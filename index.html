@@ -569,23 +569,30 @@ var donutChart = null, pngChart = null, onayCb = null;
 // ---------- Dönem / pencere ----------
 function pencere() {
   var f = ui.filtre, a = ui.anchor;
+  if (f === "gun") { return { start: a, end: a }; }
   if (f === "hafta") { var s = addDaysKey(a, -dowIdx(a)); return { start: s, end: addDaysKey(s, 6) }; }
   if (f === "ay") { var s2 = a.slice(0, 7) + "-01"; var d = fromKey(s2); var son = new Date(d.getFullYear(), d.getMonth() + 1, 0); return { start: s2, end: toKey(son) }; }
   if (f === "yil") { return { start: a.slice(0, 4) + "-01-01", end: a.slice(0, 4) + "-12-31" }; }
   return { start: null, end: null };
 }
+function gunAdi(key) {
+  var d = fromKey(key);
+  var gunler = ["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"];
+  return gunler[d.getDay()] + ", " + d.getDate() + " " + AYLAR[d.getMonth()] + " " + d.getFullYear();
+}
 function pencereAdi() {
   var p = pencere();
   if (!p.start) return "Tüm arşiv";
+  if (ui.filtre === "gun") return gunAdi(p.start);
   if (ui.filtre === "hafta") return haftaEtiket(p.start);
   if (ui.filtre === "ay") { var d = fromKey(p.start); return AYLAR[d.getMonth()] + " " + d.getFullYear(); }
   return String(fromKey(p.start).getFullYear());
 }
 function donemAdi() {
-  return { hafta: "Bu Hafta", ay: "Bu Ay", yil: "Bu Yıl", tumu: "Tüm Zamanlar" }[ui.filtre];
+  return { gun: "Bugün", hafta: "Bu Hafta", ay: "Bu Ay", yil: "Bu Yıl", tumu: "Tüm Zamanlar" }[ui.filtre];
 }
 function donemAlt() {
-  return { hafta: "bu hafta", ay: "bu ay", yil: "bu yıl", tumu: "tüm zamanlar" }[ui.filtre];
+  return { gun: "bugün", hafta: "bu hafta", ay: "bu ay", yil: "bu yıl", tumu: "tüm zamanlar" }[ui.filtre];
 }
 function penceredeDersler() {
   var p = pencere();
@@ -648,8 +655,8 @@ function sec(ad) { ui.sekme = ad; renderYonetim(); }
 function renderOzet() {
   var win = penceredeDersler(), ak = aktif(win);
   var f = ui.filtre;
-  var c1Ad = f === "hafta" ? "Bu Haftaki Ders" : f === "ay" ? "Bu Ayki Ders" : f === "yil" ? "Bu Yılki Ders" : "Toplam Ders";
-  var c3Ad = f === "hafta" ? "Bu Hafta Planlanan" : f === "ay" ? "Bu Ay Planlanan" : f === "yil" ? "Bu Yıl Planlanan" : "Bekleyen Dersler";
+  var c1Ad = f === "gun" ? "Bugünkü Ders" : f === "hafta" ? "Bu Haftaki Ders" : f === "ay" ? "Bu Ayki Ders" : f === "yil" ? "Bu Yılki Ders" : "Toplam Ders";
+  var c3Ad = f === "gun" ? "Bugün Planlanan" : f === "hafta" ? "Bu Hafta Planlanan" : f === "ay" ? "Bu Ay Planlanan" : f === "yil" ? "Bu Yıl Planlanan" : "Bekleyen Dersler";
   var toplam = ak.length;
   var ogrenciSay = {}; ak.forEach(function (l) { ogrenciSay[l.ogrenciId || l.ogrenciAd] = 1; });
   var ogrenciSayi = Object.keys(ogrenciSay).length;
@@ -657,7 +664,7 @@ function renderOzet() {
   var tumArsiv = aktif(DB.dersler).length;
 
   var seg = '<div class="inline-flex items-center rounded-full bg-slate-100 p-1 gap-0.5 shadow-inner">';
-  [["hafta","Bu Hafta"],["ay","Bu Ay"],["yil","Bu Yıl"],["tumu","Tümü"]].forEach(function (o) {
+  [["gun","Bugün"],["hafta","Bu Hafta"],["ay","Bu Ay"],["yil","Bu Yıl"],["tumu","Tümü"]].forEach(function (o) {
     var aktifMi = ui.filtre === o[0];
     seg += '<button onclick="setFiltre(\'' + o[0] + '\')" class="px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all ' +
       (aktifMi ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600") + '">' + o[1] + "</button>";
@@ -1605,7 +1612,8 @@ function setFiltre(f) {
 function navGit(yon) {
   if (ui.filtre === "tumu") return;
   var a = ui.anchor;
-  if (ui.filtre === "hafta") ui.anchor = addDaysKey(a, yon * 7);
+  if (ui.filtre === "gun") ui.anchor = addDaysKey(a, yon);
+  else if (ui.filtre === "hafta") ui.anchor = addDaysKey(a, yon * 7);
   else if (ui.filtre === "ay") {
     var d = fromKey(a.slice(0, 7) + "-01");
     ui.anchor = toKey(new Date(d.getFullYear(), d.getMonth() + yon, 1));
@@ -1620,6 +1628,7 @@ function buguneDon() {
 }
 function guncelMi() {
   var t = todayKey();
+  if (ui.filtre === "gun") return ui.anchor === t;
   if (ui.filtre === "hafta") return haftaBaslangiciD(ui.anchor) === haftaBaslangiciD(t);
   if (ui.filtre === "ay") return ui.anchor.slice(0, 7) === t.slice(0, 7);
   if (ui.filtre === "yil") return ui.anchor.slice(0, 4) === t.slice(0, 4);

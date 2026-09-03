@@ -1011,11 +1011,10 @@ function ogrenciTab() {
   var siniflar = tumSiniflar();
   if (!ui.sinifAd || siniflar.indexOf(ui.sinifAd) < 0) ui.sinifAd = siniflar[0] || null;
 
-  var duzO = ui.ogrenciDuzenleId ? DB.ogrenciler.find(function(x){return x.id===ui.ogrenciDuzenleId;}) : null;
-  if (duzO) { var e1=$("o-ad"); if(e1) e1.value=duzO.ad; var e2=$("o-sinif"); if(e2) e2.value=duzO.sinif||''; var e3=$("o-tel"); if(e3) e3.value=duzO.tel||''; }
-
   var dlSinif = '<datalist id="dl-sinif">' + siniflar.map(function (s) { return '<option value="' + esc(s) + '"></option>'; }).join("") + "</datalist>";
-  var listeHtml = '<div class="space-y-2 max-h-[340px] overflow-y-auto pr-1">';
+
+  // ─── Öğrenci listesi ───
+  var listeHtml = '<div class="space-y-2 max-h-[260px] overflow-y-auto pr-1">';
   DB.ogrenciler.forEach(function (o, i) {
     var dersSay = DB.dersler.filter(function (l) { return (l.ogrenciId === o.id || l.ogrenciAd === o.ad) && l.durum !== "iptal"; }).length;
     listeHtml += '<div class="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors">' +
@@ -1030,8 +1029,34 @@ function ogrenciTab() {
       '<button onclick="oSil(\'' + o.id + '\')" title="Öğrenciyi sil" class="w-7 h-7 rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 shrink-0"><i class="fa-solid fa-trash-can text-[12px]"></i></button></div>';
   });
   listeHtml += "</div>";
-  if (!DB.ogrenciler.length) listeHtml = '<p class="text-[12px] text-slate-400 text-center py-8">Henüz öğrenci yok.<br>Üstteki formdan ilk öğrenciyi ekleyin.</p>';
+  if (!DB.ogrenciler.length) listeHtml = '<p class="text-[12px] text-slate-400 text-center py-6">Henüz öğrenci yok.</p>';
 
+  // ─── Öğrenciyi Düzenle formu (sadece düzenleme modunda görünür) ───
+  var duzO = ui.ogrenciDuzenleId ? DB.ogrenciler.find(function(x){return x.id===ui.ogrenciDuzenleId;}) : null;
+  var duzForm = "";
+  if (duzO) {
+    duzForm = '<div class="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 mt-3">' +
+      '<h4 class="text-[12px] font-bold text-amber-600 uppercase tracking-wide mb-3"><i class="fa-solid fa-pen mr-1"></i>Öğrenciyi Düzenle — ' + esc(duzO.ad) + '</h4>' +
+      '<div class="space-y-2.5">' +
+        '<input id="d-ad" value="' + esc(duzO.ad) + '" placeholder="Ad Soyad" class="w-full rounded-xl border border-amber-200 bg-white px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-amber-400/40" />' +
+        '<input id="d-sinif" list="dl-sinif2" value="' + esc(duzO.sinif || "") + '" placeholder="Sınıf" class="w-full rounded-xl border border-amber-200 bg-white px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-amber-400/40" />' +
+        '<datalist id="dl-sinif2">' + siniflar.map(function (s) { return '<option value="' + esc(s) + '"></option>'; }).join("") + '</datalist>' +
+        '<input id="d-tel" value="' + esc(duzO.tel || "") + '" placeholder="Telefon" inputmode="tel" class="w-full rounded-xl border border-amber-200 bg-white px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-amber-400/40" />' +
+        '<div class="flex gap-2">' +
+          '<button onclick="ogrenciGuncelle()" class="flex-1 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-[13px] font-bold py-2.5 shadow-sm transition-colors"><i class="fa-solid fa-check mr-1.5"></i>Güncelle</button>' +
+          '<button onclick="ogrenciDuzenleIptal()" class="rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 text-[13px] font-bold px-4 py-2.5 shadow-sm transition-colors">İptal</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  // ─── Sınıf ekleme alanı ───
+  var sinifEkleHtml = '<div class="flex gap-2 mb-3">' +
+    '<input id="yeniSinifAd" placeholder="Yeni sınıf adı (örn. 11-B)" class="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-400/40" />' +
+    '<button onclick="sinifEkle()" class="rounded-full bg-blue-500 hover:bg-blue-600 text-white text-[12px] font-bold px-4 py-2 shadow-sm transition-colors whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i>Ekle</button>' +
+  '</div>';
+
+  // ─── Sınıf seçici + düzenle + sil ───
   var sinifSecHtml = '<div class="flex items-center gap-2 flex-wrap">' +
     '<label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Sınıf:</label>' +
     '<select id="sinifSec" onchange="sinifDegistir(this.value)" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-semibold focus:outline-none focus:ring-2 focus:ring-teal-400/40">' +
@@ -1039,6 +1064,7 @@ function ogrenciTab() {
     '<button onclick="sinifAdiDegistir()" title="Sınıf adını değiştir" class="w-8 h-8 rounded-full text-slate-300 hover:text-amber-500 hover:bg-amber-50 border border-slate-100"><i class="fa-solid fa-pen text-[10px]"></i></button>' +
     '<button onclick="sinifSil()" title="Sınıf programını sil" class="w-8 h-8 rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 border border-slate-100"><i class="fa-solid fa-trash-can text-[11px]"></i></button></div>';
 
+  // ─── Sınıf programı ───
   var prog = "";
   if (ui.sinifAd) {
     var program = DB.sinifProg[ui.sinifAd] || [];
@@ -1051,25 +1077,28 @@ function ogrenciTab() {
           '<span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-200 border border-blue-300 inline-block"></span> Toplu ders var</span></span></div>' +
       gridTablo("togSinif('" + esc(ui.sinifAd).replace(/'/g, "\'") + "'", program, "sinif") + "</div>";
   } else {
-    prog = '<div class="rounded-2xl border border-dashed border-slate-200 flex items-center justify-center text-[12.5px] text-slate-400 py-16 text-center px-6">Henüz sınıf yok.<br>Öğrenci eklerken sınıf adı girin (örn. 12-A), program otomatik oluşur.</div>';
+    prog = '<div class="rounded-2xl border border-dashed border-slate-200 flex items-center justify-center text-[12.5px] text-slate-400 py-16 text-center px-6">Henüz sınıf yok.<br>Yukarıdaki alandan yeni sınıf ekleyin.</div>';
   }
 
   return '<div class="grid grid-cols-1 xl:grid-cols-12 gap-4">' +
     '<div class="xl:col-span-4 rounded-2xl border border-slate-100 p-4">' +
-      '<h4 class="text-[12px] font-bold text-slate-500 uppercase tracking-wide mb-3"><i class="fa-solid ' + (duzO ? 'fa-pen text-amber-500' : 'fa-plus text-blue-500') + ' mr-1"></i>' + (duzO ? 'Öğrenciyi Düzenle' : 'Yeni Öğrenci') + '</h4>' +
+      // ── Yeni Öğrenci ──
+      '<h4 class="text-[12px] font-bold text-slate-500 uppercase tracking-wide mb-3"><i class="fa-solid fa-plus text-blue-500 mr-1"></i>Yeni Öğrenci</h4>' +
       '<div class="space-y-2.5">' +
         '<input id="o-ad" placeholder="Ad Soyad (örn. Ayşe Demir)" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
         '<input id="o-sinif" list="dl-sinif" placeholder="Sınıf (örn. 12-A veya Mezun-B)" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' + dlSinif +
         '<input id="o-tel" placeholder="Telefon (WhatsApp için, isteğe bağlı)" inputmode="tel" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
-        (duzO
-          ? '<div class="flex gap-2"><button onclick="ogrenciEkle()" class="flex-1 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-[13px] font-bold py-2.5 shadow-sm transition-colors"><i class="fa-solid fa-check mr-1.5"></i>Güncelle</button><button onclick="ogrenciDuzenleIptal()" class="rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 text-[13px] font-bold px-4 py-2.5 shadow-sm transition-colors">İptal</button></div>'
-          : '<button onclick="ogrenciEkle()" class="w-full rounded-full bg-blue-500 hover:bg-blue-600 text-white text-[13px] font-bold py-2.5 shadow-sm transition-colors"><i class="fa-solid fa-plus mr-1.5"></i>Öğrenciyi Kaydet</button>') +
+        '<button onclick="ogrenciEkle()" class="w-full rounded-full bg-blue-500 hover:bg-blue-600 text-white text-[13px] font-bold py-2.5 shadow-sm transition-colors"><i class="fa-solid fa-plus mr-1.5"></i>Öğrenciyi Kaydet</button>' +
       "</div>" +
-      '<h4 class="text-[12px] font-bold text-slate-500 uppercase tracking-wide mt-5 mb-2"><i class="fa-solid fa-list-ul text-blue-500 mr-1"></i>Kayıtlı Öğrenciler <span class="text-slate-300">(' + DB.ogrenciler.length + ')</span></h4>' +
+      // ── Düzenleme formu (koşullu) ──
+      duzForm +
+      // ── Kayıtlı Öğrenciler ──
+      '<h4 class="text-[12px] font-bold text-slate-500 uppercase tracking-wide mt-4 mb-2"><i class="fa-solid fa-list-ul text-blue-500 mr-1"></i>Kayıtlı Öğrenciler <span class="text-slate-300">(' + DB.ogrenciler.length + ')</span></h4>' +
       listeHtml +
     "</div>" +
     '<div class="xl:col-span-8">' +
-      '<div class="flex items-center justify-between gap-3 mb-3 flex-wrap px-1"><h4 class="text-[12px] font-bold text-slate-500 uppercase tracking-wide"><i class="fa-solid fa-calendar-week text-blue-500 mr-1"></i>Sınıf Programı</h4>' + sinifSecHtml + "</div>" +
+      '<div class="flex items-center justify-between gap-3 mb-2 flex-wrap px-1"><h4 class="text-[12px] font-bold text-slate-500 uppercase tracking-wide"><i class="fa-solid fa-calendar-week text-blue-500 mr-1"></i>Sınıf Programı</h4>' + sinifSecHtml + "</div>" +
+      sinifEkleHtml +
       prog +
     "</div></div>";
 }
@@ -1078,35 +1107,6 @@ function ogrenciEkle() {
   var sinif = $("o-sinif").value.trim();
   var tel = $("o-tel").value.trim();
   if (!ad) { toast("Öğrenci adı boş olamaz.", "hata"); return; }
-  // Düzenleme modunda
-  if (ui.ogrenciDuzenleId) {
-    var mevcut = DB.ogrenciler.find(function(o){return o.id === ui.ogrenciDuzenleId;});
-    if (mevcut) {
-      var eskiAd = mevcut.ad;
-      var cakisiyor = DB.ogrenciler.some(function(o){ return o.id !== ui.ogrenciDuzenleId && kucuk(o.ad) === kucuk(ad); });
-      if (cakisiyor) { toast("Bu isimde başka bir öğrenci zaten var.", "hata"); return; }
-      mevcut.ad = ad;
-      mevcut.sinif = sinif;
-      mevcut.tel = tel;
-      // Ders kayıtlarındaki öğrenci adını da güncelle
-      DB.dersler.forEach(function(l){
-        if (l.ogrenciAd === eskiAd) l.ogrenciAd = ad;
-        if (l.ogrenciId === mevcut.id) l.ogrenciAd = ad;
-      });
-      // İsteklerdeki öğrenci adını da güncelle
-      if (DB.istekler) DB.istekler.forEach(function(r){
-        if (r.ogrenciAd === eskiAd) r.ogrenciAd = ad;
-        if (r.ogrenciId === mevcut.id) r.ogrenciAd = ad;
-      });
-      if (sinif && !DB.sinifProg[sinif]) DB.sinifProg[sinif] = [];
-      ui.sinifAd = sinif || ui.sinifAd;
-      ui.ogrenciDuzenleId = null;
-      toast("Öğrenci güncellendi: " + ad);
-      renderYonetim(); renderFormDestek();
-      return;
-    }
-  }
-  // Yeni ekleme modunda
   var varMi = DB.ogrenciler.some(function (o) { return kucuk(o.ad) === kucuk(ad); });
   if (varMi) { toast("Bu öğrenci zaten kayıtlı.", "uyari"); return; }
   var yeni = { id: uid(), ad: ad, sinif: sinif, tel: tel };
@@ -1114,18 +1114,55 @@ function ogrenciEkle() {
   if (sinif && !DB.sinifProg[sinif]) DB.sinifProg[sinif] = [];
   ui.sinifAd = sinif || ui.sinifAd;
   toast("Öğrenci eklendi: " + ad);
+  $("o-ad").value = "";
+  $("o-sinif").value = "";
+  $("o-tel").value = "";
   renderYonetim(); renderFormDestek();
 }
+// Öğrenci düzenleme
+
 // Öğrenci düzenleme
 function ogrenciDuzenle(id) {
   ui.ogrenciDuzenleId = id;
   renderYonetim();
-  var el = document.getElementById('o-ad'); if (el) el.focus();
 }
 function ogrenciDuzenleIptal() {
   ui.ogrenciDuzenleId = null;
   renderYonetim();
 }
+function ogrenciGuncelle() {
+  var id = ui.ogrenciDuzenleId;
+  if (!id) return;
+  var mevcut = DB.ogrenciler.find(function(o){return o.id === id;});
+  if (!mevcut) return;
+  var ad = $("d-ad").value.trim();
+  var sinif = $("d-sinif").value.trim();
+  var tel = $("d-tel").value.trim();
+  if (!ad) { toast("Öğrenci adı boş olamaz.", "hata"); return; }
+  var cakisiyor = DB.ogrenciler.some(function(o){ return o.id !== id && kucuk(o.ad) === kucuk(ad); });
+  if (cakisiyor) { toast("Bu isimde başka bir öğrenci zaten var.", "hata"); return; }
+  var eskiAd = mevcut.ad;
+  mevcut.ad = ad;
+  mevcut.sinif = sinif;
+  mevcut.tel = tel;
+  // Ders kayıtlarındaki öğrenci adını güncelle
+  DB.dersler.forEach(function(l){
+    if (l.ogrenciAd === eskiAd) l.ogrenciAd = ad;
+    if (l.ogrenciId === id) l.ogrenciAd = ad;
+  });
+  // İsteklerdeki öğrenci adını güncelle
+  if (DB.istekler) DB.istekler.forEach(function(r){
+    if (r.ogrenciAd === eskiAd) r.ogrenciAd = ad;
+    if (r.ogrenciId === id) r.ogrenciAd = ad;
+  });
+  if (sinif && !DB.sinifProg[sinif]) DB.sinifProg[sinif] = [];
+  ui.sinifAd = sinif || ui.sinifAd;
+  ui.ogrenciDuzenleId = null;
+  toast("Öğrenci güncellendi: " + ad);
+  renderYonetim(); renderFormDestek();
+}
+// Öğrenci düzenleme
+
 // Öğrenci düzenleme
 function oSil(id) {
   var o = DB.ogrenciler.find(function (x) { return x.id === id; });
@@ -1139,6 +1176,15 @@ function oSil(id) {
     toast("Öğrenci silindi.");
     yenile();
   });
+}
+function sinifEkle() {
+  var ad = $("yeniSinifAd").value.trim();
+  if (!ad) { toast("Sınıf adı boş olamaz.", "hata"); return; }
+  if (DB.sinifProg[ad]) { toast("\"" + ad + "\" adında bir sınıf zaten var.", "uyari"); return; }
+  DB.sinifProg[ad] = [];
+  ui.sinifAd = ad;
+  toast("Sınıf eklendi: " + ad);
+  renderYonetim(); renderFormDestek();
 }
 function sinifDegistir(s) { ui.sinifAd = s; renderYonetim(); }
 function sinifAdiDegistir() {

@@ -1722,85 +1722,105 @@ function haftalikOgrtTablo() {
 
 function gunlukTablo() {
   var gunKey = ui.anchor;
+  var gun = new Date(gunKey + "T12:00:00");
+  var gunAdlari = ["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"];
+  var gunAdi = gunAdlari[gun.getDay()];
+
+  // O güne ait aktif dersleri al
   var gunDersler = DB.dersler.filter(function (l) {
     return l.tarih === gunKey && l.durum !== "iptal";
   });
-  if (!gunDersler.length) return "";
 
-  // Öğretmene göre grupla
+  // Öğretmene göre grupla: ogrtAd -> { saat -> ders }
   var ogrtMap = {};
   gunDersler.forEach(function (l) {
-    var ogrtAd = l.ogretmenAd || "Bilinmiyor";
-    if (!ogrtMap[ogrtAd]) ogrtMap[ogrtAd] = [];
-    ogrtMap[ogrtAd].push(l);
+    var k = l.ogretmenAd || "Bilinmiyor";
+    if (!ogrtMap[k]) ogrtMap[k] = {};
+    ogrtMap[k][l.saat] = l;
   });
 
-  // Saate göre sırala
-  Object.keys(ogrtMap).forEach(function (k) {
-    ogrtMap[k].sort(function (a, b) { return (a.saat || 0) - (b.saat || 0); });
-  });
+  var ogrtSirasi = Object.keys(ogrtMap).sort();
+  if (!ogrtSirasi.length) return "";
 
-  // Öğretmen sırası: en çok ders verenden aza
-  var ogrtSirasi = Object.keys(ogrtMap).sort(function (a, b) { return ogrtMap[b].length - ogrtMap[a].length; });
+  // Saat slotları: 09:00 - 20:00 (12 slot, mola 12:00-13:00 arası)
+  var SAAT_SLOTLARI = [
+    { s: 9, e: 10, no: "1" },
+    { s: 10, e: 11, no: "2" },
+    { s: 11, e: 12, no: "3" },
+    { s: 12, e: 13, no: "Mola", mola: true },
+    { s: 13, e: 14, no: "4" },
+    { s: 14, e: 15, no: "5" },
+    { s: 15, e: 16, no: "6" },
+    { s: 16, e: 17, no: "7" },
+    { s: 17, e: 18, no: "8" },
+    { s: 18, e: 19, no: "9" },
+    { s: 19, e: 20, no: "10" }
+  ];
 
-  var html = '<div class="rounded-2xl border border-slate-100 overflow-hidden mb-4">' +
-    '<div class="flex items-center gap-3 px-5 py-3.5 bg-gradient-to-r from-teal-50 to-blue-50 border-b border-slate-100">' +
-      '<div class="w-9 h-9 rounded-xl bg-teal-500 flex items-center justify-center text-white shadow-sm shrink-0"><i class="fa-solid fa-table-list text-sm"></i></div>' +
-      '<div><h3 class="text-[14px] font-extrabold text-slate-800">Günlük Ders Programı</h3>' +
-      '<p class="text-[11px] text-slate-400">' + gunDersler.length + " birebir ders · " + ogrtSirasi.length + " öğretmen</p></div>" +
+  // Tablo başlığı
+  var html = '<div class="rounded-2xl border border-slate-200 overflow-hidden mb-4 bg-white">' +
+    // Gün başlığı
+    '<div class="text-center py-3 border-b-2 border-slate-200 bg-slate-50">' +
+      '<h3 class="text-[16px] font-black text-slate-800 tracking-wide uppercase">' + gunAdi + '</h3>' +
     '</div>' +
-    (ui.filtre === "gun" ? gunlukTablo() : "") +
-      '<div class="overflow-x-auto">' +
-      '<table class="w-full text-left border-collapse">' +
-        '<thead><tr class="bg-slate-50/80 border-b border-slate-100">' +
-          "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Öğretmen</th>" +
-          "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Saat</th>" +
-          "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Öğrenci</th>" +
-          "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Ders</th>" +
-          "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Eksik Konu</th>" +
-          "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Durum</th>" +
-        "</tr></thead><tbody>";
+    '<div class="overflow-x-auto"><table class="w-full border-collapse text-center" style="min-width:800px">';
 
-  ogrtSirasi.forEach(function (ogrtAd, oi) {
-    var dersler = ogrtMap[ogrtAd];
-    var ilkDers = dersler[0];
-    var brans = ilkDers ? DERS[ilkDers.dersId] : null;
-
-    dersler.forEach(function (l, li) {
-      var ogrenci = DB.ogrenciler.find(function (x) { return x.id === l.ogrenciId; });
-      var ogrenciAd = l.ogrenciAd || (ogrenci ? ogrenci.ad : "");
-      var sinif = ogrenci ? ogrenci.sinif : "";
-      var ders = DERS[l.dersId];
-      var saatStr = l.saat != null ? String(l.saat).padStart(2, "0") + ":00" : "";
-
-      var bgClass = oi % 2 === 0 ? "bg-white" : "bg-slate-50/40";
-      var durumIcon = l.durum === "tamamlandi"
-        ? '<span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600"><i class="fa-solid fa-circle-check"></i>Tamam</span>'
-        : l.durum === "iptal"
-        ? '<span class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-400"><i class="fa-solid fa-circle-xmark"></i>İptal</span>'
-        : '<span class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-500"><i class="fa-regular fa-clock"></i>Planlandı</span>';
-
-      html += '<tr class="border-b border-slate-50 hover:bg-teal-50/30 transition-colors ' + bgClass + '">' +
-        '<td class="px-4 py-2.5">' +
-          (li === 0
-            ? '<div class="flex items-center gap-2">' + avatar(ogrtAd, oi) + '<div><div class="text-[12.5px] font-bold text-slate-700">' + esc(ogrtAd) + '</div>' +
-            (brans ? '<div class="text-[10px]"><span class="inline-block rounded-full px-1.5 py-px font-semibold ' + brans.bg + ' ' + brans.tx + '">' + brans.ad + "</span></div>" : "") +
-            '</div></div>'
-            : '') +
-        "</td>" +
-        '<td class="px-4 py-2.5 text-[12px] font-bold text-slate-600" style="font-variant-numeric:tabular-nums">' + saatStr + "</td>" +
-        '<td class="px-4 py-2.5"><div class="text-[12.5px] font-bold text-slate-700">' + esc(ogrenciAd) + "</div>" +
-        (sinif ? '<div class="text-[10px] text-slate-400">' + esc(sinif) + "</div>" : "") + "</td>" +
-        '<td class="px-4 py-2.5">' + (ders ? '<span class="inline-block rounded-full px-2 py-0.5 text-[10.5px] font-bold ' + ders.bg + ' ' + ders.tx + '">' + ders.ad + "</span>" : '-') + "</td>" +
-        '<td class="px-4 py-2.5 text-[12px] text-slate-500">' + (l.eksikKonu ? esc(l.eksikKonu) : '<span class="text-slate-300">—</span>') + "</td>" +
-        '<td class="px-4 py-2.5">' + durumIcon + "</td>" +
-      "</tr>";
-    });
+  // Üst satır: numaralar ve saatler
+  html += '<thead><tr class="border-b-2 border-slate-200">';
+  html += '<th class="px-3 py-2 border-r border-slate-200 bg-slate-50" style="min-width:120px"></th>';
+  SAAT_SLOTLARI.forEach(function (slot) {
+    var bg = slot.mola ? 'bg-emerald-200' : 'bg-slate-50';
+    var textColor = slot.mola ? 'text-emerald-700' : 'text-slate-600';
+    html += '<th class="px-2 py-2 border-r border-slate-200 ' + bg + '" style="min-width:72px">' +
+      '<div class="text-[12px] font-black ' + textColor + '">' + slot.no + '</div>' +
+      '<div class="text-[9px] font-semibold text-slate-400">' + String(slot.s).padStart(2,"0") + ":" + "00" + '</div>' +
+      '<div class="text-[9px] font-semibold text-slate-400">' + String(slot.e).padStart(2,"0") + ":" + "00" + '</div>' +
+      '</th>';
   });
+  html += '</tr></thead>';
 
-  html += "</tbody></table></div></div>";
+  // Satırlar: her öğretmen
+  html += '<tbody>';
+  ogrtSirasi.forEach(function (ogrtAd, oi) {
+    var saatMap = ogrtMap[ogrtAd];
+    var bg = oi % 2 === 0 ? 'bg-white' : 'bg-slate-50/60';
+
+    html += '<tr class="border-b border-slate-200 ' + bg + '">';
+    // Öğretmen adı
+    html += '<td class="px-3 py-3 border-r border-slate-200 text-left">' +
+      '<div class="text-[12px] font-black text-slate-800 uppercase leading-tight">' + esc(ogrtAd) + '</div></td>';
+
+    SAAT_SLOTLARI.forEach(function (slot) {
+      if (slot.mola) {
+        // Mola hücresi
+        html += '<td class="px-1.5 py-2 border-r border-slate-200 bg-emerald-50">' +
+          '<div class="text-[10px] font-bold text-emerald-600">Mola</div>' +
+          '<div class="text-[9px] text-emerald-500">' + String(slot.s).padStart(2,"0") + ':00-' + String(slot.e).padStart(2,"0") + ':00</div></td>';
+      } else {
+        var ders = saatMap[slot.s];
+        if (ders) {
+          var ogrenci = DB.ogrenciler.find(function(x){ return x.id === ders.ogrenciId; });
+          var sinif = ogrenci ? ogrenci.sinif : "";
+          var dersBilgi = DERS[ders.dersId];
+          var hucreIcerik = sinif || esc(ders.ogrenciAd || "").split(" ")[0];
+          var altYazi = dersBilgi ? dersBilgi.ad : "";
+          var renk = ders.durum === "tamamlandi" ? "text-emerald-600" : "text-slate-700";
+
+          html += '<td class="px-1.5 py-2 border-r border-slate-200 hover:bg-blue-50 transition-colors">' +
+            '<div class="text-[11.5px] font-bold ' + renk + ' leading-tight">' + esc(hucreIcerik) + '</div>';
+          if (altYazi) html += '<div class="text-[8.5px] text-slate-400 mt-0.5">' + esc(altYazi) + '</div>';
+          html += '</td>';
+        } else {
+          html += '<td class="px-1.5 py-2 border-r border-slate-200"></td>';
+        }
+      }
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div></div>';
   return html;
 }
+
 
 function renderDersler() {
   var liste = penceredeDersler();

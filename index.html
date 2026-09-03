@@ -734,9 +734,9 @@ function ogretmenTab() {
         '<div><h4 class="text-[14px] font-bold text-slate-900 flex items-center gap-2">' + avatar(t2.ad, 0) + esc(t2.ad) + "</h4>" +
         '<p class="text-[11px] text-slate-400 mt-0.5">Haftalık çizelge — kutuya tıklayarak durumu değiştirin</p></div>' +
         '<div class="flex items-center gap-3 text-[10.5px] font-semibold text-slate-500 flex-wrap">' +
-          '<span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded border border-slate-200 bg-white inline-block"></span> Boş (ders verilebilir)</span>' +
-          '<span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-200 border border-amber-300 inline-block"></span> Sınıf Dersi</span>' +
-          '<span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-rose-200 border border-rose-300 inline-block"></span> Müsait Değil</span>' +
+          '<span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded border border-slate-200 bg-white inline-block\"></span> Boş (ders verilebilir)</span>' +
+          '<span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-200 border border-amber-300 inline-block\"></span> Sınıf Dersi</span>' +
+          '<span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-rose-200 border border-rose-300 inline-block\"></span> Müsait Değil</span>' +
         "</div></div>" +
       gridTablo("togOgr('" + t2.id + "'", t2.avail, "ogretmen") +
       "</div>";
@@ -864,10 +864,10 @@ function ogrenciTab() {
     prog = '<div class="rounded-2xl border border-slate-100 p-4 md:p-5">' +
       '<div class="flex flex-wrap items-center justify-between gap-3 mb-4">' +
         '<div><h4 class="text-[14px] font-bold text-slate-900">Sınıf Toplu Ders Programı — ' + esc(ui.sinifAd) + "</h4>" +
-        '<p class="text-[11px] text-slate-400 mt-0.5">Bu saatlerde sınıf derste olduğu için öğrencilere birebir ders planlanamaz</p></div>" +
+        '<p class="text-[11px] text-slate-400 mt-0.5">Bu saatlerde sınıf derste olduğu için öğrencilere birebir ders planlanamaz</p></div>' +
         '<span class="flex items-center gap-3 text-[10.5px] font-semibold text-slate-500">' +
-          '<span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded border border-slate-200 bg-white inline-block"></span> Boş</span>' +
-          '<span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-200 border border-blue-300 inline-block"></span> Toplu ders var</span></span></div>' +
+          '<span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded border border-slate-200 bg-white inline-block\"></span> Boş</span>' +
+          '<span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-200 border border-blue-300 inline-block\"></span> Toplu ders var</span></span></div>' +
       gridTablo("togSinif('" + esc(ui.sinifAd).replace(/'/g, "\\'") + "'", program, "sinif") + "</div>";
   } else {
     prog = '<div class="rounded-2xl border border-dashed border-slate-200 flex items-center justify-center text-[12.5px] text-slate-400 py-16 text-center px-6">Henüz sınıf yok.<br>Öğrenci eklerken sınıf adı girin (örn. 12-A), program otomatik oluşur.</div>';
@@ -1598,15 +1598,15 @@ function pngAc() {
       '<td style="padding:7px 10px;font-size:11px;font-weight:600;color:#334155;white-space:nowrap">' + fmtTR(l.tarih) + "</td>" +
       '<td style="padding:7px 10px;font-size:11px;color:#475569;white-space:nowrap">' + l.saat + "</td>" +
       '<td style="padding:7px 10px;font-size:11px;font-weight:600;color:#334155">' + esc(l.ogrenciAd) + "</td>" +
-      '<td style="padding:7px 10px"><span style="background:' + D.seg + "22;color:#0f172a;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:99px;display:inline-block">" + D.ad + "</span></td>" +
+      '<td style="padding:7px 10px"><span style="background:' + D.seg + "22;color:#0f172a;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:99px;display:inline-block\">" + D.ad + "</span></td>" +
       '<td style="padding:7px 10px;font-size:11px;color:#64748b">' + (l.konu ? esc(l.konu) : "—") + "</td>" +
       '<td style="padding:7px 10px;font-size:11px;color:#475569">' + esc(l.ogretmenAd) + "</td>" +
-      '<td style="padding:7px 10px"><span style="background:" + etk[1] + ";color:" + etk[2] + ";font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;display:inline-block">' + etk[0] + "</span></td></tr>";
+      '<td style="padding:7px 10px"><span style="background:" + etk[1] + ";color:" + etk[2] + ";font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;display:inline-block\">' + etk[0] + "</span></td></tr>";
   });
   var lej = "";
   sirali.forEach(function (d) {
     var D = DERS[d.id];
-    lej += '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 0;font-size:11px;border-bottom:1px solid #f8fafc"><span style="font-weight:600;color:#334155;display:flex;align-items:center;gap:7px"><span style="width:9px;height:9px;border-radius:99px;background:' + (D ? D.seg : "#cbd5e1") + ';display:inline-block"></span>' + (D ? D.ad : d.id) + '</span><span style="color:#94a3b8;font-weight:600">' + d.n + " saat</span></div>";
+    lej += '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 0;font-size:11px;border-bottom:1px solid #f8fafc"><span style="font-weight:600;color:#334155;display:flex;align-items:center;gap:7px"><span style="width:9px;height:9px;border-radius:99px;background:' + (D ? D.seg : "#cbd5e1") + ';display:inline-block\"></span>' + (D ? D.ad : d.id) + '</span><span style="color:#94a3b8;font-weight:600">' + d.n + " saat</span></div>";
   });
   if (!sirali.length) lej = '<div style="color:#94a3b8;font-size:11px;padding:8px 0">Veri yok</div>';
 

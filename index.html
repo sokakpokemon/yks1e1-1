@@ -208,6 +208,9 @@ Check your Browserslist config to be sure that your targets are set up correctly
       <span class="hidden md:inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-400 bg-slate-100 rounded-full px-3 py-1.5">
         <i class="fa-solid fa-shield-halved text-teal-500"></i> Veriler bu cihazda saklanır
       </span>
+      <button onclick="indirApp()" title="Bu programın dosyasını (index.html) bilgisayarına indirir. İndirilen dosyaya çift tıklayınca internet olmadan da açılır." class="inline-flex items-center gap-1.5 text-[13px] font-semibold text-white bg-slate-800 hover:bg-slate-900 rounded-full px-4 py-2 shadow-sm transition-colors no-print">
+        <i class="fa-solid fa-file-arrow-down"></i><span class="hidden sm:inline">Program Dosyasını İndir</span>
+      </button>
       <button onclick="yedekAl()" title="Sistem verilerini bilgisayara yedekle (.json)" class="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-600 hover:text-teal-600 bg-white border border-slate-200 hover:border-teal-300 rounded-full px-3.5 py-2 shadow-sm transition-colors">
         <i class="fa-solid fa-download"></i><span class="hidden sm:inline">Yedek Al</span>
       </button>
@@ -1827,6 +1830,37 @@ function pngYakala() {
 function pngKapat() {
   if (pngChart) { pngChart.destroy(); pngChart = null; }
   $("pngModal").classList.add("hidden");
+}
+
+/* ---- Program dosyasını (index.html) bilgisayara indir ---- */
+function indirApp() {
+  var ad = "YKS-Birebir-Takip.html";
+  var kaydet = function (icerik) {
+    var blob = new Blob([icerik], { type: "text/html;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = ad;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    toast("İndirme başladı. Dosya İndirilenler klasörüne kaydedildi — masaüstüne taşıyıp çift tıklayın.", "basarili");
+  };
+  var sayfaKaynagi = function () {
+    try {
+      fetch(window.location.href.split("#")[0], { cache: "no-store" })
+        .then(function (r) { if (!r.ok) throw 0; return r.text(); })
+        .then(function (t) { kaydet(t); })
+        .catch(function () { indirYerelKopya(); });
+    } catch (e) { indirYerelKopya(); }
+  };
+  function indirYerelKopya() {
+    try {
+      kaydet("<!DOCTYPE html>\n" + document.documentElement.outerHTML);
+    } catch (e) {
+      toast("Buradan indirme engellendi. Sol taraftaki dosya listesinden index.html dosyasını indirmeyi deneyin.", "hata");
+    }
+  }
+  sayfaKaynagi();
 }
 
 /* ---- Başlangıç ---- */

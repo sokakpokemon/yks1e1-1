@@ -396,16 +396,16 @@ var GUN_KISA = ["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"];
 var SAATLER = [];
 for (var hs = 9; hs <= 20; hs++) SAATLER.push(hs);
 var DERSLER = [
-  { id:"mat", ad:"Matematik", seg:"#2dd4bf", bg:"bg-teal-100", tx:"text-teal-800" },
-  { id:"geo", ad:"Geometri",  seg:"#60a5fa", bg:"bg-blue-100", tx:"text-blue-800" },
-  { id:"fiz", ad:"Fizik",     seg:"#fbbf24", bg:"bg-amber-100", tx:"text-amber-800" },
-  { id:"kim", ad:"Kimya",     seg:"#a78bfa", bg:"bg-violet-100", tx:"text-violet-800" },
-  { id:"biy", ad:"Biyoloji",  seg:"#4ade80", bg:"bg-green-100", tx:"text-green-800" },
-  { id:"tur", ad:"Türkçe",    seg:"#fb7185", bg:"bg-rose-100", tx:"text-rose-800" },
-  { id:"tar", ad:"Tarih",     seg:"#818cf8", bg:"bg-indigo-100", tx:"text-indigo-800" },
-  { id:"cgr", ad:"Coğrafya",  seg:"#38bdf8", bg:"bg-sky-100", tx:"text-sky-800" },
-  { id:"fel", ad:"Felsefe",   seg:"#e879f9", bg:"bg-fuchsia-100", tx:"text-fuchsia-800" },
-  { id:"reh", ad:"Rehberlik", seg:"#fb923c", bg:"bg-orange-100", tx:"text-orange-800" }
+  { id:"mat", ad:"MATEMATİK", seg:"#2dd4bf", bg:"bg-teal-100",  tx:"text-teal-800" },
+  { id:"fiz", ad:"FİZİK", seg:"#fbbf24", bg:"bg-amber-100",  tx:"text-amber-800" },
+  { id:"kim", ad:"KİMYA", seg:"#a78bfa", bg:"bg-violet-100",  tx:"text-violet-800" },
+  { id:"biy", ad:"BİYOLOJİ", seg:"#4ade80", bg:"bg-green-100",  tx:"text-green-800" },
+  { id:"tur", ad:"TÜRKÇE", seg:"#fb7185", bg:"bg-rose-100",  tx:"text-rose-800" },
+  { id:"edb", ad:"EDEBİYAT", seg:"#f472b6", bg:"bg-pink-100",  tx:"text-pink-800" },
+  { id:"cgr", ad:"COĞRAFYA", seg:"#38bdf8", bg:"bg-sky-100",  tx:"text-sky-800" },
+  { id:"tar", ad:"TARİH", seg:"#818cf8", bg:"bg-indigo-100",  tx:"text-indigo-800" },
+  { id:"geo", ad:"GEOMETRİ", seg:"#60a5fa", bg:"bg-blue-100",  tx:"text-blue-800" },
+  { id:"ing", ad:"İNGİLİZCE", seg:"#fb923c", bg:"bg-orange-100",  tx:"text-orange-800" }
 ];
 var DERS = {};
 DERSLER.forEach(function (d) { DERS[d.id] = d; });
@@ -477,85 +477,78 @@ function loadDB() {
 var DB = loadDB() || seedDB();
 saveDB();
 
-// ---------- Örnek veriler (ilk açılış) ----------
+// ---------- Varsayılan başlangıç verileri (depo boşsa ilk açılışta yüklenir) ----------
 function seedDB() {
   var db = bosDB();
-  var bugun = new Date(); bugun.setHours(0,0,0,0);
   var mon = addDaysKey(todayKey(), -dowIdx(todayKey()));
 
   db.ogretmenler = [
-    { id: uid(), ad: "Soner Açıkgöz", brans: "mat", avail: { sinif: ["0-9","0-10","0-11","3-9","3-10"], musait: ["5-14"] } },
-    { id: uid(), ad: "mert hoca", brans: "tur", avail: { sinif: ["4-9","4-10"], musait: [] } },
-    { id: uid(), ad: "Buse Özkan", brans: "fiz", avail: { sinif: ["2-9","2-10","2-11","2-12"], musait: [] } },
-    { id: uid(), ad: "Kaan Yıldız", brans: "kim", avail: { sinif: ["1-9","1-10","3-11","3-12"], musait: [] } },
-    { id: uid(), ad: "Elif Demirtaş", brans: "biy", avail: { sinif: ["0-13","0-14","1-13","1-14"], musait: [] } },
-    { id: uid(), ad: "Umut Kaya", brans: "geo", avail: { sinif: ["3-13","3-14","3-15"], musait: [] } },
-    { id: uid(), ad: "Seda Arslan", brans: "reh", avail: { sinif: [], musait: [] } }
+    { id: uid(), ad: "SONER AÇIKGÖZ", brans: "mat", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "MEHMET ŞAŞAR", brans: "fiz", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "TAHSİN ASLAN", brans: "geo", avail: { sinif: ["0-9","2-9","3-9","4-9"], musait: ["5-9","0-10"] } },
+    { id: uid(), ad: "MİNE GÜRKAN", brans: "kim", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "MUSTAFA GÜRKAN", brans: "biy", avail: { sinif: ["1-9","2-9","3-9","4-9"], musait: ["5-9","0-10"] } },
+    { id: uid(), ad: "RAVİDE DERYA", brans: "tur", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["5-9","0-10"] } },
+    { id: uid(), ad: "BELGİN ÇOLAK", brans: "edb", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "KARDELEN ASLAN", brans: "cgr", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "ŞAHİN DOĞANAY", brans: "tar", avail: { sinif: ["0-9","1-9","3-9","4-9"], musait: ["5-9","0-10"] } },
+    { id: uid(), ad: "EREN BİLGİLİ", brans: "mat", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "FATMA KURT", brans: "ing", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "FİKRİYE KIYAR", brans: "tur", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "NİHAT KANARIG", brans: "mat", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "MERT ASİL", brans: "fiz", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "SALİM URTİMUR", brans: "kim", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "MERVE GEREK", brans: "biy", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } }
   ];
   db.ogrenciler = [
-    { id: uid(), ad: "Ayşe Demir", sinif: "12-A", tel: "" },
-    { id: uid(), ad: "Ecrin Şahin", sinif: "Mezun-B", tel: "" },
-    { id: uid(), ad: "Zeynep Kaya", sinif: "12-A", tel: "" },
-    { id: uid(), ad: "Emir Aydın", sinif: "Mezun-A", tel: "" },
-    { id: uid(), ad: "Elif Koç", sinif: "12-A", tel: "" },
-    { id: uid(), ad: "Yusuf Can", sinif: "Mezun-B", tel: "" }
+    { id: uid(), ad: "Ayşe Demir", sinif: "12 SAY 1", tel: "" },
+    { id: uid(), ad: "Ecrin Şahin", sinif: "12 DİL", tel: "" },
+    { id: uid(), ad: "Zeynep Kaya", sinif: "12 SAY 2", tel: "" },
+    { id: uid(), ad: "Emir Aydın", sinif: "MEZUN SAY 1", tel: "" },
+    { id: uid(), ad: "Elif Koç", sinif: "MEZUN EA 1", tel: "" },
+    { id: uid(), ad: "Yusuf Can", sinif: "MEZUN SAY 2", tel: "" }
   ];
   db.sinifProg = {
-    "12-A": ["0-9","0-10","0-11","0-12","1-13","1-14","2-9","2-10","2-11","3-13","3-14","4-13","4-14"],
-    "Mezun-B": ["1-9","1-10","1-11","3-13","3-14","5-9","5-10"],
-    "Mezun-A": ["4-9","4-10","4-11","0-13","0-14"]
+    "MEZUN SAY 1": ["0-9","2-9","3-9","5-9","0-10"],
+    "MEZUN SAY 2": ["0-9","1-9","2-9","3-9","4-9"],
+    "MEZUN SAY 3": [],
+    "MEZUN EA 1": ["0-9","1-9","3-9","4-9","5-9"],
+    "MEZUN EA 2": [],
+    "12 SAY 1": ["0-9","1-9","2-9","3-9","4-9"],
+    "12 SAY 2": ["1-9","2-9","3-9","4-9","5-9"],
+    "12 SAY CAL": [],
+    "12 EA 1": [],
+    "12 DİL": ["0-9","1-9","2-9","3-9","4-9"],
+    "11 SAY 1": [],
+    "11 SAY 2": [],
+    "11 SAY 3": [],
+    "11 SAY CAL": [],
+    "11 SAYISAL FEN": [],
+    "11 EA 1": [],
+    "10.SINIF": [],
+    "9.SINIF": []
   };
 
-  function ogr(ad) { return db.ogretmenler.find(function (t) { return t.ad === ad; }).id; }
-  function ogn(ad) { return db.ogrenciler.find(function (s) { return s.ad === ad; }).id; }
-  var plan = [
-    [1, 0, 9,  "Ayşe Demir","mat","Problemler","Soner Açıkgöz"],
-    [1, 0, 11, "Emir Aydın","kim","Kimyasal Tepkimeler","Kaan Yıldız"],
-    [1, 1, 15, "Ecrin Şahin","tur","Paragraf","mert hoca"],
-    [1, 2, 14, "Zeynep Kaya","fiz","Kuvvet ve Hareket","Buse Özkan"],
-    [1, 3, 10, "Yusuf Can","biy","Hücre Bölünmeleri","Elif Demirtaş"],
-    [1, 4, 13, "Elif Koç","mat","Fonksiyonlar","Soner Açıkgöz"],
-    [1, 5, 11, "Zeynep Kaya","reh","Hedef Belirleme","Seda Arslan"],
-    [2, 1, 16, "Elif Koç","mat","Türev","Soner Açıkgöz"],
-    [2, 1, 12, "Emir Aydın","fiz","Elektrik","Buse Özkan"],
-    [2, 2, 15, "Yusuf Can","tur","Dil Bilgisi","mert hoca"],
-    [2, 3, 10, "Ayşe Demir","geo","Açılar","Umut Kaya"],
-    [2, 4, 14, "Ecrin Şahin","kim","Mol Kavramı","Kaan Yıldız"],
-    [3, 1, 14, "Zeynep Kaya","tur","Paragraf","mert hoca"],
-    [3, 2, 10, "Elif Koç","biy","Kalıtım","Elif Demirtaş"],
-    [3, 4, 15, "Emir Aydın","mat","Limit","Soner Açıkgöz"],
-    [4, 0, 13, "Yusuf Can","fiz","Newton Yasaları","Buse Özkan"],
-    [4, 2, 16, "Ayşe Demir","tur","Sözcükte Anlam","mert hoca"],
-    [4, 5, 10, "Elif Koç","reh","Sınav Kaygısı","Seda Arslan"],
-    [5, 1, 15, "Emir Aydın","kim","Asitler ve Bazlar","Kaan Yıldız"],
-    [5, 3, 11, "Ecrin Şahin","mat","Denklem Çözme","Soner Açıkgöz"],
-    [5, 4, 13, "Zeynep Kaya","biy","Ekoloji","Elif Demirtaş"],
-    [6, 0, 9,  "Yusuf Can","tur","Paragraf","mert hoca"],
-    [6, 2, 14, "Elif Koç","fiz","Optik","Buse Özkan"],
-    [6, 4, 15, "Emir Aydın","mat","İntegral","Soner Açıkgöz"]
-  ];
+  function ogr(ad) { return db.ogretmenler.find(function (t) { return kucuk(t.ad) === kucuk(ad); }).id; }
+  function ogn(ad) { return db.ogrenciler.find(function (s) { return kucuk(s.ad) === kucuk(ad); }).id; }
+
+  var plan = [[0,0,16,"Ayşe Demir","mat","Fonksiyonlarda Uygulamalar","SONER AÇIKGÖZ"],[0,0,14,"Zeynep Kaya","kim","Mol Kavramı","MİNE GÜRKAN"],[0,1,9,"Emir Aydın","geo","Üçgende Açılar","TAHSİN ASLAN"],[0,1,11,"Elif Koç","edb","Cumhuriyet Dönemi Şiiri","BELGİN ÇOLAK"],[0,1,15,"Ecrin Şahin","ing","Tense ve Preposition Tekrarı","FATMA KURT"],[0,2,10,"Yusuf Can","fiz","Newton'un Hareket Yasaları","MERT ASİL"],[0,2,13,"Ayşe Demir","tur","Paragrafta Anlam","RAVİDE DERYA"],[0,2,17,"Zeynep Kaya","tar","Kurtuluş Savaşı Hazırlık Dönemi","ŞAHİN DOĞANAY"],[0,3,12,"Emir Aydın","biy","Kalıtım ve Genler","MERVE GEREK"],[0,3,16,"Elif Koç","cgr","Türkiye'nin Yer Şekilleri","KARDELEN ASLAN"],[0,4,11,"Ecrin Şahin","mat","Problemler","EREN BİLGİLİ"],[0,4,14,"Yusuf Can","tur","Dil Bilgisi Genel Tekrar","FİKRİYE KIYAR"],[0,4,16,"Ayşe Demir","kim","Asitler ve Bazlar","SALİM URTİMUR"],[0,5,10,"Zeynep Kaya","mat","Türev ve Uygulamaları","NİHAT KANARIG"],[0,5,13,"Emir Aydın","biy","Ekoloji","MUSTAFA GÜRKAN"],[0,5,15,"Elif Koç","ing","Vocabulary ve Cloze Test","FATMA KURT"],[-1,0,13,"Ayşe Demir","mat","Problemler","SONER AÇIKGÖZ"],[-1,0,11,"Emir Aydın","fiz","Kuvvet ve Hareket","MEHMET ŞAŞAR"],[-1,1,14,"Ecrin Şahin","ing","Okuma ve Çeviri","FATMA KURT"],[-1,1,16,"Zeynep Kaya","edb","Şiir Bilgisi","BELGİN ÇOLAK"],[-1,2,9,"Elif Koç","tar","İlk Türk Devletleri","ŞAHİN DOĞANAY"],[-1,2,15,"Yusuf Can","cgr","İklim Bilgisi","KARDELEN ASLAN"],[-1,3,10,"Ayşe Demir","geo","Üçgende Benzerlik","TAHSİN ASLAN"],[-1,3,14,"Emir Aydın","kim","Kimyasal Tepkimeler","MİNE GÜRKAN"],[-1,4,15,"Zeynep Kaya","biy","Hücre ve Organelleri","MERVE GEREK"],[-1,4,13,"Yusuf Can","mat","Polinomlar","NİHAT KANARIG"],[-2,0,9,"Zeynep Kaya","biy","Hücre Bölünmeleri","MUSTAFA GÜRKAN"],[-2,1,11,"Elif Koç","mat","Sayılar","SONER AÇIKGÖZ"],[-2,2,13,"Yusuf Can","mat","Denklem Çözme","EREN BİLGİLİ"],[-2,2,16,"Ayşe Demir","fiz","Elektrik","MEHMET ŞAŞAR"],[-2,3,11,"Ecrin Şahin","cgr","Harita Bilgisi","KARDELEN ASLAN"],[-2,4,9,"Emir Aydın","tur","Sözcükte Anlam","RAVİDE DERYA"],[-2,4,16,"Zeynep Kaya","kim","Periyodik Sistem","SALİM URTİMUR"],[-2,5,12,"Elif Koç","geo","Dörtgenler","TAHSİN ASLAN"]];
   plan.forEach(function (r) {
-    var haftaMon = addDaysKey(mon, -7 * r[0]);
-    var tarih = addDaysKey(haftaMon, r[1]);
-    var ogrenciAd = r[3], dersId = r[4], konu = r[5], ogretmenAd = r[6];
     db.dersler.push({
-      id: uid(), ogrenciId: ogn(ogrenciAd), ogrenciAd: ogrenciAd, dersId: dersId, konu: konu,
-      ogretmenId: ogr(ogretmenAd), ogretmenAd: ogretmenAd, tarih: tarih,
-      saat: String(r[2]).padStart(2, "0") + ":00", durum: "tamamlandi", olusturma: tarih
+      id: uid(), ogrenciId: ogn(r[3]), ogrenciAd: r[3], dersId: r[4], konu: r[5],
+      ogretmenId: ogr(r[6]), ogretmenAd: r[6],
+      tarih: addDaysKey(addDaysKey(mon, r[0] * 7), r[1]),
+      saat: String(r[2]).padStart(2, "0") + ":00",
+      durum: r[0] === 0 ? "planlandi" : "tamamlandi",
+      olusturma: todayKey()
     });
   });
-  db.dersler.push({
-    id: uid(), ogrenciId: ogn("Ayşe Demir"), ogrenciAd: "Ayşe Demir", dersId: "mat", konu: "Sayılar",
-    ogretmenId: ogr("Soner Açıkgöz"), ogretmenAd: "Soner Açıkgöz", tarih: addDaysKey(mon, 1),
-    saat: "16:00", durum: "planlandi", olusturma: todayKey()
-  });
-  db.dersler.push({
-    id: uid(), ogrenciId: ogn("Ecrin Şahin"), ogrenciAd: "Ecrin Şahin", dersId: "tur", konu: "Paragraf",
-    ogretmenId: ogr("mert hoca"), ogretmenAd: "mert hoca", tarih: addDaysKey(mon, 2),
-    saat: "14:00", durum: "tamamlandi", olusturma: todayKey()
-  });
-  db.istekler.push({ id: uid(), ogrenciId: ogn("Zeynep Kaya"), ogrenciAd: "Zeynep Kaya", dersId: "mat", konu: "Türev", durum: "bekliyor", olusturma: todayKey() });
-  db.istekler.push({ id: uid(), ogrenciId: ogn("Yusuf Can"), ogrenciAd: "Yusuf Can", dersId: "tur", konu: "Paragraf", durum: "bekliyor", olusturma: todayKey() });
+
+  db.istekler = [
+    { id: uid(), ogrenciId: ogn("Zeynep Kaya"), ogrenciAd: "Zeynep Kaya", dersId: "mat", konu: "Limit ve Süreklilik", durum: "bekliyor", olusturma: todayKey() },
+    { id: uid(), ogrenciId: ogn("Yusuf Can"), ogrenciAd: "Yusuf Can", dersId: "ing", konu: "Reading Stratejileri", durum: "bekliyor", olusturma: todayKey() },
+    { id: uid(), ogrenciId: ogn("Ayşe Demir"), ogrenciAd: "Ayşe Demir", dersId: "fiz", konu: "İş, Güç ve Enerji", durum: "bekliyor", olusturma: todayKey() }
+  ];
   return db;
 }
 
@@ -1093,7 +1086,7 @@ function ogrenciTab() {
       '<h4 class="text-[12px] font-bold text-slate-500 uppercase tracking-wide mb-3"><i class="fa-solid fa-plus text-blue-500 mr-1"></i>Yeni Öğrenci</h4>' +
       '<div class="space-y-2.5">' +
         '<input id="o-ad" placeholder="Ad Soyad (örn. Ayşe Demir)" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
-        '<input id="o-sinif" list="dl-sinif" placeholder="Sınıf (örn. 12-A veya Mezun-B)" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' + dlSinif +
+        '<input id="o-sinif" list="dl-sinif" placeholder="Sınıf / Grup (örn. MEZUN SAY 1)" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' + dlSinif +
         '<input id="o-tel" placeholder="Telefon (WhatsApp için, isteğe bağlı)" inputmode="tel" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
         '<button onclick="ogrenciEkle()" class="w-full rounded-full bg-blue-500 hover:bg-blue-600 text-white text-[13px] font-bold py-2.5 shadow-sm transition-colors"><i class="fa-solid fa-plus mr-1.5"></i>Öğrenciyi Kaydet</button>' +
       "</div>" +

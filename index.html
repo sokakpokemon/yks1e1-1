@@ -1607,14 +1607,24 @@ function setFiltre(f) {
   else if (f === "hafta") ui.anchor = haftaBaslangiciD(ui.anchor);
   else if (f === "ay") ui.anchor = ui.anchor.slice(0, 7) + "-01";
   else ui.anchor = ui.anchor.slice(0, 4) + "-01-01";
+  if (f !== "hafta" && f !== "gun") ui.gunSecim = null;
   renderOzet(); renderAnaliz(); renderDersler();
 }
 function haftalikOgrtSec(id) { ui.haftalikOgrtId = id || null; renderDersler(); }
+function gunSec(k) {
+  if (!k || ui.gunSecim === k) ui.gunSecim = null;
+  else ui.gunSecim = k;
+  renderDersler();
+}
 function navGit(yon) {
   if (ui.filtre === "tumu") return;
   var a = ui.anchor;
   if (ui.filtre === "gun") ui.anchor = addDaysKey(a, yon);
-  else if (ui.filtre === "hafta") ui.anchor = addDaysKey(a, yon * 7);
+  else if (ui.filtre === "hafta") {
+    ui.anchor = addDaysKey(a, yon * 7);
+    var _wp = pencere();
+    if (ui.gunSecim && (ui.gunSecim < _wp.start || ui.gunSecim > _wp.end)) ui.gunSecim = null;
+  }
   else if (ui.filtre === "ay") {
     var d = fromKey(a.slice(0, 7) + "-01");
     ui.anchor = toKey(new Date(d.getFullYear(), d.getMonth() + yon, 1));
@@ -1625,6 +1635,7 @@ function navGit(yon) {
 }
 function buguneDon() {
   ui.anchor = todayKey();
+  if (ui.gunSecim) { var _w2 = pencere(); if (ui.gunSecim < _w2.start || ui.gunSecim > _w2.end) ui.gunSecim = null; }
   renderOzet(); renderAnaliz(); renderDersler();
 }
 function guncelMi() {
@@ -1721,7 +1732,7 @@ function haftalikOgrtTablo() {
 }
 
 function gunlukTablo() {
-  var gunKey = ui.anchor;
+  var gunKey = ui.gunSecim || ui.anchor;
   var gun = new Date(gunKey + "T12:00:00");
   var gunAdlari = ["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"];
   var gunAdi = gunAdlari[gun.getDay()];
@@ -1740,7 +1751,11 @@ function gunlukTablo() {
   });
 
   var ogrtSirasi = Object.keys(ogrtMap).sort();
-  if (!ogrtSirasi.length) return "";
+  if (!ogrtSirasi.length) {
+    return '<div class="rounded-2xl border border-slate-100 overflow-hidden mb-4 bg-white">' +
+      '<div class="text-center py-3 border-b border-slate-100 bg-slate-50"><h3 class="text-[15px] font-black text-slate-800 uppercase tracking-wide">' + gunAdi + '</h3></div>' +
+      '<div class="py-12 text-center"><div class="text-3xl mb-2">\u{1F5D3}\uFE0F</div><p class="text-[13px] font-semibold text-slate-500">' + gunAdi + ' günü birebir ders yok</p><p class="text-[11.5px] text-slate-400 mt-1">Bu güne ders planlanmamış.</p></div></div>';
+  }
 
   // Saat slotları: 09:00 - 20:00 (12 slot, mola 12:00-13:00 arası)
   var SAAT_SLOTLARI = [
@@ -1887,11 +1902,26 @@ function renderDersler() {
   var say2 = liste.filter(function (l) { return l.durum === "tamamlandi"; }).length;
   var say3 = liste.filter(function (l) { return l.durum === "iptal"; }).length;
 
+  var tekGun = ui.filtre === "gun" || !!ui.gunSecim;
+  var gunChips = "";
+  if (ui.filtre === "hafta" && p.start) {
+    gunChips = '<div class="no-print flex flex-wrap items-center gap-1.5 px-5 pb-3 -mt-1">';
+    for (var cd = 0; cd < 7; cd++) {
+      var ck = addDaysKey(p.start, cd);
+      var cAkt = ui.gunSecim === ck;
+      var cBug = ck === todayKey();
+      var cLbl = GUN_KISA[cd] + " " + String(fromKey(ck).getDate());
+      gunChips += '<button onclick="gunSec(\'' + ck + '\')" title="' + fmtTR(ck) + '" class="rounded-full px-3 py-1.5 text-[11px] font-bold border transition-all ' + (cAkt ? "bg-teal-500 border-teal-500 text-white shadow-sm" : cBug ? "border-teal-300 text-teal-600 hover:bg-teal-50 bg-white" : "border-slate-200 text-slate-500 hover:bg-slate-100 bg-white") + '">' + cLbl + '</button>';
+    }
+    gunChips += '<button onclick="gunSec(\'\')" title="Haftalık listeye dön" class="rounded-full px-3 py-1.5 text-[11px] font-bold border border-slate-100 text-slate-400 hover:text-teal-600 hover:border-teal-200 transition-all bg-white ' + (ui.gunSecim ? "" : "opacity-70") + '"><i class="fa-solid fa-list-ul mr-1"></i>Hafta</button>';
+    gunChips += '</div>';
+  }
+
   $("derslerBolum").innerHTML =
     '<div class="kart overflow-hidden">' +
       '<div class="no-print flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b border-slate-100">' +
         '<div class="flex items-center gap-2 flex-wrap">' + oklar + "</div>" +
-        (ogrSecici ? '<div class="flex items-center gap-2 mt-2 flex-wrap">' + ogrSecici + '</div>' : '') +
+        (ogrSecici && !tekGun ? '<div class="flex items-center gap-2 mt-2 flex-wrap">' + ogrSecici + '</div>' : '') +
         '<div class="flex items-center gap-2 flex-wrap">' + aksiyon + "</div>" +
       "</div>" +
       '<div id="yazdir" class="bg-white">' +
@@ -1902,8 +1932,10 @@ function renderDersler() {
           '<div class="text-[11px] text-slate-400">' + aralikYazi + " · Yazdırma: " + fmtTR(todayKey()) + " " + ok + "</div></div>" +
         "</div>" +
         '<div class="print-goster px-6 py-3"><div class="border-b-2 border-slate-200"></div></div>' +
-        (ui.filtre === "gun" ? gunlukTablo() : "") +
-      (ui.haftalikOgrtId ? haftalikOgrtTablo() : "") +
+        (gunChips ? gunChips : "") +
+        (tekGun ? gunlukTablo() : "") +
+        (ui.haftalikOgrtId && !tekGun ? haftalikOgrtTablo() : "") +
+        (tekGun ? "" : 
       '<div class="overflow-x-auto">' +
           '<table class="w-full min-w-[980px] text-left border-collapse">' +
             '<thead><tr class="bg-slate-50/80 border-b border-slate-100">' +
@@ -1925,7 +1957,7 @@ function renderDersler() {
           '<span class="rounded-full bg-sky-100 text-sky-700 px-2 py-0.5">' + say1 + " planlandı</span>" +
           '<span class="rounded-full bg-emerald-100 text-emerald-700 px-2 py-0.5">' + say2 + " tamamlandı</span>" +
           (say3 ? '<span class="rounded-full bg-rose-100 text-rose-500 px-2 py-0.5">' + say3 + " iptal</span>" : "") +
-        "</div>" +
+        "</div>") +
       "</div>" +
     "</div>";
 }

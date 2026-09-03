@@ -394,7 +394,7 @@ var AYLAR = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağusto
 var GUNLER = ["Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi","Pazar"];
 var GUN_KISA = ["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"];
 var SAATLER = [];
-for (var hs = 9; hs <= 20; hs++) SAATLER.push(hs);
+for (var hs = 9; hs <= 19; hs++) SAATLER.push(hs);
 var DERSLER = [
   { id:"mat", ad:"MATEMATİK", seg:"#2dd4bf", bg:"bg-teal-100",  tx:"text-teal-800" },
   { id:"fiz", ad:"FİZİK", seg:"#fbbf24", bg:"bg-amber-100",  tx:"text-amber-800" },
@@ -461,6 +461,14 @@ function normalize(d) {
   d.istekler = Array.isArray(d.istekler) ? d.istekler : [];
   d.dersler = Array.isArray(d.dersler) ? d.dersler : [];
   d.sinifProg = d.sinifProg && typeof d.sinifProg === "object" ? d.sinifProg : {};
+  if (Array.isArray(d.ogretmenler)) d.ogretmenler.forEach(function (t) {
+    if (!t.avail) t.avail = { sinif: {}, musait: [] };
+    if (Array.isArray(t.avail.sinif)) {
+      var o = {}; t.avail.sinif.forEach(function (k) { o[k] = "Sınıf Dersi"; }); t.avail.sinif = o;
+    }
+    if (!t.avail.sinif || typeof t.avail.sinif !== "object") t.avail.sinif = {};
+    if (!Array.isArray(t.avail.musait)) t.avail.musait = [];
+  });
   return d;
 }
 function saveDB() {
@@ -917,7 +925,7 @@ function gridTablo(onclickOnce, avail, tip) {
     for (var g2 = 0; g2 < 7; g2++) {
       var key = g2 + "-" + saat;
       var durum = tip === "ogretmen"
-        ? (avail.sinif.indexOf(key) >= 0 ? "sinif" : avail.musait.indexOf(key) >= 0 ? "musait" : "")
+        ? ((avail.sinif && key in avail.sinif) ? "sinif" : avail.musait.indexOf(key) >= 0 ? "musait" : "")
         : (avail.indexOf(key) >= 0 ? "var" : "");
       var cls = "hucreBtn border ";
       var baslik = GUN_KISA[g2] + " " + saatYazi;
@@ -926,7 +934,7 @@ function gridTablo(onclickOnce, avail, tip) {
       else if (durum === "var") { cls += "bg-blue-200 border-blue-300 hover:bg-blue-300"; baslik += " · Toplu ders"; }
       else { cls += "bg-white border-slate-200 hover:border-teal-300 hover:bg-teal-50"; baslik += " · Boş"; }
       h += '<td class="p-0.5"><button class="' + cls + '" title="' + baslik + '" onclick="' + onclickOnce + "," + g2 + "," + saat + ')">' +
-        (durum === "sinif" ? '<span class="text-[8.5px] font-extrabold text-amber-700/70">SD</span>' :
+        (durum === "sinif" ? '<span class="text-[7.5px] font-extrabold text-amber-700/80 leading-tight whitespace-nowrap">' + esc((avail.sinif[key] || "SD").substring(0, 14)) + '</span>' :
          durum === "musait" ? '<span class="text-[8.5px] font-extrabold text-rose-500/70">MD</span>' :
          durum === "var" ? '<span class="text-[8.5px] font-extrabold text-blue-600/60">DV</span>' : "") +
         "</button></td>";
@@ -969,10 +977,24 @@ function secOgr(id) { ui.ogrId = id; renderYonetim(); }
 function togOgr(tid, di, saat) {
   var t = DB.ogretmenler.find(function (x) { return x.id === tid; });
   if (!t) return;
-  var key = di + "-" + saat;
-  if (t.avail.sinif.indexOf(key) >= 0) { t.avail.sinif = t.avail.sinif.filter(function (k) { return k !== key; }); t.avail.musait.push(key); }
-  else if (t.avail.musait.indexOf(key) >= 0) { t.avail.musait = t.avail.musait.filter(function (k) { return k !== key; }); }
-  else t.avail.sinif.push(key);
+  var k = di + "-" + saat;
+  if (t.avail.musait.indexOf(k) >= 0) {
+    t.avail.musait = t.avail.musait.filter(function (x) { return x !== k; });
+  } else if (t.avail.sinif[k]) {
+    var mevcut = t.avail.sinif[k];
+    var val = prompt("Sınıf / Grup adı düzenleyin (boş bırakırsanız Musait Değil olur):", mevcut);
+    if (val === null) return;
+    val = val.trim();
+    if (val === "") { delete t.avail.sinif[k]; t.avail.musait.push(k); }
+    else t.avail.sinif[k] = val;
+  } else {
+    var snf = tumSiniflar();
+    var ornek = snf.slice(0, 5).join(", ");
+    var val2 = prompt("Sınıf / Grup adı yazın\n\nMevcut sınıflar: " + ornek + (snf.length > 5 ? " ..." : ""), snf[0] || "");
+    if (val2 === null) return;
+    val2 = val2.trim();
+    if (val2 !== "") t.avail.sinif[k] = val2;
+  }
   yenile();
 }
 // Öğretmen düzenleme
@@ -1504,7 +1526,7 @@ function duzeltmeBul(adet, yokSay) {
   var uyari = [];
   var ogr = DB.ogretmenler.find(function (t) { return t.id === adet.ogretmenId; });
   if (ogr) {
-    var tip = (ogr.avail.sinif.indexOf(key) >= 0) ? "sinif" : (ogr.avail.musait.indexOf(key) >= 0) ? "musait" : "";
+    var tip = (ogr.avail.sinif && key in ogr.avail.sinif) ? "sinif" : (ogr.avail.musait.indexOf(key) >= 0) ? "musait" : "";
     if (tip === "sinif") uyari.push(ogr.ad + " öğretmeninin o saatte <b>Sınıf Dersi</b> var (" + GUN_KISA[di] + " " + String(saatNum).padStart(2, "0") + ":00).");
     else if (tip === "musait") uyari.push(ogr.ad + " öğretmeni o saat için <b>Müsait Değil</b> olarak işaretli.");
     var cakisan = DB.dersler.find(function (l) {
@@ -1536,7 +1558,7 @@ function planla() {
     var dk = saat.split(":")[1];
     var sNum = parseInt(saat.split(":")[0], 10);
     if (dk !== "00") hatalar.push("Dersler saat başı başlar — dakika “00” olmalı (örn. 16:00).");
-    if (sNum < 9 || sNum > 20) hatalar.push("Ders saatleri 09:00 – 20:00 arasındadır.");
+    if (sNum < 9 || sNum > 19) hatalar.push("Ders saatleri 09:00 – 19:00 arasındadır.");
   }
   if (hatalar.length) { hataKart(hatalar); return; }
   if (tarih < todayKey()) {
@@ -1666,7 +1688,7 @@ function haftalikOgrtTablo() {
 
   // Saat başlıkları
   var saatBaslik = "";
-  for (var h = 9; h <= 20; h++) {
+  for (var h = 9; h <= 19; h++) {
     saatBaslik += "<th class='px-2 py-2 text-center border-l border-slate-100' style='min-width:75px'>" +
       '<div class="text-[11px] font-extrabold text-slate-600">' + String(h).padStart(2,"0") + ":00</div>" +
       '<div class="text-[9px] text-slate-400">' + String(h).padStart(2,"0") + ":50</div></th>";
@@ -1683,10 +1705,10 @@ function haftalikOgrtTablo() {
     satirlar += '<tr class="border-b border-slate-100 ' + bg + '">';
     satirlar += '<td class="px-3 py-2 border-r border-slate-100 text-[11.5px] font-bold text-slate-600 whitespace-nowrap" style="min-width:100px">' + gunAd + '</td>';
 
-    for (var h = 9; h <= 20; h++) {
+    for (var h = 9; h <= 19; h++) {
       var key = g + "-" + h;
       var ders = dersMap[key];
-      var sinifVar = avail.sinif.indexOf(key) >= 0;
+      var sinifVar = avail.sinif && key in avail.sinif;
       var musaitDegil = avail.musait.indexOf(key) >= 0;
 
       if (isPazar || musaitDegil) {

@@ -1920,7 +1920,8 @@ function waAc() {
         '<button onclick="waGonder(\'' + s.id + '\')" class="rounded-full bg-green-500 hover:bg-green-600 text-white text-[11.5px] font-bold px-3.5 py-2 shadow-sm transition-colors"><i class="fa-brands fa-whatsapp mr-1"></i>Gönder</button>' +
         '<button onclick="waKopyalaMesaj(\'' + s.id + '\')" title="Mesaj metnini kopyala" class="w-8 h-8 rounded-full border border-slate-200 text-slate-400 hover:text-teal-600 hover:border-teal-300 transition-colors"><i class="fa-regular fa-copy text-[12px]"></i></button></div>';
     }).join("");
-    if (!tel) icerik += '<p class="text-[10.5px] text-slate-300 mt-3 text-center">Öğrenciye telefon kaydedilmedi — WhatsApp’ta göndermek istediğiniz kişiyi seçersiniz. Telefon eklemek için Öğrenciler sekmesini kullanın.</p>';
+    var telVarMi = dizi.some(function(x){ var o = DB.ogrenciler.find(function(y){return y.id===x.id;}); return o && o.tel; });
+    if (!telVarMi) icerik += '<p class="text-[10.5px] text-slate-300 mt-3 text-center">Öğrenciye telefon kaydedilmedi — WhatsApp’ta göndermek istediğiniz kişiyi seçersiniz. Telefon eklemek için Öğrenciler sekmesini kullanın.</p>';
   }
   $("waIcerik").innerHTML = icerik;
   $("waModal").classList.remove("hidden");

@@ -483,23 +483,23 @@ function seedDB() {
   var mon = addDaysKey(todayKey(), -dowIdx(todayKey()));
 
   db.ogretmenler = [
-    { id: uid(), ad: "SONER AÇIKGÖZ", brans: "mat", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "MEHMET ŞAŞAR", brans: "mat", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "TAHSİN ASLAN", brans: "mat", avail: { sinif: ["0-9","2-9","3-9","4-9"], musait: ["5-9","0-10"] } },
-    { id: uid(), ad: "MİNE GÜRKAN", brans: "mat", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "MERVE GEREK", brans: "mat", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "SALİM URTİMUR", brans: "mat", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "MUSTAFA GÜRKAN", brans: "fiz", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["5-9","0-10"] } },
-    { id: uid(), ad: "RAVİDE DERYA", brans: "fiz", avail: { sinif: ["1-9","2-9","3-9","4-9"], musait: ["5-9","0-10"] } },
-    { id: uid(), ad: "BELGİN ÇOLAK", brans: "kim", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "KARDELEN ASLAN", brans: "kim", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "SELİNA KUTLU", brans: "kim", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "ŞAHİN DOĞANAY", brans: "biy", avail: { sinif: ["0-9","1-9","3-9","4-9"], musait: ["5-9","0-10"] } },
-    { id: uid(), ad: "EREN BİLGİLİ", brans: "tur", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "FATMA KURT", brans: "tur", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "FİKRİYE KIYAR", brans: "cgr", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "NİHAT KANARIG", brans: "tar", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "MERT ASİL", brans: "ing", avail: { sinif: ["0-9","1-9","2-9","3-9"], musait: ["4-9","5-9"] } }
+    { id: uid(), ad: "SONER AÇIKGÖZ", brans: "mat", avail: { sinif: {"0-9":"MEZUN SAY 1","1-9":"MEZUN SAY 2","2-9":"MEZUN SAY 3","3-9":"MEZUN EA 1"}, musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "MEHMET ŞAŞAR", brans: "mat", avail: { sinif: {"0-9":"MEZUN EA 1","1-9":"MEZUN EA 2","2-9":"12 SAY 1","3-9":"12 SAY 2"}, musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "TAHSİN ASLAN", brans: "mat", avail: { sinif: {"0-9":"12 SAY 2","2-9":"12 SAY CAL","3-9":"12 EA 1","4-9":"12 DİL"}, musait: ["5-9","0-10"] } },
+    { id: uid(), ad: "MİNE GÜRKAN", brans: "mat", avail: { sinif: {"0-9":"12 DİL","1-9":"11 SAY 1","2-9":"11 SAY 2","3-9":"11 SAY 3"}, musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "MERVE GEREK", brans: "mat", avail: { sinif: {"0-9":"11 SAY 3","1-9":"11 SAY CAL","2-9":"11 SAYISAL FEN","3-9":"11 EA 1"}, musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "SALİM URTİMUR", brans: "mat", avail: { sinif: {"0-9":"11 EA 1","1-9":"10.SINIF","2-9":"9.SINIF","3-9":"MEZUN SAY 1"}, musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "MUSTAFA GÜRKAN", brans: "fiz", avail: { sinif: {"0-9":"MEZUN SAY 1","1-9":"MEZUN SAY 2","2-9":"MEZUN SAY 3","3-9":"MEZUN EA 1"}, musait: ["5-9","0-10"] } },
+    { id: uid(), ad: "RAVİDE DERYA", brans: "fiz", avail: { sinif: {"1-9":"MEZUN EA 1","2-9":"MEZUN EA 2","3-9":"12 SAY 1","4-9":"12 SAY 2"}, musait: ["5-9","0-10"] } },
+    { id: uid(), ad: "BELGİN ÇOLAK", brans: "kim", avail: { sinif: {"0-9":"12 SAY 2","1-9":"12 SAY CAL","2-9":"12 EA 1","3-9":"12 DİL"}, musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "KARDELEN ASLAN", brans: "kim", avail: { sinif: {"0-9":"12 DİL","1-9":"11 SAY 1","2-9":"11 SAY 2","3-9":"11 SAY 3"}, musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "SELİNA KUTLU", brans: "kim", avail: { sinif: {"0-9":"11 SAY 3","1-9":"11 SAY CAL","2-9":"11 SAYISAL FEN","3-9":"11 EA 1"}, musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "ŞAHİN DOĞANAY", brans: "biy", avail: { sinif: {"0-9":"11 EA 1","1-9":"10.SINIF","3-9":"9.SINIF","4-9":"MEZUN SAY 1"}, musait: ["5-9","0-10"] } },
+    { id: uid(), ad: "EREN BİLGİLİ", brans: "tur", avail: { sinif: {"0-9":"MEZUN SAY 1","1-9":"MEZUN SAY 2","2-9":"MEZUN SAY 3","3-9":"MEZUN EA 1"}, musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "FATMA KURT", brans: "tur", avail: { sinif: {"0-9":"MEZUN EA 1","1-9":"MEZUN EA 2","2-9":"12 SAY 1","3-9":"12 SAY 2"}, musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "FİKRİYE KIYAR", brans: "cgr", avail: { sinif: {"0-9":"12 SAY 2","1-9":"12 SAY CAL","2-9":"12 EA 1","3-9":"12 DİL"}, musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "NİHAT KANARIG", brans: "tar", avail: { sinif: {"0-9":"12 DİL","1-9":"11 SAY 1","2-9":"11 SAY 2","3-9":"11 SAY 3"}, musait: ["4-9","5-9"] } },
+    { id: uid(), ad: "MERT ASİL", brans: "ing", avail: { sinif: {"0-9":"11 SAY 3","1-9":"11 SAY CAL","2-9":"11 SAYISAL FEN","3-9":"11 EA 1"}, musait: ["4-9","5-9"] } }
   ];
   db.ogrenciler = [
     { id: uid(), ad: "Ayşe Demir", sinif: "12 SAY 1", tel: "" },
@@ -1692,8 +1692,8 @@ function haftalikOgrtTablo() {
       if (isPazar || musaitDegil) {
         satirlar += '<td class="px-1.5 py-1.5 text-center border-l border-slate-100 bg-slate-100"><span class="text-[9px] text-slate-400">' + (isPazar ? "Pazar" : "—") + '</span></td>';
       } else if (sinifVar) {
-        satirlar += '<td class="px-1.5 py-1.5 text-center border-l border-slate-100"><div class="rounded-lg bg-rose-100 border border-rose-200 px-1 py-1.5">' +
-          '<div class="text-[10px] font-bold text-rose-600">Sınıf Dersi</div></div></td>';
+        satirlar += '<td class=\"px-1.5 py-1.5 text-center border-l border-slate-100\"><div class=\"rounded-lg bg-rose-100 border border-rose-200 px-1 py-1.5\">' +
+          '<div class=\"text-[8px] font-bold text-rose-700 leading-tight truncate whitespace-nowrap\">' + esc((avail.sinif[key] || 'Sınıf').substring(0, 14)) + '</div></div></td>';
       } else if (ders) {
         var ogrenci = DB.ogrenciler.find(function(x){ return x.id === ders.ogrenciId; });
         var ogrenciAd = ders.ogrenciAd || (ogrenci ? ogrenci.ad : "");

@@ -434,6 +434,107 @@ export const deleteExtraLesson = mutation({
 });
 
 /* ------------------------------------------------------------------ */
+/* Sınıf ek dersleri (esnek — haftalık/günlük planlanır)                */
+/* ------------------------------------------------------------------ */
+
+/** All flexible class extra lessons, pooled or scheduled. */
+export const listClassExtraLessons = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) return [];
+    return ctx.db
+      .query("classExtraLessons")
+      .withIndex("by_user_date", (q) => q.eq("userId", userId))
+      .collect();
+  },
+});
+
+/**
+ * Creates a flexible class extra lesson request. When scheduledDate is empty
+ * the request stays in the pool; otherwise it is already placed.
+ */
+export const createClassExtraLesson = mutation({
+  args: {
+    className: v.string(),
+    subject: v.string(),
+    teacherName: v.string(),
+    topic: v.string(),
+    scheduledDate: v.string(), // "" = pool
+    scheduledTime: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) throw new Error("Giriş yapılmamış.");
+
+    const className = args.className.trim();
+    const subject = args.subject.trim();
+    const teacherName = args.teacherName.trim();
+    const topic = args.topic.trim();
+    if (!className) throw new Error("Sınıf seçilmedi.");
+    if (!subject) throw new Error("Ders seçilmedi.");
+    if (!teacherName) throw new Error("Öğretmen seçilmedi.");
+    if (!topic) throw new Error("Anlatılacak konu boş olamaz.");
+
+    // Register the teacher if they are new to this course.
+    const teachers = await ctx.db
+      .query("teachers")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    const known = teachers.some(
+      (t) =>
+        t.name.trim().toLocaleLowerCase("tr") === teacherName.toLocaleLowerCase("tr"),
+    );
+    if (!known) {
+      await ctx.db.insert("teachers", { userId, name: teacherName });
+    }
+
+    const id = await ctx.db.insert("classExtraLessons", {
+      userId,
+      className,
+      subject,
+      teacherName,
+      topic,
+      date: args.scheduledDate,
+      time: args.scheduledTime,
+    });
+    return { id };
+  },
+});
+
+/** Moves (or removes from) the calendar a flexible class extra lesson. */
+export const moveClassExtraLesson = mutation({
+  args: {
+    id: v.id("classExtraLessons"),
+    date: v.string(), // "" returns the lesson to the pool
+    time: v.string(),
+  },
+  handler: async (ctx, { id, date, time }) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) throw new Error("Giriş yapılmamış.");
+    const row = await ctx.db.get(id);
+    if (row === null || row.userId !== userId) {
+      throw new Error("Sınıf ek dersi bulunamadı.");
+    }
+    if (date !== "" && time === "") throw new Error("Saat geçersiz.");
+    await ctx.db.patch(id, { date, time });
+  },
+});
+
+export const deleteClassExtraLesson = mutation({
+  args: { id: v.id("classExtraLessons") },
+  handler: async (ctx, { id }) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) throw new Error("Giriş yapılmamış.");
+    const row = await ctx.db.get(id);
+    if (row === null || row.userId !== userId) {
+      throw new Error("Sınıf ek dersi bulunamadı.");
+    }
+    await ctx.db.delete(id);
+  },
+});
+
+/* ------------------------------------------------------------------ */
 /* Seeding                                                             */
 /* ------------------------------------------------------------------ */
 

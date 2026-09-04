@@ -91,6 +91,19 @@ const schema = defineSchema(
       date: v.string(),
       time: v.string(),
     }).index("by_user_date", ["userId", "date"]),
+
+    // Sınıflara yazılan esnek ek dersler (haftalık/günlük değişebilir).
+    // Havuzda bekleyen taleplerde date="" ve time="" olur; takvime
+    // sürüklendiğinde gün/saat atanır.
+    classExtraLessons: defineTable({
+      userId: v.id("users"),
+      className: v.string(),
+      subject: v.string(),
+      teacherName: v.string(),
+      topic: v.string(),
+      date: v.string(), // "YYYY-MM-DD" veya havuzda ""
+      time: v.string(), // "HH:mm" veya havuzda ""
+    }).index("by_user_date", ["userId", "date"]),
   },
   {
     schemaValidation: false,

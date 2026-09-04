@@ -32,17 +32,19 @@ import {
   CalendarDays,
   Filter,
   GraduationCap,
+  Layers,
   Lock,
   LockOpen,
   Plus,
   Users,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 type LessonRow = Doc<"lessons">;
 type ClassLessonRow = Doc<"classLessons">;
 type ExtraLessonRow = Doc<"extraLessons">;
+type ClassExtraRow = Doc<"classExtraLessons">;
 type ClassRow = Doc<"classes">;
 type TeacherRow = Doc<"teachers">;
 
@@ -149,6 +151,8 @@ function EditLockToggle({
 /* Badge styles: existing fixed color preserved for class lessons. */
 const BADGE_CLASS = "bg-[#14B8A6] text-white"; // sınıf dersi (mevcut sabit renk)
 const BADGE_REQUEST = "bg-sky-50 border border-sky-300 text-sky-900"; // havuzdan yerleşen istek
+const BADGE_CLASS_EXTRA =
+  "bg-orange-50 border border-orange-300 text-orange-900"; // esnek sınıf ek dersi (pastel turuncu)
 
 function ClassBadge({
   subject,
@@ -204,13 +208,35 @@ function ExtraBadge({ title, className }: { title: string; className: string }) 
   );
 }
 
+/** Pastel turuncu kart — takvime yerleşen esnek sınıf ek dersi. */
+function ClassExtraBadge({ row }: { row: ClassExtraRow }) {
+  return (
+    <div
+      className={cn(
+        "w-full rounded-md px-1.5 py-1 text-[10.5px] leading-tight font-medium",
+        BADGE_CLASS_EXTRA,
+      )}
+    >
+      <div className="flex items-center justify-between gap-1">
+        <span className="truncate font-semibold">{row.className}</span>
+        <span className="shrink-0 tabular-nums opacity-70">{row.time}</span>
+      </div>
+      <div className="truncate">
+        {row.subject} · {row.teacherName}
+      </div>
+      <div className="truncate text-[10px] opacity-70">{row.topic}</div>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /* Drag payload                                                        */
 /* ------------------------------------------------------------------ */
 
 type DragPayload =
   | { kind: "pool"; requestId: string }
-  | { kind: "extra"; extraId: string };
+  | { kind: "extra"; extraId: string }
+  | { kind: "classExtra"; extraId: string };
 
 const DRAG_MIME = "application/x-yks-schedule";
 
@@ -226,7 +252,13 @@ function readDragData(e: React.DragEvent): DragPayload | null {
       e.dataTransfer.getData(DRAG_MIME) || e.dataTransfer.getData("text/plain");
     if (!raw) return null;
     const parsed = JSON.parse(raw) as DragPayload;
-    if (parsed.kind === "pool" || parsed.kind === "extra") return parsed;
+    if (
+      parsed.kind === "pool" ||
+      parsed.kind === "extra" ||
+      parsed.kind === "classExtra"
+    ) {
+      return parsed;
+    }
     return null;
   } catch {
     return null;
@@ -241,6 +273,7 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
   const lessons = useQuery(api.lessons.listLessons);
   const classLessons = useQuery(api.lessons.listClassLessons);
   const extraLessons = useQuery(api.lessons.listExtraLessons);
+  const classExtras = useQuery(api.lessons.listClassExtraLessons);
   const classes = useQuery(api.lessons.listClasses);
   const teachers = useQuery(api.teachers.listTeachers);
 
@@ -250,6 +283,9 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
   const deleteClassLesson = useMutation(api.lessons.deleteClassLesson);
   const upsertExtraLesson = useMutation(api.lessons.upsertExtraLesson);
   const deleteExtraLesson = useMutation(api.lessons.deleteExtraLesson);
+  const createClassExtraLesson = useMutation(api.lessons.createClassExtraLesson);
+  const moveClassExtraLesson = useMutation(api.lessons.moveClassExtraLesson);
+  const deleteClassExtraLesson = useMutation(api.lessons.deleteClassExtraLesson);
 
   const [unlockClass, setUnlockClass] = useState(false);
   const [unlockTeacher, setUnlockTeacher] = useState(false);
@@ -278,12 +314,32 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
   );
   const [savingExtra, setSavingExtra] = useState(false);
 
+  /* --- Sınıf ek ders talebi formu --- */
+  const [ceClass, setCeClass] = useState("");
+  const [ceSubject, setCeSubject] = useState<string>("MATEMATİK");
+  const [ceTeacher, setCeTeacher] = useState("");
+  const [ceTopic, setCeTopic] = useState("");
+  const [savingCe, setSavingCe] = useState(false);
+
   const ready =
     lessons !== undefined &&
     classLessons !== undefined &&
     extraLessons !== undefined &&
+    classExtras !== undefined &&
     classes !== undefined &&
     teachers !== undefined;
+
+  /* --- LocalStorage yansıması: sinifEkDersleri (yenilemede kaybolmaz) --- */
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "sinifEkDersleri",
+        JSON.stringify(classExtras ?? []),
+      );
+    } catch {
+      /* kota dolu vb. — sessiz geç */
+    }
+  }, [classExtras]);
 
   const classList = classes ?? [];
   const teacherList = teachers ?? [];
@@ -357,6 +413,68 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
     }
     return map;
   }, [classLessons, weekStart]);
+
+  /* ---------------- sınıf ek dersleri havuzu + yerleşim haritası ---------------- */
+  const classExtraPool = useMemo(
+    () =>
+      (classExtras ?? [])
+        .filter((c) => !c.date)
+        .sort((a, b) =>
+          a.className === b.className
+            ? a.subject.localeCompare(b.subject, "tr")
+            : a.className.localeCompare(b.className, "tr"),
+        ),
+    [classExtras],
+  );
+
+  const classExtrasByCell = useMemo(() => {
+    const map = new Map<string, ClassExtraRow>();
+    for (const c of classExtras ?? []) {
+      if (!c.date) continue;
+      const day = dayOffsetOf(c.date, weekStart);
+      if (day === null) continue;
+      const slot = slotIndexForTime(c.time);
+      if (slot === null) continue;
+      map.set(`${c.className}|${day}|${slot}`, c);
+    }
+    return map;
+  }, [classExtras, weekStart]);
+
+  /* Bir öğretmen o gün/o saatte gerçekten meşgul mü? (birebir + sınıf dersi + ek ders + sınıf ek dersi) */
+  const teacherBusyAt = useMemo(() => {
+    const set = new Set<string>();
+    for (const l of lessons ?? []) {
+      if (l.status === "cancelled") continue;
+      set.add(`${l.teacherName}|${l.date}|${l.time}`);
+    }
+    for (const c of classLessons ?? []) {
+      set.add(`${c.teacherName}|${c.date}|${c.time}`);
+    }
+    for (const e of extraLessons ?? []) {
+      set.add(`${e.teacherName}|${e.date}|${e.time}`);
+    }
+    for (const ce of classExtras ?? []) {
+      if (!ce.date) continue;
+      set.add(`${ce.teacherName}|${ce.date}|${ce.time}`);
+    }
+    return set;
+  }, [lessons, classLessons, extraLessons, classExtras]);
+
+  const requestClassExtraDrop = (
+    request: LessonRow,
+    className: string,
+    day: number,
+    slot: number,
+  ): string | null => {
+    if (!requestMatchesBranch(request.subject, request.teacherName)) {
+      return "Branş uyuşmuyor";
+    }
+    if (request.teacherName && teacherBusyAt.has(`${request.teacherName}|${ymdOfDay(weekStart, day)}|${slotStart(slot)}`)) {
+      return "Öğretmen bu saatte dolu";
+    }
+    void className;
+    return null;
+  };
 
   /* ---------------- drop handlers ---------------- */
   const handleDropTeacher = async (
@@ -437,37 +555,145 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
     if (!unlockClass || !className || className === "all") return;
     e.preventDefault();
     const payload = readDragData(e);
-    if (!payload || payload.kind !== "pool") return;
-    const request = (lessons ?? []).find((l) => l._id === payload.requestId);
-    if (!request) return;
+    if (!payload) return;
     const ymd = ymdOfDay(weekStart, day);
-    const start = "08:50"; // class grid shows all lessons of the day in one cell
-    const slot = slotIndexForTime(start);
-    if (slot === null) return;
 
-    const cell = cellMap.get(`${className}|${day}|${slot}`);
-    if (cell && cell.length > 0) {
+    /* 1) Havuzdan gelen birebir istek → sabit sınıf dersine dönüşür. */
+    if (payload.kind === "pool") {
+      const request = (lessons ?? []).find((l) => l._id === payload.requestId);
+      if (!request) return;
+      const start = "08:50"; // class grid shows all lessons of the day in one cell
+      const slot = slotIndexForTime(start);
+      if (slot === null) return;
+      const cell = cellMap.get(`${className}|${day}|${slot}`);
+      if (cell && cell.length > 0) {
+        toast.error("Bu hücre dolu", {
+          description: `${className} sınıfının bu saatinde zaten ders var.`,
+        });
+        return;
+      }
+      if (!requestMatchesBranch(request.subject, request.teacherName)) {
+        toast.error("Branş uyuşmuyor", {
+          description: `${request.subject} dersi ${request.teacherName} öğretmenine atanamaz.`,
+        });
+        return;
+      }
+      try {
+        await upsertClassLesson({
+          className,
+          subject: request.subject,
+          teacherName: request.teacherName,
+          date: ymd,
+          time: start,
+        });
+        await deleteLesson({ id: request._id });
+        toast.success("Sınıf dersi planlandı", {
+          description: `${className} · ${request.subject} · ${DAY_NAMES[day]} ${start} · ${request.teacherName}`,
+        });
+      } catch (error) {
+        toast.error("Sınıf dersi oluşturulamadı", {
+          description: error instanceof Error ? error.message : undefined,
+        });
+      }
+      return;
+    }
+
+    /* 2) Sınıf ek dersi havuzundan gelen esnek talep → ilk boş slota yerleşir. */
+    if (payload.kind === "classExtra") {
+      const ce = (classExtras ?? []).find((c) => c._id === payload.extraId);
+      if (!ce) return;
+      if (!requestMatchesBranch(ce.subject, ce.teacherName)) {
+        toast.error("Branş uyuşmuyor", {
+          description: `${ce.subject} ek dersi yalnızca branş öğretmenine planlanabilir; ${ce.teacherName} bu branşta değil.`,
+        });
+        return;
+      }
+      if (ce.className !== className) {
+        toast.error("Sınıf uyuşmuyor", {
+          description: `${ce.className} talebi ${className} sınıfına bırakılamaz.`,
+        });
+        return;
+      }
+      // Talebin sınıfı için ilk boş (30 dk slot) hücreyi bul.
+      for (const s of TIME_SLOTS) {
+        const cellFixed = cellMap.get(`${className}|${day}|${s.index}`);
+        const cellExtra = classExtrasByCell.get(`${className}|${day}|${s.index}`);
+        if ((cellFixed && cellFixed.length > 0) || cellExtra) continue;
+        const start = slotStart(s.index);
+        if (!start) continue;
+        if (
+          ce.teacherName &&
+          teacherBusyAt.has(`${ce.teacherName}|${ymd}|${start}`)
+        ) {
+          continue; // öğretmen o slotta dolu; sonraki slotu dene
+        }
+        try {
+          await moveClassExtraLesson({ id: ce._id, date: ymd, time: start });
+          toast.success("Sınıf ek dersi planlandı", {
+            description: `${className} · ${ce.subject} · ${DAY_NAMES[day]} ${start} · ${ce.teacherName}`,
+          });
+        } catch (error) {
+          toast.error("Sınıf ek dersi yerleştirilemedi", {
+            description: error instanceof Error ? error.message : undefined,
+          });
+        }
+        return;
+      }
+      toast.error("Uygun boş saat yok", {
+        description: `${className} sınıfının ${DAY_NAMES[day]} günü müsait bir saati bulunamadı.`,
+      });
+    }
+  };
+
+  /** Takvimde yerleşik sınıf ek dersini başka gün/slota taşır. */
+  const handleMoveClassExtra = async (
+    ce: ClassExtraRow,
+    day: number,
+    slot: number,
+  ) => {
+    const ymd = ymdOfDay(weekStart, day);
+    const start = slotStart(slot);
+    if (!start) return;
+    if (ce.date === ymd && ce.time === start) return;
+    if (!requestMatchesBranch(ce.subject, ce.teacherName)) {
+      toast.error("Branş uyuşmuyor");
+      return;
+    }
+    if (ce.teacherName && teacherBusyAt.has(`${ce.teacherName}|${ymd}|${start}`)) {
+      toast.error("Çakışma var", {
+        description: `${ce.teacherName} öğretmeninin ${DAY_NAMES[day]} ${start} saatinde başka dersi var.`,
+      });
+      return;
+    }
+    const cellFixed = classLessonsByCell.get(`${ce.className}|${day}|${slot}`);
+    const cellExtra = classExtrasByCell.get(`${ce.className}|${day}|${slot}`);
+    if ((cellFixed && cellFixed.length > 0) || cellExtra) {
       toast.error("Bu hücre dolu", {
-        description: `${className} sınıfının bu saatinde zaten ders var.`,
+        description: `${ce.className} sınıfının bu saatinde zaten ders var.`,
       });
       return;
     }
     try {
-      await upsertClassLesson({
-        className,
-        subject: request.subject,
-        teacherName: request.teacherName,
-        date: ymd,
-        time: start,
-      });
-      await deleteLesson({ id: request._id });
-      toast.success("Sınıf dersi planlandı", {
-        description: `${className} · ${request.subject} · ${DAY_NAMES[day]} ${start} · ${request.teacherName}`,
+      await moveClassExtraLesson({ id: ce._id, date: ymd, time: start });
+      toast.success("Ek ders taşındı", {
+        description: `${ce.className} · ${DAY_NAMES[day]} ${start}`,
       });
     } catch (error) {
-      toast.error("Sınıf dersi oluşturulamadı", {
+      toast.error("Ek ders taşınamadı", {
         description: error instanceof Error ? error.message : undefined,
       });
+    }
+  };
+
+  /** Havuza geri alma (yerleşimi kaldır). */
+  const returnClassExtraToPool = async (ce: ClassExtraRow) => {
+    try {
+      await moveClassExtraLesson({ id: ce._id, date: "", time: "" });
+      toast("Ek ders havuza alındı", {
+        description: `${ce.className} · ${ce.subject}`,
+      });
+    } catch {
+      toast.error("Havuza alınamadı");
     }
   };
 
@@ -492,7 +718,7 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
       subject: string;
       topic: string;
       time: string;
-      type: "birebir" | "sinif" | "ek";
+      type: "birebir" | "sinif" | "ek" | "sinifEk";
     }> = [];
     for (const l of lessons ?? []) {
       if (l.date !== ymd || l.status === "cancelled") continue;
@@ -530,12 +756,24 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
         type: "ek",
       });
     }
+    for (const ce of classExtras ?? []) {
+      if (ce.date !== ymd) continue;
+      rows.push({
+        teacher: ce.teacherName,
+        student: ce.className,
+        studentClass: "Ek ders",
+        subject: ce.subject,
+        topic: ce.topic || "—",
+        time: ce.time,
+        type: "sinifEk",
+      });
+    }
     return rows.sort((a, b) =>
       a.time === b.time
         ? a.teacher.localeCompare(b.teacher, "tr")
         : a.time.localeCompare(b.time),
     );
-  }, [lessons, classLessons, extraLessons, weekStart, dailyDay]);
+  }, [lessons, classLessons, extraLessons, classExtras, weekStart, dailyDay]);
 
   if (!ready) {
     return (
@@ -547,6 +785,8 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
 
   return (
     <div className="flex flex-col gap-5">
+      {/* İki havuz yan yana: birebir istek havuzu + sınıf ek ders havuzu */}
+      <div className="grid items-start gap-5 xl:grid-cols-2">
       {/* ==================================================== */}
       {/* Ders İstek Havuzu                                     */}
       {/* ==================================================== */}
@@ -613,6 +853,219 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
           </div>
         )}
       </SectionShell>
+
+      {/* ==================================================== */}
+      {/* Sınıf Ek Ders Havuzu (esnek, haftalık değişebilir)    */}
+      {/* ==================================================== */}
+      <SectionShell
+        title="Sınıf Ek Ders Havuzu"
+        icon={
+          <span className="flex size-7 items-center justify-center rounded-lg bg-orange-500">
+            <Layers className="size-4 text-white" />
+          </span>
+        }
+        badge={`${classExtraPool.length} talep`}
+      >
+        {/* Talep oluşturma formu */}
+        <div className="grid gap-2.5 rounded-xl border border-orange-100 bg-orange-50/40 p-3">
+          <div className="grid gap-2.5 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-[10px] font-semibold tracking-wide text-neutral-500 uppercase">
+                Sınıf / Grup
+              </label>
+              <Select value={ceClass} onValueChange={setCeClass}>
+                <SelectTrigger className="h-8 w-full text-[12px]">
+                  <SelectValue placeholder="Sınıf seç" />
+                </SelectTrigger>
+                <SelectContent>
+                  {classList.map((c: ClassRow) => (
+                    <SelectItem key={c._id} value={c.name}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="mb-1 block text-[10px] font-semibold tracking-wide text-neutral-500 uppercase">
+                Ders / Branş
+              </label>
+              <Select
+                value={ceSubject}
+                onValueChange={(v) => {
+                  setCeSubject(v);
+                  if (ceTeacher && !requestMatchesBranch(v, ceTeacher)) {
+                    setCeTeacher("");
+                  }
+                }}
+              >
+                <SelectTrigger className="h-8 w-full text-[12px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SUBJECTS.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="mb-1 block text-[10px] font-semibold tracking-wide text-neutral-500 uppercase">
+                Öğretmen (branş)
+              </label>
+              <Select value={ceTeacher} onValueChange={setCeTeacher}>
+                <SelectTrigger className="h-8 w-full text-[12px]">
+                  <SelectValue placeholder="Öğretmen seç" />
+                </SelectTrigger>
+                <SelectContent>
+                  {teacherList
+                    .filter((t: TeacherRow) =>
+                      requestMatchesBranch(ceSubject, t.name),
+                    )
+                    .map((t: TeacherRow) => (
+                      <SelectItem key={t._id} value={t.name}>
+                        {t.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="mb-1 block text-[10px] font-semibold tracking-wide text-neutral-500 uppercase">
+                Anlatılacak Konu
+              </label>
+              <input
+                value={ceTopic}
+                onChange={(e) => setCeTopic(e.target.value)}
+                placeholder="örn. Trigonometri tekrarı"
+                className="h-8 w-full rounded-md border border-input bg-white px-2.5 text-[12px] shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              />
+            </div>
+          </div>
+          <Button
+            type="button"
+            disabled={
+              savingCe || !ceClass || !ceSubject || !ceTeacher || !ceTopic.trim()
+            }
+            onClick={async () => {
+              setSavingCe(true);
+              try {
+                await createClassExtraLesson({
+                  className: ceClass,
+                  subject: ceSubject,
+                  teacherName: ceTeacher,
+                  topic: ceTopic,
+                  scheduledDate: "",
+                  scheduledTime: "",
+                });
+                toast.success("Sınıf ek ders talebi oluşturuldu", {
+                  description: `${ceClass} · ${ceSubject} · ${ceTeacher} — havuza eklendi, sürükleyerek takvime yerleştirin.`,
+                });
+                setCeTopic("");
+              } catch (error) {
+                toast.error("Talep oluşturulamadı", {
+                  description:
+                    error instanceof Error ? error.message : undefined,
+                });
+              } finally {
+                setSavingCe(false);
+              }
+            }}
+            className="h-8 cursor-pointer justify-self-start rounded-full bg-orange-500 px-4 text-[12px] font-semibold text-white hover:bg-orange-600"
+          >
+            <Plus className="size-4" strokeWidth={2.5} />
+            Sınıf Ek Ders Talebi Oluştur
+          </Button>
+        </div>
+
+        {/* Havuz kartları (kronolojik / sınıf sıralı, sürüklenebilir) */}
+        {(classExtras ?? []).length === 0 ? (
+          <p className="py-6 text-center text-sm text-neutral-400">
+            Henüz sınıf ek ders talebi yok. Formu doldurup havuza ekleyin;
+            sonra kartı Sınıf Programı'na sürükleyin.
+          </p>
+        ) : (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {(classExtras ?? [])
+              .slice()
+              .sort((a, b) =>
+                a.className === b.className
+                  ? a.subject.localeCompare(b.subject, "tr")
+                  : a.className.localeCompare(b.className, "tr"),
+              )
+              .map((c) => (
+                <div
+                  key={c._id}
+                  draggable={Boolean(c.date) || true}
+                  onDragStart={(ev) =>
+                    setDragData(ev, { kind: "classExtra", extraId: c._id })
+                  }
+                  className="cursor-grab rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-[12px] leading-tight active:cursor-grabbing hover:shadow-sm"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold text-orange-900">
+                      {c.className}
+                    </span>
+                    <span
+                      className={cn(
+                        "rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase",
+                        c.date
+                          ? "bg-orange-100 text-orange-700"
+                          : "bg-neutral-100 text-neutral-500",
+                      )}
+                    >
+                      {c.date ? "planlandı" : "havuzda"}
+                    </span>
+                  </div>
+                  <div className="text-orange-800">
+                    {c.subject} · {c.teacherName}
+                  </div>
+                  <div className="truncate text-[11px] text-orange-700/80">
+                    {c.topic}
+                  </div>
+                  {c.date ? (
+                    <div className="mt-1 flex items-center gap-2 text-[11px] text-orange-600/80">
+                      {c.date.split("-").reverse().join(".")} {c.time}
+                      <button
+                        type="button"
+                        title="Havuza geri al"
+                        className="cursor-pointer font-medium hover:text-orange-900"
+                        onClick={() => void returnClassExtraToPool(c)}
+                      >
+                        havuza al
+                      </button>
+                    </div>
+                  ) : null}
+                  <button
+                    type="button"
+                    title="Talebi sil"
+                    className="mt-0.5 cursor-pointer text-[11px] font-medium text-red-400 hover:text-red-600"
+                    onClick={async () => {
+                      try {
+                        await deleteClassExtraLesson({ id: c._id });
+                        toast("Talep silindi", {
+                          description: `${c.className} · ${c.subject}`,
+                        });
+                      } catch {
+                        toast.error("Talep silinemedi");
+                      }
+                    }}
+                  >
+                    sil
+                  </button>
+                </div>
+              ))}
+          </div>
+        )}
+        <p className="mt-3 text-[11px] text-neutral-400">
+          Kartları Sınıf Programı'ndaki boş günlere sürükleyin; uygun ilk boş
+          saate yerleşir. Kilit açıkken yerleşen kartları takvimde
+          taşıyabilir, ✕ ile silebilirsiniz.
+        </p>
+      </SectionShell>
+      </div>
 
       {/* ==================================================== */}
       {/* Sınıf Programı                                        */}
@@ -724,6 +1177,72 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
                           ymd={ymd}
                           cellMap={classLessonsByCell}
                         />
+                        {/* Esnek sınıf ek dersi kartları (pastel turuncu) */}
+                        {TIME_SLOTS.map((s) => {
+                          const ce = classExtrasByCell.get(
+                            `${cls.name}|${dayIndex}|${s.index}`,
+                          );
+                          if (!ce) return null;
+                          return (
+                            <div
+                              key={ce._id}
+                              draggable={unlockClass}
+                              onDragStart={(ev) =>
+                                setDragData(ev, {
+                                  kind: "classExtra",
+                                  extraId: ce._id,
+                                })
+                              }
+                              className={cn(
+                                "group relative mt-1 rounded-md px-1.5 py-1 text-[10.5px] leading-tight font-medium",
+                                BADGE_CLASS_EXTRA,
+                                unlockClass
+                                  ? "cursor-grab active:cursor-grabbing"
+                                  : "cursor-not-allowed",
+                              )}
+                              title={`${ce.subject} · ${ce.teacherName} · ${ce.topic}`}
+                            >
+                              <div className="flex items-center justify-between gap-1">
+                                <span className="tabular-nums opacity-80">
+                                  {ce.time}
+                                </span>
+                                {unlockClass && (
+                                  <button
+                                    type="button"
+                                    title="Ek dersi sil"
+                                    className="shrink-0 cursor-pointer font-bold text-orange-400 hover:text-red-600"
+                                    onClick={(ev) => {
+                                      ev.stopPropagation();
+                                      void (async () => {
+                                        try {
+                                          await deleteClassExtraLesson({
+                                            id: ce._id,
+                                          });
+                                          toast("Sınıf ek dersi silindi", {
+                                            description: `${ce.className} · ${ce.subject} · ${ce.date} ${ce.time}`,
+                                          });
+                                        } catch {
+                                          toast.error(
+                                            "Sınıf ek dersi silinemedi",
+                                          );
+                                        }
+                                      })();
+                                    }}
+                                  >
+                                    ✕
+                                  </button>
+                                )}
+                              </div>
+                              <div className="truncate">{ce.subject}</div>
+                              <div className="truncate opacity-90">
+                                {ce.teacherName}
+                              </div>
+                              <div className="truncate text-[10px] opacity-70">
+                                {ce.topic}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </td>
                     );
                   })}
@@ -981,13 +1500,17 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
                             "bg-emerald-50 text-emerald-700",
                           row.type === "sinif" && "bg-teal-50 text-teal-700",
                           row.type === "ek" && "bg-violet-50 text-violet-700",
+                          row.type === "sinifEk" &&
+                            "bg-orange-50 text-orange-700",
                         )}
                       >
                         {row.type === "birebir"
                           ? "Birebir"
                           : row.type === "sinif"
                             ? "Sınıf"
-                            : "Ek Ders"}
+                            : row.type === "sinifEk"
+                              ? "Sınıf Ek"
+                              : "Ek Ders"}
                       </span>
                     </td>
                   </tr>

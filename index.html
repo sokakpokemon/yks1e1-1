@@ -194,6 +194,10 @@ Check your Browserslist config to be sure that your targets are set up correctly
     .dnd-uygun { background-color: #f0fdfa; box-shadow: inset 0 0 0 2px #2dd4bf; }
     .dnd-kilit { cursor: not-allowed; }
     .dnd-kilit:hover { background-color: #fef2f2; }
+  
+    .dnd-kart { cursor: grab; transition: box-shadow .12s ease; }
+    .dnd-kart:active { cursor: grabbing; }
+    .dnd-kart:hover { box-shadow: 0 0 0 2px #6ee7b7; }
   </style>
 </head>
 
@@ -1740,7 +1744,7 @@ function haftalikOgrtTablo() {
     if (p.start && (l.tarih < p.start || l.tarih > p.end)) return;
     var d = new Date(l.tarih + "T12:00:00");
     var gunIdx = (d.getDay() + 6) % 7;
-    dersMap[gunIdx + "-" + l.saat] = l;
+    dersMap[gunIdx + "-" + parseInt(l.saat.split(":")[0], 10)] = l; // saat normalize: "09:00" → 9
   });
 
   var avail = t.avail || { sinif: {}, musait: [] };
@@ -1767,7 +1771,7 @@ function haftalikOgrtTablo() {
     for (var h = 9; h <= 19; h++) {
       var key = g + "-" + h;
       var ders = dersMap[key];
-      var sinifVar = avail.sinif && key in avail.sinif;
+      var sinifVar = avail.sinif && (key in avail.sinif || ("0-" + String(h).padStart(2, "0") + ":00") in avail.sinif);
       var musaitDegil = avail.musait.indexOf(key) >= 0;
 
       if (isPazar || musaitDegil) {
@@ -1780,12 +1784,24 @@ function haftalikOgrtTablo() {
         var ogrenciAd = ders.ogrenciAd || (ogrenci ? ogrenci.ad : "");
         var sinif = ogrenci ? ogrenci.sinif : "";
         var dersBilgi = DERS[ders.dersId];
-        var durumRenk = ders.durum === "tamamlandi" ? "bg-emerald-50 border-emerald-200" : "bg-blue-50 border-blue-200";
-        satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100"><div class="rounded-lg border ' + durumRenk + ' px-1 py-1.5" title="Dolu — kilitli">' +
-          '<div class="text-[10.5px] font-bold text-slate-800 leading-tight">' + esc(ogrenciAd.split(" ")[0]) + '</div>' +
-          (sinif ? '<div class="text-[9px] font-semibold text-slate-500">' + esc(sinif) + '</div>' : '') +
-          (dersBilgi ? '<div class="text-[8px] font-bold mt-0.5 ' + dersBilgi.tx + '">' + dersBilgi.ad + '</div>' : '') +
-          '</div></td>';
+        var hareketli = ders.kaynak === "takvim"; // sürükle-bırakla yerleştirilmiş kart → takvim içinde taşınabilir
+        if (hareketli) {
+          // YENİ YERLEŞEN İSTEK KARTI: pastel yeşil, draggable
+          satirlar += '<td class="px-1.5 py-1.5 text-center border-l border-slate-100">' +
+            '<div draggable="true" ondragstart="istekDrag(event, \'' + ders.id + '\')" title="Sürükleyip başka boş saate taşıyabilirsin" class="dnd-kart rounded-lg border border-emerald-200 bg-emerald-50 px-1 py-1.5">' +
+            '<div class="text-[10.5px] font-bold text-slate-800 leading-tight">' + esc(ogrenciAd.split(" ")[0]) + '</div>' +
+            (sinif ? '<div class="text-[9px] font-semibold text-slate-500">' + esc(sinif) + '</div>' : '') +
+            (dersBilgi ? '<div class="text-[8px] font-bold mt-0.5 text-emerald-700">' + dersBilgi.ad + (ders.durum === "tamamlandi" ? ' <i class="fa-solid fa-check text-[8px]"></i>' : "") + '</div>' : '') +
+            '</div></td>';
+        } else {
+          // Formdan planlanmış ders: KİLİTLİ — mevcut renk/şablon aynen korunur
+          var durumRenk = ders.durum === "tamamlandi" ? "bg-emerald-50 border-emerald-200" : "bg-blue-50 border-blue-200";
+          satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100"><div class="rounded-lg border ' + durumRenk + ' px-1 py-1.5" title="Dolu — kilitli">' +
+            '<div class="text-[10.5px] font-bold text-slate-800 leading-tight">' + esc(ogrenciAd.split(" ")[0]) + '</div>' +
+            (sinif ? '<div class="text-[9px] font-semibold text-slate-500">' + esc(sinif) + '</div>' : '') +
+            (dersBilgi ? '<div class="text-[8px] font-bold mt-0.5 ' + dersBilgi.tx + '">' + dersBilgi.ad + '</div>' : '') +
+            '</div></td>';
+        }
       } else {
         // BOŞ HÜCRE → DROP ZONE (havuzdaki istek kartı buraya bırakılabilir)
         var hk = String(h).padStart(2, "0") + ":00";
@@ -1803,7 +1819,7 @@ function haftalikOgrtTablo() {
       '<div class="w-9 h-9 rounded-xl bg-violet-500 flex items-center justify-center text-white shadow-sm shrink-0"><i class="fa-solid fa-calendar-week text-sm"></i></div>' +
       '<div><h3 class="text-[14px] font-extrabold text-slate-800">ÖĞRETMEN — ' + esc(t.ad.toUpperCase()) + '</h3>' +
       '<p class="text-[11px] text-slate-400">' + (brans ? brans.ad : 'Branş yok') + " · " + pencereAdi() + '</p></div>' +
-      '<span class="ml-auto hidden md:inline-flex items-center gap-1.5 rounded-full bg-white border border-teal-200 text-teal-600 text-[10.5px] font-bold px-3 py-1.5"><i class="fa-solid fa-hand-pointer"></i> Boş + hücrelerine istek kartı bırakabilirsiniz</span>' +
+      '<span class="ml-auto hidden md:inline-flex items-center gap-1.5 rounded-full bg-white border border-teal-200 text-teal-600 text-[10.5px] font-bold px-3 py-1.5"><i class="fa-solid fa-hand-pointer"></i> İstek kartlarını boş hücrelere bırakın · yeşil kartları sürükleyip taşıyın</span>' +
     '</div>' +
     '<div class="overflow-x-auto"><table class="w-full border-collapse">' +
       '<thead><tr class="bg-slate-50/80 border-b border-slate-100">' +
@@ -1828,18 +1844,36 @@ function istekBurak(ev, el, ogrtId, tarih, saat) {
   el.classList.remove("dnd-uygun");
   var istekId = istekDropHedef; istekDropHedef = null;
   if (!istekId) return;
+
+  // Kaynağı belirle: havuzdaki istek mi, takvimdeki taşınan kart mı?
+  var kaynak = "havuz";
   var r = DB.istekler.find(function (x) { return x.id === istekId; });
+  if (!r) {
+    var d = DB.dersler.find(function (x) { return x.id === istekId; });
+    if (d && d.kaynak === "takvim") {
+      kaynak = "takvim";
+      r = { ogrenciId: d.ogrenciId, ogrenciAd: d.ogrenciAd, dersId: d.dersId, konu: d.konu };
+    }
+  }
   if (!r) return;
 
-  // Kilit kontrolü: hücre bu arada dolmuşsa veya öğretmen o saatte kilitliyse bırakmayı reddet
   var t = DB.ogretmenler.find(function (x) { return x.id === ogrtId; });
+  if (!t) { toast("Öğretmen bulunamadı.", "hata"); return; }
+
+  // AKILLI BRANŞ KONTROLÜ (ZORUNLU): ders yalnızca kendi branşındaki öğretmene bırakılabilir
+  var IB = DERS[r.dersId], TB = DERS[t.brans];
+  if (!t.brans || !TB || r.dersId !== t.brans) {
+    toast("Branş uyuşmuyor: " + (IB ? IB.ad : "Bu ders") + " yalnızca " + (TB ? TB.ad.toLowerCase("tr") : "aynı branştaki") + " öğretmene planlanabilir — " + t.ad + " (" + (TB ? TB.ad : "branşsız") + ").", "hata");
+    return;
+  }
+
+  // Kilit kontrolü: hücre bu arada dolmuşsa veya öğretmen o saatte kilitliyse bırakmayı reddet
   var di = dowIdx(tarih), sNum = parseInt(saat.split(":")[0], 10);
   var key = di + "-" + sNum;
-  if (!t) { toast("Öğretmen bulunamadı.", "hata"); return; }
-  var dolu = DB.dersler.some(function (l) { return l.ogretmenId === ogrtId && l.tarih === tarih && l.saat === saat && l.durum !== "iptal"; });
+  var dolu = DB.dersler.some(function (l) { return l.ogretmenId === ogrtId && l.tarih === tarih && l.saat === saat && l.durum !== "iptal" && l.id !== istekId; });
   var pazar = di === 6; // Pazar: kurum tamamen kapalı
   var kilitli = dolu || pazar || (t.avail && ((t.avail.sinif && key in t.avail.sinif) || t.avail.musait.indexOf(key) >= 0));
-  if (kilitli) { toast("Bu saat kilitli ya da dolu — istek bırakılamadı.", "hata"); renderDersler(); return; }
+  if (kilitli) { toast("Bu saat kilitli ya da dolu — kart bırakılamadı.", "hata"); renderDersler(); return; }
 
   // Öğrenciyi bul/oluştur
   var o = DB.ogrenciler.find(function (x) { return x.id === r.ogrenciId; });
@@ -1848,18 +1882,26 @@ function istekBurak(ev, el, ogrtId, tarih, saat) {
     DB.ogrenciler.push(o);
   }
 
-  // Dersi planla
-  DB.dersler.push({
-    id: uid(), ogrenciId: o.id, ogrenciAd: o.ad, dersId: r.dersId, konu: r.konu || "",
-    ogretmenId: t.id, ogretmenAd: t.ad, tarih: tarih, saat: saat,
-    durum: "planlandi", olusturma: todayKey()
-  });
+  if (kaynak === "takvim") {
+    // Takvim içinde taşıma: mevcut ders kaydının yeri değişir
+    var eski = DB.dersler.find(function (x) { return x.id === istekId; });
+    if (eski) {
+      eski.tarih = tarih; eski.saat = saat;
+      eski.ogretmenId = t.id; eski.ogretmenAd = t.ad;
+      toast("Ders taşındı ✓ " + o.ad + " · " + fmtTR(tarih) + " " + saat);
+    }
+  } else {
+    // Havuzdan yeni planlama: pastel yeşil taşınabilir kart olarak yerleşir
+    DB.dersler.push({
+      id: uid(), ogrenciId: o.id, ogrenciAd: o.ad, dersId: r.dersId, konu: r.konu || "",
+      ogretmenId: t.id, ogretmenAd: t.ad, tarih: tarih, saat: saat,
+      durum: "planlandi", olusturma: todayKey(), kaynak: "takvim"
+    });
+    DB.istekler = DB.istekler.filter(function (x) { return x.id !== istekId; });
+    ui.aktifIstekId = null;
+    toast("İstek takvime planlandı ✓ " + o.ad + " · " + fmtTR(tarih) + " " + saat);
+  }
 
-  // İsteği havuzdan kaldır
-  DB.istekler = DB.istekler.filter(function (x) { return x.id !== istekId; });
-  ui.aktifIstekId = null;
-
-  toast("İstek takvime planlandı ✓ " + o.ad + " · " + fmtTR(tarih) + " " + saat);
   saveDB();
   renderHavuz();
   renderFormDestek();
@@ -1884,7 +1926,7 @@ function gunlukTablo() {
   gunDersler.forEach(function (l) {
     var k = l.ogretmenAd || "Bilinmiyor";
     if (!ogrtMap[k]) ogrtMap[k] = {};
-    ogrtMap[k][l.saat] = l;
+    ogrtMap[k][parseInt(l.saat.split(":")[0], 10)] = l; // saat normalize: "09:00" → 9
   });
 
   var ogrtSirasi = Object.keys(ogrtMap).sort();

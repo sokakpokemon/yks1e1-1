@@ -50,6 +50,7 @@ const schema = defineSchema(
         v.literal("completed"),
         v.literal("cancelled"),
       ),
+      className: v.optional(v.string()),
     }).index("by_user_date", ["userId", "date"]),
 
     // Kursta görev alan öğretmenler.
@@ -57,6 +58,39 @@ const schema = defineSchema(
       userId: v.id("users"),
       name: v.string(),
     }).index("by_user", ["userId"]),
+
+    // Sınıf / grup listesi (MEZUN SAY 1, 12 EA 1, ...).
+    classes: defineTable({
+      userId: v.id("users"),
+      name: v.string(),
+    }).index("by_user_name", ["userId", "name"]),
+
+    // Öğrenci listesi (opsiyonel sınıf ataması ile).
+    students: defineTable({
+      userId: v.id("users"),
+      name: v.string(),
+      className: v.optional(v.string()),
+    }).index("by_user_name", ["userId", "name"]),
+
+    // Sınıf programındaki grup dersleri.
+    classLessons: defineTable({
+      userId: v.id("users"),
+      className: v.string(),
+      subject: v.string(),
+      teacherName: v.string(),
+      date: v.string(),
+      time: v.string(),
+    }).index("by_user_date", ["userId", "date"]),
+
+    // Öğretmen birebir programına eklenen ek dersler (her hafta değişebilir).
+    extraLessons: defineTable({
+      userId: v.id("users"),
+      title: v.string(),
+      teacherName: v.string(),
+      className: v.string(),
+      date: v.string(),
+      time: v.string(),
+    }).index("by_user_date", ["userId", "date"]),
   },
   {
     schemaValidation: false,

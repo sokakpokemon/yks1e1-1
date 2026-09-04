@@ -447,7 +447,7 @@ function saatKeyDonustur(k) {
   var p = String(k || "").split("-");
   if (p.length !== 2) return k;
   var si = eskiSaatToSlot(p[1]);
-  return si == null ? null : p[0] + "-" + si;
+  return si == null ? k : p[0] + "-" + si; // eski saat değilse dokunma (zaten slot index)
 }
 function eskiKeyMi(k) {
   var h = parseInt(String(k).split("-").pop(), 10);
@@ -514,28 +514,7 @@ function avatar(ad, i) {
 function bosDB() {
   return { kurulus: todayKey(), ogretmenler: [], ogrenciler: [], sinifProg: {}, istekler: [], dersler: [] };
 }
-var SAAT_DONUSUM = { "8": "08:50", "9": "09:40", "10": "10:30", "11": "11:20", "12": "13:00", "13": "13:00", "14": "13:50", "15": "14:40", "16": "15:30", "17": "16:20", "18": "17:10", "19": "18:00", "20": "18:00" };
-function saatDonustur(v) {
-  var s = String(v == null ? "" : v).trim();
-  if (!s) return s;
-  if (s.indexOf(":") < 0) { s = s + ":00"; }
-  var h = parseInt(s.split(":")[0], 10);
-  var mn = s.split(":")[1] || "00";
-  if (isNaN(h)) return s;
-  if (SAATLER.indexOf(h) >= 0 && mn === "00") return slotSaatYazi(h);
-  return SAAT_DONUSUM[h] || "18:00";
-}
-function saatKeyDonustur(k) {
-  var p = String(k || "").split("-");
-  if (p.length !== 2) return k;
-  var g = p[0];
-  var h = parseInt(p[1].split(":")[0], 10);
-  if (isNaN(h)) return k;
-  if (SAATLER.indexOf(h) >= 0) return g + "-" + h;
-  var yeni = SAAT_DONUSUM[h];
-  if (!yeni) return null;
-  return g + "-" + parseInt(yeni.split(":")[0], 10);
-}
+
 function normalize(d) {
   d.ogretmenler = Array.isArray(d.ogretmenler) ? d.ogretmenler : [];
   d.ogrenciler = Array.isArray(d.ogrenciler) ? d.ogrenciler : [];
@@ -994,7 +973,7 @@ function ogretmenTab() {
   if (!ogretmenler.length) listeHtml += '<p class="text-[12px] text-slate-400 text-center py-8">Henüz öğretmen yok.<br>Üstteki formdan ilk öğretmeni ekleyin.</p>';
   ogretmenler.forEach(function (t, i) {
     var d = DERS[t.brans];
-    var sinifSay = (t.avail.sinif || []).length, mdSay = (t.avail.musait || []).length;
+    var sinifSay = t.avail.sinif ? Object.keys(t.avail.sinif).length : 0, mdSay = (t.avail.musait || []).length;
     var a = secili && secili.id === t.id;
     listeHtml += '<div onclick="secOgr(\'' + t.id + '\')" class="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer border transition-all ' +
       (a ? "border-teal-200 bg-teal-50/60 shadow-sm" : "border-transparent hover:bg-slate-50") + '">' +
@@ -1117,7 +1096,7 @@ function ogretmenEkle() {
   // Yeni ekleme modunda
   var varMi = DB.ogretmenler.some(function (t) { return kucuk(t.ad) === kucuk(ad); });
   if (varMi) { toast("Bu öğretmen zaten kayıtlı.", "uyari"); return; }
-  var yeni = { id: uid(), ad: ad, brans: brans, avail: { sinif: [], musait: [] } };
+  var yeni = { id: uid(), ad: ad, brans: brans, avail: { sinif: {}, musait: [] } };
   DB.ogretmenler.push(yeni);
   ui.ogrId = yeni.id;
   toast("Öğretmen eklendi: " + ad);
@@ -1469,7 +1448,7 @@ function ayarTab() {
     "</div></div>";
 }
 function yedekAl() {
-  var paket = { uygulama: "YKS Birebir Takip", surum: 1, tarih: new Date().toISOString(), veri: DB };
+  var paket = { uygulama: "YKS Birebir Takip", surum: 2, tarih: new Date().toISOString(), veri: DB };
   var blob = new Blob([JSON.stringify(paket, null, 2)], { type: "application/json" });
   var a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -1488,6 +1467,25 @@ function yedekOku(input) {
       var p = JSON.parse(oku.result);
       var v = p.veri && p.veri.dersler ? p.veri : p;
       if (!v || !Array.isArray(v.dersler)) throw new Error("format");
+      // eski saat-bazlı yedek tespiti: ders saatlerinde ":" varsa veya avail/sinifProg key'leri saat formundaysa
+      var eskiFormat = v.dersler.some(function (l) { return String(l.saat || "").indexOf(":") >= 0; });
+      if (!eskiFormat) {
+        var yeniKanıt = false, eskiKanıt = false;
+        function anahtarTara(k) {
+          var h = parseInt(String(k).split("-").pop(), 10);
+          if (isNaN(h)) return;
+          if (h <= 7) yeniKanıt = true;       // eski saat modelinde 0..7 yoktu
+          else if (h >= 12) eskiKanıt = true; // yeni slot modelinde 12..20 yok
+        }
+        Object.keys(v.sinifProg || {}).forEach(function (sn) { (v.sinifProg[sn] || []).forEach(anahtarTara); });
+        (v.ogretmenler || []).forEach(function (t) {
+          if (!t.avail) return;
+          if (t.avail.sinif && typeof t.avail.sinif === "object") Object.keys(t.avail.sinif).forEach(anahtarTara);
+          (t.avail.musait || []).forEach(anahtarTara);
+        });
+        eskiFormat = !yeniKanıt && eskiKanıt;
+      }
+      if (eskiFormat) { v = migrateEski(v); toast("Eski saat-bazlı yedek algılandı — yeni ders saatlerine otomatik dönüştürüldü."); }
       onayAc({
         baslik: "Yedekten veri yüklensin mi?",
         metin: "Dosyadaki arşiv (<b>" + esc(f.name) + "</b>) yüklenecek ve <b>mevcut tüm veriler</b> bununla değiştirilecek. Bu işlem geri alınamaz.",
@@ -1624,7 +1622,7 @@ function formaAktar(id) {
   ui.editId = null;
   duzenleBannerGuncelle();
   $("f-tarih").value = todayKey();
-  if ($("f-saat").value < "09:00" || $("f-saat").value > "20:00") $("f-saat").value = "16:00";
+  if (!gecerliSlot(parseInt($("f-saat").value, 10))) $("f-saat").value = "5";
   $("planKart").scrollIntoView({ behavior: "smooth", block: "start" });
   setTimeout(function () { $("planKart").classList.add("ring-2", "ring-teal-300"); }, 500);
   setTimeout(function () { $("planKart").classList.remove("ring-2", "ring-teal-300"); }, 2600);
@@ -1703,7 +1701,7 @@ function duzenleBannerGuncelle() {
     var l = DB.dersler.find(function (x) { return x.id === ui.editId; });
     if (l) {
       banner.className = "inline-flex items-center gap-2 rounded-full bg-amber-50 border border-amber-200 px-3.5 py-1.5 text-[11.5px] font-bold text-amber-700";
-      banner.innerHTML = '<i class="fa-solid fa-pen"></i>Ders düzenleniyor: ' + esc(l.ogrenciAd) + " · " + fmtTR(l.tarih) + " " + l.saat;
+      banner.innerHTML = '<i class="fa-solid fa-pen"></i>Ders düzenleniyor: ' + esc(l.ogrenciAd) + " · " + fmtTR(l.tarih) + " " + saatGoster(l.saat);
       banner.classList.remove("hidden");
       $("btnBaslik").textContent = "Dersi Düzenle";
       $("btnPlanYazi").textContent = "Değişiklikleri Kaydet";
@@ -1764,7 +1762,7 @@ function hataKart(liste) {
   $("cakismaUyari").scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 function duzeltmeBul(adet, yokSay) {
-  var saatNum = parseInt(String(adet.saat).indexOf(":") >= 0 ? adet.saat.split(":")[0] : adet.saat, 10); // slot index veya eski saat
+  var saatNum = String(adet.saat).indexOf(":") >= 0 ? eskiSaatToSlot(adet.saat) : parseInt(adet.saat, 10); // slot index (eski "SS:DD" ise dönüşüm)
   var di = dowIdx(adet.tarih);
   var key = di + "-" + saatNum;
   var uyari = [];
@@ -1818,7 +1816,7 @@ function planla() {
   }
   var t = DB.ogretmenler.find(function (x) { return kucuk(x.ad) === kucuk(ogretmenAd); });
   if (!t) {
-    t = { id: uid(), ad: ogretmenAd, brans: dersId, avail: { sinif: [], musait: [] } };
+    t = { id: uid(), ad: ogretmenAd, brans: dersId, avail: { sinif: {}, musait: [] } };
     DB.ogretmenler.push(t);
     toast("Yeni öğretmen kaydedildi: " + ogretmenAd);
   }
@@ -2085,7 +2083,7 @@ function istekBurak(ev, el, ogrtId, tarih, saat) {
     if (eski) {
       eski.tarih = tarih; eski.saat = saat;
       eski.ogretmenId = t.id; eski.ogretmenAd = t.ad;
-      toast("Ders taşındı ✓ " + o.ad + " · " + fmtTR(tarih) + " " + saat);
+      toast("Ders taşındı ✓ " + o.ad + " · " + fmtTR(tarih) + " " + saatGoster(saat));
     }
   } else {
     // Havuzdan yeni planlama: pastel yeşil taşınabilir kart olarak yerleşir
@@ -2096,7 +2094,7 @@ function istekBurak(ev, el, ogrtId, tarih, saat) {
     });
     DB.istekler = DB.istekler.filter(function (x) { return x.id !== istekId; });
     ui.aktifIstekId = null;
-    toast("İstek takvime planlandı ✓ " + o.ad + " · " + fmtTR(tarih) + " " + saat);
+    toast("İstek takvime planlandı ✓ " + o.ad + " · " + fmtTR(tarih) + " " + saatGoster(saat));
   }
 
   saveDB();
@@ -2108,6 +2106,14 @@ function istekBurak(ev, el, ogrtId, tarih, saat) {
 }
 
 function slotIndexFromBilgi(slot) { return SLOT_BILGI.indexOf(slot); }
+// Kayıtlı slot indexini okunur saat aralığına çevirir ("0" → "08:50-09:30")
+function saatGoster(v) {
+  var raw = String(v == null ? "" : v);
+  var i = raw.indexOf(":") >= 0 ? eskiSaatToSlot(v) : parseInt(raw, 10);
+  var b = SLOT_BILGI[i];
+  if (!b) return raw;
+  return b.s + "-" + b.e;
+}
 function gunlukTablo() {
   var gunKey = ui.gunSecim || ui.anchor;
   var gun = new Date(gunKey + "T12:00:00");
@@ -2250,7 +2256,7 @@ function renderDersler() {
     var gunAd = GUN_KISA[dowIdx(l.tarih)];
     satirlar += '<tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">' +
       '<td class="px-4 py-3 whitespace-nowrap"><div class="text-[13px] font-semibold text-slate-700" style="font-variant-numeric:tabular-nums">' + fmtTR(l.tarih) + '</div><div class="text-[10px] text-slate-400 font-semibold">' + gunAd + "</div></td>" +
-      '<td class="px-4 py-3 text-[13px] font-bold text-slate-600 whitespace-nowrap" style="font-variant-numeric:tabular-nums">' + esc(l.saat) + "</td>" +
+      '<td class="px-4 py-3 text-[13px] font-bold text-slate-600 whitespace-nowrap" style="font-variant-numeric:tabular-nums">' + esc(saatGoster(l.saat)) + "</td>" +
       '<td class="px-4 py-3"><div class="flex items-center gap-2">' + avatar(l.ogrenciAd, 0) + '<span class="text-[13px] font-semibold text-slate-700 truncate max-w-[140px]">' + esc(l.ogrenciAd) + "</span></div></td>" +
       '<td class="px-4 py-3"><span class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold whitespace-nowrap ' + D.bg + " " + D.tx + '">' + D.ad + "</span></td>" +
       '<td class="px-4 py-3 text-[12.5px] text-slate-500 max-w-[180px] truncate">' + (l.konu ? esc(l.konu) : '<span class="italic text-slate-300">Genel tekrar</span>') + "</td>" +
@@ -2344,7 +2350,7 @@ function silOnay(id) {
   var D = DERS[l.dersId] || DERS.tur;
   onayAc({
     baslik: "Ders silinsin mi?",
-    metin: "<b>" + esc(l.ogrenciAd) + "</b> · " + D.ad + (l.konu ? " (" + esc(l.konu) + ")" : "") + " · " + fmtTR(l.tarih) + " " + l.saat + " kaydı arşivden kaldırılacak.",
+    metin: "<b>" + esc(l.ogrenciAd) + "</b> · " + D.ad + (l.konu ? " (" + esc(l.konu) + ")" : "") + " · " + fmtTR(l.tarih) + " " + saatGoster(l.saat) + " kaydı arşivden kaldırılacak.",
     onay: "Evet, Sil", tehlikeli: true
   }, function () {
     DB.dersler = DB.dersler.filter(function (x) { return x.id !== id; });
@@ -2377,7 +2383,7 @@ function listeMetni() {
   if (!liste.length) return baslik + "Bu dönemde ders yok.";
   var satir = liste.map(function (l) {
     var D = DERS[l.dersId] || DERS.tur;
-    return fmtTR(l.tarih) + " " + l.saat + " | " + l.ogrenciAd + " | " + D.ad + " | " + (l.konu || "Genel tekrar") + " | " + l.ogretmenAd + " | " + l.durum;
+    return fmtTR(l.tarih) + " " + saatGoster(l.saat) + " | " + l.ogrenciAd + " | " + D.ad + " | " + (l.konu || "Genel tekrar") + " | " + l.ogretmenAd + " | " + l.durum;
   }).join("\n");
   return baslik + satir;
 }
@@ -2407,7 +2413,7 @@ function ogrenciMesajMetni(ogrenciId) {
   var satirlar = liste.map(function (l, i) {
     var D = DERS[l.dersId] || DERS.tur;
     var durum = l.durum === "tamamlandi" ? " ✓ Tamamlandı" : "";
-    return (i + 1) + ") " + D.ad + (l.konu ? " — " + l.konu : "") + "\n   📅 " + fmtTR(l.tarih) + " " + GUNLER[dowIdx(l.tarih)] + " • " + l.saat + " • " + l.ogretmenAd + durum;
+    return (i + 1) + ") " + D.ad + (l.konu ? " — " + l.konu : "") + "\n   📅 " + fmtTR(l.tarih) + " " + GUNLER[dowIdx(l.tarih)] + " • " + saatGoster(l.saat) + " • " + l.ogretmenAd + durum;
   });
   return "Merhaba " + o.ad + "! 👋\n\n📚 " + pencereAdi() + " birebir ders programın:\n\n" + satirlar.join("\n") + "\n\nDerslerimize zamanında katılmayı unutma. İyi çalışmalar! 🎓\n— YKS Birebir Takip";
 }
@@ -2497,7 +2503,7 @@ function pngAc() {
     var etk = { planlandi: ["Planlandı", "#e0f2fe", "#0369a1"], tamamlandi: ["Tamamlandı", "#d1fae5", "#047857"], iptal: ["İptal", "#ffe4e6", "#e11d48"] }[l.durum || "planlandi"];
     satirlar += '<tr style="border-bottom:1px solid #f1f5f9">' +
       '<td style="padding:7px 10px;font-size:11px;font-weight:600;color:#334155;white-space:nowrap">' + fmtTR(l.tarih) + "</td>" +
-      '<td style="padding:7px 10px;font-size:11px;color:#475569;white-space:nowrap">' + l.saat + "</td>" +
+      '<td style="padding:7px 10px;font-size:11px;color:#475569;white-space:nowrap">' + saatGoster(l.saat) + "</td>" +
       '<td style="padding:7px 10px;font-size:11px;font-weight:600;color:#334155">' + esc(l.ogrenciAd) + "</td>" +
       '<td style="padding:7px 10px"><span style="background:' + D.seg + "22;color:#0f172a;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:99px;display:inline-block\">" + D.ad + "</span></td>" +
       '<td style="padding:7px 10px;font-size:11px;color:#64748b">' + (l.konu ? esc(l.konu) : "—") + "</td>" +

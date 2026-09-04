@@ -1,5 +1,5 @@
 import { api } from "@/convex/_generated/api";
-import type { Doc } from "@/convex/_generated/dataModel";
+import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import {
@@ -27,11 +27,13 @@ export function RosterManager() {
   const deleteStudent = useMutation(api.lessons.deleteStudent);
 
   const [classDraft, setClassDraft] = useState("");
-  const [classEditId, setClassEditId] = useState<string | null>(null);
+  const [classEditId, setClassEditId] = useState<Id<"classes"> | null>(null);
   const [classEditName, setClassEditName] = useState("");
   const [studentDraft, setStudentDraft] = useState("");
   const [studentDraftClass, setStudentDraftClass] = useState("");
-  const [studentEditId, setStudentEditId] = useState<string | null>(null);
+  const [studentEditId, setStudentEditId] = useState<Id<"students"> | null>(
+    null,
+  );
   const [studentEditName, setStudentEditName] = useState("");
   const [studentEditClass, setStudentEditClass] = useState("");
   const [busy, setBusy] = useState(false);

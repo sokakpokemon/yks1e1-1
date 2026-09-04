@@ -207,6 +207,19 @@ export const upsertClassLesson = mutation({
   },
 });
 
+/** All class lessons of the signed-in course. */
+export const listClassLessons = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) return [];
+    return ctx.db
+      .query("classLessons")
+      .withIndex("by_user_date", (q) => q.eq("userId", userId))
+      .collect();
+  },
+});
+
 export const deleteClassLesson = mutation({
   args: { id: v.id("classLessons") },
   handler: async (ctx, { id }) => {
@@ -394,6 +407,19 @@ export const upsertExtraLesson = mutation({
   },
 });
 
+/** All extra lessons (ek ders) of the signed-in course. */
+export const listExtraLessons = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) return [];
+    return ctx.db
+      .query("extraLessons")
+      .withIndex("by_user_date", (q) => q.eq("userId", userId))
+      .collect();
+  },
+});
+
 export const deleteExtraLesson = mutation({
   args: { id: v.id("extraLessons") },
   handler: async (ctx, { id }) => {
@@ -416,6 +442,62 @@ const pad = (n: number) => String(n).padStart(2, "0");
 function toYmd(date: Date): string {
   return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
 }
+
+/**
+ * Idempotently adds the course's default class groups and teachers (by name)
+ * when they are missing. Safe to call any time; used to top up existing
+ * accounts created before the real roster existed.
+ */
+export const ensureRosterDefaults = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) return { added: 0 };
+
+    const classNames = [
+      "MEZUN SAY 1", "MEZUN SAY 2", "MEZUN SAY 3", "MEZUN EA 1", "MEZUN EA 2",
+      "12 SAY 1", "12 SAY 2", "12 SAY CAL", "12 EA 1", "12 DİL",
+      "11 SAY 1", "11 SAY 2", "11 SAY 3", "11 SAY CAL", "11 SAYISAL FEN", "11 EA 1",
+      "10.SINIF", "9.SINIF",
+    ];
+    const teacherNames = [
+      "SONER AÇIKGÖZ", "MEHMET ŞAŞAR", "TAHSİN ASLAN", "MİNE GÜRKAN",
+      "MUSTAFA GÜRKAN", "RAVİDE DERYA", "BELGİN ÇOLAK", "KARDELEN ASLAN",
+      "ŞAHİN DOĞANAY", "EREN BİLGİLİ", "FATMA KURT", "FİKRİYE KIYAR",
+      "NİHAT KANARIG", "MERT ASİL", "SALİM URTİMUR", "MERVE GEREK", "SELİNA KUTLU",
+    ];
+
+    const classes = await ctx.db
+      .query("classes")
+      .withIndex("by_user_name", (q) => q.eq("userId", userId))
+      .collect();
+    const teachers = await ctx.db
+      .query("teachers")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    const knownClasses = new Set(
+      classes.map((c) => c.name.trim().toLocaleUpperCase("tr")),
+    );
+    const knownTeachers = new Set(
+      teachers.map((t) => t.name.trim().toLocaleUpperCase("tr")),
+    );
+
+    let added = 0;
+    for (const name of classNames) {
+      if (!knownClasses.has(name.toLocaleUpperCase("tr"))) {
+        await ctx.db.insert("classes", { userId, name });
+        added++;
+      }
+    }
+    for (const name of teacherNames) {
+      if (!knownTeachers.has(name.toLocaleUpperCase("tr"))) {
+        await ctx.db.insert("teachers", { userId, name });
+        added++;
+      }
+    }
+    return { added };
+  },
+});
 
 /**
  * Seeds the course's real starter dataset: classes, teachers (with branch

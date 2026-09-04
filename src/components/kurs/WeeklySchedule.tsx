@@ -1,5 +1,5 @@
 import { api } from "@/convex/_generated/api";
-import type { Doc } from "@/convex/_generated/dataModel";
+import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -18,29 +18,23 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
-  branchOf,
   DAY_NAMES,
   requestMatchesBranch,
   slotIndexForTime,
   slotStart,
   SUBJECTS,
   TIME_SLOTS,
-  todayYmd,
-  ymdOf,
 } from "@/lib/schedule";
+import { todayYmd, ymdOf } from "@/lib/yks";
 import { useMutation, useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import {
   CalendarDays,
-  ChevronLeft,
-  ChevronRight,
   Filter,
-  GripVertical,
   GraduationCap,
   Lock,
   LockOpen,
   Plus,
-  Trash2,
   Users,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -53,12 +47,13 @@ type ClassRow = Doc<"classes">;
 type TeacherRow = Doc<"teachers">;
 
 /* ------------------------------------------------------------------ */
-/* Shared helpers                                                      */
+/* Helpers                                                             */
 /* ------------------------------------------------------------------ */
 
 function dayOffsetOf(ymd: string, weekStart: Date): number | null {
   if (!ymd) return null;
   const [y, m, d] = ymd.split("-").map(Number);
+  if (!y || !m || !d) return null;
   const date = new Date(y, m - 1, d);
   const ws = new Date(
     weekStart.getFullYear(),
@@ -80,14 +75,14 @@ function ymdOfDay(weekStart: Date, dayIndex: number): string {
 
 const DAY_LETTERS = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
 
-function dayHeader(weekStart: Date, dayIndex: number) {
+function dayHeader(weekStart: Date, dayIndex: number): string {
   const ymd = ymdOfDay(weekStart, dayIndex);
-  const [y, m, d] = ymd.split("-");
+  const [, m, d] = ymd.split("-");
   return `${DAY_LETTERS[dayIndex]} ${Number(d)}.${Number(m)}`;
 }
 
 /* ------------------------------------------------------------------ */
-/* Small UI atoms                                                      */
+/* UI atoms                                                            */
 /* ------------------------------------------------------------------ */
 
 function SectionShell({
@@ -130,35 +125,30 @@ function SectionShell({
 }
 
 function EditLockToggle({
-  locked,
+  unlocked,
   onChange,
 }: {
-  locked: boolean;
+  unlocked: boolean;
   onChange: (next: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2 rounded-full border border-neutral-200 bg-white px-3.5 py-1.5 select-none print:hidden">
-      <Checkbox checked={!locked} onCheckedChange={(v) => onChange(!v)} />
+    <label className="flex cursor-pointer items-center gap-2 rounded-full border border-neutral-200 bg-white px-3.5 py-1.5 select-none">
+      <Checkbox checked={unlocked} onCheckedChange={(v) => onChange(v === true)} />
       <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-neutral-700">
-        {locked ? (
-          <Lock className="size-3.5 text-neutral-400" />
-        ) : (
+        {unlocked ? (
           <LockOpen className="size-3.5 text-emerald-600" />
+        ) : (
+          <Lock className="size-3.5 text-neutral-400" />
         )}
-        {locked ? "Düzenleme Kilidi Kapalı" : "Düzenleme Kilidi Açık"}
+        {unlocked ? "Düzenleme açık" : "Düzenleme kilidi"}
       </span>
     </label>
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Grid cell badge (class lesson / request card / extra lesson)         */
-/* ------------------------------------------------------------------ */
-
-const BADGE_CLASS = "text-white";
-const BADGE_BG = "bg-[#14B8A6]"; // existing fixed class-lesson color
-const BADGE_REQUEST_BG = "bg-sky-100 border border-sky-300 text-sky-900"; // pastel blue for placed requests
-const BADGE_EXTRA_BG = "bg-violet-100 border border-violet-300 text-violet-900";
+/* Badge styles: existing fixed color preserved for class lessons. */
+const BADGE_CLASS = "bg-[#14B8A6] text-white"; // sınıf dersi (mevcut sabit renk)
+const BADGE_REQUEST = "bg-sky-50 border border-sky-300 text-sky-900"; // havuzdan yerleşen istek
 
 function ClassBadge({
   subject,
@@ -170,13 +160,12 @@ function ClassBadge({
   return (
     <div
       className={cn(
-        "rounded-md px-2 py-1 text-[11px] leading-tight font-semibold",
+        "rounded-md px-1.5 py-1 text-[10.5px] leading-tight font-semibold",
         BADGE_CLASS,
-        BADGE_BG,
       )}
     >
       <div className="truncate">{subject}</div>
-      <div className="truncate opacity-90">{teacherName}</div>
+      <div className="truncate font-medium opacity-90">{teacherName}</div>
     </div>
   );
 }
@@ -193,11 +182,11 @@ function RequestBadge({
   return (
     <div
       className={cn(
-        "rounded-md px-2 py-1 text-[11px] leading-tight font-medium",
-        BADGE_REQUEST_BG,
+        "w-full rounded-md px-1.5 py-1 text-[10.5px] leading-tight font-medium",
+        BADGE_REQUEST,
       )}
     >
-      <div className="truncate">{studentName}</div>
+      <div className="truncate font-semibold">{studentName}</div>
       {className && <div className="truncate opacity-80">{className}</div>}
       {missingTopic && (
         <div className="truncate text-[10px] opacity-70">{missingTopic}</div>
@@ -208,14 +197,9 @@ function RequestBadge({
 
 function ExtraBadge({ title, className }: { title: string; className: string }) {
   return (
-    <div
-      className={cn(
-        "rounded-md px-2 py-1 text-[11px] leading-tight font-medium",
-        BADGE_EXTRA_BG,
-      )}
-    >
-      <div className="truncate">{title}</div>
-      <div className="truncate opacity-80">{className}</div>
+    <div className="w-full rounded-md border border-violet-300 bg-violet-50 px-1.5 py-1 text-[10.5px] leading-tight font-medium text-violet-900">
+      <div className="truncate font-semibold">{title}</div>
+      <div className="truncate text-[10px] opacity-75">{className}</div>
     </div>
   );
 }
@@ -226,14 +210,13 @@ function ExtraBadge({ title, className }: { title: string; className: string }) 
 
 type DragPayload =
   | { kind: "pool"; requestId: string }
-  | { kind: "lesson"; lessonId: string }
   | { kind: "extra"; extraId: string };
 
 const DRAG_MIME = "application/x-yks-schedule";
 
 function setDragData(e: React.DragEvent, payload: DragPayload) {
   e.dataTransfer.setData(DRAG_MIME, JSON.stringify(payload));
-  e.dataTransfer.setData("text/plain", payload.kind);
+  e.dataTransfer.setData("text/plain", JSON.stringify(payload));
   e.dataTransfer.effectAllowed = "move";
 }
 
@@ -243,13 +226,7 @@ function readDragData(e: React.DragEvent): DragPayload | null {
       e.dataTransfer.getData(DRAG_MIME) || e.dataTransfer.getData("text/plain");
     if (!raw) return null;
     const parsed = JSON.parse(raw) as DragPayload;
-    if (
-      parsed.kind === "pool" ||
-      parsed.kind === "lesson" ||
-      parsed.kind === "extra"
-    ) {
-      return parsed;
-    }
+    if (parsed.kind === "pool" || parsed.kind === "extra") return parsed;
     return null;
   } catch {
     return null;
@@ -257,7 +234,7 @@ function readDragData(e: React.DragEvent): DragPayload | null {
 }
 
 /* ------------------------------------------------------------------ */
-/* Main section                                                        */
+/* Main component                                                      */
 /* ------------------------------------------------------------------ */
 
 export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
@@ -268,6 +245,7 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
   const teachers = useQuery(api.teachers.listTeachers);
 
   const moveLesson = useMutation(api.lessons.moveLesson);
+  const deleteLesson = useMutation(api.lessons.deleteLesson);
   const upsertClassLesson = useMutation(api.lessons.upsertClassLesson);
   const deleteClassLesson = useMutation(api.lessons.deleteClassLesson);
   const upsertExtraLesson = useMutation(api.lessons.upsertExtraLesson);
@@ -276,94 +254,71 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
   const [unlockClass, setUnlockClass] = useState(false);
   const [unlockTeacher, setUnlockTeacher] = useState(false);
   const [filterSubject, setFilterSubject] = useState<string>("Tüm Dersler");
-  const [dailyDay, setDailyDay] = useState<number>(0);
+  const [selectedClass, setSelectedClass] = useState<string>("all");
+
+  const todayDayIndex = useMemo(() => {
+    const ymd = todayYmd();
+    for (let i = 0; i < 7; i++) {
+      if (ymdOfDay(weekStart, i) === ymd) return i;
+    }
+    return -1;
+  }, [weekStart]);
+  const [dailyDay, setDailyDay] = useState<number>(
+    todayDayIndex >= 0 ? todayDayIndex : 0,
+  );
+
   const [extraDialogOpen, setExtraDialogOpen] = useState(false);
   const [extraTitle, setExtraTitle] = useState("");
   const [extraTeacher, setExtraTeacher] = useState("");
   const [extraClass, setExtraClass] = useState("");
   const [extraDay, setExtraDay] = useState("0");
   const [extraSlot, setExtraSlot] = useState("1");
-  const [extraEditId, setExtraEditId] = useState<string | null>(null);
+  const [extraEditId, setExtraEditId] = useState<Id<"extraLessons"> | null>(
+    null,
+  );
+  const [savingExtra, setSavingExtra] = useState(false);
 
   const ready =
     lessons !== undefined &&
     classLessons !== undefined &&
     extraLessons !== undefined &&
-    classes !== undefined;
+    classes !== undefined &&
+    teachers !== undefined;
 
   const classList = classes ?? [];
   const teacherList = teachers ?? [];
 
   /* ---------------- request pool ---------------- */
-  const poolItems = useMemo(() => {
+  const allPoolItems = useMemo(() => {
     const planned = (lessons ?? []).filter((l) => l.status === "planned");
-    const classLessonKeys = new Set(
+    const taken = new Set(
       (classLessons ?? []).map((c) => `${c.date}|${c.time}|${c.teacherName}`),
     );
     return planned
-      .filter((l) => !classLessonKeys.has(`${l.date}|${l.time}|${l.teacherName}`))
-      .filter((l) =>
-        filterSubject === "Tüm Dersler"
-          ? true
-          : l.subject.trim().toLocaleUpperCase("tr") === filterSubject,
-      )
+      .filter((l) => !taken.has(`${l.date}|${l.time}|${l.teacherName}`))
       .sort((a, b) =>
         a.date === b.date
           ? a.time.localeCompare(b.time)
           : a.date.localeCompare(b.date),
       );
-  }, [lessons, classLessons, filterSubject]);
-
-  const poolCountAll = useMemo(() => {
-    const planned = (lessons ?? []).filter((l) => l.status === "planned");
-    const classLessonKeys = new Set(
-      (classLessons ?? []).map((c) => `${c.date}|${c.time}|${c.teacherName}`),
-    );
-    return planned.filter(
-      (l) => !classLessonKeys.has(`${l.date}|${l.time}|${l.teacherName}`),
-    ).length;
   }, [lessons, classLessons]);
 
+  const poolItems = useMemo(
+    () =>
+      filterSubject === "Tüm Dersler"
+        ? allPoolItems
+        : allPoolItems.filter(
+            (l) =>
+              l.subject.trim().toLocaleUpperCase("tr") === filterSubject,
+          ),
+    [allPoolItems, filterSubject],
+  );
+
   /* ---------------- index maps ---------------- */
-  const lessonsByCell = useMemo(() => {
-    const map = new Map<string, LessonRow>();
-    for (const l of lessons ?? []) {
-      const day = dayOffsetOf(l.date, weekStart);
-      if (day === null) continue;
-      const slot = slotIndexForTime(l.time);
-      if (slot === null) continue;
-      map.set(`${day}|${slot}`, l);
-    }
-    return map;
-  }, [lessons, weekStart]);
-
-  const classLessonsByCell = useMemo(() => {
-    const map = new Map<string, ClassLessonRow>();
-    for (const c of classLessons ?? []) {
-      const day = dayOffsetOf(c.date, weekStart);
-      if (day === null) continue;
-      const slot = slotIndexForTime(c.time);
-      if (slot === null) continue;
-      map.set(`${c.className}|${day}|${slot}`, c);
-    }
-    return map;
-  }, [classLessons, weekStart]);
-
-  const extrasByCell = useMemo(() => {
-    const map = new Map<string, ExtraLessonRow>();
-    for (const e of extraLessons ?? []) {
-      const day = dayOffsetOf(e.date, weekStart);
-      if (day === null) continue;
-      const slot = slotIndexForTime(e.time);
-      if (slot === null) continue;
-      map.set(`${e.teacherName}|${day}|${slot}`, e);
-    }
-    return map;
-  }, [extraLessons, weekStart]);
-
   const lessonsByTeacherCell = useMemo(() => {
     const map = new Map<string, LessonRow[]>();
     for (const l of lessons ?? []) {
+      if (l.status === "cancelled") continue;
       const day = dayOffsetOf(l.date, weekStart);
       if (day === null) continue;
       const slot = slotIndexForTime(l.time);
@@ -376,79 +331,87 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
     return map;
   }, [lessons, weekStart]);
 
-  /* ---------------- drag & drop handlers ---------------- */
-  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const extrasByTeacherCell = useMemo(() => {
+    const map = new Map<string, ExtraLessonRow>();
+    for (const e of extraLessons ?? []) {
+      const day = dayOffsetOf(e.date, weekStart);
+      if (day === null) continue;
+      const slot = slotIndexForTime(e.time);
+      if (slot === null) continue;
+      map.set(`${e.teacherName}|${day}|${slot}`, e);
+    }
+    return map;
+  }, [extraLessons, weekStart]);
 
-  const canDropPool = (
-    payload: DragPayload,
-    teacherName: string,
-    _day: number,
-    _slot: number,
-  ): boolean => {
-    if (payload.kind !== "pool") return true;
-    const request = (lessons ?? []).find(
-      (l) => l._id === payload.requestId,
-    );
-    if (!request) return false;
-    return requestMatchesBranch(request.subject, teacherName);
-  };
+  const classLessonsByCell = useMemo(() => {
+    const map = new Map<string, ClassLessonRow[]>();
+    for (const c of classLessons ?? []) {
+      const day = dayOffsetOf(c.date, weekStart);
+      if (day === null) continue;
+      const slot = slotIndexForTime(c.time);
+      if (slot === null) continue;
+      const key = `${c.className}|${day}|${slot}`;
+      const arr = map.get(key);
+      if (arr) arr.push(c);
+      else map.set(key, [c]);
+    }
+    return map;
+  }, [classLessons, weekStart]);
 
-  const handleDropToTeacher = async (
-    payload: DragPayload,
+  /* ---------------- drop handlers ---------------- */
+  const handleDropTeacher = async (
+    e: React.DragEvent,
     teacherName: string,
     day: number,
     slot: number,
   ) => {
+    if (!unlockTeacher || !teacherName) return;
+    e.preventDefault();
+    const payload = readDragData(e);
+    if (!payload) return;
     const ymd = ymdOfDay(weekStart, day);
     const start = slotStart(slot);
     if (!start) return;
+
+    const cellKey = `${teacherName}|${day}|${slot}`;
+    const cellBusy =
+      lessonsByTeacherCell.has(cellKey) || extrasByTeacherCell.has(cellKey);
+
     if (payload.kind === "pool") {
       const request = (lessons ?? []).find((l) => l._id === payload.requestId);
       if (!request) return;
-      if (!canDropPool(payload, teacherName, day, slot)) {
+      if (!requestMatchesBranch(request.subject, teacherName)) {
         toast.error("Branş uyuşmuyor", {
-          description: `${request.subject} dersi bu öğretmene atanamaz.`,
+          description: `${request.subject} dersi yalnızca branş öğretmenine planlanabilir.`,
+        });
+        return;
+      }
+      if (cellBusy) {
+        toast.error("Bu saat dolu", {
+          description: `${teacherName} öğretmeninin bu saatinde zaten ders var.`,
         });
         return;
       }
       try {
-        await moveLesson({
-          id: request._id,
-          date: ymd,
-          time: start,
-          teacherName,
-        });
+        await moveLesson({ id: request._id, date: ymd, time: start });
         toast.success("Ders takvime yerleştirildi", {
-          description: `${request.studentName} · ${request.subject} · ${DAY_NAMES[day]} ${start}`,
+          description: `${request.studentName} · ${request.subject} · ${DAY_NAMES[day]} ${start} · ${teacherName}`,
         });
-      } catch {
-        toast.error("Ders yerleştirilemedi");
+      } catch (error) {
+        toast.error("Ders yerleştirilemedi", {
+          description: error instanceof Error ? error.message : undefined,
+        });
       }
       return;
     }
-    if (payload.kind === "lesson") {
-      const lesson = (lessons ?? []).find((l) => l._id === payload.lessonId);
-      if (!lesson) return;
-      try {
-        await moveLesson({
-          id: lesson._id,
-          date: ymd,
-          time: start,
-          teacherName: teacherName !== lesson.teacherName ? undefined : undefined,
-        });
-        toast.success("Ders taşındı", {
-          description: `${lesson.studentName} · ${DAY_NAMES[day]} ${start}`,
-        });
-      } catch {
-        toast.error("Ders taşınamadı");
-      }
-      return;
-    }
+
     if (payload.kind === "extra") {
-      const extra = (extraLessons ?? []).find(
-        (e) => e._id === payload.extraId,
-      );
+      const extra = (extraLessons ?? []).find((x) => x._id === payload.extraId);
       if (!extra) return;
+      if (cellBusy) {
+        toast.error("Bu saat dolu");
+        return;
+      }
       try {
         await upsertExtraLesson({
           id: extra._id,
@@ -465,65 +428,57 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
     }
   };
 
-  const handleDropToClass = async (
-    payload: DragPayload,
+  const handleDropClass = async (
+    e: React.DragEvent,
     className: string,
     day: number,
-    slot: number,
+    cellMap: Map<string, ClassLessonRow[]>,
   ) => {
+    if (!unlockClass || !className || className === "all") return;
+    e.preventDefault();
+    const payload = readDragData(e);
+    if (!payload || payload.kind !== "pool") return;
+    const request = (lessons ?? []).find((l) => l._id === payload.requestId);
+    if (!request) return;
     const ymd = ymdOfDay(weekStart, day);
-    const start = slotStart(slot);
-    if (!start) return;
-    if (payload.kind === "pool") {
-      const request = (lessons ?? []).find((l) => l._id === payload.requestId);
-      if (!request) return;
-      const teacher = request.teacherName;
-      if (!requestMatchesBranch(request.subject, teacher)) {
-        toast.error("Branş uyuşmuyor", {
-          description: `${request.subject} dersi ${teacher} öğretmenine atanamaz.`,
-        });
-        return;
-      }
-      try {
-        await upsertClassLesson({
-          className,
-          subject: request.subject,
-          teacherName: teacher,
-          date: ymd,
-          time: start,
-        });
-        await moveLesson({
-          id: request._id,
-          date: ymd,
-          time: start,
-          className,
-        });
-        toast.success("Sınıf dersine dönüştürüldü", {
-          description: `${className} · ${request.subject} · ${DAY_NAMES[day]} ${start}`,
-        });
-      } catch {
-        toast.error("Sınıf dersi oluşturulamadı");
-      }
+    const start = "08:50"; // class grid shows all lessons of the day in one cell
+    const slot = slotIndexForTime(start);
+    if (slot === null) return;
+
+    const cell = cellMap.get(`${className}|${day}|${slot}`);
+    if (cell && cell.length > 0) {
+      toast.error("Bu hücre dolu", {
+        description: `${className} sınıfının bu saatinde zaten ders var.`,
+      });
       return;
     }
-    if (payload.kind === "extra") {
-      const extra = (extraLessons ?? []).find(
-        (e) => e._id === payload.extraId,
-      );
-      if (!extra) return;
-      try {
-        await upsertExtraLesson({
-          id: extra._id,
-          title: extra.title,
-          teacherName: extra.teacherName,
-          className,
-          date: ymd,
-          time: start,
-        });
-        toast.success("Ek ders taşındı");
-      } catch {
-        toast.error("Ek ders taşınamadı");
-      }
+    try {
+      await upsertClassLesson({
+        className,
+        subject: request.subject,
+        teacherName: request.teacherName,
+        date: ymd,
+        time: start,
+      });
+      await deleteLesson({ id: request._id });
+      toast.success("Sınıf dersi planlandı", {
+        description: `${className} · ${request.subject} · ${DAY_NAMES[day]} ${start} · ${request.teacherName}`,
+      });
+    } catch (error) {
+      toast.error("Sınıf dersi oluşturulamadı", {
+        description: error instanceof Error ? error.message : undefined,
+      });
+    }
+  };
+
+  const removeClassLesson = async (row: ClassLessonRow) => {
+    try {
+      await deleteClassLesson({ id: row._id });
+      toast("Sınıf dersi silindi", {
+        description: `${row.className} · ${row.subject} · ${row.date} ${row.time}`,
+      });
+    } catch {
+      toast.error("Sınıf dersi silinemedi");
     }
   };
 
@@ -582,22 +537,6 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
     );
   }, [lessons, classLessons, extraLessons, weekStart, dailyDay]);
 
-  /* ---------------- today's day index ---------------- */
-  const todayDayIndex = useMemo(() => {
-    const ymd = todayYmd();
-    for (let i = 0; i < 7; i++) {
-      if (ymdOfDay(weekStart, i) === ymd) return i;
-    }
-    return -1;
-  }, [weekStart]);
-
-  const initialDay = todayDayIndex >= 0 ? todayDayIndex : 0;
-  if (dailyDay !== initialDay && todayDayIndex >= 0 && !("yksDailyPin" in window)) {
-    // keep daily view pinned to today's weekday when the week changes
-    setDailyDay(initialDay);
-    (window as unknown as Record<string, unknown>).yksDailyPin = true;
-  }
-
   if (!ready) {
     return (
       <div className="flex min-h-[30vh] items-center justify-center rounded-2xl border border-neutral-200/80 bg-white">
@@ -609,7 +548,7 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
   return (
     <div className="flex flex-col gap-5">
       {/* ==================================================== */}
-      {/* Haftalık Ders İstek Havuzu                            */}
+      {/* Ders İstek Havuzu                                     */}
       {/* ==================================================== */}
       <SectionShell
         title="Ders İstek Havuzu"
@@ -618,9 +557,9 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
             <Filter className="size-4 text-white" />
           </span>
         }
-        badge={`${poolItems.length} / ${poolCountAll} istek`}
+        badge={`${poolItems.length}/${allPoolItems.length} istek`}
         action={
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             {["Tüm Dersler", ...SUBJECTS].map((s) => (
               <button
                 key={s}
@@ -633,7 +572,9 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
                     : "border-neutral-200 bg-white text-neutral-500 hover:border-amber-400 hover:text-amber-700",
                 )}
               >
-                {s === "Tüm Dersler" ? s : s.charAt(0) + s.slice(1).toLocaleLowerCase("tr")}
+                {s === "Tüm Dersler"
+                  ? s
+                  : s.charAt(0) + s.slice(1).toLocaleLowerCase("tr")}
               </button>
             ))}
           </div>
@@ -641,8 +582,9 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
       >
         {poolItems.length === 0 ? (
           <p className="py-6 text-center text-sm text-neutral-400">
-            Havuzda bekleyen istek yok. Birebir ders planladığınızda istekler
-            burada listelenir ve sürüklenerek takvime yerleştirilir.
+            {filterSubject === "Tüm Dersler"
+              ? "Havuzda bekleyen istek yok. Planlanan birebir dersler burada listelenir."
+              : "Bu ders için havuzda bekleyen istek yok."}
           </p>
         ) : (
           <div className="flex flex-wrap gap-2">
@@ -650,26 +592,21 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
               <div
                 key={l._id}
                 draggable
-                onDragStart={(e) => {
-                  setDragData(e, { kind: "pool", requestId: l._id });
-                  setDraggingId(l._id);
-                }}
-                onDragEnd={() => setDraggingId(null)}
-                className={cn(
-                  "cursor-grab rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] leading-tight transition-shadow active:cursor-grabbing hover:shadow-sm",
-                  draggingId === l._id && "opacity-50",
-                )}
+                onDragStart={(e) =>
+                  setDragData(e, { kind: "pool", requestId: l._id })
+                }
+                className="cursor-grab rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] leading-tight transition-shadow active:cursor-grabbing hover:shadow-sm"
               >
-                <div className="flex items-center gap-1.5 font-semibold text-amber-900">
-                  <GripVertical className="size-3 shrink-0 opacity-60" />
+                <div className="font-semibold text-amber-900">
                   {l.studentName}
                 </div>
-                <div className="mt-0.5 text-amber-700">
+                <div className="text-amber-700">
                   {l.subject}
                   {l.missingTopic ? ` · ${l.missingTopic}` : ""}
                 </div>
                 <div className="text-[11px] text-amber-600/80">
-                  {l.teacherName} · {l.date.split("-").reverse().join(".")} {l.time}
+                  {l.teacherName} · {l.date.split("-").reverse().join(".")}{" "}
+                  {l.time}
                 </div>
               </div>
             ))}
@@ -689,22 +626,40 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
         }
         badge={`${classList.length} sınıf`}
         action={
-          <EditLockToggle
-            locked={!unlockClass}
-            onChange={(v) => setUnlockClass(v)}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={selectedClass} onValueChange={setSelectedClass}>
+              <SelectTrigger className="h-8 w-[190px] text-[13px]">
+                <SelectValue placeholder="Sınıf seç" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tüm sınıflar</SelectItem>
+                {classList.map((c: ClassRow) => (
+                  <SelectItem key={c._id} value={c.name}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <EditLockToggle
+              unlocked={unlockClass}
+              onChange={(v) => setUnlockClass(v)}
+            />
+          </div>
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] border-separate border-spacing-0 text-[12px]">
+          <table className="w-full min-w-[980px] border-separate border-spacing-0 text-[12px]">
             <thead>
               <tr>
-                <th className="sticky left-0 z-10 w-24 min-w-24 bg-white px-2 py-2 text-left text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
+                <th className="sticky left-0 z-10 w-20 min-w-20 bg-white px-2 py-2 text-left text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
                   Saat
                 </th>
-                {DAY_NAMES.map((day, i) => (
+                <th className="w-32 min-w-32 px-2 py-2 text-left text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
+                  Sınıf
+                </th>
+                {DAY_NAMES.map((_, i) => (
                   <th
-                    key={day}
+                    key={i}
                     className={cn(
                       "px-2 py-2 text-center text-[10px] font-semibold tracking-wider text-neutral-500 uppercase",
                       i === todayDayIndex && "text-teal-700",
@@ -716,89 +671,86 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
               </tr>
             </thead>
             <tbody>
-              {TIME_SLOTS.map((slot) => {
-                const isLunch = slot.index === 5 && false;
-                return (
-                  <tr key={slot.index}>
-                    <td className="sticky left-0 z-10 border-t border-neutral-100 bg-white px-2 py-1.5 text-[11px] font-medium whitespace-nowrap text-neutral-500 tabular-nums">
-                      {slot.index}. {slot.start}
-                    </td>
-                    {DAY_NAMES.map((_, dayIndex) => {
-                      const cellKey = `${dayIndex}|${slot.index}`;
-                      const ymd = ymdOfDay(weekStart, dayIndex);
-                      const cellClassLessons = (classLessons ?? []).filter(
-                        (c) =>
-                          c.date === ymd &&
-                          slotIndexForTime(c.time) === slot.index,
-                      );
-                      const cellExtra = (extrasByCell.get(
-                        `${""}|${dayIndex}|${slot.index}`,
-                      ) ?? null) as ExtraLessonRow | null;
-                      void cellExtra;
-                      const occupied = cellClassLessons.length > 0;
-                      const isLunchSlot = slot.index === 5 && slot.start === "13:00";
-                      const lunch = isLunchSlot;
-                      void lunch;
+              {classList.map((cls: ClassRow) => (
+                <tr key={cls._id}>
+                  <td className="sticky left-0 z-10 border-t border-neutral-100 bg-white px-2 py-1.5 text-[11px] font-medium text-neutral-300">
+                    {selectedClass === cls.name ? "•" : ""}
+                  </td>
+                  <td className="border-t border-neutral-100 bg-neutral-50/60 px-2 py-1.5 text-[11px] font-semibold whitespace-nowrap text-neutral-700">
+                    {cls.name}
+                  </td>
+                  {DAY_NAMES.map((_, dayIndex) => {
+                    const ymd = ymdOfDay(weekStart, dayIndex);
+                    if (
+                      selectedClass !== "all" &&
+                      selectedClass !== cls.name
+                    ) {
                       return (
                         <td
-                          key={cellKey}
-                          onDragOver={(e) => {
-                            if (!unlockClass || occupied) {
-                              e.dataTransfer.dropEffect = "none";
-                              return;
-                            }
-                            e.preventDefault();
-                            e.dataTransfer.dropEffect = "move";
-                          }}
-                          onDrop={async (e) => {
-                            if (!unlockClass || occupied) return;
-                            const payload = readDragData(e);
-                            if (!payload) return;
-                            e.preventDefault();
-                            await handleDropToClass(
-                              payload,
-                              "", // class name resolved by column? filled below
-                              dayIndex,
-                              slot.index,
-                            );
-                          }}
-                          className={cn(
-                            "border-t border-l border-neutral-100 px-1.5 py-1.5 align-top transition-colors last:border-r",
-                            occupied && "bg-neutral-50/80",
-                            !occupied && unlockClass && "hover:bg-teal-50/40",
-                            !occupied && !unlockClass && "cursor-not-allowed",
-                          )}
-                        >
-                          {cellClassLessons.map((c) => (
-                            <ClassBadge
-                              key={c._id}
-                              subject={c.subject}
-                              teacherName={c.teacherName}
-                            />
-                          ))}
-                          {!occupied && (
-                            <span className="block text-center text-[10px] text-neutral-300">
-                              —
-                            </span>
-                          )}
-                        </td>
+                          key={dayIndex}
+                          className="border-t border-l border-neutral-100 bg-neutral-50/30 px-1.5 py-1 align-top last:border-r"
+                        />
                       );
-                    })}
-                  </tr>
-                );
-              })}
+                    }
+                    return (
+                      <td
+                        key={dayIndex}
+                        onDragOver={(e) => {
+                          if (!unlockClass) {
+                            e.dataTransfer.dropEffect = "none";
+                            return;
+                          }
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = "move";
+                        }}
+                        onDrop={(e) => {
+                          if (!unlockClass) return;
+                          void handleDropClass(
+                            e,
+                            cls.name,
+                            dayIndex,
+                            classLessonsByCell,
+                          );
+                        }}
+                        className={cn(
+                          "border-t border-l border-neutral-100 px-1.5 py-1 align-top last:border-r",
+                          unlockClass &&
+                            "cursor-pointer hover:bg-teal-50/50",
+                        )}
+                      >
+                        <ClassDayCell
+                          className={cls.name}
+                          dayIndex={dayIndex}
+                          ymd={ymd}
+                          cellMap={classLessonsByCell}
+                        />
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+              {classList.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={9}
+                    className="py-6 text-center text-sm text-neutral-400"
+                  >
+                    Henüz sınıf eklenmemiş.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
         <p className="mt-3 text-[11px] text-neutral-400">
-          Sınıf satırı yok: sınıf bazlı program sütunları gün bazlı toplu
-          görünüm sağlar. Düzenleme kilidi açıkken havuzdaki bir istek boş bir
-          hücreye bırakılarak sınıf dersine dönüştürülebilir.
+          Sınıf programındaki her hücre o gün o saatte sınıfın aldığı grubu
+          gösterir (ders + öğretmen kartı). Düzenleme kilidi açıkken havuzdan
+          sürükleyerek sınıf dersi oluşturabilirsiniz.
         </p>
       </SectionShell>
 
       {/* ==================================================== */}
-      {/* Öğretmen Birebir Programı (tüm öğretmenler tek tablo) */}
+      {/* Öğretmen Birebir Programı (tek toplu tablo)           */}
       {/* ==================================================== */}
       <SectionShell
         title="Öğretmen Birebir Programı"
@@ -810,21 +762,21 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
         badge={`${teacherList.length} öğretmen`}
         action={
           <EditLockToggle
-            locked={!unlockTeacher}
+            unlocked={unlockTeacher}
             onChange={(v) => setUnlockTeacher(v)}
           />
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] border-separate border-spacing-0 text-[12px]">
+          <table className="w-full min-w-[1100px] border-separate border-spacing-0 text-[12px]">
             <thead>
               <tr>
-                <th className="sticky left-0 z-10 w-40 min-w-40 bg-white px-2 py-2 text-left text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
-                  Öğretmen
+                <th className="sticky left-0 z-10 w-32 min-w-32 bg-white px-2 py-2 text-left text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
+                  Öğretmen / Saat
                 </th>
-                {DAY_NAMES.map((day, i) => (
+                {DAY_NAMES.map((_, i) => (
                   <th
-                    key={day}
+                    key={i}
                     className={cn(
                       "px-2 py-2 text-center text-[10px] font-semibold tracking-wider text-neutral-500 uppercase",
                       i === todayDayIndex && "text-blue-700",
@@ -836,54 +788,106 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
               </tr>
             </thead>
             <tbody>
-              {TIME_SLOTS.map((slot) => (
-                <tr key={slot.index}>
-                  <td className="sticky left-0 z-10 border-t border-neutral-100 bg-white px-2 py-1.5 text-[11px] font-medium whitespace-nowrap text-neutral-500 tabular-nums">
-                    {slot.index}. {slot.start}
-                  </td>
-                  {DAY_NAMES.map((_, dayIndex) => {
-                    const ymd = ymdOfDay(weekStart, dayIndex);
-                    return (
+              {teacherList.map((teacher: TeacherRow) => {
+                const tName = teacher.name.trim();
+                const isTurGroup =
+                  requestMatchesBranch("TÜRKÇE", tName) &&
+                  requestMatchesBranch("EDEBİYAT", tName) &&
+                  (tName === "EREN BİLGİLİ" || tName === "FATMA KURT");
+                return (
+                  <tr key={teacher._id} className="align-top">
+                    <td className="sticky left-0 z-10 border-t border-neutral-100 bg-white px-2 py-1.5">
+                      <div className="text-[12px] font-semibold whitespace-nowrap text-neutral-800">
+                        {tName}
+                      </div>
+                      {isTurGroup && (
+                        <div className="text-[10px] font-medium text-blue-600">
+                          TÜRKÇE / EDEBİYAT
+                        </div>
+                      )}
+                    </td>
+                    {DAY_NAMES.map((_, dayIndex) => (
                       <td
-                        key={`${dayIndex}|${slot.index}`}
-                        onDragOver={(e) => {
-                          if (!unlockTeacher) {
-                            e.dataTransfer.dropEffect = "none";
-                            return;
-                          }
-                          e.preventDefault();
-                          e.dataTransfer.dropEffect = "move";
-                        }}
-                        onDrop={async (e) => {
-                          if (!unlockTeacher) return;
-                          const payload = readDragData(e);
-                          if (!payload) return;
-                          e.preventDefault();
-                          await handleDropToTeacher(
-                            payload,
-                            "", // teacher resolved in cell content below
-                            dayIndex,
-                            slot.index,
-                          );
-                        }}
-                        className={cn(
-                          "border-t border-l border-neutral-100 px-1.5 py-1.5 align-top transition-colors last:border-r",
-                          !unlockTeacher && "cursor-not-allowed",
-                          unlockTeacher && "hover:bg-blue-50/40",
-                        )}
+                        key={dayIndex}
+                        className="border-t border-l border-neutral-100 px-1 py-1.5 align-top last:border-r"
                       >
-                        {/* cells intentionally left generic; per-teacher rows below */}
+                        <div className="flex flex-col gap-1">
+                          {TIME_SLOTS.map((slot) => {
+                            const cellKey = `${tName}|${dayIndex}|${slot.index}`;
+                            const cellLessons =
+                              lessonsByTeacherCell.get(cellKey);
+                            const cellExtra =
+                              extrasByTeacherCell.get(cellKey);
+                            const hasContent =
+                              (cellLessons && cellLessons.length > 0) ||
+                              Boolean(cellExtra);
+                            return (
+                              <div
+                                key={slot.index}
+                                onDragOver={(e) => {
+                                  if (!unlockTeacher || hasContent) {
+                                    e.dataTransfer.dropEffect = "none";
+                                    return;
+                                  }
+                                  e.preventDefault();
+                                  e.dataTransfer.dropEffect = "move";
+                                }}
+                                onDrop={(e) => {
+                                  if (!unlockTeacher || hasContent) return;
+                                  void handleDropTeacher(
+                                    e,
+                                    tName,
+                                    dayIndex,
+                                    slot.index,
+                                  );
+                                }}
+                                className={cn(
+                                  "flex min-h-[30px] flex-col gap-0.5 rounded-md border border-dashed border-transparent px-1 py-0.5 transition-colors",
+                                  hasContent &&
+                                    "border-solid border-neutral-100 bg-neutral-50/70",
+                                  !hasContent &&
+                                    unlockTeacher &&
+                                    "hover:border-blue-200 hover:bg-blue-50/40",
+                                  !unlockTeacher && "cursor-not-allowed",
+                                )}
+                                title={`${tName} · ${DAY_NAMES[dayIndex]} · ${slot.index}. Ders ${slot.start}-${slot.end}`}
+                              >
+                                {cellLessons?.map((l) => (
+                                  <RequestBadge
+                                    key={l._id}
+                                    studentName={l.studentName}
+                                    className={l.className || undefined}
+                                    missingTopic={l.missingTopic}
+                                  />
+                                ))}
+                                {cellExtra && (
+                                  <ExtraBadge
+                                    title={cellExtra.title}
+                                    className={cellExtra.className}
+                                  />
+                                )}
+                                {!hasContent && (
+                                  <span className="text-[9px] text-neutral-200">
+                                    {slot.start}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </td>
-                    );
-                  })}
-                </tr>
-              ))}
+                    ))}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
         <p className="mt-3 text-[11px] text-neutral-400">
-          Öğretmen bazlı birebir hücreleri: hücrede öğrenci adı, sınıfı ve eksik
-          konu listelenir. Ek dersler mor kartlarla görünür.
+          Hücrelerde öğrencinin adı, sınıfı ve eksik konusu alt alta listelenir;
+          ek dersler mor kartla görünür. Düzenleme kilidi açıkken havuzdaki
+          istekleri boş saatlere sürükleyin — branş dışı öğretmene bırakma
+          engellenir.
         </p>
       </SectionShell>
 
@@ -927,16 +931,22 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-neutral-100">
-                  {["Saat", "Öğretmen", "Öğrenci / Grup", "Sınıf", "Ders", "Eksik Konu", "Tür"].map(
-                    (head) => (
-                      <th
-                        key={head}
-                        className="h-9 px-3 text-left text-[11px] font-semibold tracking-wider text-neutral-400 uppercase"
-                      >
-                        {head}
-                      </th>
-                    ),
-                  )}
+                  {[
+                    "Saat",
+                    "Öğretmen",
+                    "Öğrenci / Grup",
+                    "Sınıf",
+                    "Ders",
+                    "Eksik Konu",
+                    "Tür",
+                  ].map((head) => (
+                    <th
+                      key={head}
+                      className="h-9 px-3 text-left text-[11px] font-semibold tracking-wider text-neutral-400 uppercase"
+                    >
+                      {head}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
@@ -989,7 +999,7 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
       </SectionShell>
 
       {/* ==================================================== */}
-      {/* Ek Ders Yönetimi                                      */}
+      {/* Ek Dersler                                            */}
       {/* ==================================================== */}
       <SectionShell
         title="Ek Dersler"
@@ -1007,7 +1017,7 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
               setExtraTitle("");
               setExtraTeacher("");
               setExtraClass("");
-              setExtraDay(String(initialDay));
+              setExtraDay(String(todayDayIndex >= 0 ? todayDayIndex : 0));
               setExtraSlot("1");
               setExtraDialogOpen(true);
             }}
@@ -1036,18 +1046,12 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
                 <div
                   key={e._id}
                   draggable
-                  onDragStart={(ev) => {
-                    setDragData(ev, { kind: "extra", extraId: e._id });
-                    setDraggingId(e._id);
-                  }}
-                  onDragEnd={() => setDraggingId(null)}
-                  className={cn(
-                    "group cursor-grab rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-[12px] leading-tight active:cursor-grabbing hover:shadow-sm",
-                    draggingId === e._id && "opacity-50",
-                  )}
+                  onDragStart={(ev) =>
+                    setDragData(ev, { kind: "extra", extraId: e._id })
+                  }
+                  className="cursor-grab rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-[12px] leading-tight active:cursor-grabbing hover:shadow-sm"
                 >
-                  <div className="flex items-center gap-1.5 font-semibold text-violet-900">
-                    <GripVertical className="size-3 shrink-0 opacity-60" />
+                  <div className="font-semibold text-violet-900">
                     {e.title}
                   </div>
                   <div className="text-violet-700">
@@ -1058,7 +1062,7 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
                     <button
                       type="button"
                       title="Düzenle"
-                      className="cursor-pointer text-violet-500 hover:text-violet-800"
+                      className="cursor-pointer font-medium text-violet-500 hover:text-violet-800"
                       onClick={() => {
                         const dayIdx = dayOffsetOf(e.date, weekStart) ?? 0;
                         const slotIdx = slotIndexForTime(e.time) ?? 1;
@@ -1076,7 +1080,7 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
                     <button
                       type="button"
                       title="Sil"
-                      className="cursor-pointer text-red-500 hover:text-red-700"
+                      className="cursor-pointer font-medium text-red-500 hover:text-red-700"
                       onClick={async () => {
                         try {
                           await deleteExtraLesson({ id: e._id });
@@ -1094,6 +1098,31 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
           </div>
         )}
       </SectionShell>
+
+      {/* Sınıf dersi sil butonları (kilitliyken gizli) */}
+      {unlockClass && (classLessons ?? []).length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {(classLessons ?? [])
+            .slice()
+            .sort((a, b) =>
+              a.date === b.date
+                ? a.time.localeCompare(b.time)
+                : a.date.localeCompare(b.date),
+            )
+            .map((c) => (
+              <button
+                key={c._id}
+                type="button"
+                onClick={() => void removeClassLesson(c)}
+                className="cursor-pointer rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-[11px] text-neutral-500 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600"
+                title="Sınıf dersini sil"
+              >
+                {c.className} · {c.subject} ·{" "}
+                {c.date.split("-").reverse().join(".")} {c.time} ✕
+              </button>
+            ))}
+        </div>
+      )}
 
       {/* ---------------------------------------------------- */}
       {/* Ek ders dialog                                        */}
@@ -1201,10 +1230,11 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
             <Button
               type="button"
               disabled={
-                !extraTitle.trim() || !extraTeacher || !extraClass
+                savingExtra || !extraTitle.trim() || !extraTeacher || !extraClass
               }
               className="cursor-pointer bg-violet-600 text-white hover:bg-violet-700"
               onClick={async () => {
+                setSavingExtra(true);
                 try {
                   const ymd = ymdOfDay(weekStart, Number(extraDay));
                   const start = slotStart(Number(extraSlot)) ?? "08:50";
@@ -1228,6 +1258,8 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
                     description:
                       error instanceof Error ? error.message : undefined,
                   });
+                } finally {
+                  setSavingExtra(false);
                 }
               }}
             >
@@ -1236,6 +1268,58 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Class-day cell: shows the grouped class lessons of that day/slot    */
+/* ------------------------------------------------------------------ */
+
+function ClassDayCell({
+  className,
+  dayIndex,
+  ymd,
+  cellMap,
+}: {
+  className: string;
+  dayIndex: number;
+  ymd: string;
+  cellMap: Map<string, ClassLessonRow[]>;
+}) {
+  const rows: ClassLessonRow[] = [];
+  for (const [key, list] of cellMap) {
+    void key;
+    for (const c of list) {
+      if (c.className === className && c.date === ymd) rows.push(c);
+    }
+  }
+  if (rows.length === 0) {
+    return (
+      <span className="block text-center text-[10px] text-neutral-300">—</span>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-0.5">
+      {rows
+        .slice()
+        .sort((a, b) => a.time.localeCompare(b.time))
+        .map((c) => (
+          <div
+            key={c._id}
+            className={cn(
+              "rounded-md px-1.5 py-1 text-[10.5px] leading-tight font-semibold",
+              BADGE_CLASS,
+            )}
+            title={`${c.subject} · ${c.teacherName} · ${DAY_NAMES[dayIndex]} ${c.time}`}
+          >
+            <span className="tabular-nums opacity-80">{c.time}</span>
+            <div className="truncate">{c.subject}</div>
+            <div className="truncate font-medium opacity-90">
+              {c.teacherName}
+            </div>
+          </div>
+        ))}
     </div>
   );
 }

@@ -11,8 +11,10 @@ import {
 import { ActionBar } from "@/components/kurs/ActionBar";
 import { LessonTable } from "@/components/kurs/LessonTable";
 import { PlanForm } from "@/components/kurs/PlanForm";
+import { RosterManager } from "@/components/kurs/RosterManager";
 import { StatCards, type StatScope } from "@/components/kurs/StatCards";
 import { SubjectDonut, type SubjectCount } from "@/components/kurs/SubjectDonut";
+import { WeeklySchedule } from "@/components/kurs/WeeklySchedule";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import {
@@ -51,6 +53,7 @@ export default function Dashboard() {
   const lessons = useQuery(api.lessons.listLessons);
   const teachers = useQuery(api.teachers.listTeachers);
   const ensureSampleData = useMutation(api.lessons.ensureSampleData);
+  const ensureRosterDefaults = useMutation(api.lessons.ensureRosterDefaults);
 
   const [scope, setScope] = useState<StatScope>("week");
   const [weekStart, setWeekStart] = useState<Date>(() =>
@@ -72,7 +75,23 @@ export default function Dashboard() {
     void ensureSampleData({ today: todayYmd() }).catch((error) => {
       console.error("sample data seeding failed:", error);
     });
-  }, [user, lessons, teachers, ensureSampleData]);
+  }, [user, lessons, teachers, ensureSampleData, ensureRosterDefaults]);
+
+  /* Top up roster for accounts that existed before the real class list. */
+  useEffect(() => {
+    if (!user?._id || !isAuthenticated) return;
+    if (lessons === undefined || teachers === undefined) return;
+    if (teachers.length === 0) return; // seeding still running
+    try {
+      if (localStorage.getItem(`yks-roster-topup:${user._id}`)) return;
+      localStorage.setItem(`yks-roster-topup:${user._id}`, "1");
+    } catch {
+      /* storage unavailable */
+    }
+    void ensureRosterDefaults().catch((error) => {
+      console.error("roster top-up failed:", error);
+    });
+  }, [user, isAuthenticated, lessons, teachers, ensureRosterDefaults]);
 
   const weekEnd = useMemo(() => addDays(weekStart, 6), [weekStart]);
 
@@ -256,6 +275,9 @@ export default function Dashboard() {
               />
             </div>
 
+            {/* Roster management (sınıflar + öğrenciler) */}
+            <RosterManager />
+
             {/* Action bar */}
             <ActionBar
               scope={scope}
@@ -277,6 +299,9 @@ export default function Dashboard() {
             >
               <LessonTable lessons={scopedSorted} scopeLabel={scopeLabel} />
             </div>
+
+            {/* Weekly schedules, request pool, daily table, ek ders */}
+            <WeeklySchedule weekStart={weekStart} />
           </div>
         )}
       </div>

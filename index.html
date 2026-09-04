@@ -187,7 +187,14 @@ Check your Browserslist config to be sure that your targets are set up correctly
     .print-goster { display:block !important; }
     * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   }
-</style>
+
+    /* --- Havuz kartı → haftalık takvim sürükle-bırak --- */
+    .dnd-bos { cursor: grab; }
+    .dnd-bos:hover { background-color: #f0fdfa; box-shadow: inset 0 0 0 1.5px #99f6e4; }
+    .dnd-uygun { background-color: #f0fdfa; box-shadow: inset 0 0 0 2px #2dd4bf; }
+    .dnd-kilit { cursor: not-allowed; }
+    .dnd-kilit:hover { background-color: #fef2f2; }
+  </style>
 </head>
 
 <body class="text-slate-800 antialiased">
@@ -1668,6 +1675,7 @@ function haftaBaslangiciD(k) { return addDaysKey(k, -dowIdx(k)); }
    ================================================================ */
 function setFiltre(f) {
   ui.filtre = f;
+  istekDropHedef = null;
   if (f === "tumu") { /* anchor kullanılmaz */ }
   else if (f === "hafta") ui.anchor = haftaBaslangiciD(ui.anchor);
   else if (f === "ay") ui.anchor = ui.anchor.slice(0, 7) + "-01";
@@ -1683,6 +1691,7 @@ function gunSec(k) {
 }
 function navGit(yon) {
   if (ui.filtre === "tumu") return;
+  istekDropHedef = null;
   var a = ui.anchor;
   if (ui.filtre === "gun") ui.anchor = addDaysKey(a, yon);
   else if (ui.filtre === "hafta") {
@@ -1700,6 +1709,7 @@ function navGit(yon) {
 }
 function buguneDon() {
   ui.anchor = todayKey();
+  istekDropHedef = null;
   if (ui.gunSecim) { var _w2 = pencere(); if (ui.gunSecim < _w2.start || ui.gunSecim > _w2.end) ui.gunSecim = null; }
   renderOzet(); renderAnaliz(); renderDersler();
 }
@@ -1733,7 +1743,7 @@ function haftalikOgrtTablo() {
     dersMap[gunIdx + "-" + l.saat] = l;
   });
 
-  var avail = t.avail || { sinif: [], musait: [] };
+  var avail = t.avail || { sinif: {}, musait: [] };
 
   // Saat başlıkları
   var saatBaslik = "";
@@ -1761,23 +1771,28 @@ function haftalikOgrtTablo() {
       var musaitDegil = avail.musait.indexOf(key) >= 0;
 
       if (isPazar || musaitDegil) {
-        satirlar += '<td class="px-1.5 py-1.5 text-center border-l border-slate-100 bg-slate-100"><span class="text-[9px] text-slate-400">' + (isPazar ? "Pazar" : "—") + '</span></td>';
+        satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100 bg-slate-100"><span class="text-[9px] text-slate-400">' + (isPazar ? "Pazar" : "—") + '</span></td>';
       } else if (sinifVar) {
-        satirlar += '<td class=\"px-1.5 py-1.5 text-center border-l border-slate-100\"><div class=\"rounded-lg bg-rose-100 border border-rose-200 px-1 py-1.5\">' +
-          '<div class=\"text-[8px] font-bold text-rose-700 leading-tight truncate whitespace-nowrap\">' + esc((avail.sinif[key] || 'Sınıf').substring(0, 14)) + '</div></div></td>';
+        satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100"><div class="rounded-lg bg-rose-100 border border-rose-200 px-1 py-1.5" title="Sınıf dersi — kilitli">' +
+          '<div class="text-[8px] font-bold text-rose-700 leading-tight truncate whitespace-nowrap">' + esc((avail.sinif[key] || 'Sınıf').substring(0, 14)) + '</div></div></td>';
       } else if (ders) {
         var ogrenci = DB.ogrenciler.find(function(x){ return x.id === ders.ogrenciId; });
         var ogrenciAd = ders.ogrenciAd || (ogrenci ? ogrenci.ad : "");
         var sinif = ogrenci ? ogrenci.sinif : "";
         var dersBilgi = DERS[ders.dersId];
         var durumRenk = ders.durum === "tamamlandi" ? "bg-emerald-50 border-emerald-200" : "bg-blue-50 border-blue-200";
-        satirlar += '<td class="px-1.5 py-1.5 text-center border-l border-slate-100"><div class="rounded-lg border ' + durumRenk + ' px-1 py-1.5">' +
+        satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100"><div class="rounded-lg border ' + durumRenk + ' px-1 py-1.5" title="Dolu — kilitli">' +
           '<div class="text-[10.5px] font-bold text-slate-800 leading-tight">' + esc(ogrenciAd.split(" ")[0]) + '</div>' +
           (sinif ? '<div class="text-[9px] font-semibold text-slate-500">' + esc(sinif) + '</div>' : '') +
           (dersBilgi ? '<div class="text-[8px] font-bold mt-0.5 ' + dersBilgi.tx + '">' + dersBilgi.ad + '</div>' : '') +
           '</div></td>';
       } else {
-        satirlar += '<td class="px-1.5 py-1.5 text-center border-l border-slate-100"></td>';
+        // BOŞ HÜCRE → DROP ZONE (havuzdaki istek kartı buraya bırakılabilir)
+        var hk = String(h).padStart(2, "0") + ":00";
+        satirlar += '<td class="dnd-bos px-1.5 py-1.5 text-center border-l border-slate-100 transition-colors"' +
+          ' data-drop-ogrt="' + esc(t.id) + '" data-drop-gun="' + g + '" data-drop-saat="' + hk + '"' +
+          ' ondragover="istekDragOver(event, this)" ondragleave="istekDragLeave(this)" ondrop="istekBurak(event, this, \'' + esc(t.id) + '\', \'' + addDaysKey(p.start, g) + '\', \'' + hk + '\')" title="Boş saat — havuzdan istek kartı sürükleyip bırakın">' +
+          '<span class="text-[9px] text-slate-300 select-none">+</span></td>';
       }
     }
     satirlar += "</tr>";
@@ -1788,12 +1803,69 @@ function haftalikOgrtTablo() {
       '<div class="w-9 h-9 rounded-xl bg-violet-500 flex items-center justify-center text-white shadow-sm shrink-0"><i class="fa-solid fa-calendar-week text-sm"></i></div>' +
       '<div><h3 class="text-[14px] font-extrabold text-slate-800">ÖĞRETMEN — ' + esc(t.ad.toUpperCase()) + '</h3>' +
       '<p class="text-[11px] text-slate-400">' + (brans ? brans.ad : 'Branş yok') + " · " + pencereAdi() + '</p></div>' +
+      '<span class="ml-auto hidden md:inline-flex items-center gap-1.5 rounded-full bg-white border border-teal-200 text-teal-600 text-[10.5px] font-bold px-3 py-1.5"><i class="fa-solid fa-hand-pointer"></i> Boş + hücrelerine istek kartı bırakabilirsiniz</span>' +
     '</div>' +
     '<div class="overflow-x-auto"><table class="w-full border-collapse">' +
       '<thead><tr class="bg-slate-50/80 border-b border-slate-100">' +
         '<th class="px-3 py-2 text-left border-r border-slate-100 text-[10.5px] font-extrabold text-slate-400 uppercase" style="min-width:100px">Gün</th>' +
         saatBaslik +
       '</tr></thead><tbody>' + satirlar + '</tbody></table></div></div>';
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// HAVUZ KARTI → HAFTALIK TAKVİM SÜRÜKLE-BIRAK
+// ═══════════════════════════════════════════════════════════════
+function istekDragOver(ev, el) {
+  if (!istekDropHedef) return;               // havuzdan sürüklenen kart yoksa tepki verme
+  ev.preventDefault();
+  if (ev.dataTransfer) ev.dataTransfer.dropEffect = "copy";
+  el.classList.add("dnd-uygun");
+}
+function istekDragLeave(el) { el.classList.remove("dnd-uygun"); }
+function istekBurak(ev, el, ogrtId, tarih, saat) {
+  ev.preventDefault();
+  el.classList.remove("dnd-uygun");
+  var istekId = istekDropHedef; istekDropHedef = null;
+  if (!istekId) return;
+  var r = DB.istekler.find(function (x) { return x.id === istekId; });
+  if (!r) return;
+
+  // Kilit kontrolü: hücre bu arada dolmuşsa veya öğretmen o saatte kilitliyse bırakmayı reddet
+  var t = DB.ogretmenler.find(function (x) { return x.id === ogrtId; });
+  var di = dowIdx(tarih), sNum = parseInt(saat.split(":")[0], 10);
+  var key = di + "-" + sNum;
+  if (!t) { toast("Öğretmen bulunamadı.", "hata"); return; }
+  var dolu = DB.dersler.some(function (l) { return l.ogretmenId === ogrtId && l.tarih === tarih && l.saat === saat && l.durum !== "iptal"; });
+  var pazar = di === 6; // Pazar: kurum tamamen kapalı
+  var kilitli = dolu || pazar || (t.avail && ((t.avail.sinif && key in t.avail.sinif) || t.avail.musait.indexOf(key) >= 0));
+  if (kilitli) { toast("Bu saat kilitli ya da dolu — istek bırakılamadı.", "hata"); renderDersler(); return; }
+
+  // Öğrenciyi bul/oluştur
+  var o = DB.ogrenciler.find(function (x) { return x.id === r.ogrenciId; });
+  if (!o) {
+    o = { id: uid(), ad: r.ogrenciAd || "İsimsiz Öğrenci", sinif: "", tel: "" };
+    DB.ogrenciler.push(o);
+  }
+
+  // Dersi planla
+  DB.dersler.push({
+    id: uid(), ogrenciId: o.id, ogrenciAd: o.ad, dersId: r.dersId, konu: r.konu || "",
+    ogretmenId: t.id, ogretmenAd: t.ad, tarih: tarih, saat: saat,
+    durum: "planlandi", olusturma: todayKey()
+  });
+
+  // İsteği havuzdan kaldır
+  DB.istekler = DB.istekler.filter(function (x) { return x.id !== istekId; });
+  ui.aktifIstekId = null;
+
+  toast("İstek takvime planlandı ✓ " + o.ad + " · " + fmtTR(tarih) + " " + saat);
+  saveDB();
+  renderHavuz();
+  renderFormDestek();
+  renderDersler();
+  renderOzet();
+  renderAnaliz();
 }
 
 function gunlukTablo() {

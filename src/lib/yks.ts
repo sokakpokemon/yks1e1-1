@@ -34,6 +34,7 @@ export const SUBJECT_COLORS: Record<string, string> = {
   Felsefe: "#64748B", // slate-500
   İngilizce: "#4F46E5", // indigo-600
   "Din Kültürü": "#9333EA", // fuchsia-600
+  "Ek Ders": "#7C3AED", // violet-600 — matches the violet ek-ders badges
 };
 
 const FALLBACK_PALETTE = [

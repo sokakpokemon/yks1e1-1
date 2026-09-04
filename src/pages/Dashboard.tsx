@@ -52,6 +52,9 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const lessons = useQuery(api.lessons.listLessons);
   const teachers = useQuery(api.teachers.listTeachers);
+  const classLessons = useQuery(api.lessons.listClassLessons);
+  const extraLessons = useQuery(api.lessons.listExtraLessons);
+  const classExtras = useQuery(api.lessons.listClassExtraLessons);
   const ensureSampleData = useMutation(api.lessons.ensureSampleData);
   const ensureRosterDefaults = useMutation(api.lessons.ensureRosterDefaults);
 
@@ -95,6 +98,12 @@ export default function Dashboard() {
 
   const weekEnd = useMemo(() => addDays(weekStart, 6), [weekStart]);
 
+  const weekFrom = useMemo(() => ymdOf(weekStart), [weekStart]);
+  const weekToExclusive = useMemo(
+    () => ymdOf(addDays(weekStart, 7)),
+    [weekStart],
+  );
+
   const allSorted = useMemo(
     () => (lessons ? sortLessons(lessons) : []),
     [lessons],
@@ -102,31 +111,87 @@ export default function Dashboard() {
 
   const scopedSorted = useMemo(() => {
     if (!lessons || scope === "all") return allSorted;
-    const from = ymdOf(weekStart);
-    const toExclusive = ymdOf(addDays(weekStart, 7));
     return sortLessons(
-      lessons.filter((l) => l.date >= from && l.date < toExclusive),
+      lessons.filter(
+        (l) => l.date >= weekFrom && l.date < weekToExclusive,
+      ),
     );
-  }, [lessons, scope, weekStart, allSorted]);
+  }, [lessons, scope, weekFrom, weekToExclusive, allSorted]);
+
+  /* Analiz tüm ders türlerini kapsar: birebir + sınıf + ek ders + sınıf ek dersi. */
+  const scopedClassLessons = useMemo(() => {
+    if (!classLessons || scope === "all") return classLessons ?? [];
+    return classLessons.filter(
+      (c) => c.date >= weekFrom && c.date < weekToExclusive,
+    );
+  }, [classLessons, scope, weekFrom, weekToExclusive]);
+
+  const scopedExtraLessons = useMemo(() => {
+    if (!extraLessons || scope === "all") return extraLessons ?? [];
+    return extraLessons.filter(
+      (e) => e.date >= weekFrom && e.date < weekToExclusive,
+    );
+  }, [extraLessons, scope, weekFrom, weekToExclusive]);
+
+  const scopedClassExtras = useMemo(() => {
+    if (!classExtras) return [];
+    const scheduled = classExtras.filter((c) => c.date !== "");
+    if (scope === "all") return scheduled;
+    return scheduled.filter(
+      (c) => c.date >= weekFrom && c.date < weekToExclusive,
+    );
+  }, [classExtras, scope, weekFrom, weekToExclusive]);
 
   const stats = useMemo(() => {
     const students = new Set(scopedSorted.map((l) => l.studentName.trim()));
-    const planned = scopedSorted.filter((l) => l.status !== "cancelled").length;
+    /* Planlanan: iptal olmayan birebir + tüm sınıf/ek dersler. */
+    const planned =
+      scopedSorted.filter((l) => l.status !== "cancelled").length +
+      scopedClassLessons.length +
+      scopedExtraLessons.length +
+      scopedClassExtras.length;
+    const scopedAllCount =
+      scopedSorted.length +
+      scopedClassLessons.length +
+      scopedExtraLessons.length +
+      scopedClassExtras.length;
+    const totalCount =
+      allSorted.length +
+      (classLessons?.length ?? 0) +
+      (extraLessons?.length ?? 0) +
+      (classExtras?.filter((c) => c.date !== "").length ?? 0);
     return {
-      lessons: scopedSorted.length,
+      lessons: scopedAllCount,
       students: students.size,
       planned,
-      total: allSorted.length,
+      total: totalCount,
     };
-  }, [scopedSorted, allSorted]);
+  }, [
+    scopedSorted,
+    scopedClassLessons,
+    scopedExtraLessons,
+    scopedClassExtras,
+    allSorted,
+    classLessons,
+    extraLessons,
+    classExtras,
+  ]);
 
   const subjectCounts = useMemo<SubjectCount[]>(() => {
     const map = new Map<string, number>();
-    for (const lesson of scopedSorted) {
-      map.set(lesson.subject, (map.get(lesson.subject) ?? 0) + 1);
-    }
+    const bump = (subject: string, n = 1) =>
+      map.set(subject, (map.get(subject) ?? 0) + n);
+    for (const lesson of scopedSorted) bump(lesson.subject);
+    for (const c of scopedClassLessons) bump(c.subject);
+    for (const e of scopedExtraLessons) bump("Ek Ders");
+    for (const ce of scopedClassExtras) bump(ce.subject);
     return [...map.entries()].map(([subject, count]) => ({ subject, count }));
-  }, [scopedSorted]);
+  }, [
+    scopedSorted,
+    scopedClassLessons,
+    scopedExtraLessons,
+    scopedClassExtras,
+  ]);
 
   const teacherNames = useMemo(
     () =>
@@ -150,7 +215,12 @@ export default function Dashboard() {
       ? fmtWeekRange(weekStart, weekEnd)
       : "Tüm zamanlar";
 
-  const ready = lessons !== undefined && teachers !== undefined;
+  const ready =
+    lessons !== undefined &&
+    teachers !== undefined &&
+    classLessons !== undefined &&
+    extraLessons !== undefined &&
+    classExtras !== undefined;
 
   const handleSignOut = async () => {
     await signOut();

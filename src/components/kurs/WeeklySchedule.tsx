@@ -38,7 +38,7 @@ import {
   Plus,
   Users,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 type LessonRow = Doc<"lessons">;
@@ -154,26 +154,6 @@ const BADGE_REQUEST = "bg-sky-50 border border-sky-300 text-sky-900"; // havuzda
 const BADGE_CLASS_EXTRA =
   "bg-orange-50 border border-orange-300 text-orange-900"; // esnek sınıf ek dersi (pastel turuncu)
 
-function ClassBadge({
-  subject,
-  teacherName,
-}: {
-  subject: string;
-  teacherName: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "rounded-md px-1.5 py-1 text-[10.5px] leading-tight font-semibold",
-        BADGE_CLASS,
-      )}
-    >
-      <div className="truncate">{subject}</div>
-      <div className="truncate font-medium opacity-90">{teacherName}</div>
-    </div>
-  );
-}
-
 function RequestBadge({
   studentName,
   className,
@@ -204,27 +184,6 @@ function ExtraBadge({ title, className }: { title: string; className: string }) 
     <div className="w-full rounded-md border border-violet-300 bg-violet-50 px-1.5 py-1 text-[10.5px] leading-tight font-medium text-violet-900">
       <div className="truncate font-semibold">{title}</div>
       <div className="truncate text-[10px] opacity-75">{className}</div>
-    </div>
-  );
-}
-
-/** Pastel turuncu kart — takvime yerleşen esnek sınıf ek dersi. */
-function ClassExtraBadge({ row }: { row: ClassExtraRow }) {
-  return (
-    <div
-      className={cn(
-        "w-full rounded-md px-1.5 py-1 text-[10.5px] leading-tight font-medium",
-        BADGE_CLASS_EXTRA,
-      )}
-    >
-      <div className="flex items-center justify-between gap-1">
-        <span className="truncate font-semibold">{row.className}</span>
-        <span className="shrink-0 tabular-nums opacity-70">{row.time}</span>
-      </div>
-      <div className="truncate">
-        {row.subject} · {row.teacherName}
-      </div>
-      <div className="truncate text-[10px] opacity-70">{row.topic}</div>
     </div>
   );
 }
@@ -460,22 +419,6 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
     return set;
   }, [lessons, classLessons, extraLessons, classExtras]);
 
-  const requestClassExtraDrop = (
-    request: LessonRow,
-    className: string,
-    day: number,
-    slot: number,
-  ): string | null => {
-    if (!requestMatchesBranch(request.subject, request.teacherName)) {
-      return "Branş uyuşmuyor";
-    }
-    if (request.teacherName && teacherBusyAt.has(`${request.teacherName}|${ymdOfDay(weekStart, day)}|${slotStart(slot)}`)) {
-      return "Öğretmen bu saatte dolu";
-    }
-    void className;
-    return null;
-  };
-
   /* ---------------- drop handlers ---------------- */
   const handleDropTeacher = async (
     e: React.DragEvent,
@@ -614,13 +557,15 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
         });
         return;
       }
-      // Talebin sınıfı için ilk boş (30 dk slot) hücreyi bul.
+      // Talebin sınıfı için ilk boş slota yerleş (kartın kendi hücresi hariç).
       for (const s of TIME_SLOTS) {
-        const cellFixed = cellMap.get(`${className}|${day}|${s.index}`);
+        const cellFixed = classLessonsByCell.get(`${className}|${day}|${s.index}`);
         const cellExtra = classExtrasByCell.get(`${className}|${day}|${s.index}`);
-        if ((cellFixed && cellFixed.length > 0) || cellExtra) continue;
+        if (cellFixed && cellFixed.length > 0) continue;
+        if (cellExtra && cellExtra._id !== ce._id) continue;
         const start = slotStart(s.index);
         if (!start) continue;
+        if (ce.date === ymd && ce.time === start) continue; // zaten o slotta
         if (
           ce.teacherName &&
           teacherBusyAt.has(`${ce.teacherName}|${ymd}|${start}`)
@@ -652,14 +597,18 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
     slot: number,
   ) => {
     const ymd = ymdOfDay(weekStart, day);
-    const start = slotStart(slot);
-    if (!start) return;
-    if (ce.date === ymd && ce.time === start) return;
     if (!requestMatchesBranch(ce.subject, ce.teacherName)) {
       toast.error("Branş uyuşmuyor");
       return;
     }
-    if (ce.teacherName && teacherBusyAt.has(`${ce.teacherName}|${ymd}|${start}`)) {
+    const start = slotStart(slot);
+    if (!start) return;
+    // Kartın kendi hücresine bırakma, öğretmen çakışması sayılmasın.
+    if (
+      ce.teacherName &&
+      teacherBusyAt.has(`${ce.teacherName}|${ymd}|${start}`) &&
+      !(ce.date === ymd && ce.time === start)
+    ) {
       toast.error("Çakışma var", {
         description: `${ce.teacherName} öğretmeninin ${DAY_NAMES[day]} ${start} saatinde başka dersi var.`,
       });
@@ -667,7 +616,8 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
     }
     const cellFixed = classLessonsByCell.get(`${ce.className}|${day}|${slot}`);
     const cellExtra = classExtrasByCell.get(`${ce.className}|${day}|${slot}`);
-    if ((cellFixed && cellFixed.length > 0) || cellExtra) {
+    const ownCell = cellExtra?._id === ce._id;
+    if ((cellFixed && cellFixed.length > 0) || (cellExtra && !ownCell)) {
       toast.error("Bu hücre dolu", {
         description: `${ce.className} sınıfının bu saatinde zaten ders var.`,
       });
@@ -1158,6 +1108,36 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
                         }}
                         onDrop={(e) => {
                           if (!unlockClass) return;
+                          const payload = readDragData(e);
+                          if (
+                            payload?.kind === "classExtra" &&
+                            payload.extraId
+                          ) {
+                            const ce = (classExtras ?? []).find(
+                              (c) => c._id === payload.extraId,
+                            );
+                            if (!ce) return;
+                            const slot = slotIndexForTime(ce.time);
+                            const ownDay =
+                              ce.date === ymdOfDay(weekStart, dayIndex);
+                            // Yerleşmiş kart kendi hücresine bırakıldıysa dokunma;
+                            // kendi gününe bırakıldıysa ilk boş slota taşı.
+                            if (ce.date && ownDay && slot !== null) {
+                              void handleMoveClassExtra(
+                                ce,
+                                dayIndex,
+                                slot,
+                              );
+                            } else {
+                              void handleDropClass(
+                                e,
+                                cls.name,
+                                dayIndex,
+                                classLessonsByCell,
+                              );
+                            }
+                            return;
+                          }
                           void handleDropClass(
                             e,
                             cls.name,
@@ -1176,8 +1156,7 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
                           dayIndex={dayIndex}
                           ymd={ymd}
                           cellMap={classLessonsByCell}
-                        />
-                        {/* Esnek sınıf ek dersi kartları (pastel turuncu) */}
+                        />                        {/* Esnek sınıf ek dersi kartları (pastel turuncu) */}
                         {TIME_SLOTS.map((s) => {
                           const ce = classExtrasByCell.get(
                             `${cls.name}|${dayIndex}|${s.index}`,

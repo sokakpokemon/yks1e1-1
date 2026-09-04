@@ -554,9 +554,9 @@ function seedDB() {
   });
 
   db.istekler = [
-    { id: uid(), ogrenciId: ogn("Zeynep Kaya"), ogrenciAd: "Zeynep Kaya", dersId: "mat", konu: "Limit ve Süreklilik", durum: "bekliyor", olusturma: todayKey() },
-    { id: uid(), ogrenciId: ogn("Yusuf Can"), ogrenciAd: "Yusuf Can", dersId: "ing", konu: "Reading Stratejileri", durum: "bekliyor", olusturma: todayKey() },
-    { id: uid(), ogrenciId: ogn("Ayşe Demir"), ogrenciAd: "Ayşe Demir", dersId: "fiz", konu: "İş, Güç ve Enerji", durum: "bekliyor", olusturma: todayKey() }
+    { id: uid(), ogrenciId: ogn("Zeynep Kaya"), ogrenciAd: "Zeynep Kaya", dersId: "mat", konu: "Limit ve Süreklilik", durum: "bekliyor", olusturma: addDaysKey(todayKey(), -3), saat: "09:30" },
+    { id: uid(), ogrenciId: ogn("Yusuf Can"), ogrenciAd: "Yusuf Can", dersId: "ing", konu: "Reading Stratejileri", durum: "bekliyor", olusturma: addDaysKey(todayKey(), -3), saat: "14:00" },
+    { id: uid(), ogrenciId: ogn("Ayşe Demir"), ogrenciAd: "Ayşe Demir", dersId: "fiz", konu: "İş, Güç ve Enerji", durum: "bekliyor", olusturma: addDaysKey(todayKey(), -2), saat: "11:15" }
   ];
   return db;
 }
@@ -564,7 +564,7 @@ function seedDB() {
 // ---------- Arayüz durumu ----------
 var ui = {
   filtre: "hafta", anchor: todayKey(), sekme: "ogretmen",
-  editId: null, aktifIstekId: null, ogrId: null, sinifAd: null, analizAcik: true
+  editId: null, aktifIstekId: null, ogrId: null, sinifAd: null, analizAcik: true, istekFiltre: ""
 };
 var donutChart = null, pngChart = null, onayCb = null;
 
@@ -1360,23 +1360,44 @@ function renderHavuz() {
   var dersOps = '<option value="" disabled>Ders seçin</option>';
   DERSLER.forEach(function (d) { dersOps += '<option value="' + d.id + '">' + d.ad + "</option>"; });
 
+  // -- Ders filtresi çipleri: Tüm Dersler + her ders için ayrı anlık filtre --
+  var aktif = ui.istekFiltre || "";
+  var gosterilen = DB.istekler.filter(function (r) { return !aktif || r.dersId === aktif; });
+  var chips = '<div class="flex flex-wrap items-center gap-1.5 mb-3">' +
+    '<span class="text-[10.5px] font-bold text-slate-400 uppercase tracking-wide mr-1"><i class="fa-solid fa-filter mr-1"></i>İstek Filtresi:</span>';
+  chips += '<button onclick="istekFiltrele(\'\')" class="rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors ' + (!aktif ? "bg-slate-800 text-white shadow-sm" : "bg-slate-100 text-slate-500 hover:bg-slate-200") + '">Tüm Dersler <span class="opacity-60">(' + DB.istekler.length + ")</span></button>";
+  DERSLER.forEach(function (d) {
+    var n = DB.istekler.filter(function (r) { return r.dersId === d.id; }).length;
+    if (!n) return;
+    chips += '<button onclick="istekFiltrele(\'' + d.id + '\')" class="rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors ' + (aktif === d.id ? d.bg + " " + d.tx + " ring-2 ring-offset-1 ring-slate-300" : d.bg + " " + d.tx + " opacity-60 hover:opacity-100") + '">' + d.ad + " (" + n + ")</button>";
+  });
+  chips += "</div>";
+
+  // -- Kronolojik sıralama: tarih + saat, eskiden yeniye --
+  var sirali = gosterilen.slice().sort(function (a, b) {
+    var ka = (a.olusturma || "9999") + " " + String(a.saat || "00:00");
+    var kb = (b.olusturma || "9999") + " " + String(b.saat || "00:00");
+    return ka < kb ? -1 : ka > kb ? 1 : 0;
+  });
+
   var liste = '<div class="space-y-2">';
-  var sirali = DB.istekler.slice().reverse();
   if (!sirali.length) {
-    liste += '<div class="border border-dashed border-slate-200 rounded-2xl py-10 text-center"><p class="text-[12px] text-slate-400">Havuz boş — rehberlik servisinin öğrenci talepleri burada toplanır.</p></div>';
+    liste += '<div class="border border-dashed border-slate-200 rounded-2xl py-10 text-center"><p class="text-[12px] text-slate-400">' + (aktif ? "Bu derse ait istek yok." : "Havuz boş — rehberlik servisinin öğrenci talepleri burada toplanır.") + "</p></div>";
   }
   sirali.forEach(function (r, i) {
     var o = DB.ogrenciler.find(function (x) { return x.id === r.ogrenciId; });
     var D2 = DERS[r.dersId];
     var bekliyor = r.durum === "bekliyor";
-    liste += '<div class="flex items-center gap-3 rounded-xl border px-3.5 py-2.5 ' + (bekliyor ? "border-slate-100 hover:border-teal-200 transition-colors" : "border-green-100 bg-green-50/40") + '">' +
+    liste += '<div draggable="' + bekliyor + '" data-istek="' + r.id + '" class="istek-kart flex items-center gap-3 rounded-xl border px-3.5 py-2.5 ' + (bekliyor ? "border-slate-100 hover:border-teal-300 transition-colors cursor-grab active:cursor-grabbing" : "border-green-100 bg-green-50/40") + '"' +
+      (bekliyor ? ' ondragstart="istekDrag(event, \'' + r.id + '\'); this.style.opacity=\'0.45\'" ondragend="istekDropHedef=null; this.style.opacity=\'\'"' : "") + ">" +
       avatar((o ? o.ad : r.ogrenciAd), i) +
       '<div class="flex-1 min-w-0"><div class="flex items-center gap-2 flex-wrap"><b class="text-[13px] text-slate-800">' + esc(o ? o.ad : r.ogrenciAd) + "</b>" +
       (D2 ? '<span class="rounded-full px-2 py-0.5 text-[10.5px] font-bold ' + D2.bg + " " + D2.tx + '">' + D2.ad + "</span>" : "") +
       '<span class="text-[10px] font-bold rounded-full px-2 py-0.5 ' + (bekliyor ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700") + '">' + (bekliyor ? "Bekliyor" : "Planlandı") + "</span></div>" +
-      '<div class="text-[11.5px] text-slate-500 truncate mt-0.5">' + (r.konu ? "<i>Eksik konu:</i> " + esc(r.konu) : '<span class="italic text-slate-300">Konu belirtilmedi</span>') + "</div></div>" +
+      '<div class="text-[11.5px] text-slate-500 truncate mt-0.5">' + (r.konu ? "<i>Eksik konu:</i> " + esc(r.konu) : '<span class="italic text-slate-300">Konu belirtilmedi</span>') + "</div>" +
+      '<div class="text-[10px] text-slate-400 font-semibold mt-0.5"><i class="fa-regular fa-calendar mr-1"></i>' + fmtTR(r.olusturma) + (r.saat ? " · <i class=\'fa-regular fa-clock ml-1 mr-1\'></i>" + r.saat : "") + "</div></div>" +
       (bekliyor
-        ? '<button onclick="formaAktar(\'' + r.id + '\')" class="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-teal-500 hover:bg-teal-600 text-white text-[11.5px] font-bold px-3.5 py-2 shadow-sm transition-colors"><i class="fa-solid fa-arrow-right-arrow-left"></i>Eşleştir &amp; Planla</button>'
+        ? '<button onclick="formaAktar(\'' + r.id + '\')" title="Sürükleyip planlama formuna bırakın veya tıklayın" class="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-teal-500 hover:bg-teal-600 text-white text-[11.5px] font-bold px-3.5 py-2 shadow-sm transition-colors"><i class="fa-solid fa-arrow-right-arrow-left"></i>Eşleştir &amp; Planla</button>'
         : '<span class="text-[10.5px] text-emerald-600 font-bold shrink-0"><i class="fa-solid fa-check mr-1"></i>Derse dönüştürüldü</span>') +
       '<button onclick="istekSil(\'' + r.id + '\')" class="w-7 h-7 rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 shrink-0"><i class="fa-solid fa-trash-can text-[12px]"></i></button></div>';
   });
@@ -1386,15 +1407,19 @@ function renderHavuz() {
     '<div class="kart p-5">' +
       '<div class="flex flex-wrap items-center justify-between gap-3 mb-4">' +
         '<div><h2 class="text-[15px] font-bold text-slate-900 flex items-center gap-2"><i class="fa-solid fa-inbox text-slate-300"></i> Öğrenci Birebir İstek Havuzu</h2>' +
-        '<p class="text-[11.5px] text-slate-400 font-medium">Rehberlik servisinin taleplerini toplayın, tek tıkla planlama formuna aktarın</p></div>' +
+        '<p class="text-[11.5px] text-slate-400 font-medium">Kronolojik sıralı · Kartları sürükleyip planlama formuna bırakabilirsiniz</p></div>' +
         '<span class="rounded-full px-3 py-1.5 text-[11.5px] font-bold ' + (bekleyen ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-400") + '">' + bekleyen + " bekleyen istek</span></div>" +
       '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-4">' +
         '<input id="h-ogrenci" list="dl-ogrenci" placeholder="Öğrenci adı" autocomplete="off" class="rounded-xl border border-slate-200 px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
         '<select id="h-ders" class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40">' + dersOps + "</select>" +
         '<input id="h-konu" placeholder="Eksik konu (örn. Paragraf)" autocomplete="off" class="lg:col-span-2 rounded-xl border border-slate-200 px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
         '<button onclick="istekEkle()" class="rounded-full border-2 border-teal-200 text-teal-600 hover:bg-teal-50 text-[13px] font-bold px-4 py-2 transition-colors"><i class="fa-solid fa-plus mr-1.5"></i>İsteği Havuza Ekle</button>' +
-      "</div>" + liste + "</div>";
+      "</div>" +
+      chips + liste + "</div>";
 }
+function istekFiltrele(id) { ui.istekFiltre = id || ""; renderHavuz(); }
+function istekDrag(ev, id) { istekDropHedef = id; if (ev.dataTransfer) { ev.dataTransfer.effectAllowed = "copy"; try { ev.dataTransfer.setData("text/plain", id); } catch (e) {} } }
+
 function istekEkle() {
   var ad = $("h-ogrenci").value.trim();
   var dersId = $("h-ders").value;
@@ -1432,6 +1457,30 @@ function istekSil(id) {
   toast("İstek silindi.");
   renderHavuz();
 }
+
+
+// -- Havuz kartı, planlama formu kartına sürüklenip bırakıldığında isteği forma aktar --
+document.addEventListener("DOMContentLoaded", function () {
+  var pk = $("planKart");
+  if (!pk) return;
+  pk.addEventListener("dragover", function (e) {
+    if (!istekDropHedef) return;
+    e.preventDefault();
+    if (ev_dnd) ev_dnd.dataTransfer.dropEffect = "copy";
+    pk.classList.add("ring-2", "ring-teal-300");
+  });
+  pk.addEventListener("dragleave", function () { pk.classList.remove("ring-2", "ring-teal-300"); });
+  pk.addEventListener("drop", function (e) {
+    pk.classList.remove("ring-2", "ring-teal-300");
+    if (!istekDropHedef) return;
+    e.preventDefault();
+    formaAktar(istekDropHedef);
+    istekDropHedef = null;
+  });
+});
+var ev_dnd = null, istekDropHedef = null;
+document.addEventListener("dragstart", function (e) { ev_dnd = e; });
+document.addEventListener("dragend", function () { ev_dnd = null; });
 
 /* ================================================================
    4) PLAN FORMU — hızlı öğretmen, liste destekleri, banner
@@ -1601,7 +1650,7 @@ function planla() {
     });
     if (ui.aktifIstekId) {
       var r = DB.istekler.find(function (x) { return x.id === ui.aktifIstekId; });
-      if (r && r.durum === "bekliyor") { r.durum = "planlandi"; }
+      if (r) { r.durum = "planlandi"; }
       ui.aktifIstekId = null;
     }
     toast("Ders planlandı 🎉 " + o.ad + " · " + fmtTR(tarih) + " " + saat);

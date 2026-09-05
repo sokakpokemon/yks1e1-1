@@ -31,7 +31,6 @@ import {
 } from "@/lib/scheduleDrag";
 import { termOfYmd, todayYmd, ymdInTerm, ymdOf } from "@/lib/yks";
 import { useMutation, useQuery } from "convex/react";
-import { ClassGroupEkDersPanel } from "./ClassGroupEkDersPanel";
 import { motion } from "framer-motion";
 import {
   CalendarDays,
@@ -898,7 +897,7 @@ export function WeeklySchedule({
       {/* Sınıf Ek Ders Havuzu (esnek, haftalık değişebilir)    */}
       {/* ==================================================== */}
       <SectionShell
-        title="Sınıf Ek Ders Havuzu"
+        title="Sınıf Programına Yazılan Ek Dersler"
         icon={
           <span className="flex size-7 items-center justify-center rounded-lg bg-orange-500">
             <Layers className="size-4 text-white" />
@@ -1017,7 +1016,7 @@ export function WeeklySchedule({
             className="h-8 cursor-pointer justify-self-start rounded-full bg-orange-500 px-4 text-[12px] font-semibold text-white hover:bg-orange-600"
           >
             <Plus className="size-4" strokeWidth={2.5} />
-            Sınıf Ek Ders Talebi Oluştur
+            Sınıf Programına Ek Ders Talebi Oluştur
           </Button>
         </div>
 
@@ -1541,9 +1540,6 @@ export function WeeklySchedule({
           engellenir.
         </p>
       </SectionShell>
-
-      {/* Sınıf (Grup) Ek Ders — bağımsız bölüm (birebir mantığı, sınıfa yazılır) */}
-      <ClassGroupEkDersPanel term={term} />
 
       {/* ==================================================== */}
       {/* Günlük Toplu Tablo                                    */}

@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ActionBar } from "@/components/kurs/ActionBar";
+import { ClassGroupEkDersPanel } from "@/components/kurs/ClassGroupEkDersPanel";
 import { BackupManager } from "@/components/kurs/BackupManager";
 import { LessonTable } from "@/components/kurs/LessonTable";
 import { PlanForm } from "@/components/kurs/PlanForm";
@@ -453,6 +454,9 @@ export default function Dashboard() {
 
             {/* Roster management (döneme özel sınıflar + öğrenciler) */}
             <RosterManager term={term} />
+
+            {/* Sınıf (Grup) Ek Ders — bağımsız üst düzey bölüm */}
+            <ClassGroupEkDersPanel term={term} />
 
             {/* Action bar */}
             <ActionBar

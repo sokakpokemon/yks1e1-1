@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { sameTerm } from "@/lib/yks";
 import { termOfYmd } from "@/lib/yks";
 
 type LessonRow = Doc<"lessons">;
@@ -273,7 +274,7 @@ export function BackupManager({ term }: { term: string }) {
           (snap.classes as ClassRow[])
             .slice()
             .sort((a, b) =>
-              a.term === b.term
+              sameTerm(a.term, b.term)
                 ? a.name.localeCompare(b.name, "tr")
                 : a.term.localeCompare(b.term),
             )

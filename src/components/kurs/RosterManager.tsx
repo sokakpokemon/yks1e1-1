@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { sameTerm } from "@/lib/yks";
 import { cn } from "@/lib/utils";
 
 type ClassRow = Doc<"classes">;
@@ -42,9 +43,11 @@ export function RosterManager({ term }: { term: string }) {
   const [studentEditClass, setStudentEditClass] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const classList = (classes ?? []).filter((c) => c.term === term);
+  const classList = (classes ?? []).filter((c) =>
+    sameTerm(c.term ?? "", term),
+  );
   const studentList = [...(students ?? [])]
-    .filter((s) => s.term === term)
+    .filter((s) => sameTerm(s.term ?? "", term))
     .sort((a, b) => a.name.localeCompare(b.name, "tr", { sensitivity: "base" }));
 
   /* Seçili dönemden önce, kaydı olan en yakın dönem (kopyalama kaynağı). */

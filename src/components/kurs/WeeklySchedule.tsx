@@ -29,7 +29,7 @@ import {
   readDragData as readDragDataShared,
   setDragData as setDragDataShared,
 } from "@/lib/scheduleDrag";
-import { termOfYmd, todayYmd, ymdInTerm, ymdOf } from "@/lib/yks";
+import { sameTerm, termOfYmd, todayYmd, ymdInTerm, ymdOf } from "@/lib/yks";
 import { useMutation, useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import {
@@ -296,7 +296,9 @@ export function WeeklySchedule({
     }
   }, [classExtras]);
 
-  const classList = (classes ?? []).filter((c) => c.term === term);
+  const classList = (classes ?? []).filter((c) =>
+    sameTerm(c.term ?? "", term),
+  );
   const teacherList = teachers ?? [];
 
   /* ---------------- request pool ---------------- */
@@ -375,7 +377,7 @@ export function WeeklySchedule({
   const termClassExtras = useMemo(
     () =>
       (classExtras ?? []).filter((c) =>
-        c.date ? termOfYmd(c.date) === term : (c.term || "") === term,
+        c.date ? sameTerm(termOfYmd(c.date), term) : sameTerm(c.term || "", term),
       ),
     [classExtras, term],
   );

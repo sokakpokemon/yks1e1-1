@@ -123,6 +123,20 @@ const TERM_START_DAY = 1;
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
+/**
+ * Normalizes any stored term label to the full "YYYY/YYYY" form.
+ * Accepts "2026/27" (legacy 2-digit) and "2026/2027".
+ */
+export function normalizeTerm(term: string): string {
+  if (!term) return "";
+  const m = term.trim().match(/^(\d{4})\/(\d{2,4})$/);
+  if (!m) return term.trim();
+  const start = Number(m[1]);
+  let end = Number(m[2]);
+  if (m[2].length === 2) end = start + (end === (start + 1) % 100 ? 1 : 0);
+  return `${start}/${end}`;
+}
+
 /** "2026-09-05" -> "2026/2027". Empty/invalid strings return "". */
 export function termOfYmd(ymd: string): string {
   if (!ymd) return "";
@@ -131,9 +145,9 @@ export function termOfYmd(ymd: string): string {
   const [, m] = ymd.split("-");
   const month = Number(m);
   if (month >= TERM_START_MONTH + 1) {
-    return `${y}/${String((y + 1) % 100).padStart(2, "0")}`;
+    return `${y}/${y + 1}`;
   }
-  return `${y - 1}/${String(y % 100).padStart(2, "0")}`;
+  return `${y - 1}/${y}`;
 }
 
 /** A local Date -> "2026/2027" (September starts the new term). */
@@ -141,9 +155,9 @@ export function termOfDate(date: Date): string {
   const y = date.getFullYear();
   const month = date.getMonth(); // 0-based; 8 = September
   if (month >= TERM_START_MONTH) {
-    return `${y}/${String((y + 1) % 100).padStart(2, "0")}`;
+    return `${y}/${y + 1}`;
   }
-  return `${y - 1}/${String(y % 100).padStart(2, "0")}`;
+  return `${y - 1}/${y}`;
 }
 
 /** "2026/2027" -> first day (Sep 1 2026) as a local Date. */
@@ -173,10 +187,15 @@ export function ymdInTerm(ymd: string, term: string): boolean {
   return ymd >= start && ymd < end;
 }
 
-/** "2026" -> "2027" (next term label), "2026/2027" + 1 -> "2027/2028". */
+/** "2026/2027" -> "2027/2028" (next term label, accepts legacy 2-digit). */
 export function termPlus(term: string, delta: number): string {
-  const y = Number(term.slice(0, 4)) + delta;
-  return `${y}/${String((y + 1) % 100).padStart(2, "0")}`;
+  const y = Number(normalizeTerm(term).slice(0, 4)) + delta;
+  return `${y}/${y + 1}`;
+}
+
+/** True when two term labels refer to the same dönem (legacy "2026/27" safe). */
+export function sameTerm(a: string, b: string): boolean {
+  return normalizeTerm(a) === normalizeTerm(b);
 }
 
 /** Candidate term labels (past few + current + next) for selectors. */

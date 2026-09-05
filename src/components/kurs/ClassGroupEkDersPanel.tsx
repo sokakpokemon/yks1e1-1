@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { requestMatchesBranch, SUBJECTS } from "@/lib/schedule";
+import { sameTerm } from "@/lib/yks";
 import { setDragData } from "@/lib/scheduleDrag";
 import { useMutation, useQuery } from "convex/react";
 import { motion } from "framer-motion";
@@ -65,12 +66,12 @@ export function ClassGroupEkDersPanel({
   const ready =
     cgExtras !== undefined && classes !== undefined && teachers !== undefined;
 
-  const classList = (classes ?? []).filter((c) => c.term === term);
+  const classList = (classes ?? []).filter((c) => sameTerm(c.term ?? "", term));
   const teacherList = teachers ?? [];
 
   /* Döneme ait talepler (havuz + planlanmış). */
   const termRows = useMemo(
-    () => (cgExtras ?? []).filter((c) => (c.term || "") === term),
+    () => (cgExtras ?? []).filter((c) => sameTerm(c.term || "", term)),
     [cgExtras, term],
   );
 

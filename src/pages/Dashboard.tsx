@@ -29,6 +29,8 @@ import { cn } from "@/lib/utils";
 import {
   addDays,
   currentTerm,
+  normalizeTerm,
+  sameTerm,
   fmtWeekRange,
   startOfWeekMonday,
   subjectLabel,
@@ -114,8 +116,10 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user?._id) return;
     if (classes === undefined || classes === null) return;
-    const classesForTerm = classes.filter((c) => c.term === term);
-    if (term !== currentTerm() || classesForTerm.length > 0) return;
+    const classesForTerm = classes.filter((c) =>
+      sameTerm(c.term ?? "", term),
+    );
+    if (!sameTerm(term, currentTerm()) || classesForTerm.length > 0) return;
     try {
       if (localStorage.getItem(`yks-defaults:${user._id}:${term}`)) return;
       localStorage.setItem(`yks-defaults:${user._id}:${term}`, "1");
@@ -154,7 +158,8 @@ export default function Dashboard() {
       if (t) set.add(t);
     };
     const addTerm = (t: string | undefined | null) => {
-      if (t) set.add(t);
+      if (!t) return;
+      set.add(normalizeTerm(t));
     };
     lessons?.forEach((l) => addDate(l.date));
     classLessons?.forEach((c) => addDate(c.date));
@@ -354,7 +359,7 @@ export default function Dashboard() {
                 {allTerms.map((t) => (
                   <SelectItem key={t} value={t}>
                     {t} Dönemi
-                    {t === currentTerm() ? " (güncel)" : ""}
+                    {sameTerm(t, currentTerm()) ? " (güncel)" : ""}
                   </SelectItem>
                 ))}
               </SelectContent>

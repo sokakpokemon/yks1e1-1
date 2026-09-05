@@ -268,7 +268,7 @@ export const upsertClass = mutation({
     const dup = all.some(
       (c) =>
         c._id !== id &&
-        (termKey === "" || c.term === termKey) &&
+        (termKey === "" || normalizeTerm(c.term ?? "") === normalizeTerm(termKey)) &&
         c.name.trim().toLocaleLowerCase("tr") === trimmed.toLocaleLowerCase("tr"),
     );
     if (dup) throw new Error("Bu sınıf adı bu dönemde zaten kayıtlı.");
@@ -277,13 +277,13 @@ export const upsertClass = mutation({
       if (existing === null || existing.userId !== userId) {
         throw new Error("Sınıf bulunamadı.");
       }
-      await ctx.db.patch(id, { name: trimmed, term: termKey });
+      await ctx.db.patch(id, { name: trimmed, term: normalizeTerm(termKey) });
       return { id };
     }
     const newId = await ctx.db.insert("classes", {
       userId,
       name: trimmed,
-      term: termKey,
+      term: normalizeTerm(termKey),
     });
     return { id: newId };
   },
@@ -338,7 +338,7 @@ export const upsertStudent = mutation({
     const dup = all.some(
       (s) =>
         s._id !== id &&
-        (termKey === "" || s.term === termKey) &&
+        (termKey === "" || normalizeTerm(s.term ?? "") === normalizeTerm(termKey)) &&
         s.name.trim().toLocaleLowerCase("tr") === trimmed.toLocaleLowerCase("tr"),
     );
     if (dup) throw new Error("Bu öğrenci bu dönemde zaten kayıtlı.");
@@ -350,7 +350,7 @@ export const upsertStudent = mutation({
       await ctx.db.patch(id, {
         name: trimmed,
         className: (className ?? "").trim(),
-        term: termKey,
+        term: normalizeTerm(termKey),
       });
       return { id };
     }
@@ -358,7 +358,7 @@ export const upsertStudent = mutation({
       userId,
       name: trimmed,
       className: (className ?? "").trim(),
-      term: termKey,
+      term: normalizeTerm(termKey),
     });
     return { id: newId };
   },
@@ -534,8 +534,22 @@ function termFromYmd(ymd: string): string {
   const y = Number(yRaw);
   const month = Number(mRaw);
   if (!y || !month) return "";
-  if (month >= 9) return `${y}/${String((y + 1) % 100).padStart(2, "0")}`;
-  return `${y - 1}/${String(y % 100).padStart(2, "0")}`;
+  if (month >= 9) return `${y}/${y + 1}`;
+  return `${y - 1}/${y}`;
+}
+
+/**
+ * Normalizes any stored term label to the full "YYYY/YYYY" form so that
+ * legacy "2026/27" rows still match the current "2026/2027" selectors.
+ */
+function normalizeTerm(term: string): string {
+  if (!term) return "";
+  const m = term.trim().match(/^(\d{4})\/(\d{2,4})$/);
+  if (!m) return term.trim();
+  const start = Number(m[1]);
+  let end = Number(m[2]);
+  if (m[2].length === 2) end = start + (end === (start + 1) % 100 ? 1 : 0);
+  return `${start}/${end}`;
 }
 
 /** Moves (or removes from) the calendar a flexible class extra lesson. */
@@ -608,7 +622,7 @@ export const createClassGroupExtraLesson = mutation({
     const userId = await getAuthUserId(ctx);
     if (userId === null) throw new Error("Giriş yapılmamış.");
 
-    const term = args.term.trim();
+    const term = normalizeTerm(args.term.trim());
     const className = args.className.trim();
     const subject = args.subject.trim();
     const teacherName = args.teacherName.trim();
@@ -729,7 +743,7 @@ export const ensureRosterDefaults = mutation({
       .collect();
     const knownClassesInTerm = new Set(
       classes
-        .filter((c) => c.term === termKey)
+        .filter((c) => normalizeTerm(c.term ?? "") === normalizeTerm(termKey))
         .map((c) => c.name.trim().toLocaleUpperCase("tr")),
     );
     const knownTeachers = new Set(
@@ -785,7 +799,7 @@ export const ensureTermDefaults = mutation({
       .collect();
     const knownClassesInTerm = new Set(
       classes
-        .filter((c) => c.term === termKey)
+        .filter((c) => normalizeTerm(c.term ?? "") === normalizeTerm(termKey))
         .map((c) => c.name.trim().toLocaleUpperCase("tr")),
     );
     const knownTeachers = new Set(
@@ -795,7 +809,11 @@ export const ensureTermDefaults = mutation({
     let added = 0;
     for (const name of classNames) {
       if (!knownClassesInTerm.has(name.toLocaleUpperCase("tr"))) {
-        await ctx.db.insert("classes", { userId, name, term: termKey });
+        await ctx.db.insert("classes", {
+          userId,
+          name,
+          term: normalizeTerm(termKey),
+        });
         added++;
       }
     }
@@ -822,7 +840,11 @@ export const copyRosterFromTerm = mutation({
   handler: async (ctx, { fromTerm, toTerm, includeStudents }) => {
     const userId = await getAuthUserId(ctx);
     if (userId === null) throw new Error("Giriş yapılmamış.");
-    if (!fromTerm || !toTerm || fromTerm === toTerm) {
+    if (
+      !fromTerm ||
+      !toTerm ||
+      normalizeTerm(fromTerm) === normalizeTerm(toTerm)
+    ) {
       throw new Error("Geçersiz dönem seçimi.");
     }
     const classes = await ctx.db
@@ -836,17 +858,19 @@ export const copyRosterFromTerm = mutation({
 
     const existingClasses = new Set(
       classes
-        .filter((c) => c.term === toTerm)
+        .filter((c) => normalizeTerm(c.term ?? "") === normalizeTerm(toTerm))
         .map((c) => c.name.trim().toLocaleUpperCase("tr")),
     );
     const existingStudents = new Set(
       students
-        .filter((s) => s.term === toTerm)
+        .filter((s) => normalizeTerm(s.term ?? "") === normalizeTerm(toTerm))
         .map((s) => s.name.trim().toLocaleUpperCase("tr")),
     );
 
     let added = 0;
-    for (const c of classes.filter((x) => x.term === fromTerm)) {
+    for (const c of classes.filter(
+      (x) => normalizeTerm(x.term ?? "") === normalizeTerm(fromTerm),
+    )) {
       const key = c.name.trim().toLocaleUpperCase("tr");
       if (!existingClasses.has(key)) {
         await ctx.db.insert("classes", { userId, name: c.name, term: toTerm });
@@ -855,7 +879,9 @@ export const copyRosterFromTerm = mutation({
       }
     }
     if (includeStudents) {
-      for (const s of students.filter((x) => x.term === fromTerm)) {
+      for (const s of students.filter(
+        (x) => normalizeTerm(x.term ?? "") === normalizeTerm(fromTerm),
+      )) {
         const key = s.name.trim().toLocaleUpperCase("tr");
         if (!existingStudents.has(key)) {
           await ctx.db.insert("students", {

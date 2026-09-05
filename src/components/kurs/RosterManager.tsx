@@ -4,27 +4,31 @@ import { useMutation, useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import {
   Check,
+  Copy,
   Loader2,
   Pencil,
   Plus,
+  Sparkles,
   Trash2,
   Users,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 type ClassRow = Doc<"classes">;
 type StudentRow = Doc<"students">;
 
-export function RosterManager() {
+export function RosterManager({ term }: { term: string }) {
   const classes = useQuery(api.lessons.listClasses);
   const students = useQuery(api.lessons.listStudents);
   const upsertClass = useMutation(api.lessons.upsertClass);
   const deleteClass = useMutation(api.lessons.deleteClass);
   const upsertStudent = useMutation(api.lessons.upsertStudent);
   const deleteStudent = useMutation(api.lessons.deleteStudent);
+  const copyRoster = useMutation(api.lessons.copyRosterFromTerm);
+  const ensureTermDefaults = useMutation(api.lessons.ensureTermDefaults);
 
   const [classDraft, setClassDraft] = useState("");
   const [classEditId, setClassEditId] = useState<Id<"classes"> | null>(null);
@@ -38,10 +42,19 @@ export function RosterManager() {
   const [studentEditClass, setStudentEditClass] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const classList = classes ?? [];
-  const studentList = [...(students ?? [])].sort((a, b) =>
-    a.name.localeCompare(b.name, "tr", { sensitivity: "base" }),
-  );
+  const classList = (classes ?? []).filter((c) => c.term === term);
+  const studentList = [...(students ?? [])]
+    .filter((s) => s.term === term)
+    .sort((a, b) => a.name.localeCompare(b.name, "tr", { sensitivity: "base" }));
+
+  /* Seçili dönemden önce, kaydı olan en yakın dönem (kopyalama kaynağı). */
+  const pastTerm = useMemo(() => {
+    const present = new Set<string>();
+    for (const c of classes ?? []) if (c.term) present.add(c.term);
+    for (const s of students ?? []) if (s.term) present.add(s.term);
+    const older = [...present].filter((t) => t < term).sort();
+    return older.length > 0 ? older[older.length - 1] : null;
+  }, [classes, students, term]);
 
   const saveClass = async () => {
     const name = (classEditId ? classEditName : classDraft).trim();
@@ -52,12 +65,12 @@ export function RosterManager() {
     setBusy(true);
     try {
       if (classEditId) {
-        await upsertClass({ id: classEditId, name });
+        await upsertClass({ id: classEditId, name, term });
         toast.success("Sınıf güncellendi", { description: name });
         setClassEditId(null);
         setClassEditName("");
       } else {
-        await upsertClass({ name });
+        await upsertClass({ name, term });
         toast.success("Sınıf eklendi", { description: name });
         setClassDraft("");
       }
@@ -82,19 +95,56 @@ export function RosterManager() {
     setBusy(true);
     try {
       if (studentEditId) {
-        await upsertStudent({ id: studentEditId, name, className });
+        await upsertStudent({ id: studentEditId, name, className, term });
         toast.success("Öğrenci güncellendi", { description: name });
         setStudentEditId(null);
         setStudentEditName("");
         setStudentEditClass("");
       } else {
-        await upsertStudent({ name, className });
+        await upsertStudent({ name, className, term });
         toast.success("Öğrenci eklendi", { description: name });
         setStudentDraft("");
         setStudentDraftClass("");
       }
     } catch (error) {
       toast.error("Öğrenci kaydedilemedi", {
+        description: error instanceof Error ? error.message : undefined,
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const addDefaults = async () => {
+    setBusy(true);
+    try {
+      const res = await ensureTermDefaults({ term });
+      toast.success("Varsayılan sınıflar eklendi", {
+        description: `${res.added} kayıt · ${term} dönemi`,
+      });
+    } catch (error) {
+      toast.error("Eklenemedi", {
+        description: error instanceof Error ? error.message : undefined,
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const copyFromPast = async () => {
+    if (!pastTerm) return;
+    setBusy(true);
+    try {
+      const res = await copyRoster({
+        fromTerm: pastTerm,
+        toTerm: term,
+        includeStudents: true,
+      });
+      toast.success("Önceki dönemden listeler kopyalandı", {
+        description: `${res.added} kayıt · ${pastTerm} → ${term}`,
+      });
+    } catch (error) {
+      toast.error("Kopyalanamadı", {
         description: error instanceof Error ? error.message : undefined,
       });
     } finally {
@@ -126,7 +176,7 @@ export function RosterManager() {
     "h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none placeholder:text-neutral-400 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
   const sectionTitle = (icon: React.ReactNode, text: string, count: number) => (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       {icon}
       <h3 className="text-sm font-semibold tracking-tight text-neutral-900">
         {text}
@@ -134,8 +184,40 @@ export function RosterManager() {
       <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-500 tabular-nums">
         {count}
       </span>
+      <span className="rounded-full border border-neutral-200 px-2 py-0.5 text-[11px] font-medium text-neutral-400">
+        {term}
+      </span>
     </div>
   );
+
+  const quickActions =
+    pastTerm || classList.length === 0 ? (
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {classList.length === 0 && (
+          <button
+            type="button"
+            onClick={() => void addDefaults()}
+            disabled={busy}
+            className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 px-3 text-[12px] font-medium text-teal-700 transition-colors hover:bg-teal-100 disabled:opacity-50"
+          >
+            <Sparkles className="size-3.5" />
+            Varsayılan sınıfları ekle
+          </button>
+        )}
+        {pastTerm && (
+          <button
+            type="button"
+            onClick={() => void copyFromPast()}
+            disabled={busy}
+            title={`${pastTerm} dönemindeki sınıfları ve öğrencileri bu döneme kopyalar`}
+            className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 text-[12px] font-medium text-neutral-600 transition-colors hover:border-neutral-300 hover:bg-neutral-50 disabled:opacity-50"
+          >
+            <Copy className="size-3.5" />
+            {pastTerm} döneminden kopyala
+          </button>
+        )}
+      </div>
+    ) : null;
 
   return (
     <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
@@ -156,6 +238,7 @@ export function RosterManager() {
             "Sınıflar / Gruplar",
             classList.length,
           )}
+          {quickActions}
         </div>
         <div className="px-5 py-4">
           <div className="flex gap-2">
@@ -165,7 +248,7 @@ export function RosterManager() {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !busy) void saveClass();
               }}
-              placeholder="Yeni sınıf adı (örn. 10.SINIF)"
+              placeholder={`Yeni sınıf adı (${term})`}
               className={inputClass}
             />
             <button
@@ -186,7 +269,8 @@ export function RosterManager() {
               </div>
             ) : classList.length === 0 ? (
               <p className="py-6 text-center text-sm text-neutral-400">
-                Henüz sınıf yok.
+                {term} dönemi için henüz sınıf yok. Yukarıdan varsayılan sınıfları
+                ekleyebilir veya önceki dönemden kopyalayabilirsin.
               </p>
             ) : (
               classList.map((row) => (
@@ -315,8 +399,8 @@ export function RosterManager() {
               </div>
             ) : studentList.length === 0 ? (
               <p className="py-6 text-center text-sm text-neutral-400">
-                Henüz öğrenci yok. Birebir ders planladıkça öğrenciler de
-                burada listelenir.
+                {term} dönemi için henüz öğrenci yok. Öğrenci ekleyebilir veya
+                önceki dönemden kopyalayabilirsin.
               </p>
             ) : (
               studentList.map((row) => (

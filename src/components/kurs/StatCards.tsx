@@ -1,11 +1,26 @@
 import { motion } from "framer-motion";
-import { BookOpen, CalendarDays, Clock, Users } from "lucide-react";
+import {
+  BookOpen,
+  CalendarDays,
+  Clock,
+  Layers,
+  Users,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export type StatScope = "week" | "all";
 
+export type StatValues = {
+  total: number;
+  birebir: number;
+  sinifDersi: number;
+  ekDers: number;
+  students: number;
+  planned: number;
+};
+
 type StatDef = {
-  key: string;
+  key: keyof StatValues;
   titleWeek: string;
   titleAll: string;
   subtitleWeek: string;
@@ -17,14 +32,44 @@ type StatDef = {
 
 const STATS: StatDef[] = [
   {
-    key: "lessons",
+    key: "total",
     titleWeek: "Bu Haftaki Ders",
-    titleAll: "Yazılan Ders",
-    subtitleWeek: "birebir ders · bu hafta",
-    subtitleAll: "birebir ders · tüm zamanlar",
+    titleAll: "Toplam Ders",
+    subtitleWeek: "birebir + sınıf + ek ders · bu hafta",
+    subtitleAll: "birebir + sınıf + ek ders · seçili dönem",
     icon: Clock,
     cardClass: "bg-[#E6FFFA]",
     iconClass: "bg-[#14B8A6] text-white",
+  },
+  {
+    key: "birebir",
+    titleWeek: "Birebir Ders",
+    titleAll: "Birebir Ders",
+    subtitleWeek: "öğrenciye yazılan ders · bu hafta",
+    subtitleAll: "öğrenciye yazılan ders · seçili dönem",
+    icon: Users,
+    cardClass: "bg-[#EBF8FF]",
+    iconClass: "bg-[#3B82F6] text-white",
+  },
+  {
+    key: "sinifDersi",
+    titleWeek: "Sınıf Dersi",
+    titleAll: "Sınıf Dersi",
+    subtitleWeek: "kur / grup dersi · bu hafta",
+    subtitleAll: "kur / grup dersi · seçili dönem",
+    icon: BookOpen,
+    cardClass: "bg-[#ECFDF5]",
+    iconClass: "bg-[#10B981] text-white",
+  },
+  {
+    key: "ekDers",
+    titleWeek: "Ek Ders",
+    titleAll: "Ek Ders",
+    subtitleWeek: "sınıf / grup ek dersleri · bu hafta",
+    subtitleAll: "sınıf / grup ek dersleri · seçili dönem",
+    icon: Layers,
+    cardClass: "bg-[#FAF5FF]",
+    iconClass: "bg-[#8B5CF6] text-white",
   },
   {
     key: "students",
@@ -33,28 +78,18 @@ const STATS: StatDef[] = [
     subtitleWeek: "takip edilen öğrenci",
     subtitleAll: "takip edilen öğrenci",
     icon: Users,
-    cardClass: "bg-[#EBF8FF]",
-    iconClass: "bg-[#3B82F6] text-white",
+    cardClass: "bg-[#FEFCE8]",
+    iconClass: "bg-[#F59E0B] text-white",
   },
   {
     key: "planned",
     titleWeek: "Bu Hafta Planlanan",
     titleAll: "Planlanan Ders",
-    subtitleWeek: "planlanan ders sayısı",
-    subtitleAll: "planlanan ders sayısı",
+    subtitleWeek: "iptal hariç planlanan ders sayısı",
+    subtitleAll: "iptal hariç planlanan ders sayısı",
     icon: CalendarDays,
-    cardClass: "bg-[#FEFCE8]",
-    iconClass: "bg-[#F59E0B] text-white",
-  },
-  {
-    key: "total",
-    titleWeek: "Toplam Ders",
-    titleAll: "Toplam Ders",
-    subtitleWeek: "tüm zamanlar",
-    subtitleAll: "tüm zamanlar",
-    icon: BookOpen,
-    cardClass: "bg-[#FAF5FF]",
-    iconClass: "bg-[#8B5CF6] text-white",
+    cardClass: "bg-[#FFF7ED]",
+    iconClass: "bg-[#EA580C] text-white",
   },
 ];
 
@@ -63,17 +98,10 @@ export function StatCards({
   values,
 }: {
   scope: StatScope;
-  values: { lessons: number; students: number; planned: number; total: number };
+  values: StatValues;
 }) {
-  const nums: Record<string, number> = {
-    lessons: values.lessons,
-    students: values.students,
-    planned: values.planned,
-    total: values.total,
-  };
-
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
       {STATS.map((stat, i) => (
         <motion.div
           key={stat.key}
@@ -87,13 +115,13 @@ export function StatCards({
           >
             <stat.icon className="size-[18px]" strokeWidth={2} />
           </div>
-          <p className="mt-4 text-[13px] font-medium text-neutral-500">
+          <p className="mt-4 truncate text-[13px] font-medium text-neutral-500">
             {scope === "week" ? stat.titleWeek : stat.titleAll}
           </p>
           <p className="mt-1 text-3xl font-semibold tracking-tight text-neutral-900 tabular-nums">
-            {nums[stat.key]}
+            {values[stat.key]}
           </p>
-          <p className="mt-1 text-xs text-neutral-400">
+          <p className="mt-1 text-xs leading-4 text-neutral-400">
             {scope === "week" ? stat.subtitleWeek : stat.subtitleAll}
           </p>
         </motion.div>

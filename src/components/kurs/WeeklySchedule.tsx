@@ -25,8 +25,9 @@ import {
   SUBJECTS,
   TIME_SLOTS,
 } from "@/lib/schedule";
-import { todayYmd, ymdOf } from "@/lib/yks";
+import { termOfYmd, todayYmd, ymdInTerm, ymdOf } from "@/lib/yks";
 import { useMutation, useQuery } from "convex/react";
+import { ClassGroupEkDersPanel } from "./ClassGroupEkDersPanel";
 import { motion } from "framer-motion";
 import {
   CalendarDays,
@@ -228,7 +229,13 @@ function readDragData(e: React.DragEvent): DragPayload | null {
 /* Main component                                                      */
 /* ------------------------------------------------------------------ */
 
-export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
+export function WeeklySchedule({
+  weekStart,
+  term,
+}: {
+  weekStart: Date;
+  term: string;
+}) {
   const lessons = useQuery(api.lessons.listLessons);
   const classLessons = useQuery(api.lessons.listClassLessons);
   const extraLessons = useQuery(api.lessons.listExtraLessons);
@@ -300,12 +307,14 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
     }
   }, [classExtras]);
 
-  const classList = classes ?? [];
+  const classList = (classes ?? []).filter((c) => c.term === term);
   const teacherList = teachers ?? [];
 
   /* ---------------- request pool ---------------- */
   const allPoolItems = useMemo(() => {
-    const planned = (lessons ?? []).filter((l) => l.status === "planned");
+    const planned = (lessons ?? []).filter(
+      (l) => l.status === "planned" && ymdInTerm(l.date, term),
+    );
     const taken = new Set(
       (classLessons ?? []).map((c) => `${c.date}|${c.time}|${c.teacherName}`),
     );
@@ -316,7 +325,7 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
           ? a.time.localeCompare(b.time)
           : a.date.localeCompare(b.date),
       );
-  }, [lessons, classLessons]);
+  }, [lessons, classLessons, term]);
 
   const poolItems = useMemo(
     () =>
@@ -374,16 +383,24 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
   }, [classLessons, weekStart]);
 
   /* ---------------- sınıf ek dersleri havuzu + yerleşim haritası ---------------- */
+  const termClassExtras = useMemo(
+    () =>
+      (classExtras ?? []).filter((c) =>
+        c.date ? termOfYmd(c.date) === term : (c.term || "") === term,
+      ),
+    [classExtras, term],
+  );
+
   const classExtraPool = useMemo(
     () =>
-      (classExtras ?? [])
+      termClassExtras
         .filter((c) => !c.date)
         .sort((a, b) =>
           a.className === b.className
             ? a.subject.localeCompare(b.subject, "tr")
             : a.className.localeCompare(b.className, "tr"),
         ),
-    [classExtras],
+    [termClassExtras],
   );
 
   const classExtrasByCell = useMemo(() => {
@@ -909,6 +926,7 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
                   topic: ceTopic,
                   scheduledDate: "",
                   scheduledTime: "",
+                  term,
                 });
                 toast.success("Sınıf ek ders talebi oluşturuldu", {
                   description: `${ceClass} · ${ceSubject} · ${ceTeacher} — havuza eklendi, sürükleyerek takvime yerleştirin.`,
@@ -931,14 +949,14 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
         </div>
 
         {/* Havuz kartları (kronolojik / sınıf sıralı, sürüklenebilir) */}
-        {(classExtras ?? []).length === 0 ? (
+        {termClassExtras.length === 0 ? (
           <p className="py-6 text-center text-sm text-neutral-400">
-            Henüz sınıf ek ders talebi yok. Formu doldurup havuza ekleyin;
-            sonra kartı Sınıf Programı'na sürükleyin.
+            {term} dönemi için henüz sınıf ek ders talebi yok. Formu doldurup
+            havuza ekleyin; sonra kartı Sınıf Programı'na sürükleyin.
           </p>
         ) : (
           <div className="mt-3 flex flex-wrap gap-2">
-            {(classExtras ?? [])
+            {termClassExtras
               .slice()
               .sort((a, b) =>
                 a.className === b.className
@@ -1388,6 +1406,9 @@ export function WeeklySchedule({ weekStart }: { weekStart: Date }) {
           engellenir.
         </p>
       </SectionShell>
+
+      {/* Sınıf (Grup) Ek Ders — bağımsız bölüm (birebir mantığı, sınıfa yazılır) */}
+      <ClassGroupEkDersPanel weekStart={weekStart} term={term} />
 
       {/* ==================================================== */}
       {/* Günlük Toplu Tablo                                    */}

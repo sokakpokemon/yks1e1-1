@@ -31,7 +31,6 @@ import {
   fmtWeekRange,
   startOfWeekMonday,
   subjectLabel,
-  termEndExclusiveDate,
   termOfYmd,
   termPlus,
   termStartDate,
@@ -135,13 +134,6 @@ export default function Dashboard() {
     [weekStart],
   );
 
-  /* Dönem penceresi (Tümü kapsamı). */
-  const termFrom = useMemo(() => ymdOf(termStartDate(term)), [term]);
-  const termToExclusive = useMemo(
-    () => ymdOf(termEndExclusiveDate(term)),
-    [term],
-  );
-
   const dateInScope = useCallback(
     (ymd: string): boolean => {
       if (!ymd) return false;
@@ -173,7 +165,15 @@ export default function Dashboard() {
     // Her zaman ileriye dönük bir boş dönem de seçilebilsin.
     set.add(termPlus(currentTerm(), 1));
     return [...set].sort();
-  }, [lessons, classLessons, extraLessons, classExtras, classGroups]);
+  }, [
+    lessons,
+    classLessons,
+    extraLessons,
+    classExtras,
+    classGroups,
+    classes,
+    students,
+  ]);
 
   const handleTermChange = (next: string) => {
     setTerm(next);
@@ -183,11 +183,6 @@ export default function Dashboard() {
       setWeekStart(startOfWeekMonday(termStartDate(next)));
     }
   };
-
-  const allSorted = useMemo(
-    () => (lessons ? sortLessons(lessons) : []),
-    [lessons],
-  );
 
   const scopedSorted = useMemo(() => {
     if (!lessons) return [];
@@ -262,7 +257,7 @@ export default function Dashboard() {
 
   const ekCounts = useMemo<SubjectCount[]>(() => {
     const rows: Array<{ subject: string }> = [
-      ...scopedExtraLessons.map((e) => ({ subject: "Ek Ders" })),
+      ...scopedExtraLessons.map(() => ({ subject: "Ek Ders" })),
       ...scopedClassExtras,
     ];
     return subjectCountsOf(rows);

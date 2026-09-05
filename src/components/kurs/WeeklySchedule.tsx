@@ -28,7 +28,6 @@ import {
 import {
   readDragData as readDragDataShared,
   setDragData as setDragDataShared,
-  type DragPayload as SharedDragPayload,
 } from "@/lib/scheduleDrag";
 import { termOfYmd, todayYmd, ymdInTerm, ymdOf } from "@/lib/yks";
 import { useMutation, useQuery } from "convex/react";
@@ -162,10 +161,8 @@ const BADGE_CLASS_EXTRA =
   "bg-orange-50 border border-orange-300 text-orange-900"; // esnek sınıf ek dersi (pastel turuncu)
 
 /* ------------------------------------------------------------------ */
-/* Drag payload (delegates to the shared schedule drag module)         */
+/* Drag payload — shared with ClassGroupEkDersPanel (@/lib/scheduleDrag) */
 /* ------------------------------------------------------------------ */
-
-type DragPayload = SharedDragPayload;
 
 const setDragData = setDragDataShared;
 const readDragData = readDragDataShared;

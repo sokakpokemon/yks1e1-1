@@ -226,17 +226,18 @@ export default function Dashboard() {
       (l) => l.status === "planned",
     ).length;
     const sinifDersi = scopedClassLessons.length;
-    const ekDers =
-      scopedExtraLessons.length + scopedClassExtras.length + scopedClassGroups.length;
+    const ekDers = scopedExtraLessons.length + scopedClassExtras.length;
+    const sinifGrupEk = scopedClassGroups.length;
     const birebir = active.length;
     const students = new Set(active.map((l) => l.studentName.trim())).size;
     return {
-      total: birebir + sinifDersi + ekDers,
+      total: birebir + sinifDersi + ekDers + sinifGrupEk,
       birebir,
       sinifDersi,
       ekDers,
+      sinifGrupEk,
       students,
-      planned: plannedBirebir + sinifDersi + ekDers,
+      planned: plannedBirebir + sinifDersi + ekDers + sinifGrupEk,
     };
   }, [
     scopedSorted,
@@ -263,10 +264,14 @@ export default function Dashboard() {
     const rows: Array<{ subject: string }> = [
       ...scopedExtraLessons.map((e) => ({ subject: "Ek Ders" })),
       ...scopedClassExtras,
-      ...scopedClassGroups,
     ];
     return subjectCountsOf(rows);
-  }, [scopedExtraLessons, scopedClassExtras, scopedClassGroups]);
+  }, [scopedExtraLessons, scopedClassExtras]);
+
+  const sinifGrupCounts = useMemo<SubjectCount[]>(
+    () => subjectCountsOf(scopedClassGroups),
+    [scopedClassGroups],
+  );
 
   const teacherNames = useMemo(
     () =>
@@ -423,7 +428,7 @@ export default function Dashboard() {
               }}
             >
               <StatCards scope={scope} values={stats} />
-              <div className="mt-4 grid grid-cols-1 items-stretch gap-4 lg:grid-cols-3">
+              <div className="mt-4 grid grid-cols-1 items-stretch gap-4 lg:grid-cols-4">
                 <SubjectDonut
                   title="Birebir · Ders Dağılımı"
                   data={birebirCounts}
@@ -435,6 +440,10 @@ export default function Dashboard() {
                 <SubjectDonut
                   title="Ek Ders · Branş Dağılımı"
                   data={ekCounts}
+                />
+                <SubjectDonut
+                  title="Sınıf (Grup) Ek Ders · Branş Dağılımı"
+                  data={sinifGrupCounts}
                 />
               </div>
             </div>

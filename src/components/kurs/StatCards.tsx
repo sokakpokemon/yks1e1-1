@@ -4,6 +4,7 @@ import {
   CalendarDays,
   Clock,
   Layers,
+  Layers2,
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -15,6 +16,7 @@ export type StatValues = {
   birebir: number;
   sinifDersi: number;
   ekDers: number;
+  sinifGrupEk: number;
   students: number;
   planned: number;
 };
@@ -65,11 +67,21 @@ const STATS: StatDef[] = [
     key: "ekDers",
     titleWeek: "Ek Ders",
     titleAll: "Ek Ders",
-    subtitleWeek: "sınıf / grup ek dersleri · bu hafta",
-    subtitleAll: "sınıf / grup ek dersleri · seçili dönem",
+    subtitleWeek: "öğretmen + sınıf ek dersleri · bu hafta",
+    subtitleAll: "öğretmen + sınıf ek dersleri · seçili dönem",
     icon: Layers,
     cardClass: "bg-[#FAF5FF]",
     iconClass: "bg-[#8B5CF6] text-white",
+  },
+  {
+    key: "sinifGrupEk",
+    titleWeek: "Sınıf (Grup) Ek Ders",
+    titleAll: "Sınıf (Grup) Ek Ders",
+    subtitleWeek: "sınıfa yazılan ek ders · bu hafta",
+    subtitleAll: "sınıfa yazılan ek ders · seçili dönem",
+    icon: Layers2,
+    cardClass: "bg-[#ECFDF5]",
+    iconClass: "bg-[#059669] text-white",
   },
   {
     key: "students",

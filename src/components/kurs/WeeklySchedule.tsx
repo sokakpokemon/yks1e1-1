@@ -25,6 +25,11 @@ import {
   SUBJECTS,
   TIME_SLOTS,
 } from "@/lib/schedule";
+import {
+  readDragData as readDragDataShared,
+  setDragData as setDragDataShared,
+  type DragPayload as SharedDragPayload,
+} from "@/lib/scheduleDrag";
 import { termOfYmd, todayYmd, ymdInTerm, ymdOf } from "@/lib/yks";
 import { useMutation, useQuery } from "convex/react";
 import { ClassGroupEkDersPanel } from "./ClassGroupEkDersPanel";
@@ -46,6 +51,7 @@ type LessonRow = Doc<"lessons">;
 type ClassLessonRow = Doc<"classLessons">;
 type ExtraLessonRow = Doc<"extraLessons">;
 type ClassExtraRow = Doc<"classExtraLessons">;
+type ClassGroupExtraRow = Doc<"classGroupExtraLessons">;
 type ClassRow = Doc<"classes">;
 type TeacherRow = Doc<"teachers">;
 
@@ -155,6 +161,15 @@ const BADGE_REQUEST = "bg-sky-50 border border-sky-300 text-sky-900"; // havuzda
 const BADGE_CLASS_EXTRA =
   "bg-orange-50 border border-orange-300 text-orange-900"; // esnek sınıf ek dersi (pastel turuncu)
 
+/* ------------------------------------------------------------------ */
+/* Drag payload (delegates to the shared schedule drag module)         */
+/* ------------------------------------------------------------------ */
+
+type DragPayload = SharedDragPayload;
+
+const setDragData = setDragDataShared;
+const readDragData = readDragDataShared;
+
 function RequestBadge({
   studentName,
   className,
@@ -193,37 +208,7 @@ function ExtraBadge({ title, className }: { title: string; className: string }) 
 /* Drag payload                                                        */
 /* ------------------------------------------------------------------ */
 
-type DragPayload =
-  | { kind: "pool"; requestId: string }
-  | { kind: "extra"; extraId: string }
-  | { kind: "classExtra"; extraId: string };
-
-const DRAG_MIME = "application/x-yks-schedule";
-
-function setDragData(e: React.DragEvent, payload: DragPayload) {
-  e.dataTransfer.setData(DRAG_MIME, JSON.stringify(payload));
-  e.dataTransfer.setData("text/plain", JSON.stringify(payload));
-  e.dataTransfer.effectAllowed = "move";
-}
-
-function readDragData(e: React.DragEvent): DragPayload | null {
-  try {
-    const raw =
-      e.dataTransfer.getData(DRAG_MIME) || e.dataTransfer.getData("text/plain");
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as DragPayload;
-    if (
-      parsed.kind === "pool" ||
-      parsed.kind === "extra" ||
-      parsed.kind === "classExtra"
-    ) {
-      return parsed;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
+/* moved to @/lib/scheduleDrag — shared with ClassGroupEkDersPanel */
 
 /* ------------------------------------------------------------------ */
 /* Main component                                                      */
@@ -240,6 +225,7 @@ export function WeeklySchedule({
   const classLessons = useQuery(api.lessons.listClassLessons);
   const extraLessons = useQuery(api.lessons.listExtraLessons);
   const classExtras = useQuery(api.lessons.listClassExtraLessons);
+  const classGroupExtras = useQuery(api.lessons.listClassGroupExtraLessons);
   const classes = useQuery(api.lessons.listClasses);
   const teachers = useQuery(api.teachers.listTeachers);
 
@@ -252,6 +238,12 @@ export function WeeklySchedule({
   const createClassExtraLesson = useMutation(api.lessons.createClassExtraLesson);
   const moveClassExtraLesson = useMutation(api.lessons.moveClassExtraLesson);
   const deleteClassExtraLesson = useMutation(api.lessons.deleteClassExtraLesson);
+  const moveClassGroupExtraLesson = useMutation(
+    api.lessons.moveClassGroupExtraLesson,
+  );
+  const deleteClassGroupExtraLesson = useMutation(
+    api.lessons.deleteClassGroupExtraLesson,
+  );
 
   const [unlockClass, setUnlockClass] = useState(false);
   const [unlockTeacher, setUnlockTeacher] = useState(false);
@@ -292,6 +284,7 @@ export function WeeklySchedule({
     classLessons !== undefined &&
     extraLessons !== undefined &&
     classExtras !== undefined &&
+    classGroupExtras !== undefined &&
     classes !== undefined &&
     teachers !== undefined;
 
@@ -416,6 +409,20 @@ export function WeeklySchedule({
     return map;
   }, [classExtras, weekStart]);
 
+  /* Sınıf (Grup) Ek Ders yerleşimleri — öğretmen hücre anahtarlı. */
+  const classGroupExtrasByCell = useMemo(() => {
+    const map = new Map<string, ClassGroupExtraRow>();
+    for (const c of classGroupExtras ?? []) {
+      if (!c.date) continue;
+      const day = dayOffsetOf(c.date, weekStart);
+      if (day === null) continue;
+      const slot = slotIndexForTime(c.time);
+      if (slot === null) continue;
+      map.set(`${c.teacherName}|${day}|${slot}`, c);
+    }
+    return map;
+  }, [classGroupExtras, weekStart]);
+
   /* Bir öğretmen o gün/o saatte gerçekten meşgul mü? (birebir + sınıf dersi + ek ders + sınıf ek dersi) */
   const teacherBusyAt = useMemo(() => {
     const set = new Set<string>();
@@ -433,8 +440,12 @@ export function WeeklySchedule({
       if (!ce.date) continue;
       set.add(`${ce.teacherName}|${ce.date}|${ce.time}`);
     }
+    for (const cg of classGroupExtras ?? []) {
+      if (!cg.date) continue;
+      set.add(`${cg.teacherName}|${cg.date}|${cg.time}`);
+    }
     return set;
-  }, [lessons, classLessons, extraLessons, classExtras]);
+  }, [lessons, classLessons, extraLessons, classExtras, classGroupExtras]);
 
   /* ---------------- drop handlers ---------------- */
   const handleDropTeacher = async (
@@ -503,6 +514,51 @@ export function WeeklySchedule({
       } catch {
         toast.error("Ek ders taşınamadı");
       }
+      return;
+    }
+
+    /* Sınıf (Grup) Ek Ders → öğretmenin birebir takvimine yerleşir. */
+    if (payload.kind === "classGroupExtra") {
+      const cg = (classGroupExtras ?? []).find(
+        (c) => c._id === payload.extraId,
+      );
+      if (!cg) return;
+      if (!requestMatchesBranch(cg.subject, teacherName)) {
+        toast.error("Branş uyuşmuyor", {
+          description: `${cg.subject} ek dersi yalnızca branş öğretmenine planlanabilir; ${teacherName} bu branşta değil.`,
+        });
+        return;
+      }
+      if (cg.teacherName && cg.teacherName !== teacherName) {
+        toast.error("Öğretmen uyuşmuyor", {
+          description: `${cg.className} talebi ${cg.teacherName} için oluşturuldu; ${teacherName} takvimine bırakılamaz.`,
+        });
+        return;
+      }
+      if (cellBusy) {
+        toast.error("Bu saat dolu", {
+          description: `${teacherName} öğretmeninin bu saatinde zaten ders var.`,
+        });
+        return;
+      }
+      if (cg.date === ymd && cg.time === start) return; // zaten o slotta
+      if (teacherBusyAt.has(`${teacherName}|${ymd}|${start}`)) {
+        toast.error("Çakışma var", {
+          description: `${teacherName} öğretmeninin ${DAY_NAMES[day]} ${start} saatinde başka dersi var.`,
+        });
+        return;
+      }
+      try {
+        await moveClassGroupExtraLesson({ id: cg._id, date: ymd, time: start });
+        toast.success("Sınıf (Grup) Ek Ders planlandı", {
+          description: `${cg.className} · ${cg.subject} · ${DAY_NAMES[day]} ${start} · ${teacherName}`,
+        });
+      } catch (error) {
+        toast.error("Sınıf ek dersi yerleştirilemedi", {
+          description: error instanceof Error ? error.message : undefined,
+        });
+      }
+      return;
     }
   };
 
@@ -735,12 +791,32 @@ export function WeeklySchedule({
         type: "sinifEk",
       });
     }
+    for (const cg of classGroupExtras ?? []) {
+      if (cg.date !== ymd) continue;
+      rows.push({
+        teacher: cg.teacherName,
+        student: cg.className,
+        studentClass: "Sınıf (Grup) Ek ders",
+        subject: cg.subject,
+        topic: cg.topic || "—",
+        time: cg.time,
+        type: "sinifEk",
+      });
+    }
     return rows.sort((a, b) =>
       a.time === b.time
         ? a.teacher.localeCompare(b.teacher, "tr")
         : a.time.localeCompare(b.time),
     );
-  }, [lessons, classLessons, extraLessons, classExtras, weekStart, dailyDay]);
+  }, [
+    lessons,
+    classLessons,
+    extraLessons,
+    classExtras,
+    classGroupExtras,
+    weekStart,
+    dailyDay,
+  ]);
 
   if (!ready) {
     return (
@@ -1334,9 +1410,12 @@ export function WeeklySchedule({
                               lessonsByTeacherCell.get(cellKey);
                             const cellExtra =
                               extrasByTeacherCell.get(cellKey);
+                            const cellCg =
+                              classGroupExtrasByCell.get(cellKey);
                             const hasContent =
                               (cellLessons && cellLessons.length > 0) ||
-                              Boolean(cellExtra);
+                              Boolean(cellExtra) ||
+                              Boolean(cellCg);
                             return (
                               <div
                                 key={slot.index}
@@ -1382,6 +1461,65 @@ export function WeeklySchedule({
                                     className={cellExtra.className}
                                   />
                                 )}
+                                {cellCg && (
+                                  <div
+                                    draggable={unlockTeacher}
+                                    onDragStart={(ev) =>
+                                      setDragData(ev, {
+                                        kind: "classGroupExtra",
+                                        extraId: cellCg._id,
+                                      })
+                                    }
+                                    className={cn(
+                                      "w-full rounded-md border border-emerald-300 bg-emerald-50 px-1.5 py-1 text-[10.5px] leading-tight font-medium text-emerald-900",
+                                      unlockTeacher
+                                        ? "cursor-grab active:cursor-grabbing"
+                                        : "cursor-not-allowed",
+                                    )}
+                                    title={`${cellCg.className} · ${cellCg.subject} · ${cellCg.teacherName} · ${cellCg.topic}`}
+                                  >
+                                    <div className="flex items-center justify-between gap-1">
+                                      <span className="tabular-nums opacity-80">
+                                        {cellCg.time}
+                                      </span>
+                                      {unlockTeacher && (
+                                        <button
+                                          type="button"
+                                          title="Ek dersi sil"
+                                          className="shrink-0 cursor-pointer font-bold text-emerald-400 hover:text-red-600"
+                                          onClick={(ev) => {
+                                            ev.stopPropagation();
+                                            void (async () => {
+                                              try {
+                                                await deleteClassGroupExtraLesson({
+                                                  id: cellCg._id,
+                                                });
+                                                toast("Sınıf (Grup) Ek dersi silindi", {
+                                                  description: `${cellCg.className} · ${cellCg.subject} · ${cellCg.date} ${cellCg.time}`,
+                                                });
+                                              } catch {
+                                                toast.error(
+                                                  "Sınıf (Grup) Ek dersi silinemedi",
+                                                );
+                                              }
+                                            })();
+                                          }}
+                                        >
+                                          ✕
+                                        </button>
+                                      )}
+                                    </div>
+                                    <div className="truncate font-semibold">
+                                      {cellCg.className}
+                                    </div>
+                                    <div className="truncate">
+                                      {cellCg.subject}
+                                    </div>
+                                    <div className="truncate text-[10px] opacity-75">
+                                      {cellCg.topic}
+                                    </div>
+                                  </div>
+                                )}
                                 {!hasContent && (
                                   <span className="text-[9px] text-neutral-200">
                                     {slot.start}
@@ -1408,7 +1546,7 @@ export function WeeklySchedule({
       </SectionShell>
 
       {/* Sınıf (Grup) Ek Ders — bağımsız bölüm (birebir mantığı, sınıfa yazılır) */}
-      <ClassGroupEkDersPanel weekStart={weekStart} term={term} />
+      <ClassGroupEkDersPanel term={term} />
 
       {/* ==================================================== */}
       {/* Günlük Toplu Tablo                                    */}

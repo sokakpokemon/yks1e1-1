@@ -6,6 +6,7 @@ import {
   ChevronRight,
   Copy,
   Download,
+  Layers,
   MessageCircle,
   Printer,
 } from "lucide-react";
@@ -244,6 +245,19 @@ export function ActionBar({
 
       {/* Actions */}
       <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() =>
+            document
+              .getElementById("sinif-grup-ek-ders")
+              ?.scrollIntoView({ behavior: "smooth", block: "start" })
+          }
+          className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3.5 text-[13px] font-medium text-emerald-800 transition-colors hover:bg-emerald-100"
+        >
+          <Layers className="size-4 text-emerald-600" />
+          Sınıf (Grup) Ek Ders
+        </button>
+
         <button
           type="button"
           onClick={() => window.print()}

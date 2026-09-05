@@ -157,10 +157,11 @@ export function ClassGroupEkDersPanel({
 
   return (
     <motion.section
+      id="sinif-grup-ek-ders"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
-      className="overflow-hidden rounded-2xl border border-neutral-200/80 bg-white"
+      className="scroll-mt-24 overflow-hidden rounded-2xl border border-neutral-200/80 bg-white"
     >
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-100 px-5 py-4">
         <div className="flex items-center gap-2">

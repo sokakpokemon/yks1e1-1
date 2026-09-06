@@ -542,6 +542,20 @@ export default function Dashboard() {
         )}
       </div>
 
+      {/* Floating quick-jump button — her zaman ekranda (istatistikler görünürken gizli) */}
+      <button
+        type="button"
+        onClick={() =>
+          document
+            .getElementById("sinif-grup-ek-ders")
+            ?.scrollIntoView({ behavior: "smooth", block: "start" })
+        }
+        className="fixed right-5 bottom-5 z-50 hidden cursor-pointer items-center gap-2 rounded-full bg-emerald-600 px-4 py-3 text-[13px] font-semibold text-white shadow-lg shadow-emerald-600/25 transition-all hover:-translate-y-0.5 hover:bg-emerald-700 sm:inline-flex print:hidden"
+      >
+        <CalendarPlus className="size-4" />
+        Ek Ders Paneli
+      </button>
+
       {!isAuthenticated && (
         <div className="sr-only">Yönlendiriliyorsunuz…</div>
       )}

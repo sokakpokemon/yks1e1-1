@@ -162,8 +162,10 @@ export function ClassGroupEkDersPanel({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
-      className="scroll-mt-24 overflow-hidden rounded-2xl border border-neutral-200/80 bg-white"
+      className="scroll-mt-24 relative overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-[0_2px_12px_rgba(16,185,129,0.08)]"
     >
+      {/* Emerald top accent — panel görünür olsun diye */}
+      <div aria-hidden className="h-1 w-full bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-500" />
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-100 bg-emerald-600/[0.07] px-5 py-4">
         <div className="flex items-center gap-2.5">
           <span className="flex size-8 items-center justify-center rounded-lg bg-emerald-600 shadow-sm">
@@ -179,6 +181,9 @@ export function ClassGroupEkDersPanel({
           </div>
           <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800 tabular-nums">
             {termRows.length} talep · {scheduledRows.length} planlandı
+          </span>
+          <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase">
+            yeni bölüm
           </span>
           <span className="hidden rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-400 sm:inline">
             {term}

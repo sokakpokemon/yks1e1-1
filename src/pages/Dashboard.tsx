@@ -449,6 +449,9 @@ export default function Dashboard() {
               </div>
             </div>
 
+            {/* Sınıf (Grup) Ek Ders — bağımsız üst düzey bölüm (istatistiklerin hemen altında) */}
+            <ClassGroupEkDersPanel term={term} />
+
             {/* Plan form */}
             <div className="print:hidden">
               <PlanForm
@@ -459,9 +462,6 @@ export default function Dashboard() {
 
             {/* Roster management (döneme özel sınıflar + öğrenciler) */}
             <RosterManager term={term} />
-
-            {/* Sınıf (Grup) Ek Ders — bağımsız üst düzey bölüm */}
-            <ClassGroupEkDersPanel term={term} />
 
             {/* Action bar */}
             <ActionBar

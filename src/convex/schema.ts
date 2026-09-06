@@ -50,7 +50,6 @@ const schema = defineSchema(
         v.literal("completed"),
         v.literal("cancelled"),
       ),
-      className: v.optional(v.string()),
     }).index("by_user_date", ["userId", "date"]),
 
     // Kursta görev alan öğretmenler.
@@ -58,69 +57,6 @@ const schema = defineSchema(
       userId: v.id("users"),
       name: v.string(),
     }).index("by_user", ["userId"]),
-
-    // Sınıf / grup listesi (MEZUN SAY 1, 12 EA 1, ...). Dönem bazlıdır.
-    classes: defineTable({
-      userId: v.id("users"),
-      name: v.string(),
-      term: v.string(), // "2026/2027"
-    }).index("by_user_name", ["userId", "name"]),
-
-    // Öğrenci listesi (opsiyonel sınıf ataması ile). Dönem bazlıdır.
-    students: defineTable({
-      userId: v.id("users"),
-      name: v.string(),
-      className: v.optional(v.string()),
-      term: v.string(), // "2026/2027"
-    }).index("by_user_name", ["userId", "name"]),
-
-    // Sınıf programındaki grup dersleri.
-    classLessons: defineTable({
-      userId: v.id("users"),
-      className: v.string(),
-      subject: v.string(),
-      teacherName: v.string(),
-      date: v.string(),
-      time: v.string(),
-    }).index("by_user_date", ["userId", "date"]),
-
-    // Öğretmen birebir programına eklenen ek dersler (her hafta değişebilir).
-    extraLessons: defineTable({
-      userId: v.id("users"),
-      title: v.string(),
-      teacherName: v.string(),
-      className: v.string(),
-      date: v.string(),
-      time: v.string(),
-    }).index("by_user_date", ["userId", "date"]),
-
-    // Sınıflara yazılan esnek ek dersler (haftalık/günlük değişebilir).
-    // Havuzda bekleyen taleplerde date="" ve time="" olur; takvime
-    // sürüklendiğinde gün/saat atanır.
-    classExtraLessons: defineTable({
-      userId: v.id("users"),
-      className: v.string(),
-      subject: v.string(),
-      teacherName: v.string(),
-      topic: v.string(),
-      date: v.string(), // "YYYY-MM-DD" veya havuzda ""
-      time: v.string(), // "HH:mm" veya havuzda ""
-      term: v.string(), // talebin ait olduğu dönem ("2026/2027")
-    }).index("by_user_date", ["userId", "date"]),
-
-    // Sınıf (Grup) Ek Ders — bağımsız panel. Birebir mantığıyla sınıfa
-    // öğretmen atanır; talep havuzdan öğretmenin haftalık takvimindeki boş
-    // saate sürüklenerek planlanır. date="" => havuzda bekliyor.
-    classGroupExtraLessons: defineTable({
-      userId: v.id("users"),
-      term: v.string(), // "2026/2027"
-      className: v.string(), // sınıf / grup
-      subject: v.string(), // branş (MATEMATİK, ...)
-      teacherName: v.string(),
-      topic: v.string(), // anlatılacak konu
-      date: v.string(), // "YYYY-MM-DD" veya havuzda ""
-      time: v.string(), // "HH:mm" veya havuzda ""
-    }).index("by_user_date", ["userId", "date"]),
   },
   {
     schemaValidation: false,

@@ -8,49 +8,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ActionBar } from "@/components/kurs/ActionBar";
-import { ClassGroupEkDersPanel } from "@/components/kurs/ClassGroupEkDersPanel";
-import { BackupManager } from "@/components/kurs/BackupManager";
 import { LessonTable } from "@/components/kurs/LessonTable";
 import { PlanForm } from "@/components/kurs/PlanForm";
-import { RosterManager } from "@/components/kurs/RosterManager";
-import { StatCards, type StatScope, type StatValues } from "@/components/kurs/StatCards";
+import { StatCards, type StatScope } from "@/components/kurs/StatCards";
 import { SubjectDonut, type SubjectCount } from "@/components/kurs/SubjectDonut";
-import { WeeklySchedule } from "@/components/kurs/WeeklySchedule";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import {
   addDays,
-  currentTerm,
-  normalizeTerm,
-  sameTerm,
   fmtWeekRange,
   startOfWeekMonday,
-  subjectLabel,
-  termOfYmd,
-  termPlus,
-  termStartDate,
   todayYmd,
-  ymdInTerm,
   ymdOf,
 } from "@/lib/yks";
 import { useMutation, useQuery } from "convex/react";
-import {
-  CalendarPlus,
-  CalendarRange,
-  GraduationCap,
-  Home,
-  Loader2,
-  LogOut,
-} from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { GraduationCap, Home, Loader2, LogOut } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
 type LessonRow = Doc<"lessons">;
@@ -71,33 +45,14 @@ function sortLessons(rows: LessonRow[]): LessonRow[] {
   });
 }
 
-function subjectCountsOf(
-  rows: Array<{ subject: string }>,
-): SubjectCount[] {
-  const map = new Map<string, number>();
-  for (const row of rows) {
-    const label = subjectLabel(row.subject);
-    map.set(label, (map.get(label) ?? 0) + 1);
-  }
-  return [...map.entries()].map(([subject, count]) => ({ subject, count }));
-}
-
 export default function Dashboard() {
   const { isLoading, isAuthenticated, user, signOut } = useAuth();
   const navigate = useNavigate();
   const lessons = useQuery(api.lessons.listLessons);
   const teachers = useQuery(api.teachers.listTeachers);
-  const classLessons = useQuery(api.lessons.listClassLessons);
-  const extraLessons = useQuery(api.lessons.listExtraLessons);
-  const classExtras = useQuery(api.lessons.listClassExtraLessons);
-  const classGroups = useQuery(api.lessons.listClassGroupExtraLessons);
-  const classes = useQuery(api.lessons.listClasses);
-  const students = useQuery(api.lessons.listStudents);
   const ensureSampleData = useMutation(api.lessons.ensureSampleData);
-  const ensureTermDefaults = useMutation(api.lessons.ensureTermDefaults);
 
   const [scope, setScope] = useState<StatScope>("week");
-  const [term, setTerm] = useState<string>(() => currentTerm());
   const [weekStart, setWeekStart] = useState<Date>(() =>
     startOfWeekMonday(new Date()),
   );
@@ -119,167 +74,40 @@ export default function Dashboard() {
     });
   }, [user, lessons, teachers, ensureSampleData]);
 
-  /* Dönem bazlı varsayılan sınıf listesi (yalnızca güncel dönemde, bir kez). */
-  useEffect(() => {
-    if (!user?._id) return;
-    if (classes === undefined || classes === null) return;
-    const classesForTerm = classes.filter((c) =>
-      sameTerm(c.term ?? "", term),
-    );
-    if (!sameTerm(term, currentTerm()) || classesForTerm.length > 0) return;
-    try {
-      if (localStorage.getItem(`yks-defaults:${user._id}:${term}`)) return;
-      localStorage.setItem(`yks-defaults:${user._id}:${term}`, "1");
-    } catch {
-      /* storage unavailable */
-    }
-    void ensureTermDefaults({ term }).catch((error) => {
-      console.error("default roster seeding failed:", error);
-    });
-  }, [user, term, classes, ensureTermDefaults]);
-
   const weekEnd = useMemo(() => addDays(weekStart, 6), [weekStart]);
 
-  const weekFrom = useMemo(() => ymdOf(weekStart), [weekStart]);
-  const weekToExclusive = useMemo(
-    () => ymdOf(addDays(weekStart, 7)),
-    [weekStart],
+  const allSorted = useMemo(
+    () => (lessons ? sortLessons(lessons) : []),
+    [lessons],
   );
-
-  const dateInScope = useCallback(
-    (ymd: string): boolean => {
-      if (!ymd) return false;
-      if (scope === "week") {
-        return ymd >= weekFrom && ymd < weekToExclusive;
-      }
-      return ymdInTerm(ymd, term);
-    },
-    [scope, weekFrom, weekToExclusive, term],
-  );
-
-  const allTerms = useMemo(() => {
-    const set = new Set<string>();
-    set.add(currentTerm());
-    const addDate = (ymd: string) => {
-      const t = termOfYmd(ymd);
-      if (t) set.add(t);
-    };
-    const addTerm = (t: string | undefined | null) => {
-      if (!t) return;
-      set.add(normalizeTerm(t));
-    };
-    lessons?.forEach((l) => addDate(l.date));
-    classLessons?.forEach((c) => addDate(c.date));
-    extraLessons?.forEach((e) => addDate(e.date));
-    classExtras?.forEach((c) => (c.date ? addDate(c.date) : addTerm(c.term)));
-    classGroups?.forEach((c) => (c.date ? addDate(c.date) : addTerm(c.term)));
-    (classes ?? []).forEach((c) => addTerm(c.term));
-    (students ?? []).forEach((s) => addTerm(s.term));
-    // Her zaman ileriye dönük bir boş dönem de seçilebilsin.
-    set.add(termPlus(currentTerm(), 1));
-    return [...set].sort();
-  }, [
-    lessons,
-    classLessons,
-    extraLessons,
-    classExtras,
-    classGroups,
-    classes,
-    students,
-  ]);
-
-  const handleTermChange = (next: string) => {
-    setTerm(next);
-    const today = todayYmd();
-    if (!ymdInTerm(today, next)) {
-      // Dönem içinde "bugün" yoksa dönemin başındaki haftaya git.
-      setWeekStart(startOfWeekMonday(termStartDate(next)));
-    }
-  };
 
   const scopedSorted = useMemo(() => {
-    if (!lessons) return [];
-    return sortLessons(lessons.filter((l) => dateInScope(l.date)));
-  }, [lessons, dateInScope]);
+    if (!lessons || scope === "all") return allSorted;
+    const from = ymdOf(weekStart);
+    const toExclusive = ymdOf(addDays(weekStart, 7));
+    return sortLessons(
+      lessons.filter((l) => l.date >= from && l.date < toExclusive),
+    );
+  }, [lessons, scope, weekStart, allSorted]);
 
-  const scopedClassLessons = useMemo(
-    () => (classLessons ?? []).filter((c) => dateInScope(c.date)),
-    [classLessons, dateInScope],
-  );
-
-  const scopedExtraLessons = useMemo(
-    () => (extraLessons ?? []).filter((e) => dateInScope(e.date)),
-    [extraLessons, dateInScope],
-  );
-
-  const scopedClassExtras = useMemo(
-    () =>
-      (classExtras ?? []).filter(
-        (c) => c.date !== "" && dateInScope(c.date),
-      ),
-    [classExtras, dateInScope],
-  );
-
-  const scopedClassGroups = useMemo(
-    () =>
-      (classGroups ?? []).filter(
-        (c) => c.date !== "" && dateInScope(c.date),
-      ),
-    [classGroups, dateInScope],
-  );
-
-  const stats = useMemo<StatValues>(() => {
-    const active = scopedSorted.filter((l) => l.status !== "cancelled");
-    const plannedBirebir = scopedSorted.filter(
-      (l) => l.status === "planned",
-    ).length;
-    const sinifDersi = scopedClassLessons.length;
-    const ekDers = scopedExtraLessons.length + scopedClassExtras.length;
-    const sinifGrupEk = scopedClassGroups.length;
-    const birebir = active.length;
-    const students = new Set(active.map((l) => l.studentName.trim())).size;
+  const stats = useMemo(() => {
+    const students = new Set(scopedSorted.map((l) => l.studentName.trim()));
+    const planned = scopedSorted.filter((l) => l.status !== "cancelled").length;
     return {
-      total: birebir + sinifDersi + ekDers + sinifGrupEk,
-      birebir,
-      sinifDersi,
-      ekDers,
-      sinifGrupEk,
-      students,
-      planned: plannedBirebir + sinifDersi + ekDers + sinifGrupEk,
+      lessons: scopedSorted.length,
+      students: students.size,
+      planned,
+      total: allSorted.length,
     };
-  }, [
-    scopedSorted,
-    scopedClassLessons,
-    scopedExtraLessons,
-    scopedClassExtras,
-    scopedClassGroups,
-  ]);
+  }, [scopedSorted, allSorted]);
 
-  const birebirCounts = useMemo<SubjectCount[]>(
-    () =>
-      subjectCountsOf(
-        scopedSorted.filter((l) => l.status !== "cancelled"),
-      ),
-    [scopedSorted],
-  );
-
-  const sinifCounts = useMemo<SubjectCount[]>(
-    () => subjectCountsOf(scopedClassLessons),
-    [scopedClassLessons],
-  );
-
-  const ekCounts = useMemo<SubjectCount[]>(() => {
-    const rows: Array<{ subject: string }> = [
-      ...scopedExtraLessons.map(() => ({ subject: "Ek Ders" })),
-      ...scopedClassExtras,
-    ];
-    return subjectCountsOf(rows);
-  }, [scopedExtraLessons, scopedClassExtras]);
-
-  const sinifGrupCounts = useMemo<SubjectCount[]>(
-    () => subjectCountsOf(scopedClassGroups),
-    [scopedClassGroups],
-  );
+  const subjectCounts = useMemo<SubjectCount[]>(() => {
+    const map = new Map<string, number>();
+    for (const lesson of scopedSorted) {
+      map.set(lesson.subject, (map.get(lesson.subject) ?? 0) + 1);
+    }
+    return [...map.entries()].map(([subject, count]) => ({ subject, count }));
+  }, [scopedSorted]);
 
   const teacherNames = useMemo(
     () =>
@@ -291,28 +119,19 @@ export default function Dashboard() {
 
   const studentNames = useMemo(() => {
     const names = new Set(
-      (lessons ?? [])
-        .filter((l) => l.status !== "cancelled" && ymdInTerm(l.date, term))
-        .map((l) => l.studentName.trim())
-        .filter(Boolean),
+      (lessons ?? []).map((l) => l.studentName.trim()).filter(Boolean),
     );
     return [...names].sort((a, b) =>
       a.localeCompare(b, "tr", { sensitivity: "base" }),
     );
-  }, [lessons, term]);
+  }, [lessons]);
 
   const scopeLabel =
     scope === "week"
       ? fmtWeekRange(weekStart, weekEnd)
-      : `${term} dönemi · tümü`;
+      : "Tüm zamanlar";
 
-  const ready =
-    lessons !== undefined &&
-    teachers !== undefined &&
-    classLessons !== undefined &&
-    extraLessons !== undefined &&
-    classExtras !== undefined &&
-    classGroups !== undefined;
+  const ready = lessons !== undefined && teachers !== undefined;
 
   const handleSignOut = async () => {
     await signOut();
@@ -355,26 +174,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Dönem seçici */}
-            <Select value={term} onValueChange={handleTermChange}>
-              <SelectTrigger className="h-8 w-[152px] gap-1.5 rounded-full border-neutral-200 bg-white pr-2 text-[13px] font-medium shadow-none print:hidden">
-                <CalendarRange className="size-3.5 text-neutral-500" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {allTerms.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {t} Dönemi
-                    {sameTerm(t, currentTerm()) ? " (güncel)" : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
+          <div className="flex items-center gap-3">
             <div className="inline-flex items-center rounded-full bg-neutral-100 p-1 print:hidden">
               {segmented("week", "Haftalık")}
-              {segmented("all", "Dönem")}
+              {segmented("all", "Tümü")}
             </div>
 
             <DropdownMenu>
@@ -421,39 +224,6 @@ export default function Dashboard() {
         </header>
 
         {/* ---------------------------------------------------------- */}
-        {/* Section quick-nav (print-hidden)                            */}
-        {/* ---------------------------------------------------------- */}
-        <nav className="mt-5 flex flex-wrap items-center gap-2 print:hidden">
-          {[
-            { id: "istatistikler", label: "İstatistikler" },
-            { id: "sinif-grup-ek-ders", label: "Ek Ders Paneli", emerald: true },
-            { id: "plan-formu", label: "Plan Formu" },
-            { id: "roster", label: "Sınıf / Öğrenci" },
-            { id: "haftalik-program", label: "Haftalık Program" },
-            { id: "yedekleme", label: "Yedekleme" },
-          ].map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() =>
-                document
-                  .getElementById(item.id)
-                  ?.scrollIntoView({ behavior: "smooth", block: "start" })
-              }
-              className={[
-                "inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[12px] font-medium transition-colors",
-                item.emerald
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
-                  : "border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900",
-              ].join(" ")}
-            >
-              {item.emerald && <CalendarPlus className="size-3.5 text-emerald-600" />}
-              {item.label}
-            </button>
-          ))}
-        </nav>
-
-        {/* ---------------------------------------------------------- */}
         {/* Content                                                    */}
         {/* ---------------------------------------------------------- */}
         {isLoading || !ready ? (
@@ -462,49 +232,28 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="mt-8 flex flex-col gap-5">
-            {/* Stats + split donuts (report PNG export region part 1) */}
+            {/* Stats + donut (report PNG export region part 1) */}
             <div
-              id="istatistikler"
-              className="scroll-mt-24"
               ref={(node) => {
                 exportNodes.current[0] = node;
               }}
             >
-              <StatCards scope={scope} values={stats} />
-              <div className="mt-4 grid grid-cols-1 items-stretch gap-4 lg:grid-cols-4">
-                <SubjectDonut
-                  title="Birebir · Ders Dağılımı"
-                  data={birebirCounts}
-                />
-                <SubjectDonut
-                  title="Sınıf Dersi · Branş Dağılımı"
-                  data={sinifCounts}
-                />
-                <SubjectDonut
-                  title="Ek Ders · Branş Dağılımı"
-                  data={ekCounts}
-                />
-                <SubjectDonut
-                  title="Sınıf (Grup) Ek Ders · Branş Dağılımı"
-                  data={sinifGrupCounts}
-                />
+              <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-6">
+                <div className="xl:col-span-4">
+                  <StatCards scope={scope} values={stats} />
+                </div>
+                <div className="xl:col-span-2">
+                  <SubjectDonut data={subjectCounts} />
+                </div>
               </div>
             </div>
 
-            {/* Sınıf (Grup) Ek Ders — bağımsız üst düzey bölüm (istatistiklerin hemen altında) */}
-            <ClassGroupEkDersPanel term={term} />
-
             {/* Plan form */}
-            <div id="plan-formu" className="scroll-mt-24 print:hidden">
+            <div className="print:hidden">
               <PlanForm
                 teacherNames={teacherNames}
                 studentNames={studentNames}
               />
-            </div>
-
-            {/* Roster management (döneme özel sınıflar + öğrenciler) */}
-            <div id="roster" className="scroll-mt-24">
-              <RosterManager term={term} />
             </div>
 
             {/* Action bar */}
@@ -528,33 +277,9 @@ export default function Dashboard() {
             >
               <LessonTable lessons={scopedSorted} scopeLabel={scopeLabel} />
             </div>
-
-            {/* Weekly schedules, request pools, ek ders panels */}
-            <div id="haftalik-program" className="scroll-mt-24">
-              <WeeklySchedule weekStart={weekStart} term={term} />
-            </div>
-
-            {/* Yedekleme / dışa aktarma */}
-            <div id="yedekleme" className="scroll-mt-24">
-              <BackupManager term={term} />
-            </div>
           </div>
         )}
       </div>
-
-      {/* Floating quick-jump button — her zaman ekranda (istatistikler görünürken gizli) */}
-      <button
-        type="button"
-        onClick={() =>
-          document
-            .getElementById("sinif-grup-ek-ders")
-            ?.scrollIntoView({ behavior: "smooth", block: "start" })
-        }
-        className="fixed right-5 bottom-5 z-50 hidden cursor-pointer items-center gap-2 rounded-full bg-emerald-600 px-4 py-3 text-[13px] font-semibold text-white shadow-lg shadow-emerald-600/25 transition-all hover:-translate-y-0.5 hover:bg-emerald-700 sm:inline-flex print:hidden"
-      >
-        <CalendarPlus className="size-4" />
-        Ek Ders Paneli
-      </button>
 
       {!isAuthenticated && (
         <div className="sr-only">Yönlendiriliyorsunuz…</div>

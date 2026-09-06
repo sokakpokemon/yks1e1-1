@@ -10,7 +10,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { fmtDMY, SUBJECTS, ymdOf } from "@/lib/yks";
-import { branchOf, TIME_SLOTS } from "@/lib/schedule";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { useMutation } from "convex/react";
@@ -51,26 +50,6 @@ export function PlanForm({
   const [date, setDate] = useState<Date | null>(new Date());
   const [time, setTime] = useState("16:00");
   const [pending, setPending] = useState(false);
-  const [teacherWarning, setTeacherWarning] = useState<string | null>(null);
-
-  /* Warn (don't block) when the teacher's branch differs from the subject. */
-  const handleTeacherChange = (value: string) => {
-    setTeacher(value);
-    const branch = branchOf(value);
-    if (branch && subject && branch !== subject.trim().toLocaleUpperCase("tr")) {
-      const isTurGroup =
-        (subject.trim().toLocaleUpperCase("tr") === "TÜRKÇE" ||
-          subject.trim().toLocaleUpperCase("tr") === "EDEBİYAT") &&
-        (branch === "TÜRKÇE" || branch === "EDEBİYAT");
-      if (!isTurGroup) {
-        setTeacherWarning(
-          `${value} öğretmeninin branşı ${branch}. Devam ederseniz branş uyarısı verilir.`,
-        );
-        return;
-      }
-    }
-    setTeacherWarning(null);
-  };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -223,7 +202,7 @@ export function PlanForm({
               <input
                 id="plan-teacher"
                 value={teacher}
-                onChange={(e) => handleTeacherChange(e.target.value)}
+                onChange={(e) => setTeacher(e.target.value)}
                 list="teacher-options"
                 placeholder="Öğretmen adı"
                 autoComplete="off"
@@ -235,9 +214,6 @@ export function PlanForm({
                 ))}
               </datalist>
             </div>
-            {teacherWarning && (
-              <p className="mt-1 text-[11px] text-amber-600">{teacherWarning}</p>
-            )}
           </div>
 
           {/* Tarih */}
@@ -278,21 +254,18 @@ export function PlanForm({
 
           {/* Saat */}
           <div>
-            <FieldLabel>Saat</FieldLabel>
+            <label htmlFor="plan-time">
+              <FieldLabel>Saat</FieldLabel>
+            </label>
             <div className="relative">
-              <Clock className="pointer-events-none absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2 text-neutral-400" />
-              <Select value={time} onValueChange={setTime}>
-                <SelectTrigger className="w-full pl-9">
-                  <SelectValue placeholder="Saat seç" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TIME_SLOTS.map((s) => (
-                    <SelectItem key={s.index} value={s.start}>
-                      {s.index}. Ders · {s.start}-{s.end}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Clock className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400" />
+              <input
+                id="plan-time"
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="h-9 w-full min-w-0 rounded-md border border-input bg-transparent pr-2 pl-9 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              />
             </div>
           </div>
         </div>

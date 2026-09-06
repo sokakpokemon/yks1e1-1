@@ -164,15 +164,20 @@ export function ClassGroupEkDersPanel({
       transition={{ duration: 0.35, ease: "easeOut" }}
       className="scroll-mt-24 overflow-hidden rounded-2xl border border-neutral-200/80 bg-white"
     >
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-100 px-5 py-4">
-        <div className="flex items-center gap-2">
-          <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-600">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-100 bg-emerald-600/[0.07] px-5 py-4">
+        <div className="flex items-center gap-2.5">
+          <span className="flex size-8 items-center justify-center rounded-lg bg-emerald-600 shadow-sm">
             <CalendarPlus className="size-4 text-white" />
           </span>
-          <h3 className="text-sm font-semibold tracking-tight text-neutral-900">
-            Sınıf (Grup) Ek Ders
-          </h3>
-          <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-500 tabular-nums">
+          <div>
+            <h3 className="text-sm font-bold tracking-tight text-neutral-900">
+              Ek Ders Paneli
+            </h3>
+            <p className="text-[11px] text-neutral-500">
+              Sınıf (Grup) Ek Ders — sınıflara esnek haftalık ders yazma
+            </p>
+          </div>
+          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800 tabular-nums">
             {termRows.length} talep · {scheduledRows.length} planlandı
           </span>
           <span className="hidden rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-400 sm:inline">

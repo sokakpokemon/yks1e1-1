@@ -42,7 +42,14 @@ import {
   ymdOf,
 } from "@/lib/yks";
 import { useMutation, useQuery } from "convex/react";
-import { CalendarRange, GraduationCap, Home, Loader2, LogOut } from "lucide-react";
+import {
+  CalendarPlus,
+  CalendarRange,
+  GraduationCap,
+  Home,
+  Loader2,
+  LogOut,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -414,6 +421,39 @@ export default function Dashboard() {
         </header>
 
         {/* ---------------------------------------------------------- */}
+        {/* Section quick-nav (print-hidden)                            */}
+        {/* ---------------------------------------------------------- */}
+        <nav className="mt-5 flex flex-wrap items-center gap-2 print:hidden">
+          {[
+            { id: "istatistikler", label: "İstatistikler" },
+            { id: "sinif-grup-ek-ders", label: "Ek Ders Paneli", emerald: true },
+            { id: "plan-formu", label: "Plan Formu" },
+            { id: "roster", label: "Sınıf / Öğrenci" },
+            { id: "haftalik-program", label: "Haftalık Program" },
+            { id: "yedekleme", label: "Yedekleme" },
+          ].map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() =>
+                document
+                  .getElementById(item.id)
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" })
+              }
+              className={[
+                "inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[12px] font-medium transition-colors",
+                item.emerald
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+                  : "border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900",
+              ].join(" ")}
+            >
+              {item.emerald && <CalendarPlus className="size-3.5 text-emerald-600" />}
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        {/* ---------------------------------------------------------- */}
         {/* Content                                                    */}
         {/* ---------------------------------------------------------- */}
         {isLoading || !ready ? (
@@ -424,6 +464,8 @@ export default function Dashboard() {
           <div className="mt-8 flex flex-col gap-5">
             {/* Stats + split donuts (report PNG export region part 1) */}
             <div
+              id="istatistikler"
+              className="scroll-mt-24"
               ref={(node) => {
                 exportNodes.current[0] = node;
               }}
@@ -453,7 +495,7 @@ export default function Dashboard() {
             <ClassGroupEkDersPanel term={term} />
 
             {/* Plan form */}
-            <div className="print:hidden">
+            <div id="plan-formu" className="scroll-mt-24 print:hidden">
               <PlanForm
                 teacherNames={teacherNames}
                 studentNames={studentNames}
@@ -461,7 +503,9 @@ export default function Dashboard() {
             </div>
 
             {/* Roster management (döneme özel sınıflar + öğrenciler) */}
-            <RosterManager term={term} />
+            <div id="roster" className="scroll-mt-24">
+              <RosterManager term={term} />
+            </div>
 
             {/* Action bar */}
             <ActionBar
@@ -486,10 +530,14 @@ export default function Dashboard() {
             </div>
 
             {/* Weekly schedules, request pools, ek ders panels */}
-            <WeeklySchedule weekStart={weekStart} term={term} />
+            <div id="haftalik-program" className="scroll-mt-24">
+              <WeeklySchedule weekStart={weekStart} term={term} />
+            </div>
 
             {/* Yedekleme / dışa aktarma */}
-            <BackupManager term={term} />
+            <div id="yedekleme" className="scroll-mt-24">
+              <BackupManager term={term} />
+            </div>
           </div>
         )}
       </div>

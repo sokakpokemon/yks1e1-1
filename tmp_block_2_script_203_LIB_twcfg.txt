@@ -1,0 +1,9 @@
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ["Inter", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Arial", "sans-serif"] }
+      }
+    }
+  };
+</script>

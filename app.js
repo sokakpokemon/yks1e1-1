@@ -1,4 +1,3 @@
-<script>
 /* ================================================================
    YKS Birebir Takip — tek dosya otomasyonu
    Veriler localStorage'da kalıcıdır; yedek .json indirilir/yüklenir.
@@ -2005,4 +2004,3 @@ yenile();
 document.addEventListener("keydown", function (e) {
   if (e.key === "Escape") { onayKapat(); waKapat(); pngKapat(); }
 });
-</script>

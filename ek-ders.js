@@ -82,7 +82,7 @@ if (
      5) Sınıfın normal toplu ders programı (Sınıf Programı) o saatteyse uyarı   */
 
   var ekDuzeltmeBul = function (adet) {
-    var saatNum = parseInt(adet.saat.split(":")[0], 10);
+    var saatNum = parseInt(adet.saat.split(":")[0], 10); /* probe */
     var di = dowIdx(adet.tarih);
     var key = di + "-" + saatNum;
     var uyari = [];

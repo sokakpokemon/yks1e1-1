@@ -24,6 +24,8 @@ import {
 } from "@/lib/yks";
 import { useMutation, useQuery } from "convex/react";
 import { GraduationCap, Home, Loader2, LogOut } from "lucide-react";
+import { CalendarPlus, Inbox, Settings2 } from "lucide-react";
+import { JumpMenu } from "@/components/kurs/JumpMenu";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -223,6 +225,9 @@ export default function Dashboard() {
           </div>
         </header>
 
+        {/* Yapışkan atlamalı menü (sticky jump menu) */}
+        <JumpMenu />
+
         {/* ---------------------------------------------------------- */}
         {/* Content                                                    */}
         {/* ---------------------------------------------------------- */}
@@ -234,6 +239,8 @@ export default function Dashboard() {
           <div className="mt-8 flex flex-col gap-5">
             {/* Stats + donut (report PNG export region part 1) */}
             <div
+              id="bolum-bakis"
+              className="scroll-mt-20"
               ref={(node) => {
                 exportNodes.current[0] = node;
               }}
@@ -249,13 +256,15 @@ export default function Dashboard() {
             </div>
 
             {/* Plan form */}
-            <div className="print:hidden">
+            <div id="bolum-ders-planla" className="scroll-mt-20 print:hidden">
               <PlanForm
                 teacherNames={teacherNames}
                 studentNames={studentNames}
               />
             </div>
 
+            {/* Program (action bar + lesson table) */}
+            <div id="bolum-program" className="flex flex-col gap-5 scroll-mt-20">
             {/* Action bar */}
             <ActionBar
               scope={scope}
@@ -276,6 +285,63 @@ export default function Dashboard() {
               }}
             >
               <LessonTable lessons={scopedSorted} scopeLabel={scopeLabel} />
+            </div>
+            </div>
+
+            {/* İstekler / Ek Ders / Yönetim — atlamalı menü hedef bölüm kartları */}
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+              <section
+                id="bolum-istekler"
+                className="scroll-mt-20 rounded-2xl border border-neutral-200/80 bg-white p-5"
+                aria-label="İstekler"
+              >
+                <span className="inline-flex h-8 items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-3.5 text-[13px] font-semibold text-sky-700">
+                  <Inbox className="size-4" strokeWidth={2.25} />
+                  İstekler
+                </span>
+                <p className="mt-3 text-[13px] leading-relaxed text-neutral-500">
+                  Öğrencilerden gelen ders ve program istekleri burada listelenir.
+                </p>
+                <p className="mt-4 rounded-lg bg-neutral-50 px-3 py-2.5 text-[13px] text-neutral-400">
+                  Şimdilik bekleyen istek yok.
+                </p>
+              </section>
+
+              <section
+                id="bolum-ek-ders"
+                className="scroll-mt-20 rounded-2xl border border-neutral-200/80 bg-white p-5"
+                aria-label="Ek Ders"
+              >
+                <span className="inline-flex h-8 items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3.5 text-[13px] font-semibold text-amber-700">
+                  <CalendarPlus className="size-4" strokeWidth={2.25} />
+                  Ek Ders
+                </span>
+                <p className="mt-3 text-[13px] leading-relaxed text-neutral-500">
+                  Normal program dışında planlanan ek birebir dersler buradan takip edilir.
+                </p>
+                <p className="mt-4 rounded-lg bg-neutral-50 px-3 py-2.5 text-[13px] text-neutral-400">
+                  Bu hafta ek ders bulunmuyor.
+                </p>
+              </section>
+
+              <section
+                id="bolum-yonetim"
+                className="scroll-mt-20 rounded-2xl border border-neutral-200/80 bg-white p-5"
+                aria-label="Yönetim"
+              >
+                <span className="inline-flex h-8 items-center gap-1.5 rounded-full border border-violet-200 bg-violet-50 px-3.5 text-[13px] font-semibold text-violet-700">
+                  <Settings2 className="size-4" strokeWidth={2.25} />
+                  Yönetim
+                </span>
+                <p className="mt-3 text-[13px] leading-relaxed text-neutral-500">
+                  Öğretmen ve öğrenci kayıtlarını yönettiğin bölüm.
+                </p>
+                <p className="mt-4 rounded-lg bg-neutral-50 px-3 py-2.5 text-[13px] text-neutral-400">
+                  {teacherNames.length > 0
+                    ? `${teacherNames.length} öğretmen kayıtlı`
+                    : "Henüz öğretmen eklenmedi."}
+                </p>
+              </section>
             </div>
           </div>
         )}

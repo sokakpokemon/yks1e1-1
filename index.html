@@ -58,6 +58,68 @@
     .dnd-kilit { cursor: not-allowed; }
     .dnd-kilit:hover { background-color: #fef2f2; }
   </style>
+
+  <!-- ============ ATLAMALI MENÜ STİLİ (eklendi — mevcut stile/HTML'e dokunmaz) ============ -->
+  <style id="atlamaMenuStil">
+    #atlamaMenu {
+      position: sticky;
+      top: var(--atlamaTop, 66px);
+      z-index: 25;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid #e2e8f0;
+      box-shadow: 0 1px 0 rgba(15, 23, 42, 0.05);
+    }
+    #atlamaMenuIcerik {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 5px 12px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
+      scrollbar-width: none;
+    }
+    #atlamaMenuIcerik::-webkit-scrollbar { display: none; }
+    .atlama-btn {
+      flex: 0 0 auto;
+      white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+      cursor: pointer;
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
+      color: #475569;
+      font-size: 12.5px;
+      font-weight: 600;
+      line-height: 1;
+      padding: 6px 13px;
+      border-radius: 999px;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .atlama-btn:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      color: #0f172a;
+    }
+    .atlama-btn.aktif {
+      background: #14b8a6;
+      border-color: #14b8a6;
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(20, 184, 166, 0.35);
+    }
+    .atlama-btn:focus-visible {
+      outline: 2px solid #14b8a6;
+      outline-offset: 2px;
+    }
+    #ozetBolum, #analizBolum, #yonetimBolum, #havuzBolum, #planKart, #derslerBolum {
+      scroll-margin-top: calc(var(--atlamaTop, 66px) + 50px);
+    }
+    @media print {
+      #atlamaMenu { display: none; }
+    }
+  </style>
 </head>
 
 <body class="text-slate-800 antialiased">
@@ -91,6 +153,18 @@
     </div>
   </div>
 </header>
+
+<!-- ============ ATLAMALI MENÜ (eklendi — mevcut yapıya dokunmaz) ============ -->
+<nav id="atlamaMenu" class="no-print" aria-label="Bölümlere hızlı atla">
+  <div id="atlamaMenuIcerik">
+    <button type="button" class="atlama-btn" data-hedef="derslerBolum">Program</button>
+    <button type="button" class="atlama-btn" data-hedef="planKart">Ders Planla</button>
+    <button type="button" class="atlama-btn" data-hedef="havuzBolum">İstekler</button>
+    <button type="button" class="atlama-btn" data-hedef="analizBolum">Ek Ders</button>
+    <button type="button" class="atlama-btn" data-hedef="ozetBolum">Bakış</button>
+    <button type="button" class="atlama-btn" data-hedef="yonetimBolum">Yönetim</button>
+  </div>
+</nav>
 
 <main class="max-w-[1440px] mx-auto px-4 md:px-6 pt-6 pb-24 space-y-5">
 
@@ -2260,6 +2334,76 @@ yenile();
 document.addEventListener("keydown", function (e) {
   if (e.key === "Escape") { onayKapat(); waKapat(); pngKapat(); }
 });
+</script>
+
+<script>
+/* ============ ATLAMALI MENÜ DAVRANIŞI (eklendi — mevcut fonksiyonlara dokunmaz) ============ */
+(function () {
+  var menu = document.getElementById("atlamaMenu");
+  if (!menu) return;
+  var butonlar = Array.prototype.slice.call(menu.querySelectorAll(".atlama-btn"));
+  if (!butonlar.length) return;
+  var ustBar = document.querySelector("header");
+
+  /* Üst bar yapışkan olduğu için menü tam altına yapışsın. */
+  function ustYuksekligi() {
+    return (ustBar && ustBar.offsetHeight) ? ustBar.offsetHeight : 64;
+  }
+  function guncelleTop() {
+    document.documentElement.style.setProperty("--atlamaTop", (ustYuksekligi() + 2) + "px");
+  }
+  guncelleTop();
+  window.addEventListener("resize", guncelleTop);
+  setTimeout(guncelleTop, 600);
+
+  function vurgula(buton) {
+    butonlar.forEach(function (b) {
+      if (buton && b === buton) {
+        b.classList.add("aktif");
+        b.setAttribute("aria-current", "true");
+      } else {
+        b.classList.remove("aktif");
+        b.removeAttribute("aria-current");
+      }
+    });
+  }
+
+  /* Tıklayınca ilgili bölüme yumuşak kaydır. */
+  butonlar.forEach(function (buton) {
+    buton.addEventListener("click", function () {
+      var hedef = document.getElementById(buton.getAttribute("data-hedef"));
+      if (!hedef) return;
+      vurgula(buton);
+      hedef.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+
+  /* Kaydırma sırasında hangi bölümdeysek o buton vurgulu olsun. */
+  var bekleyen = false;
+  function spy() {
+    if (bekleyen) return;
+    bekleyen = true;
+    requestAnimationFrame(function () {
+      bekleyen = false;
+      var esik = ustYuksekligi() + menu.offsetHeight + 10;
+      var aktif = null;
+      for (var i = 0; i < butonlar.length; i++) {
+        var hedef = document.getElementById(butonlar[i].getAttribute("data-hedef"));
+        if (hedef && hedef.getBoundingClientRect().top <= esik) aktif = butonlar[i];
+      }
+      /* Sayfa en başındayken ilk bölüm (Bakış) vurgulu görünsün. */
+      var kayma = window.scrollY !== undefined ? window.scrollY : (document.documentElement && document.documentElement.scrollTop) || 0;
+      if (!aktif && kayma < 120) aktif = butonlar[0];
+      /* Sayfa sonuna gelindiyse son bölüm vurgulu olsun. */
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
+        aktif = butonlar[butonlar.length - 1];
+      }
+      vurgula(aktif);
+    });
+  }
+  window.addEventListener("scroll", spy, { passive: true });
+  spy();
+})();
 </script>
 </body>
 </html>

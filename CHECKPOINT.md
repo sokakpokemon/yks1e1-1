@@ -91,3 +91,46 @@ Not: `index.html`, 7 Eylül checkpoint'inden sonra kısa kod sistemiyle değişt
 
 - Zaman damgalı yedek zip'i: `backups/` klasöründe (node_modules, .git ve .env hariç tüm proje).
 - Kod düzeyinde geri dönüş: `ks-patch.mjs` / `ks-patch2.mjs` yamalarının tersini uygulamak yerine bu zip'teki `index.html` ve `ek-ders.js` kopyalanır.
+  (Not: `ks-patch.mjs` 9 Eylül temizliğinde silindi — yine de geri dönüş zip'i `backups/` içinde duruyor.)
+
+---
+
+# ✅ CHECKPOINT: Kullanılmayan Dosyaların Temizliği
+
+**Tarih:** 9 Eylül 2026 · **Durum:** ✅ Tamamlandı, tüm doğrulamalar geçti
+
+## Silinen Dosyalar (7)
+
+| Dosya | Neden |
+|---|---|
+| `ks-patch.mjs` | Tek seferlik yama script'i; hiçbir kod dosyasından referansı yoktu |
+| `src/` (tüm klasör) | Eski React/Convex iskeleti (93 dosya); `index.html` hiç referans vermiyordu |
+| `main.ts` | Deno `serveStatic` sunucu kalıntısı; hiçbir tsconfig include'unda değil |
+| `convex.json` | Silinen `src/convex/` klasörünü işaret ediyordu |
+| `sst-env.d.ts` | SST kalıntısı |
+| `components.json` | shadcn yapılandırması; yalnızca silinen React iskeletince kullanılıyordu |
+| `public/manifest.webmanifest` | `index.html`'de referans yoktu; `public/logo.svg` korundu |
+
+Not: `.nodetest.txt`, `.writetest.txt`, `app_tmp.js` istek listesindeydi ama repoda zaten mevcut değillerdi.
+
+## Korunan Dosyalar (dokunulmadı)
+
+`package.json`, `tsconfig.json`, `bun.lock`, `vendor/`, `index.html`, `app.js`,
+`ek-ders.js`, `ks-harness.mjs`, `ks-test-render.mjs`
+
+## Temizlik Sonrası Doğrulama
+
+- `ks-harness.mjs`: 33/33 test geçti (HEPSİ GEÇTİ)
+- `ks-test-render.mjs`: 12/12 test geçti (regresyon için korundu)
+- `bun tsc -b --noEmit`: hatasız (exit 0)
+- `node --check app.js` ve `node --check ek-ders.js`: OK
+- SHA-256: `index.html`, `ek-ders.js` ve 4 `vendor/` dosyası bir önceki checkpoint
+  ile bayt bayt aynı — uygulama koduna dokunulmadı.
+
+## Temizlik Sonrası Kök Dizini
+
+`index.html` (331.857 B), `app.js` (127.683 B), `ek-ders.js` (29.588 B),
+`ks-harness.mjs`, `ks-test-render.mjs`, `vendor/` (4 dosya), `public/logo.svg`,
+`package.json`, `bun.lock`, `tsconfig*.json`, `vite.config.ts`, `eslint.config.js`,
+`postcss.config.cjs`, `vly-toolbar-readonly.tsx`, `CHECKPOINT.md`, `README.md`,
+`integrations.md`, `.env*`, `.gitignore`, `.prettier*`

@@ -1,7 +1,8 @@
 /* Logic harness: kısa kod v2 kuralları (index.html'den koparılmış sahte DOM ile) */
 import { readFileSync } from "node:fs";
 const html = readFileSync("index.html", "utf8");
-const scripts = [...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]).join("\n;\n");
+/* Ana uygulama kodu app.js'te (index.html'de <script src="app.js">); inline bloklar (tailwind.config + atlama menüsü) sonrasına eklenir */
+const scripts = [readFileSync("app.js", "utf8"), ...[...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1])].join("\n;\n");
 
 /* Sahte DOM */
 const store = {};

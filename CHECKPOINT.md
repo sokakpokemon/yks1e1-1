@@ -1,6 +1,7 @@
 # PROJE REHBERİ — önce burayı oku
 
-- `index.html` = HTML iskeleti + giriş (ek-ders.js ve vendor/* yüklüyor)
+- `index.html` = HTML iskeleti + giriş (ek-ders.js, app.js ve vendor/* yüklüyor)
+- `app.js` = ana uygulama kodu (index.html'in ana inline script bloğu; KS v2 dahil)
 - `ek-ders.js` = Ek Ders sekmesi + kısa kod (KS) fonksiyonları
 - Testler: `node ks-harness.mjs` ve `node ks-test-render.mjs`
 - ⚠️ **Kritik:** index.html'de düzenleme yaparken str_replace takılırsa doğrudan assert'li Node script kullan
@@ -71,6 +72,56 @@ Değerler tabloyla eşleşiyorsa, bu checkpoint'teki çalışır durum aynıdır
 - seed: eski `X-9/X-10` anahtarları ve 12:00 çökmesi giderildi (12:00 satırları 4. derse eşlenir).
 - Yedek al/yükle: eski yedekler `normalize + ksGec` ile otomatik taşınır (test edildi).
 - Doğrulama: `node --check ek-ders.js`, 4 inline script sözdizimi, `ks-harness.mjs` (33 test) — hepsi geçti.
+
+---
+
+# ✅ CHECKPOINT: Ana Inline Script → app.js (Tek Doğru Kaynak)
+
+**Tarih:** 9 Eylül 2026 · **Durum:** ✅ Tamamlandı, assert'li Node script'i ile doğrulandı
+
+## Karar
+
+`index.html`'deki ana inline script bloğu (satır 328, ~130.4k karakter, "YKS Birebir Takip")
+ile kök dizindeki `app.js` karşılaştırıldı:
+
+- **Aynı değillerdi.** `app.js` KS v2 öncesi eski sürümdü (0× `KISA_KOD`/`saatEtiket`,
+  7 fark grubu; inline'da olmayan fonksiyon: YOK).
+- Kullanıcının kuralına göre **inline kaynak kabul edildi; `app.js` üzerine yazıldı**
+  (ana bloğun birebir kendisi, baştaki boş satır ve sondaki boşluklar normalize edilerek).
+- `index.html`'de bloğun yerine `<script src="app.js"></script>` kondu.
+
+## Sonuç (boyut + SHA-256)
+
+| Dosya | Önce | Sonra | Yeni SHA-256 |
+|---|---|---|---|
+| index.html | 153.486 B (`226a5d32…`) | 21.153 B (400 satır) | `5b691039f85c612b02a19ce11635260b3a523ae2256196fb581a1ba9f9dd00dd` |
+| app.js | 127.683 B (`56943c40…`, eski) | 132.345 B (2.108 satır) | `f2034775a348d8a7670c45dd4f7731026a0fce8528b98c0bd0f99afc22433fe4` |
+
+Kalıcı olarak 2 inline blok kaldı: `tailwind.config` (satır 13) ve atlama menüsü (satır 330).
+Script yüklenme sırası: `ek-ders.js` (defer) → `vendor/tailwind.js` → tailwind.config →
+`vendor/chart.js` → `vendor/html2canvas.js` → `app.js`.
+
+## Script'in Assert Ettikleri
+
+- 3 inline blok beklenip bulundu; blok kimlikleri (tailwind.config / ana uygulama / atlama menüsü) doğrulandı.
+- Silme güvenliği: `app.js`'te inline'da olmayan fonksiyon/üst-düzey değişken olmadığı
+  (fonksiyon adı karşılaştırması: fark 0) assert edildi.
+- Dönüşüm birebirliği: blok metni tag'iyle birlikte hedeflendi; `htmlAfter.replace(tag, target)
+  === htmlBefore` assert'i başka hiçbir bayta dokunulmadığını kanıtladı.
+- Çift uygulama koruması: hedef tag zaten varsa script reddetti.
+- Yeni `app.js` 'te `saatEtiket`/`KISA_KOD` varlığı (KS v2) doğrulandı.
+
+## Test Dosyalarında Eş Zamanlı Güncelleme
+
+`ks-harness.mjs` ve `ks-test-render.mjs` ana kodu artık `app.js`'ten okuyor
+(inline bloklar hâlâ index.html'den alınıp aynı sırada birleştiriliyor —oot sırası tarayıcıdakiyle aynı kalır).
+
+## Doğrulama
+
+- `node --check app.js` ve `node --check ek-ders.js`: OK
+- `ks-harness.mjs`: **33/33 geçti**
+- `ks-test-render.mjs`: **12/12 geçti**
+- `ek-ders.js` (29.588 B, `a2a421fb…`) ve `vendor/*`: birebir aynı, dokunulmadı
 
 ---
 

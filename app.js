@@ -27,6 +27,111 @@ var AVATAR_RENK = [
   ["bg-teal-100","text-teal-700"],["bg-blue-100","text-blue-700"],["bg-amber-100","text-amber-700"],
   ["bg-violet-100","text-violet-700"],["bg-rose-100","text-rose-700"],["bg-indigo-100","text-indigo-700"]
 ];
+// ---------- Kısa Kod Ders Saatleri (yeni sistem) ----------
+var KISA_KOD = [
+  { no: "1",  b: "08:50", e: "09:30" },
+  { no: "2",  b: "09:40", e: "10:20" },
+  { no: "3",  b: "10:30", e: "11:10" },
+  { no: "4",  b: "11:20", e: "12:00" },
+  { no: "5",  b: "13:00", e: "13:40" },
+  { no: "6",  b: "13:50", e: "14:30" },
+  { no: "7",  b: "14:40", e: "15:20" },
+  { no: "8",  b: "15:30", e: "16:10" },
+  { no: "9",  b: "16:20", e: "17:00" },
+  { no: "10", b: "17:10", e: "17:50" },
+  { no: "11", b: "18:00", e: "18:40" }
+];
+/* Kısa kod yardımcıları v2: başlangıç saati hangi aralığa düşüyorsa o koddur (örn. 16:00 → 8. ders) */
+function ksKodOf(saat) {
+  var s = String(saat || "");
+  var k = KISA_KOD.filter(function (x) { return x.b === s; })[0];
+  if (!k) k = KISA_KOD.filter(function (x) { return s >= x.b && s < x.e; })[0];
+  return k ? k.no : "";
+}
+function saatEtiket(saat) {
+  var m = KISA_KOD.filter(function (x) { return x.no === ksKodOf(saat); })[0];
+  return m ? m.no + " · " + m.b + "-" + m.e : String(saat || "");
+}
+/* Eski saat-bazlı müsaitlik/sınıf programı anahtarlarını TEK SEFERLİĞİNE kısa koda taşır */
+function ksVerGec() {
+  if (DB.ksVer === 2) return;
+  var noOf = function (h) {
+    var n = parseInt(h, 10);
+    if (isNaN(n)) return null;
+    return ksKodOf((n < 10 ? "0" + n : "" + n) + ":00");
+  };
+  DB.ogretmenler.forEach(function (t) {
+    if (!t.avail) return;
+    if (t.avail.sinif && typeof t.avail.sinif === "object" && !Array.isArray(t.avail.sinif)) {
+      var yeni = {};
+      Object.keys(t.avail.sinif).forEach(function (k) {
+        var p = String(k).split("-");
+        var no = noOf(p[1]);
+        yeni[p[0] + "-" + (no || p[1])] = t.avail.sinif[k];
+      });
+      t.avail.sinif = yeni;
+    }
+    if (Array.isArray(t.avail.musait)) {
+      t.avail.musait = t.avail.musait.map(function (k) {
+        var p = String(k).split("-");
+        var no = noOf(p[1]);
+        return p[0] + "-" + (no || p[1]);
+      });
+    }
+  });
+  Object.keys(DB.sinifProg || {}).forEach(function (s) {
+    DB.sinifProg[s] = (DB.sinifProg[s] || []).map(function (k) {
+      var p = String(k).split("-");
+      var no = noOf(p[1]);
+      return p[0] + "-" + (no || p[1]);
+    });
+  });
+  DB.ksVer = 2;
+}
+
+function ksSeceneklerHTML(secili) {
+  var h = "";
+  KISA_KOD.forEach(function (k) {
+    h += '<option value="' + k.b + '"' + (secili === k.b ? " selected" : "") + ">" + k.no + " \u00b7 " + k.b + "-" + k.e + "</option>";
+  });
+  return h;
+}
+/* Eski saat-bazlı dersleri kısa koda taşır; uymayanları DOKUNMADAN raporlar */
+function ksGec() {
+  ksVerGec();
+  var rapor = { tasinan: 0, belirsiz: [] };
+  var diziler = [DB.dersler];
+  if (Array.isArray(DB.ekDersler)) diziler.push(DB.ekDersler);
+  diziler.forEach(function (dizi) {
+    dizi.forEach(function (l) {
+      if (l.kod) {
+        var k0 = KISA_KOD.filter(function (x) { return x.no === l.kod; })[0];
+        if (k0 && l.saat !== k0.b) l.saat = k0.b;
+        return;
+      }
+      var no = ksKodOf(l.saat);
+      var m = KISA_KOD.filter(function (x) { return x.no === no; })[0];
+      if (m) { l.kod = m.no; l.saat = m.b; rapor.tasinan++; }
+      else rapor.belirsiz.push({ ad: l.ogrenciAd || l.sinif || "?", tarih: l.tarih, saat: String(l.saat || "") });
+    });
+  });
+  return rapor;
+}
+
+function ksRaporHTML() {
+  if (typeof __KS_RAPOR === "undefined" || !__KS_RAPOR || !__KS_RAPOR.belirsiz.length || ui.ksRaporKapat) return "";
+  var satir = __KS_RAPOR.belirsiz.map(function (r) {
+    return "<li><b>" + esc(r.ad) + "</b> \u00b7 " + fmtTR(r.tarih) + " \u00b7 " + esc(r.saat) + "</li>";
+  }).join("");
+  return '<div class="no-print mx-5 mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5">' +
+    '<div class="flex items-start gap-3"><span class="w-8 h-8 rounded-full bg-amber-400 text-white flex items-center justify-center shrink-0"><i class="fa-solid fa-clock-rotate-left"></i></span>' +
+    '<div class="flex-1"><b class="text-[13px] text-amber-800 block">Kısa koda taşıma: ' + __KS_RAPOR.tasinan + ' ders taşındı \u00b7 ' + __KS_RAPOR.belirsiz.length + ' belirsiz (değiştirilmedi)</b>' +
+    '<ul class="text-[12px] text-amber-700/90 mt-1.5 space-y-1 list-disc list-inside">' + satir + '</ul>' +
+    '<p class="text-[11px] text-amber-600 mt-2">Bu derslerin başlangıç saati kısa kod saatlerine tam uymuyor. Listeden \u201cDüzenle\u201d ile doğru ders saatini seçin.</p></div>' +
+    '<button onclick="ksRaporKapat()" class="w-7 h-7 rounded-full text-amber-400 hover:text-amber-600 hover:bg-amber-100 shrink-0"><i class="fa-solid fa-xmark"></i></button></div></div>';
+}
+function ksRaporKapat() { ui.ksRaporKapat = true; renderDersler(); }
+
 var LS_KEY = "yksOto_arsiv_v1";
 
 // ---------- Yardımcılar ----------
@@ -67,7 +172,7 @@ function avatar(ad, i) {
 
 // ---------- Veri katmanı ----------
 function bosDB() {
-  return { kurulus: todayKey(), ogretmenler: [], ogrenciler: [], sinifProg: {}, istekler: [], dersler: [] };
+  return { kurulus: todayKey(), ksVer: 2, ogretmenler: [], ogrenciler: [], sinifProg: {}, istekler: [], dersler: [] };
 }
 function normalize(d) {
   d.ogretmenler = Array.isArray(d.ogretmenler) ? d.ogretmenler : [];
@@ -98,6 +203,7 @@ function loadDB() {
 }
 var DB = loadDB() || seedDB();
 saveDB();
+var __KS_RAPOR = ksGec(); saveDB();
 
 // ---------- Varsayılan başlangıç verileri (depo boşsa ilk açılışta yüklenir) ----------
 function seedDB() {
@@ -105,23 +211,23 @@ function seedDB() {
   var mon = addDaysKey(todayKey(), -dowIdx(todayKey()));
 
   db.ogretmenler = [
-    { id: uid(), ad: "SONER AÇIKGÖZ", brans: "mat", avail: { sinif: {"0-9":"MEZUN SAY 1","1-9":"MEZUN SAY 2","2-9":"MEZUN SAY 3","3-9":"MEZUN EA 1"}, musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "MEHMET ŞAŞAR", brans: "mat", avail: { sinif: {"0-9":"MEZUN EA 1","1-9":"MEZUN EA 2","2-9":"12 SAY 1","3-9":"12 SAY 2"}, musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "TAHSİN ASLAN", brans: "mat", avail: { sinif: {"0-9":"12 SAY 2","2-9":"12 SAY CAL","3-9":"12 EA 1","4-9":"12 DİL"}, musait: ["5-9","0-10"] } },
-    { id: uid(), ad: "MİNE GÜRKAN", brans: "mat", avail: { sinif: {"0-9":"12 DİL","1-9":"11 SAY 1","2-9":"11 SAY 2","3-9":"11 SAY 3"}, musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "MERVE GEREK", brans: "mat", avail: { sinif: {"0-9":"11 SAY 3","1-9":"11 SAY CAL","2-9":"11 SAYISAL FEN","3-9":"11 EA 1"}, musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "SALİM URTİMUR", brans: "mat", avail: { sinif: {"0-9":"11 EA 1","1-9":"10.SINIF","2-9":"9.SINIF","3-9":"MEZUN SAY 1"}, musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "MUSTAFA GÜRKAN", brans: "fiz", avail: { sinif: {"0-9":"MEZUN SAY 1","1-9":"MEZUN SAY 2","2-9":"MEZUN SAY 3","3-9":"MEZUN EA 1"}, musait: ["5-9","0-10"] } },
-    { id: uid(), ad: "RAVİDE DERYA", brans: "fiz", avail: { sinif: {"1-9":"MEZUN EA 1","2-9":"MEZUN EA 2","3-9":"12 SAY 1","4-9":"12 SAY 2"}, musait: ["5-9","0-10"] } },
-    { id: uid(), ad: "BELGİN ÇOLAK", brans: "kim", avail: { sinif: {"0-9":"12 SAY 2","1-9":"12 SAY CAL","2-9":"12 EA 1","3-9":"12 DİL"}, musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "KARDELEN ASLAN", brans: "kim", avail: { sinif: {"0-9":"12 DİL","1-9":"11 SAY 1","2-9":"11 SAY 2","3-9":"11 SAY 3"}, musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "SELİNA KUTLU", brans: "kim", avail: { sinif: {"0-9":"11 SAY 3","1-9":"11 SAY CAL","2-9":"11 SAYISAL FEN","3-9":"11 EA 1"}, musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "ŞAHİN DOĞANAY", brans: "biy", avail: { sinif: {"0-9":"11 EA 1","1-9":"10.SINIF","3-9":"9.SINIF","4-9":"MEZUN SAY 1"}, musait: ["5-9","0-10"] } },
-    { id: uid(), ad: "EREN BİLGİLİ", brans: "tur", avail: { sinif: {"0-9":"MEZUN SAY 1","1-9":"MEZUN SAY 2","2-9":"MEZUN SAY 3","3-9":"MEZUN EA 1"}, musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "FATMA KURT", brans: "tur", avail: { sinif: {"0-9":"MEZUN EA 1","1-9":"MEZUN EA 2","2-9":"12 SAY 1","3-9":"12 SAY 2"}, musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "FİKRİYE KIYAR", brans: "cgr", avail: { sinif: {"0-9":"12 SAY 2","1-9":"12 SAY CAL","2-9":"12 EA 1","3-9":"12 DİL"}, musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "NİHAT KANARIG", brans: "tar", avail: { sinif: {"0-9":"12 DİL","1-9":"11 SAY 1","2-9":"11 SAY 2","3-9":"11 SAY 3"}, musait: ["4-9","5-9"] } },
-    { id: uid(), ad: "MERT ASİL", brans: "ing", avail: { sinif: {"0-9":"11 SAY 3","1-9":"11 SAY CAL","2-9":"11 SAYISAL FEN","3-9":"11 EA 1"}, musait: ["4-9","5-9"] } }
+    { id: uid(), ad: "SONER AÇIKGÖZ", brans: "mat", avail: { sinif: {"0-1":"MEZUN SAY 1","1-1":"MEZUN SAY 2","2-1":"MEZUN SAY 3","3-1":"MEZUN EA 1"}, musait: ["4-1","5-1"] } },
+    { id: uid(), ad: "MEHMET ŞAŞAR", brans: "mat", avail: { sinif: {"0-1":"MEZUN EA 1","1-1":"MEZUN EA 2","2-1":"12 SAY 1","3-1":"12 SAY 2"}, musait: ["4-1","5-1"] } },
+    { id: uid(), ad: "TAHSİN ASLAN", brans: "mat", avail: { sinif: {"0-1":"12 SAY 2","2-1":"12 SAY CAL","3-1":"12 EA 1","4-1":"12 DİL"}, musait: ["5-1","0-2"] } },
+    { id: uid(), ad: "MİNE GÜRKAN", brans: "mat", avail: { sinif: {"0-1":"12 DİL","1-1":"11 SAY 1","2-1":"11 SAY 2","3-1":"11 SAY 3"}, musait: ["4-1","5-1"] } },
+    { id: uid(), ad: "MERVE GEREK", brans: "mat", avail: { sinif: {"0-1":"11 SAY 3","1-1":"11 SAY CAL","2-1":"11 SAYISAL FEN","3-1":"11 EA 1"}, musait: ["4-1","5-1"] } },
+    { id: uid(), ad: "SALİM URTİMUR", brans: "mat", avail: { sinif: {"0-1":"11 EA 1","1-1":"10.SINIF","2-1":"9.SINIF","3-1":"MEZUN SAY 1"}, musait: ["4-1","5-1"] } },
+    { id: uid(), ad: "MUSTAFA GÜRKAN", brans: "fiz", avail: { sinif: {"0-1":"MEZUN SAY 1","1-1":"MEZUN SAY 2","2-1":"MEZUN SAY 3","3-1":"MEZUN EA 1"}, musait: ["5-1","0-2"] } },
+    { id: uid(), ad: "RAVİDE DERYA", brans: "fiz", avail: { sinif: {"1-1":"MEZUN EA 1","2-1":"MEZUN EA 2","3-1":"12 SAY 1","4-1":"12 SAY 2"}, musait: ["5-1","0-2"] } },
+    { id: uid(), ad: "BELGİN ÇOLAK", brans: "kim", avail: { sinif: {"0-1":"12 SAY 2","1-1":"12 SAY CAL","2-1":"12 EA 1","3-1":"12 DİL"}, musait: ["4-1","5-1"] } },
+    { id: uid(), ad: "KARDELEN ASLAN", brans: "kim", avail: { sinif: {"0-1":"12 DİL","1-1":"11 SAY 1","2-1":"11 SAY 2","3-1":"11 SAY 3"}, musait: ["4-1","5-1"] } },
+    { id: uid(), ad: "SELİNA KUTLU", brans: "kim", avail: { sinif: {"0-1":"11 SAY 3","1-1":"11 SAY CAL","2-1":"11 SAYISAL FEN","3-1":"11 EA 1"}, musait: ["4-1","5-1"] } },
+    { id: uid(), ad: "ŞAHİN DOĞANAY", brans: "biy", avail: { sinif: {"0-1":"11 EA 1","1-1":"10.SINIF","3-1":"9.SINIF","4-1":"MEZUN SAY 1"}, musait: ["5-1","0-2"] } },
+    { id: uid(), ad: "EREN BİLGİLİ", brans: "tur", avail: { sinif: {"0-1":"MEZUN SAY 1","1-1":"MEZUN SAY 2","2-1":"MEZUN SAY 3","3-1":"MEZUN EA 1"}, musait: ["4-1","5-1"] } },
+    { id: uid(), ad: "FATMA KURT", brans: "tur", avail: { sinif: {"0-1":"MEZUN EA 1","1-1":"MEZUN EA 2","2-1":"12 SAY 1","3-1":"12 SAY 2"}, musait: ["4-1","5-1"] } },
+    { id: uid(), ad: "FİKRİYE KIYAR", brans: "cgr", avail: { sinif: {"0-1":"12 SAY 2","1-1":"12 SAY CAL","2-1":"12 EA 1","3-1":"12 DİL"}, musait: ["4-1","5-1"] } },
+    { id: uid(), ad: "NİHAT KANARIG", brans: "tar", avail: { sinif: {"0-1":"12 DİL","1-1":"11 SAY 1","2-1":"11 SAY 2","3-1":"11 SAY 3"}, musait: ["4-1","5-1"] } },
+    { id: uid(), ad: "MERT ASİL", brans: "ing", avail: { sinif: {"0-1":"11 SAY 3","1-1":"11 SAY CAL","2-1":"11 SAYISAL FEN","3-1":"11 EA 1"}, musait: ["4-1","5-1"] } }
   ];
   db.ogrenciler = [
     { id: uid(), ad: "Ayşe Demir", sinif: "12 SAY 1", tel: "" },
@@ -132,16 +238,16 @@ function seedDB() {
     { id: uid(), ad: "Yusuf Can", sinif: "MEZUN SAY 2", tel: "" }
   ];
   db.sinifProg = {
-    "MEZUN SAY 1": ["0-9","2-9","3-9","5-9","0-10"],
-    "MEZUN SAY 2": ["0-9","1-9","2-9","3-9","4-9"],
+    "MEZUN SAY 1": ["0-1","2-1","3-1","5-1","0-2"],
+    "MEZUN SAY 2": ["0-1","1-1","2-1","3-1","4-1"],
     "MEZUN SAY 3": [],
-    "MEZUN EA 1": ["0-9","1-9","3-9","4-9","5-9"],
+    "MEZUN EA 1": ["0-1","1-1","3-1","4-1","5-1"],
     "MEZUN EA 2": [],
-    "12 SAY 1": ["0-9","1-9","2-9","3-9","4-9"],
-    "12 SAY 2": ["1-9","2-9","3-9","4-9","5-9"],
+    "12 SAY 1": ["0-1","1-1","2-1","3-1","4-1"],
+    "12 SAY 2": ["1-1","2-1","3-1","4-1","5-1"],
     "12 SAY CAL": [],
     "12 EA 1": [],
-    "12 DİL": ["0-9","1-9","2-9","3-9","4-9"],
+    "12 DİL": ["0-1","1-1","2-1","3-1","4-1"],
     "11 SAY 1": [],
     "11 SAY 2": [],
     "11 SAY 3": [],
@@ -157,20 +263,23 @@ function seedDB() {
 
   var plan = [[0,0,16,"Ayşe Demir","mat","Fonksiyonlarda Uygulama","SONER AÇIKGÖZ"],[0,0,14,"Zeynep Kaya","mat","Denklem Çözme","MİNE GÜRKAN"],[0,1,9,"Emir Aydın","mat","Sayılar ve İşlemler","TAHSİN ASLAN"],[0,3,12,"Emir Aydın","mat","Türev Temelleri","MERVE GEREK"],[0,4,16,"Ayşe Demir","mat","Problemler","SALİM URTİMUR"],[0,2,13,"Ayşe Demir","fiz","Kuvvet ve Hareket","RAVİDE DERYA"],[0,5,13,"Emir Aydın","fiz","Newton Yasaları","MUSTAFA GÜRKAN"],[0,1,11,"Elif Koç","kim","Periyodik Tablo","BELGİN ÇOLAK"],[0,3,16,"Elif Koç","kim","Asitler ve Bazlar","KARDELEN ASLAN"],[0,5,11,"Elif Koç","kim","Organik Kimya Giriş","SELİNA KUTLU"],[0,2,17,"Zeynep Kaya","biy","Hücre ve Organelleri","ŞAHİN DOĞANAY"],[0,1,15,"Ecrin Şahin","tur","Paragrafta Anlam","FATMA KURT"],[0,4,11,"Ecrin Şahin","tur","Sözcükte Anlam","EREN BİLGİLİ"],[0,5,15,"Elif Koç","tur","Dil Bilgisi Tekrarı","FATMA KURT"],[0,4,14,"Yusuf Can","cgr","Türkiye'nin Yer Şekilleri","FİKRİYE KIYAR"],[0,5,10,"Zeynep Kaya","tar","Kurtuluş Savaşı","NİHAT KANARIG"],[0,2,10,"Yusuf Can","ing","Tense & Preposition Tekrarı","MERT ASİL"],[-1,0,13,"Ayşe Demir","mat","Problemler","SONER AÇIKGÖZ"],[-1,0,11,"Emir Aydın","mat","Polinomlar","MEHMET ŞAŞAR"],[-1,2,11,"Yusuf Can","kim","Gaz Yasaları","SELİNA KUTLU"],[-1,3,10,"Ayşe Demir","mat","Limit","TAHSİN ASLAN"],[-1,3,14,"Emir Aydın","mat","İntegral","MİNE GÜRKAN"],[-1,4,15,"Zeynep Kaya","mat","Üçgende Benzerlik","MERVE GEREK"],[-1,1,14,"Ecrin Şahin","tur","Paragraf Analizi","FATMA KURT"],[-1,4,13,"Yusuf Can","tar","İlk Türk Devletleri","NİHAT KANARIG"],[-1,2,9,"Elif Koç","biy","Ekoloji","ŞAHİN DOĞANAY"],[-1,2,15,"Yusuf Can","cgr","İklim Bilgisi","KARDELEN ASLAN"],[-1,1,16,"Zeynep Kaya","kim","Mol Kavramı","BELGİN ÇOLAK"],[-1,0,11,"Ecrin Şahin","ing","Reading Practice","MERT ASİL"],[-2,0,9,"Zeynep Kaya","fiz","Elektrik","RAVİDE DERYA"],[-2,1,11,"Elif Koç","mat","Sayılar","SONER AÇIKGÖZ"],[-2,2,13,"Yusuf Can","tur","Sözcükte Anlam","EREN BİLGİLİ"],[-2,2,16,"Ayşe Demir","mat","Fonksiyonlar","MEHMET ŞAŞAR"],[-2,3,11,"Ecrin Şahin","ing","Vocabulary","MERT ASİL"],[-2,4,9,"Emir Aydın","fiz","İş ve Enerji","MUSTAFA GÜRKAN"],[-2,4,16,"Zeynep Kaya","mat","Denklem Sistemleri","SALİM URTİMUR"],[-2,5,12,"Elif Koç","tar","İnkılap Tarihi","NİHAT KANARIG"]];
   plan.forEach(function (r) {
+    var _h = r[2];
+    var _no = ksKodOf((_h < 10 ? "0" + _h : "" + _h) + ":00") || "4"; /* 12:00 belirsiz → 4. ders (11:20-12:00) */
+    var _k = KISA_KOD.filter(function (k) { return k.no === _no; })[0];
     db.dersler.push({
       id: uid(), ogrenciId: ogn(r[3]), ogrenciAd: r[3], dersId: r[4], konu: r[5],
       ogretmenId: ogr(r[6]), ogretmenAd: r[6],
       tarih: addDaysKey(addDaysKey(mon, r[0] * 7), r[1]),
-      saat: String(r[2]).padStart(2, "0") + ":00",
+      saat: _k.b, kod: _k.no,
       durum: r[0] === 0 ? "planlandi" : "tamamlandi",
       olusturma: todayKey()
     });
   });
 
   db.istekler = [
-    { id: uid(), ogrenciId: ogn("Zeynep Kaya"), ogrenciAd: "Zeynep Kaya", dersId: "mat", konu: "Limit ve Süreklilik", durum: "bekliyor", olusturma: addDaysKey(todayKey(), -3), saat: "09:30" },
-    { id: uid(), ogrenciId: ogn("Yusuf Can"), ogrenciAd: "Yusuf Can", dersId: "ing", konu: "Reading Stratejileri", durum: "bekliyor", olusturma: addDaysKey(todayKey(), -3), saat: "14:00" },
-    { id: uid(), ogrenciId: ogn("Ayşe Demir"), ogrenciAd: "Ayşe Demir", dersId: "fiz", konu: "İş, Güç ve Enerji", durum: "bekliyor", olusturma: addDaysKey(todayKey(), -2), saat: "11:15" }
+    { id: uid(), ogrenciId: ogn("Zeynep Kaya"), ogrenciAd: "Zeynep Kaya", dersId: "mat", konu: "Limit ve Süreklilik", durum: "bekliyor", olusturma: addDaysKey(todayKey(), -3), saat: "15:30" },
+    { id: uid(), ogrenciId: ogn("Yusuf Can"), ogrenciAd: "Yusuf Can", dersId: "ing", konu: "Reading Stratejileri", durum: "bekliyor", olusturma: addDaysKey(todayKey(), -3), saat: "14:40" },
+    { id: uid(), ogrenciId: ogn("Ayşe Demir"), ogrenciAd: "Ayşe Demir", dersId: "fiz", konu: "İş, Güç ve Enerji", durum: "bekliyor", olusturma: addDaysKey(todayKey(), -2), saat: "11:20" }
   ];
   return db;
 }
@@ -532,12 +641,12 @@ function gridTablo(onclickOnce, avail, tip) {
   var h = "<thead><tr><th class='sticky left-0 bg-slate-50/80'></th>";
   for (var g = 0; g < 7; g++) h += '<th class="py-1.5 text-[10.5px] font-bold text-slate-500 uppercase tracking-wide">' + GUN_KISA[g] + "</th>";
   h += "</tr></thead><tbody>";
-  SAATLER.forEach(function (saat) {
-    var saatYazi = String(saat).padStart(2, "0") + ":00";
+  KISA_KOD.forEach(function (ks) {
+    var saatYazi = ks.no + " · " + ks.b + "-" + ks.e;
     h += "<tr>";
     h += '<td class="sticky left-0 bg-white pr-2 text-[10.5px] font-bold text-slate-400 text-right whitespace-nowrap">' + saatYazi + "</td>";
     for (var g2 = 0; g2 < 7; g2++) {
-      var key = g2 + "-" + saat;
+      var key = g2 + "-" + ks.no;
       var durum = tip === "ogretmen"
         ? ((avail.sinif && key in avail.sinif) ? "sinif" : avail.musait.indexOf(key) >= 0 ? "musait" : "")
         : (avail.indexOf(key) >= 0 ? "var" : "");
@@ -547,7 +656,7 @@ function gridTablo(onclickOnce, avail, tip) {
       else if (durum === "musait") { cls += "bg-rose-200 border-rose-300 hover:bg-rose-300"; baslik += " · Müsait Değil"; }
       else if (durum === "var") { cls += "bg-blue-200 border-blue-300 hover:bg-blue-300"; baslik += " · Toplu ders"; }
       else { cls += "bg-white border-slate-200 hover:border-teal-300 hover:bg-teal-50"; baslik += " · Boş"; }
-      h += '<td class="p-0.5"><button class="' + cls + '" title="' + baslik + '" onclick="' + onclickOnce + "," + g2 + "," + saat + ')">' +
+      h += '<td class="p-0.5"><button class="' + cls + '" title="' + baslik + '" onclick="' + onclickOnce + "," + g2 + "," + ks.no + ')">' +
         (durum === "sinif" ? '<span class="text-[7.5px] font-extrabold text-amber-700/80 leading-tight whitespace-nowrap">' + esc((avail.sinif[key] || "SD").substring(0, 14)) + '</span>' :
          durum === "musait" ? '<span class="text-[8.5px] font-extrabold text-rose-500/70">MD</span>' :
          durum === "var" ? '<span class="text-[8.5px] font-extrabold text-blue-600/60">DV</span>' : "") +
@@ -558,6 +667,7 @@ function gridTablo(onclickOnce, avail, tip) {
   h += "</tbody>";
   return '<div class="overflow-x-auto rounded-xl border border-slate-100"><table class="w-full min-w-[640px] text-center border-separate border-spacing-0.5">' + h + "</table></div>";
 }
+
 function ogretmenEkle() {
   var ad = $("y-ad").value.trim();
   var brans = $("y-brans").value;
@@ -930,6 +1040,7 @@ function yedekOku(input) {
         onay: "Evet, Yükle", tehlikeli: true
       }, function () {
         DB = normalize(v);
+        ksGec();
         saveDB();
         ui.editId = null; ui.ogrId = null; ui.sinifAd = null;
         yenile();
@@ -1009,7 +1120,7 @@ function renderHavuz() {
       (D2 ? '<span class="rounded-full px-2 py-0.5 text-[10.5px] font-bold ' + D2.bg + " " + D2.tx + '">' + D2.ad + "</span>" : "") +
       '<span class="text-[10px] font-bold rounded-full px-2 py-0.5 ' + (bekliyor ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700") + '">' + (bekliyor ? "Bekliyor" : "Planlandı") + "</span></div>" +
       '<div class="text-[11.5px] text-slate-500 truncate mt-0.5">' + (r.konu ? "<i>Eksik konu:</i> " + esc(r.konu) : '<span class="italic text-slate-300">Konu belirtilmedi</span>') + "</div>" +
-      '<div class="text-[10px] text-slate-400 font-semibold mt-0.5"><i class="fa-regular fa-calendar mr-1"></i>' + fmtTR(r.olusturma) + (r.saat ? " · <i class=\'fa-regular fa-clock ml-1 mr-1\'></i>" + r.saat : "") + "</div></div>" +
+      '<div class="text-[10px] text-slate-400 font-semibold mt-0.5"><i class="fa-regular fa-calendar mr-1"></i>' + fmtTR(r.olusturma) + (r.saat ? " · <i class=\'fa-regular fa-clock ml-1 mr-1\'></i>" + saatEtiket(r.saat) : "") + "</div></div>" +
       (bekliyor
         ? '<button onclick="formaAktar(\'' + r.id + '\')" title="Sürükleyip planlama formuna bırakın veya tıklayın" class="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-teal-500 hover:bg-teal-600 text-white text-[11.5px] font-bold px-3.5 py-2 shadow-sm transition-colors"><i class="fa-solid fa-arrow-right-arrow-left"></i>Eşleştir &amp; Planla</button>'
         : '<span class="text-[10.5px] text-emerald-600 font-bold shrink-0"><i class="fa-solid fa-check mr-1"></i>Derse dönüştürüldü</span>') +
@@ -1060,7 +1171,7 @@ function formaAktar(id) {
   ui.editId = null;
   duzenleBannerGuncelle();
   $("f-tarih").value = todayKey();
-  if ($("f-saat").value < "09:00" || $("f-saat").value > "20:00") $("f-saat").value = "16:00";
+  $("f-saat").value = "15:30";
   $("planKart").scrollIntoView({ behavior: "smooth", block: "start" });
   setTimeout(function () { $("planKart").classList.add("ring-2", "ring-teal-300"); }, 500);
   setTimeout(function () { $("planKart").classList.remove("ring-2", "ring-teal-300"); }, 2600);
@@ -1116,6 +1227,9 @@ function renderFormDestek() {
   var dersSec = $("f-ders");
   if (!dersSec.innerHTML.trim()) dersSec.innerHTML = dersOpsi();
 
+  var saatSec = $("f-saat");
+  if (saatSec && !saatSec.options.length) saatSec.innerHTML = ksSeceneklerHTML(saatSec.value || "15:30");
+
   var sayac = {};
   DB.dersler.filter(function (l) { return l.durum !== "iptal"; }).forEach(function (l) {
     sayac[l.ogretmenId || l.ogretmenAd] = (sayac[l.ogretmenId || l.ogretmenAd] || 0) + 1;
@@ -1139,7 +1253,7 @@ function duzenleBannerGuncelle() {
     var l = DB.dersler.find(function (x) { return x.id === ui.editId; });
     if (l) {
       banner.className = "inline-flex items-center gap-2 rounded-full bg-amber-50 border border-amber-200 px-3.5 py-1.5 text-[11.5px] font-bold text-amber-700";
-      banner.innerHTML = '<i class="fa-solid fa-pen"></i>Ders düzenleniyor: ' + esc(l.ogrenciAd) + " · " + fmtTR(l.tarih) + " " + l.saat;
+      banner.innerHTML = '<i class="fa-solid fa-pen"></i>Ders düzenleniyor: ' + esc(l.ogrenciAd) + " · " + fmtTR(l.tarih) + " " + saatEtiket(l.saat);
       banner.classList.remove("hidden");
       $("btnBaslik").textContent = "Dersi Düzenle";
       $("btnPlanYazi").textContent = "Değişiklikleri Kaydet";
@@ -1168,7 +1282,7 @@ function temizleForm() {
   $("f-konu").value = "";
   $("f-ogretmen").value = "";
   $("f-tarih").value = "";
-  $("f-saat").value = "16:00";
+  $("f-saat").value = "15:30";
   $("f-yoksay").checked = false;
   $("cakismaUyari").classList.add("hidden");
 }
@@ -1183,23 +1297,23 @@ function hataKart(liste) {
   $("cakismaUyari").scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 function duzeltmeBul(adet, yokSay) {
-  var saatNum = parseInt(adet.saat.split(":")[0], 10);
+  var saatKod = ksKodOf(adet.saat);
   var di = dowIdx(adet.tarih);
-  var key = di + "-" + saatNum;
+  var key = di + "-" + saatKod;
   var uyari = [];
   var ogr = DB.ogretmenler.find(function (t) { return t.id === adet.ogretmenId; });
   if (ogr) {
     var tip = (ogr.avail.sinif && key in ogr.avail.sinif) ? "sinif" : (ogr.avail.musait.indexOf(key) >= 0) ? "musait" : "";
-    if (tip === "sinif") uyari.push(ogr.ad + " öğretmeninin o saatte <b>Sınıf Dersi</b> var (" + GUN_KISA[di] + " " + String(saatNum).padStart(2, "0") + ":00).");
+    if (tip === "sinif") uyari.push(ogr.ad + " öğretmeninin o saatte <b>Sınıf Dersi</b> var (" + GUN_KISA[di] + " " + saatEtiket(adet.saat) + ").");
     else if (tip === "musait") uyari.push(ogr.ad + " öğretmeni o saat için <b>Müsait Değil</b> olarak işaretli.");
     var cakisan = DB.dersler.find(function (l) {
-      return l.ogretmenId === ogr.id && l.tarih === adet.tarih && l.saat === adet.saat && l.durum !== "iptal" && l.id !== (adet.id || "");
+      return l.ogretmenId === ogr.id && l.tarih === adet.tarih && ksKodOf(l.saat) === saatKod && l.durum !== "iptal" && l.id !== (adet.id || "");
     });
-    if (cakisan) uyari.push("Aynı saatte " + ogr.ad + " öğretmeninin <b>" + cakisan.ogrenciAd + "</b> ile başka bir dersi var (" + fmtTR(cakisan.tarih) + " " + cakisan.saat + ").");
+    if (cakisan) uyari.push("Aynı kısa kod saatinde " + ogr.ad + " öğretmeninin <b>" + cakisan.ogrenciAd + "</b> ile başka bir dersi var (" + fmtTR(cakisan.tarih) + " " + saatEtiket(cakisan.saat) + ").");
   }
   var o = DB.ogrenciler.find(function (s) { return s.id === adet.ogrenciId; });
   if (o && o.sinif && (DB.sinifProg[o.sinif] || []).indexOf(key) >= 0) {
-    uyari.push(o.ad + " öğrencisinin sınıfı (<b>" + o.sinif + "</b>) o saatte toplu derste.");
+    uyari.push(o.ad + " öğrencisinin sınıfı (<b>" + o.sinif + "</b>) o kısa kod saatinde toplu derste.");
   }
   return uyari;
 }
@@ -1218,10 +1332,9 @@ function planla() {
   if (!tarih) hatalar.push("Tarih seçin.");
   if (!saat) hatalar.push("Saat seçin.");
   else {
-    var dk = saat.split(":")[1];
-    var sNum = parseInt(saat.split(":")[0], 10);
-    if (dk !== "00") hatalar.push("Dersler saat başı başlar — dakika “00” olmalı (örn. 16:00).");
-    if (sNum < 9 || sNum > 19) hatalar.push("Ders saatleri 09:00 – 19:00 arasındadır.");
+    var k = KISA_KOD.filter(function (x) { return x.b === saat; })[0];
+    if (!k) hatalar.push("Ders saati kısa kod saatlerinden biri olmalı (örn. 8 · 15:30-16:10).");
+    
   }
   if (hatalar.length) { hataKart(hatalar); return; }
   if (tarih < todayKey()) {
@@ -1252,14 +1365,14 @@ function planla() {
       mevcut.ogrenciId = o.id; mevcut.ogrenciAd = o.ad;
       mevcut.dersId = dersId; mevcut.konu = konu;
       mevcut.ogretmenId = t.id; mevcut.ogretmenAd = t.ad;
-      mevcut.tarih = tarih; mevcut.saat = saat;
+      mevcut.tarih = tarih; mevcut.saat = saat; mevcut.kod = ksKodOf(saat);
       toast("Ders güncellendi ✓");
     }
     ui.editId = null;
   } else {
     DB.dersler.push({
       id: uid(), ogrenciId: o.id, ogrenciAd: o.ad, dersId: dersId, konu: konu,
-      ogretmenId: t.id, ogretmenAd: t.ad, tarih: tarih, saat: saat,
+      ogretmenId: t.id, ogretmenAd: t.ad, tarih: tarih, saat: saat, kod: ksKodOf(saat),
       durum: "planlandi", olusturma: todayKey()
     });
     if (ui.aktifIstekId) {
@@ -1267,7 +1380,7 @@ function planla() {
       if (r) { r.durum = "planlandi"; }
       ui.aktifIstekId = null;
     }
-    toast("Ders planlandı 🎉 " + o.ad + " · " + fmtTR(tarih) + " " + saat);
+    toast("Ders planlandı 🎉 " + o.ad + " · " + fmtTR(tarih) + " " + saatEtiket(saat));
   }
   temizleForm();
   ui.anchor = haftaBaslangiciD(tarih);
@@ -1347,18 +1460,18 @@ function haftalikOgrtTablo() {
     if (p.start && (l.tarih < p.start || l.tarih > p.end)) return;
     var d = new Date(l.tarih + "T12:00:00");
     var gunIdx = (d.getDay() + 6) % 7;
-    dersMap[gunIdx + "-" + l.saat] = l;
+    dersMap[gunIdx + "-" + ksKodOf(l.saat)] = l;
   });
 
   var avail = t.avail || { sinif: {}, musait: [] };
 
-  // Saat başlıkları
+  // Kısa kod saat başlıkları
   var saatBaslik = "";
-  for (var h = 9; h <= 19; h++) {
+  KISA_KOD.forEach(function (k) {
     saatBaslik += "<th class='px-2 py-2 text-center border-l border-slate-100' style='min-width:75px'>" +
-      '<div class="text-[11px] font-extrabold text-slate-600">' + String(h).padStart(2,"0") + ":00</div>" +
-      '<div class="text-[9px] text-slate-400">' + String(h).padStart(2,"0") + ":50</div></th>";
-  }
+      '<div class="text-[11px] font-extrabold text-slate-600">' + k.no + " \u00b7 " + k.b + "</div>" +
+      '<div class="text-[9px] text-slate-400">' + k.e + "</div></th>";
+  });
 
   // Satırlar: her gün
   var gunAdlari = ["Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi","Pazar"];
@@ -1371,8 +1484,9 @@ function haftalikOgrtTablo() {
     satirlar += '<tr class="border-b border-slate-100 ' + bg + '">';
     satirlar += '<td class="px-3 py-2 border-r border-slate-100 text-[11.5px] font-bold text-slate-600 whitespace-nowrap" style="min-width:100px">' + gunAd + '</td>';
 
-    for (var h = 9; h <= 19; h++) {
-      var key = g + "-" + h;
+    for (var hi = 0; hi < KISA_KOD.length; hi++) {
+      var no = KISA_KOD[hi].no;
+      var key = g + "-" + no;
       var ders = dersMap[key];
       var sinifVar = avail.sinif && key in avail.sinif;
       var musaitDegil = avail.musait.indexOf(key) >= 0;
@@ -1395,7 +1509,7 @@ function haftalikOgrtTablo() {
           '</div></td>';
       } else {
         // BOŞ HÜCRE → DROP ZONE (havuzdaki istek kartı buraya bırakılabilir)
-        var hk = String(h).padStart(2, "0") + ":00";
+        var hk = KISA_KOD[hi].b;
         satirlar += '<td class="dnd-bos px-1.5 py-1.5 text-center border-l border-slate-100 transition-colors"' +
           ' data-drop-ogrt="' + esc(t.id) + '" data-drop-gun="' + g + '" data-drop-saat="' + hk + '"' +
           ' ondragover="istekDragOver(event, this)" ondragleave="istekDragLeave(this)" ondrop="istekBurak(event, this, \'' + esc(t.id) + '\', \'' + addDaysKey(p.start, g) + '\', \'' + hk + '\')" title="Boş saat — havuzdan istek kartı sürükleyip bırakın">' +
@@ -1440,10 +1554,10 @@ function istekBurak(ev, el, ogrtId, tarih, saat) {
 
   // Kilit kontrolü: hücre bu arada dolmuşsa veya öğretmen o saatte kilitliyse bırakmayı reddet
   var t = DB.ogretmenler.find(function (x) { return x.id === ogrtId; });
-  var di = dowIdx(tarih), sNum = parseInt(saat.split(":")[0], 10);
-  var key = di + "-" + sNum;
+  var di = dowIdx(tarih), saatKod = ksKodOf(saat);
+  var key = di + "-" + saatKod;
   if (!t) { toast("Öğretmen bulunamadı.", "hata"); return; }
-  var dolu = DB.dersler.some(function (l) { return l.ogretmenId === ogrtId && l.tarih === tarih && l.saat === saat && l.durum !== "iptal"; });
+  var dolu = DB.dersler.some(function (l) { return l.ogretmenId === ogrtId && l.tarih === tarih && ksKodOf(l.saat) === saatKod && l.durum !== "iptal"; });
   var pazar = di === 6; // Pazar: kurum tamamen kapalı
   var kilitli = dolu || pazar || (t.avail && ((t.avail.sinif && key in t.avail.sinif) || t.avail.musait.indexOf(key) >= 0));
   if (kilitli) { toast("Bu saat kilitli ya da dolu — istek bırakılamadı.", "hata"); renderDersler(); return; }
@@ -1458,7 +1572,7 @@ function istekBurak(ev, el, ogrtId, tarih, saat) {
   // Dersi planla
   DB.dersler.push({
     id: uid(), ogrenciId: o.id, ogrenciAd: o.ad, dersId: r.dersId, konu: r.konu || "",
-    ogretmenId: t.id, ogretmenAd: t.ad, tarih: tarih, saat: saat,
+    ogretmenId: t.id, ogretmenAd: t.ad, tarih: tarih, saat: saat, kod: ksKodOf(saat),
     durum: "planlandi", olusturma: todayKey()
   });
 
@@ -1466,7 +1580,7 @@ function istekBurak(ev, el, ogrtId, tarih, saat) {
   DB.istekler = DB.istekler.filter(function (x) { return x.id !== istekId; });
   ui.aktifIstekId = null;
 
-  toast("İstek takvime planlandı ✓ " + o.ad + " · " + fmtTR(tarih) + " " + saat);
+  toast("İstek takvime planlandı ✓ " + o.ad + " · " + fmtTR(tarih) + " " + saatEtiket(saat));
   saveDB();
   renderHavuz();
   renderFormDestek();
@@ -1501,20 +1615,7 @@ function gunlukTablo() {
       '<div class="py-12 text-center"><div class="text-3xl mb-2">\u{1F5D3}\uFE0F</div><p class="text-[13px] font-semibold text-slate-500">' + gunAdi + ' günü birebir ders yok</p><p class="text-[11.5px] text-slate-400 mt-1">Bu güne ders planlanmamış.</p></div></div>';
   }
 
-  // Saat slotları: 09:00 - 20:00 (12 slot, mola 12:00-13:00 arası)
-  var SAAT_SLOTLARI = [
-    { s: 9, e: 10, no: "1" },
-    { s: 10, e: 11, no: "2" },
-    { s: 11, e: 12, no: "3" },
-    { s: 12, e: 13, no: "Mola", mola: true },
-    { s: 13, e: 14, no: "4" },
-    { s: 14, e: 15, no: "5" },
-    { s: 15, e: 16, no: "6" },
-    { s: 16, e: 17, no: "7" },
-    { s: 17, e: 18, no: "8" },
-    { s: 18, e: 19, no: "9" },
-    { s: 19, e: 20, no: "10" }
-  ];
+  var SAAT_SLOTLARI = KISA_KOD.slice(0, 4).concat([{ no: "Mola", b: "12:00", e: "13:00", mola: true }], KISA_KOD.slice(4));
 
   // Tablo başlığı
   var html = '<div class="rounded-2xl border border-slate-200 overflow-hidden mb-4 bg-white">' +
@@ -1532,8 +1633,8 @@ function gunlukTablo() {
     var textColor = slot.mola ? 'text-emerald-700' : 'text-slate-600';
     html += '<th class="px-2 py-2 border-r border-slate-200 ' + bg + '" style="min-width:72px">' +
       '<div class="text-[12px] font-black ' + textColor + '">' + slot.no + '</div>' +
-      '<div class="text-[9px] font-semibold text-slate-400">' + String(slot.s).padStart(2,"0") + ":" + "00" + '</div>' +
-      '<div class="text-[9px] font-semibold text-slate-400">' + String(slot.e).padStart(2,"0") + ":" + "00" + '</div>' +
+      '<div class="text-[9px] font-semibold text-slate-400">' + slot.b + '</div>' +
+      '<div class="text-[9px] font-semibold text-slate-400">' + slot.e + '</div>' +
       '</th>';
   });
   html += '</tr></thead>';
@@ -1554,9 +1655,9 @@ function gunlukTablo() {
         // Mola hücresi
         html += '<td class="px-1.5 py-2 border-r border-slate-200 bg-emerald-50">' +
           '<div class="text-[10px] font-bold text-emerald-600">Mola</div>' +
-          '<div class="text-[9px] text-emerald-500">' + String(slot.s).padStart(2,"0") + ':00-' + String(slot.e).padStart(2,"0") + ':00</div></td>';
+          '<div class="text-[9px] text-emerald-500">' + slot.b + '-' + slot.e + '</div></td>';
       } else {
-        var ders = saatMap[slot.s];
+        var ders = saatMap[slot.b];
         if (ders) {
           var ogrenci = DB.ogrenciler.find(function(x){ return x.id === ders.ogrenciId; });
           var sinif = ogrenci ? ogrenci.sinif : "";
@@ -1626,7 +1727,7 @@ function renderDersler() {
     var gunAd = GUN_KISA[dowIdx(l.tarih)];
     satirlar += '<tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">' +
       '<td class="px-4 py-3 whitespace-nowrap"><div class="text-[13px] font-semibold text-slate-700" style="font-variant-numeric:tabular-nums">' + fmtTR(l.tarih) + '</div><div class="text-[10px] text-slate-400 font-semibold">' + gunAd + "</div></td>" +
-      '<td class="px-4 py-3 text-[13px] font-bold text-slate-600 whitespace-nowrap" style="font-variant-numeric:tabular-nums">' + esc(l.saat) + "</td>" +
+      '<td class="px-4 py-3 text-[13px] font-bold text-slate-600 whitespace-nowrap" style="font-variant-numeric:tabular-nums">' + esc(saatEtiket(l.saat)) + "</td>" +
       '<td class="px-4 py-3"><div class="flex items-center gap-2">' + avatar(l.ogrenciAd, 0) + '<span class="text-[13px] font-semibold text-slate-700 truncate max-w-[140px]">' + esc(l.ogrenciAd) + "</span></div></td>" +
       '<td class="px-4 py-3"><span class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold whitespace-nowrap ' + D.bg + " " + D.tx + '">' + D.ad + "</span></td>" +
       '<td class="px-4 py-3 text-[12.5px] text-slate-500 max-w-[180px] truncate">' + (l.konu ? esc(l.konu) : '<span class="italic text-slate-300">Genel tekrar</span>') + "</td>" +
@@ -1669,6 +1770,7 @@ function renderDersler() {
         '<div class="flex items-center gap-2 flex-wrap">' + aksiyon + "</div>" +
       "</div>" +
       '<div id="yazdir" class="bg-white">' +
+        ksRaporHTML() +
         '<div class="print-goster px-6 pt-6 pb-2 flex items-center justify-between">' +
           '<div><h2 class="text-lg font-extrabold text-slate-900">YKS Birebir Takip</h2>' +
           '<p class="text-[11px] text-slate-500 mt-0.5">Birebir Ders ve Öğrenci Eksik Takip Otomasyonu</p></div>' +
@@ -1720,7 +1822,7 @@ function silOnay(id) {
   var D = DERS[l.dersId] || DERS.tur;
   onayAc({
     baslik: "Ders silinsin mi?",
-    metin: "<b>" + esc(l.ogrenciAd) + "</b> · " + D.ad + (l.konu ? " (" + esc(l.konu) + ")" : "") + " · " + fmtTR(l.tarih) + " " + l.saat + " kaydı arşivden kaldırılacak.",
+    metin: "<b>" + esc(l.ogrenciAd) + "</b> · " + D.ad + (l.konu ? " (" + esc(l.konu) + ")" : "") + " · " + fmtTR(l.tarih) + " " + saatEtiket(l.saat) + " kaydı arşivden kaldırılacak.",
     onay: "Evet, Sil", tehlikeli: true
   }, function () {
     DB.dersler = DB.dersler.filter(function (x) { return x.id !== id; });
@@ -1753,7 +1855,7 @@ function listeMetni() {
   if (!liste.length) return baslik + "Bu dönemde ders yok.";
   var satir = liste.map(function (l) {
     var D = DERS[l.dersId] || DERS.tur;
-    return fmtTR(l.tarih) + " " + l.saat + " | " + l.ogrenciAd + " | " + D.ad + " | " + (l.konu || "Genel tekrar") + " | " + l.ogretmenAd + " | " + l.durum;
+    return fmtTR(l.tarih) + " " + saatEtiket(l.saat) + " | " + l.ogrenciAd + " | " + D.ad + " | " + (l.konu || "Genel tekrar") + " | " + l.ogretmenAd + " | " + l.durum;
   }).join("\n");
   return baslik + satir;
 }
@@ -1783,7 +1885,7 @@ function ogrenciMesajMetni(ogrenciId) {
   var satirlar = liste.map(function (l, i) {
     var D = DERS[l.dersId] || DERS.tur;
     var durum = l.durum === "tamamlandi" ? " ✓ Tamamlandı" : "";
-    return (i + 1) + ") " + D.ad + (l.konu ? " — " + l.konu : "") + "\n   📅 " + fmtTR(l.tarih) + " " + GUNLER[dowIdx(l.tarih)] + " • " + l.saat + " • " + l.ogretmenAd + durum;
+    return (i + 1) + ") " + D.ad + (l.konu ? " — " + l.konu : "") + "\n   📅 " + fmtTR(l.tarih) + " " + GUNLER[dowIdx(l.tarih)] + " • " + saatEtiket(l.saat) + " • " + l.ogretmenAd + durum;
   });
   return "Merhaba " + o.ad + "! 👋\n\n📚 " + pencereAdi() + " birebir ders programın:\n\n" + satirlar.join("\n") + "\n\nDerslerimize zamanında katılmayı unutma. İyi çalışmalar! 🎓\n— YKS Birebir Takip";
 }
@@ -1873,7 +1975,7 @@ function pngAc() {
     var etk = { planlandi: ["Planlandı", "#e0f2fe", "#0369a1"], tamamlandi: ["Tamamlandı", "#d1fae5", "#047857"], iptal: ["İptal", "#ffe4e6", "#e11d48"] }[l.durum || "planlandi"];
     satirlar += '<tr style="border-bottom:1px solid #f1f5f9">' +
       '<td style="padding:7px 10px;font-size:11px;font-weight:600;color:#334155;white-space:nowrap">' + fmtTR(l.tarih) + "</td>" +
-      '<td style="padding:7px 10px;font-size:11px;color:#475569;white-space:nowrap">' + l.saat + "</td>" +
+      '<td style="padding:7px 10px;font-size:11px;color:#475569;white-space:nowrap">' + saatEtiket(l.saat) + "</td>" +
       '<td style="padding:7px 10px;font-size:11px;font-weight:600;color:#334155">' + esc(l.ogrenciAd) + "</td>" +
       '<td style="padding:7px 10px"><span style="background:' + D.seg + "22;color:#0f172a;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:99px;display:inline-block\">" + D.ad + "</span></td>" +
       '<td style="padding:7px 10px;font-size:11px;color:#64748b">' + (l.konu ? esc(l.konu) : "—") + "</td>" +

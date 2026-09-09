@@ -1,3 +1,13 @@
+# PROJE REHBERİ — önce burayı oku
+
+- `index.html` = HTML iskeleti + giriş (ek-ders.js ve vendor/* yüklüyor)
+- `ek-ders.js` = Ek Ders sekmesi + kısa kod (KS) fonksiyonları
+- Testler: `node ks-harness.mjs` ve `node ks-test-render.mjs`
+- ⚠️ **Kritik:** index.html'de düzenleme yaparken str_replace takılırsa doğrudan assert'li Node script kullan
+- **Protokol:** tek iş → test → rapor
+
+---
+
 # Checkpoint: Vendor Kütüphane Ayrımı — Çalışan Durum
 
 **Tarih:** 7 Eylül 2026

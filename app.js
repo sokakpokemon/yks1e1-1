@@ -3,6 +3,7 @@
    Veriler localStorage'da kalıcıdır; yedek .json indirilir/yüklenir.
    ================================================================ */
 
+// ===== SECTION: SABİTLER VE KISA KOD (KS) =====
 // ---------- Sabitler ----------
 var AYLAR = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
 var GUNLER = ["Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi","Pazar"];
@@ -134,6 +135,7 @@ function ksRaporKapat() { ui.ksRaporKapat = true; renderDersler(); }
 
 var LS_KEY = "yksOto_arsiv_v1";
 
+// ===== SECTION: YARDIMCILAR VE VERİ KATMANI =====
 // ---------- Yardımcılar ----------
 function $(id) { return document.getElementById(id); }
 function esc(s) {
@@ -284,6 +286,7 @@ function seedDB() {
   return db;
 }
 
+// ===== SECTION: ARAYÜZ DURUMU VE GENEL KONTROLLER =====
 // ---------- Arayüz durumu ----------
 var ui = {
   filtre: "hafta", anchor: todayKey(), sekme: "ogretmen",
@@ -362,6 +365,7 @@ function onayAc(opts, cb) {
 function onayKapat() { $("onayModal").classList.add("hidden"); onayCb = null; }
 function onayOnayla() { var cb = onayCb; onayKapat(); if (cb) cb(); }
 
+// ===== SECTION: RENDER: ÖZET VE ANALİZ =====
 // ---------- Tamamlama (yeniden çizim) ----------
 function yenile() {
   saveDB();
@@ -556,6 +560,7 @@ function analizToggle() { ui.analizAcik = !ui.analizAcik; renderAnaliz(); }
 /* ================================================================
    2) VERİ YÖNETİMİ SEKMELERİ
    ================================================================ */
+// ===== SECTION: YÖNETİM — ÖĞRETMEN · ÖĞRENCİ · AYAR =====
 function renderYonetim() {
   var sekmeler = [
     ["ogretmen", "Öğretmen Tanımlama", "fa-chalkboard-user"],
@@ -1080,6 +1085,7 @@ function tumunuSil() {
 /* ================================================================
    3) ÖĞRENCİ BİREBİR İSTEK HAVUZU
    ================================================================ */
+// ===== SECTION: TALEP HAVUZU =====
 function renderHavuz() {
   var bekleyen = DB.istekler.filter(function (r) { return r.durum === "bekliyor"; }).length;
   var dersOps = '<option value="" disabled>Ders seçin</option>';
@@ -1185,6 +1191,7 @@ function istekSil(id) {
 
 
 // -- Havuz kartı, planlama formu kartına sürüklenip bırakıldığında isteği forma aktar --
+// ===== SECTION: BOOT VE DERS PLANLAMA =====
 document.addEventListener("DOMContentLoaded", function () {
   var pk = $("planKart");
   if (!pk) return;
@@ -1388,6 +1395,7 @@ function planla() {
   yenile();
   $("planKart").scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
+// ===== SECTION: TAKVİM, DERS LİSTESİ VE PAYLAŞIM =====
 function haftaBaslangiciD(k) { return addDaysKey(k, -dowIdx(k)); }
 
 /* ================================================================

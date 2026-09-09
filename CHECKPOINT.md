@@ -7,7 +7,7 @@
 - `YÖNETİM — ÖĞRETMEN · ÖĞRENCİ · AYAR` 563–1087 · `TALEP HAVUZU` 1088–1193
 - `BOOT VE DERS PLANLAMA` 1194–1397 · `TAKVİM, DERS LİSTESİ VE PAYLAŞIM` 1398–dosya sonu (2.117)
 - `ek-ders.js` = Ek Ders sekmesi + kısa kod (KS) fonksiyonları
-- Testler: `node ks-harness.mjs` ve `node ks-test-render.mjs`
+- Testler: `node ks-harness.mjs` ve `node ks-test-render.mjs` (tek komut: `node test.mjs` — ikisini sırayla çalıştırır, özet verir)
 - ⚠️ **Kritik:** index.html'de düzenleme yaparken str_replace takılırsa doğrudan assert'li Node script kullan
 - **Protokol:** tek iş → test → rapor
 

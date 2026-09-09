@@ -73,6 +73,12 @@ Değerler tabloyla eşleşiyorsa, bu checkpoint'teki çalışır durum aynıdır
 | Dosya | Boyut | SHA-256 |
 |---|---|---|
 | index.html | 331.857 bayt (2.512 satır) | `56c3b6a03b6cc2c9c2e40e95d5c5945277cfb2c0e54a3794385d79305bc7cb78` |
+
+> ⚠️ **9 Eylül 2026 güncellemesi:** Aşağıdaki "Font Ayrımı" bölümüne bakın —
+> `index.html` artık 153.486 bayt ve checksum'u değişti (base64 font blokları
+> `vendor/fonts.css`'e taşındı). Yukarıdaki index.html satırı yalnızca o tarihten
+> önceki durum için geçerlidir. `ek-ders.js` ve `vendor/` checksum'ları hâlâ geçerlidir.
+
 | ek-ders.js | 29.588 bayt (435 satır) | `a2a421fb5b8136039d31f9e8df6237a617975f99c340673b0ead718c6d2ad691` |
 | vendor/tailwind.js | 407.280 bayt | `7afa0afd2536044695e7e674298bc0dda9af94475e4e07d0575feccfa796c74f` |
 | vendor/fontawesome.css | 1.305.692 bayt | `f69efe0fb3372fe8aca04af3664ec926cda67b34772246ae416fb4d1bf040ac8` |
@@ -86,6 +92,27 @@ Not: `index.html`, 7 Eylül checkpoint'inden sonra kısa kod sistemiyle değişt
 
 - `ks-harness.mjs` — 33 mantık testi (aralık kuralı, taşıma, anahtar göçü, çakışma, yedek yükleme). Çalıştır: `node ks-harness.mjs`
 - `ks-test-render.mjs` — 12 render testi (grid 11×7, günlük tablo Mola 4–5 arası, `f-saat` select, ek-ders.js boot). Çalıştır: `node ks-test-render.mjs`
+
+## Güncelleme: Base64 Font Bloklarının vendor/fonts.css'e Ayrılması
+
+**Tarih:** 9 Eylül 2026 · **Durum:** ✅ Tamamlandı, assert'li Node script'i ile doğrulandı
+
+`index.html`'in 11–14. satırlarındaki `<style>` bloğundaki 2 Inter `@font-face`
+(base64 woff2 gömülü) kesilip `vendor/fonts.css`'e taşındı; yerine
+`<link rel="stylesheet" href="vendor/fonts.css">` kondu (satır 11,
+`vendor/tailwind.js`'ten hemen önce).
+
+| Dosya | Boyut | SHA-256 |
+|---|---|---|
+| index.html (sonra) | 153.486 bayt | `226a5d326ee1adb6a0d695c91f8b586b508f33875d6cbb4944ee45b1200cbcbf` |
+| vendor/fonts.css | 178.509 bayt | `b801b3a0b95140edae0deabbee362ddc9723dd03affcbe518401548f00e21af4` |
+
+- Taşınan font verisi bayt bayt korundu: 2 adet woff2, 48.256 B + 85.068 B
+  (base64 decode edilip `wOF2` magic byte'larıyla doğrulandı).
+- Toplam kesilen: 178.371 bayt. Dosya başlıklarının diğer hiçbir yeri değişmedi
+  (script, çıktının girdinin birebir "satır 11–14 → link" dönüşümü olduğunu assert etti).
+- Script ikinci kez çalıştırıldığında güvenli şekilde reddetti (idempotent değil, korumalı).
+- Doğrulama: `ks-harness.mjs` 33/33, `ks-test-render.mjs` 12/12 — HEPSİ GEÇTİ.
 
 ## Geri Dönüş
 

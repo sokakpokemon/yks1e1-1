@@ -23,7 +23,7 @@ if (
     return DB.ekDersler;
   };
 
-  if (!ui.ekForm) ui.ekForm = { sinif: "", dersId: "", konu: "", ogretmen: "", tarih: "", saat: "16:00", yoksay: false };
+  if (!ui.ekForm) ui.ekForm = { sinif: "", dersId: "", konu: "", ogretmen: "", tarih: "", saat: "15:30", yoksay: false };
   if (ui.ekEditId === undefined || ui.ekEditId === null) ui.ekEditId = null;
 
   /* ---------- Form durumu yardımcıları ---------- */
@@ -35,7 +35,7 @@ if (
 
   var ekTemizleForm = function () {
     ui.ekForm.sinif = ""; ui.ekForm.dersId = ""; ui.ekForm.konu = "";
-    ui.ekForm.ogretmen = ""; ui.ekForm.tarih = ""; ui.ekForm.saat = "16:00";
+    ui.ekForm.ogretmen = ""; ui.ekForm.tarih = ""; ui.ekForm.saat = "15:30";
     ui.ekForm.yoksay = false;
     var u = $("ek-cakismaUyari"); if (u) u.classList.add("hidden");
   };
@@ -82,28 +82,28 @@ if (
      5) Sınıfın normal toplu ders programı (Sınıf Programı) o saatteyse uyarı   */
 
   var ekDuzeltmeBul = function (adet) {
-    var saatNum = parseInt(adet.saat.split(":")[0], 10); /* probe */
+    var saatKod = ksKodOf(adet.saat);
     var di = dowIdx(adet.tarih);
-    var key = di + "-" + saatNum;
+    var key = di + "-" + saatKod;
     var uyari = [];
     var ogr = DB.ogretmenler.find(function (t) { return t.id === adet.ogretmenId; });
     if (ogr) {
       var tip = (ogr.avail.sinif && key in ogr.avail.sinif) ? "sinif" : (ogr.avail.musait.indexOf(key) >= 0) ? "musait" : "";
-      if (tip === "sinif") uyari.push(ogr.ad + " öğretmeninin o saatte <b>Sınıf Dersi</b> var (" + GUN_KISA[di] + " " + String(saatNum).padStart(2, "0") + ":00).");
+      if (tip === "sinif") uyari.push(ogr.ad + " öğretmeninin o saatte <b>Sınıf Dersi</b> var (" + GUN_KISA[di] + " " + saatEtiket(adet.saat) + ").");
       else if (tip === "musait") uyari.push(ogr.ad + " öğretmeni o saat için <b>Müsait Değil</b> olarak işaretli.");
       var cakisanBirebir = DB.dersler.find(function (l) {
-        return l.ogretmenId === ogr.id && l.tarih === adet.tarih && l.saat === adet.saat && l.durum !== "iptal";
+        return l.ogretmenId === ogr.id && l.tarih === adet.tarih && ksKodOf(l.saat) === saatKod && l.durum !== "iptal";
       });
-      if (cakisanBirebir) uyari.push("Aynı saatte " + ogr.ad + " öğretmeninin <b>" + esc(cakisanBirebir.ogrenciAd) + "</b> ile bir birebir dersi var (" + fmtTR(cakisanBirebir.tarih) + " " + cakisanBirebir.saat + ").");
+      if (cakisanBirebir) uyari.push("Aynı saatte " + ogr.ad + " öğretmeninin <b>" + esc(cakisanBirebir.ogrenciAd) + "</b> ile bir birebir dersi var (" + fmtTR(cakisanBirebir.tarih) + " " + saatEtiket(cakisanBirebir.saat) + ").");
       var cakisanEk = ekDersler().find(function (l) {
-        return l.ogretmenId === ogr.id && l.tarih === adet.tarih && l.saat === adet.saat && l.durum !== "iptal" && l.id !== (adet.id || "");
+        return l.ogretmenId === ogr.id && l.tarih === adet.tarih && ksKodOf(l.saat) === saatKod && l.durum !== "iptal" && l.id !== (adet.id || "");
       });
-      if (cakisanEk) uyari.push("Aynı saatte " + ogr.ad + " öğretmeninin <b>" + esc(cakisanEk.sinif) + "</b> sınıfıyla bir ek dersi var (" + fmtTR(cakisanEk.tarih) + " " + cakisanEk.saat + ").");
+      if (cakisanEk) uyari.push("Aynı saatte " + ogr.ad + " öğretmeninin <b>" + esc(cakisanEk.sinif) + "</b> sınıfıyla bir ek dersi var (" + fmtTR(cakisanEk.tarih) + " " + saatEtiket(cakisanEk.saat) + ").");
     }
     var cakisanSinif = ekDersler().find(function (l) {
-      return l.sinif === adet.sinif && l.tarih === adet.tarih && l.saat === adet.saat && l.durum !== "iptal" && l.id !== (adet.id || "");
+      return l.sinif === adet.sinif && l.tarih === adet.tarih && ksKodOf(l.saat) === saatKod && l.durum !== "iptal" && l.id !== (adet.id || "");
     });
-    if (cakisanSinif) uyari.push("<b>" + esc(adet.sinif) + "</b> sınıfının aynı saatte başka bir ek dersi var (" + fmtTR(cakisanSinif.tarih) + " " + cakisanSinif.saat + ").");
+    if (cakisanSinif) uyari.push("<b>" + esc(adet.sinif) + "</b> sınıfının aynı saatte başka bir ek dersi var (" + fmtTR(cakisanSinif.tarih) + " " + saatEtiket(cakisanSinif.saat) + ").");
     if ((DB.sinifProg[adet.sinif] || []).indexOf(key) >= 0) {
       uyari.push("<b>" + esc(adet.sinif) + "</b> sınıfı o saatte zaten toplu derste (Sınıf Programı).");
     }
@@ -128,10 +128,8 @@ if (
     if (!tarih) hatalar.push("Tarih seçin.");
     if (!saat) hatalar.push("Saat seçin.");
     else {
-      var dk = saat.split(":")[1];
-      var sNum = parseInt(saat.split(":")[0], 10);
-      if (dk !== "00") hatalar.push("Dersler saat başı başlar — dakika \u201C00\u201D olmalı (örn. 16:00).");
-      if (sNum < 9 || sNum > 19) hatalar.push("Ders saatleri 09:00 – 19:00 arasındadır.");
+      var k = KISA_KOD.filter(function (x) { return x.b === saat; })[0];
+      if (!k) hatalar.push("Ders saati kısa kod saatlerinden biri olmalı (örn. 8 · 15:30-16:10).");
     }
     if (hatalar.length) { ekHataKart(hatalar); return; }
     if (tarih < todayKey()) {
@@ -162,17 +160,17 @@ if (
       if (mevcut) {
         mevcut.sinif = sinif; mevcut.dersId = dersId; mevcut.konu = konu;
         mevcut.ogretmenId = t.id; mevcut.ogretmenAd = t.ad;
-        mevcut.tarih = tarih; mevcut.saat = saat;
+        mevcut.tarih = tarih; mevcut.saat = saat; mevcut.kod = ksKodOf(saat);
         toast("Ek ders güncellendi ✓");
       }
       ui.ekEditId = null;
     } else {
       ekDersler().push({
         id: uid(), sinif: sinif, dersId: dersId, konu: konu,
-        ogretmenId: t.id, ogretmenAd: t.ad, tarih: tarih, saat: saat,
+        ogretmenId: t.id, ogretmenAd: t.ad, tarih: tarih, saat: saat, kod: ksKodOf(saat),
         durum: "planlandi", olusturma: todayKey()
       });
-      toast("Ek ders planlandı 🎉 " + sinif + " · " + fmtTR(tarih) + " " + saat);
+      toast("Ek ders planlandı 🎉 " + sinif + " · " + fmtTR(tarih) + " " + saatEtiket(saat));
     }
     ekTemizleForm();
     ui.anchor = haftaBaslangiciD(tarih);
@@ -216,7 +214,7 @@ if (
     var D = DERS[l.dersId] || DERS.tur;
     onayAc({
       baslik: "Ek ders silinsin mi?",
-      metin: "<b>" + esc(l.sinif) + "</b> sınıfı · " + D.ad + (l.konu ? " (" + esc(l.konu) + ")" : "") + " · " + fmtTR(l.tarih) + " " + l.saat + " kaydı arşivden kaldırılacak.",
+      metin: "<b>" + esc(l.sinif) + "</b> sınıfı · " + D.ad + (l.konu ? " (" + esc(l.konu) + ")" : "") + " · " + fmtTR(l.tarih) + " " + saatEtiket(l.saat) + " kaydı arşivden kaldırılacak.",
       onay: "Evet, Sil", tehlikeli: true
     }, function () {
       DB.ekDersler = ekDersler().filter(function (x) { return x.id !== id; });
@@ -233,7 +231,7 @@ if (
     if (!liste.length) return baslik + "Ek ders kaydı yok.";
     var satir = liste.map(function (l) {
       var D = DERS[l.dersId] || DERS.tur;
-      return fmtTR(l.tarih) + " " + l.saat + " | " + l.sinif + " | " + D.ad + " | " + (l.konu || "Genel tekrar") + " | " + l.ogretmenAd + " | " + l.durum;
+      return fmtTR(l.tarih) + " " + saatEtiket(l.saat) + " | " + l.sinif + " | " + D.ad + " | " + (l.konu || "Genel tekrar") + " | " + l.ogretmenAd + " | " + l.durum;
     }).join("\n");
     return baslik + satir;
   };
@@ -283,7 +281,7 @@ if (
 
     var banner = "";
     if (duzenlenen) {
-      banner = '<span class="inline-flex items-center gap-2 rounded-full bg-amber-50 border border-amber-200 px-3.5 py-1.5 text-[11.5px] font-bold text-amber-700"><i class="fa-solid fa-pen"></i>Ek ders düzenleniyor: ' + esc(duzenlenen.sinif) + " · " + fmtTR(duzenlenen.tarih) + " " + duzenlenen.saat + "</span>";
+      banner = '<span class="inline-flex items-center gap-2 rounded-full bg-amber-50 border border-amber-200 px-3.5 py-1.5 text-[11.5px] font-bold text-amber-700"><i class="fa-solid fa-pen"></i>Ek ders düzenleniyor: ' + esc(duzenlenen.sinif) + " · " + fmtTR(duzenlenen.tarih) + " " + saatEtiket(duzenlenen.saat) + "</span>";
     }
 
     var form =
@@ -293,7 +291,7 @@ if (
             '<span class="inline-flex items-center gap-2 bg-indigo-600 text-white text-[13px] font-bold rounded-full px-4 py-2 shadow-sm"><i class="fa-solid fa-layer-group"></i> <span id="ek-btnBaslik">' + (duzenlenen ? "Ek Dersi Düzenle" : "Ek Ders Planla") + "</span></span>" +
             banner +
           "</div>" +
-          '<span class="text-[11px] text-slate-400 font-medium"><i class="fa-regular fa-clock mr-1"></i>Dersler 1 saattir, saat başı başlar (09:00 – 20:00)</span>' +
+          '<span class="text-[11px] text-slate-400 font-medium"><i class="fa-regular fa-clock mr-1"></i>Dersler 40 dakikadır, kısa kod saatlerine göre işler</span>' +
         "</div>" +
         '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">' +
           /* Sınıf (birebirde Öğrenci alanı) */
@@ -331,8 +329,8 @@ if (
           "</div>" +
           /* Saat */
           '<div class="lg:col-span-1">' +
-            '<label class="' + lbl + '"><i class="fa-regular fa-clock text-cyan-500"></i> Saat</label>' +
-            '<input id="ek-saat" type="time" value="' + esc(ui.ekForm.saat) + '" step="3600" onchange="ekFormSet(\'saat\', this.value)" oninput="ekFormSet(\'saat\', this.value)" class="' + inp + '" />' +
+            '<label class="' + lbl + '"><i class="fa-regular fa-clock text-cyan-500"></i> Ders Saati</label>' +
+            '<select id="ek-saat" onchange="ekFormSet(\'saat\', this.value)" class="' + inp + '">' + ksSeceneklerHTML(ui.ekForm.saat) + "</select>" +
           "</div>" +
         "</div>" +
         '<div class="flex flex-wrap items-center justify-between gap-3 mt-4">' +
@@ -359,7 +357,7 @@ if (
       var gunAd = GUN_KISA[dowIdx(l.tarih)];
       satirlar += '<tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">' +
         '<td class="px-4 py-3 whitespace-nowrap"><div class="text-[13px] font-semibold text-slate-700" style="font-variant-numeric:tabular-nums">' + fmtTR(l.tarih) + '</div><div class="text-[10px] text-slate-400 font-semibold">' + gunAd + "</div></td>" +
-        '<td class="px-4 py-3 text-[13px] font-bold text-slate-600 whitespace-nowrap" style="font-variant-numeric:tabular-nums">' + esc(l.saat) + "</td>" +
+        '<td class="px-4 py-3 text-[13px] font-bold text-slate-600 whitespace-nowrap" style="font-variant-numeric:tabular-nums">' + esc(saatEtiket(l.saat)) + "</td>" +
         '<td class="px-4 py-3"><div class="flex items-center gap-2">' + avatar(l.sinif, 0) + '<span class="text-[13px] font-semibold text-slate-700 truncate max-w-[140px]">' + esc(l.sinif) + "</span></div></td>" +
         '<td class="px-4 py-3"><span class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold whitespace-nowrap ' + D.bg + " " + D.tx + '">' + D.ad + "</span></td>" +
         '<td class="px-4 py-3 text-[12.5px] text-slate-500 max-w-[180px] truncate">' + (l.konu ? esc(l.konu) : '<span class="italic text-slate-300">Genel tekrar</span>') + "</td>" +
@@ -388,7 +386,7 @@ if (
         '<div class="overflow-x-auto"><table class="w-full min-w-[900px] text-left border-collapse">' +
           '<thead><tr class="bg-slate-50/80 border-b border-slate-100">' +
             "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Tarih</th>" +
-            "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Saat</th>" +
+            "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Ders Saati</th>" +
             "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Sınıf</th>" +
             "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Ders</th>" +
             "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Eksik Konu</th>" +

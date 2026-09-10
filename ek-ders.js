@@ -90,7 +90,7 @@ if (
     if (ogr) {
       var tip = (ogr.avail.sinif && key in ogr.avail.sinif) ? "sinif" : (ogr.avail.musait.indexOf(key) >= 0) ? "musait" : "";
       if (tip === "sinif") uyari.push(ogr.ad + " öğretmeninin o saatte <b>Sınıf Dersi</b> var (" + GUN_KISA[di] + " " + saatEtiket(adet.saat) + ").");
-      else if (tip === "musait") uyari.push(ogr.ad + " öğretmeni o saat için <b>Müsait Değil</b> olarak işaretli.");
+      else if (tip === "musait") uyari.push(ogr.ad + " öğretmeni o saat için <b>Kapalı</b> olarak işaretli.");
       var cakisanBirebir = DB.dersler.find(function (l) {
         return l.ogretmenId === ogr.id && l.tarih === adet.tarih && ksKodOf(l.saat) === saatKod && l.durum !== "iptal";
       });

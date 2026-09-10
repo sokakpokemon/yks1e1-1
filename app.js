@@ -192,6 +192,21 @@ function normalize(d) {
   });
   return d;
 }
+/* ---------- Grup dersi uyumluluk katmanı ----------
+   Tek okuma yardımcısı: mevcut ogrenciId alanına ASLA yazmaz, silmez, taşımaz.
+   - ders.ogrenciIds (dizi) varsa → benzersiz, sırasını koruyan dizi
+   - yoksa eski kayıt → [ogrenciId]
+   - hatalı kayıt (nesne değil / ogrenciIds dizi değil / kimlik yok) → [] */
+function dersOgrenciIds(ders) {
+  if (!ders || typeof ders !== "object") return [];
+  if (ders.ogrenciIds != null) {
+    if (!Array.isArray(ders.ogrenciIds)) return [];
+    return ders.ogrenciIds.filter(function (v, i) { return v != null && ders.ogrenciIds.indexOf(v) === i; });
+  }
+  if (ders.ogrenciId != null && ders.ogrenciId !== "") return [ders.ogrenciId];
+  return [];
+}
+
 function saveDB() {
   try { localStorage.setItem(LS_KEY, JSON.stringify(DB)); }
   catch (e) { toast("Veri kaydedilemedi (tarayıcı deposu dolu olabilir). Yedek alın.", "hata"); }

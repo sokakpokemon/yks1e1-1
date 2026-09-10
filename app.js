@@ -1303,20 +1303,6 @@ function renderFormDestek() {
   DB.ogrenciler.forEach(function (o) { dlO += '<option value="' + esc(o.ad) + '"></option>'; });
   $("dl-ogrenci").innerHTML = dlO;
 
-  /* ---------- COKLU OGRENCI SECIMI (yalnizca UI) ---------- */
-  /* f-ogrenci tekli input ve planla()/kaydetme akisi AYNEN; bu blok yalnizca ek chipleri cizer. */
-  if (!ui.ekOgrenciIds) ui.ekOgrenciIds = [];
-  var EK_OGR_MAX = 5;
-  ui.ekOgrenciIds = ui.ekOgrenciIds.filter(function (oid) { return DB.ogrenciler.some(function (x) { return x.id === oid; }); });
-  var ekChips = ui.ekOgrenciIds.map(function (oid) {
-    var o = DB.ogrenciler.find(function (x) { return x.id === oid; });
-    return '<span class="inline-flex items-center gap-1.5 rounded-full bg-teal-50 border border-teal-200 pl-2.5 pr-1.5 py-1 text-[11.5px] font-bold text-teal-700">' + esc(o ? o.ad : "?") +
-      '<button onclick="ekOgrenciSil(\'' + esc(oid) + '\')" title="Cikar" class="w-4 h-4 -mr-0.5 rounded-full hover:bg-teal-200 text-teal-600 flex items-center justify-center"><i class="fa-solid fa-xmark text-[9px]"></i></button></span>';
-  }).join("");
-  if (!ui.ekOgrenciIds.length) ekChips = '<span class="text-[11px] text-slate-300 italic">Grup dersi icin ek ogrenci ekle (en fazla ' + EK_OGR_MAX + ')</span>';
-  $("ek-ogrenci-chips").innerHTML = ekChips;
-  $("ek-ogrenci-sayac").textContent = ui.ekOgrenciIds.length + " / " + EK_OGR_MAX;
-
   var dlT = '<option value=""></option>';
   DB.ogretmenler.forEach(function (t) { dlT += '<option value="' + esc(t.ad) + '"></option>'; });
   $("dl-ogretmen").innerHTML = dlT;
@@ -1355,6 +1341,21 @@ function renderFormDestek() {
     var hzEl = $("hizliOgr");
     if (hzEl && hzEl.insertAdjacentHTML) hzEl.insertAdjacentHTML("afterend", ekPanel);
   }
+
+  /* COKLU OGRENCI SECIMI chipleri — panel eklendikten SONRA doldurulur (boot null-guvenli) */
+  if (!ui.ekOgrenciIds) ui.ekOgrenciIds = [];
+  var EK_OGR_MAX = 5;
+  ui.ekOgrenciIds = ui.ekOgrenciIds.filter(function (oid) { return DB.ogrenciler.some(function (x) { return x.id === oid; }); });
+  var ekChips = ui.ekOgrenciIds.map(function (oid) {
+    var o = DB.ogrenciler.find(function (x) { return x.id === oid; });
+    return '<span class="inline-flex items-center gap-1.5 rounded-full bg-teal-50 border border-teal-200 pl-2.5 pr-1.5 py-1 text-[11.5px] font-bold text-teal-700">' + esc(o ? o.ad : "?") +
+      '<button onclick="ekOgrenciSil(\'' + esc(oid) + '\')" title="Cikar" class="w-4 h-4 -mr-0.5 rounded-full hover:bg-teal-200 text-teal-600 flex items-center justify-center"><i class="fa-solid fa-xmark text-[9px]"></i></button></span>';
+  }).join("");
+  if (!ui.ekOgrenciIds.length) ekChips = '<span class="text-[11px] text-slate-300 italic">Grup dersi icin ek ogrenci ekle (en fazla ' + EK_OGR_MAX + ')</span>';
+  var chipsEl = $("ek-ogrenci-chips");
+  if (chipsEl) chipsEl.innerHTML = ekChips;
+  var sayacEl = $("ek-ogrenci-sayac");
+  if (sayacEl) sayacEl.textContent = ui.ekOgrenciIds.length + " / " + EK_OGR_MAX;
 
   duzenleBannerGuncelle();
 }

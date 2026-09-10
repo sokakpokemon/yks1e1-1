@@ -67,5 +67,46 @@ t("seed derslerinde ogrenciIds eklenmedi", seedDersleri.every(d => !("ogrenciIds
 t("her seed dersinde yardımcı = [ogrenciId]", seedDersleri.every(d => JSON.stringify(dersOgrenciIds(d)) === JSON.stringify([d.ogrenciId])));
 t("dönen değerler dizi (tüm kayıtlar)", seedDersleri.every(d => Array.isArray(dersOgrenciIds(d))));
 
+/* 6) Boot sıra düzeltmesi: gerçek tarayıcı DOM'u — bilinmeyen id → NULL döner,
+   insertAdjacentHTML markup'taki id'leri gerçekten DOM'a kaydeder (test kör noktasını kapatır) */
+console.log("6) Gerçek tarayıcı DOM simülasyonu (bilinmeyen id → null):");
+{
+  const reg = {};
+  let insertSay = 0;
+  const gercekEl = (id) => ({ id, innerHTML: "", textContent: "", value: "", style: {}, dataset: {},
+    get options() { const m = this.innerHTML.match(/<option/g); return { length: m ? m.length : 0 }; },
+    classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } },
+    insertAdjacentHTML(_p, h) { insertSay++; [...h.matchAll(/id="([^"]+)"/g)].forEach(m => { if (!reg[m[1]]) reg[m[1]] = gercekEl(m[1]); }); },
+    appendChild() {}, remove() {}, click() {}, focus() {}, addEventListener() {}, scrollIntoView() {},
+    querySelectorAll() { return []; }, getContext() { return null; } });
+  for (const m of html.matchAll(/id="([^"]+)"/g)) if (!reg[m[1]]) reg[m[1]] = gercekEl(m[1]);
+  global.document = {
+    getElementById: (i) => reg[i] || null,
+    addEventListener() {}, removeEventListener() {},
+    createElement: () => gercekEl("anon"),
+    body: { appendChild() {}, removeChild() {} },
+    querySelectorAll() { return []; }
+  };
+  let boot2Err = null;
+  try { new Function(scripts + "\n  yenile();")(); } catch (e) { boot2Err = e; }
+  t("ilk boot (renderFormDestek dahil) çökmeden tamamlanır", !boot2Err);
+  if (boot2Err) console.log(boot2Err.stack.split("\n").slice(0, 5).join("\n"));
+  t("ilk boot'ta #ek-ogrenciler paneli DOM'a eklendi", !!reg["ek-ogrenciler"]);
+  t("ilk boot'ta #ek-ogrenci-chips de DOM'da (null değil)", !!reg["ek-ogrenci-chips"]);
+  let api2Err = null, render2Err = null;
+  let renderFormDestek2 = null;
+  try {
+    const api2 = new Function(scripts + "\n  yenile();\n  return { renderFormDestek };")();
+    renderFormDestek2 = api2.renderFormDestek;
+  } catch (e) { api2Err = e; }
+  t("ikinci boot da çökmeden tamamlanır", !api2Err && typeof renderFormDestek2 === "function");
+  try { if (renderFormDestek2) renderFormDestek2(); } catch (e) { render2Err = e; }
+  t("2. renderFormDestek çağrısı çökmez", !render2Err);
+  if (render2Err) console.log(render2Err.stack.split("\n").slice(0, 5).join("\n"));
+  t("panel idempotent: insertAdjacentHTML yalnızca 1 kez çağrıldı", insertSay === 1);
+  t("chip alanı boşken ipucu metni dolu", (reg["ek-ogrenci-chips"] || { innerHTML: "" }).innerHTML.includes("Grup dersi"));
+  t("sayaç 0 / 5 gösterir", (reg["ek-ogrenci-sayac"] || { textContent: "" }).textContent === "0 / 5");
+}
+
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail);

@@ -306,7 +306,8 @@ function seedDB() {
 var ui = {
   filtre: "hafta", anchor: todayKey(), sekme: "ogretmen",
   editId: null, aktifIstekId: null, ogrId: null, sinifAd: null, analizAcik: true, istekFiltre: "",
-  seciliDurum: null, seciliOgrId: null
+  seciliDurum: null, seciliOgrId: null,
+  ekOgrenciIds: null /* COKLU UI: secili ogrenci id dizisi (max 5) */
 };
 
 // ---------- Durum seçici çubuk (takvim düzenlemesi) ----------
@@ -1302,6 +1303,20 @@ function renderFormDestek() {
   DB.ogrenciler.forEach(function (o) { dlO += '<option value="' + esc(o.ad) + '"></option>'; });
   $("dl-ogrenci").innerHTML = dlO;
 
+  /* ---------- COKLU OGRENCI SECIMI (yalnizca UI) ---------- */
+  /* f-ogrenci tekli input ve planla()/kaydetme akisi AYNEN; bu blok yalnizca ek chipleri cizer. */
+  if (!ui.ekOgrenciIds) ui.ekOgrenciIds = [];
+  var EK_OGR_MAX = 5;
+  ui.ekOgrenciIds = ui.ekOgrenciIds.filter(function (oid) { return DB.ogrenciler.some(function (x) { return x.id === oid; }); });
+  var ekChips = ui.ekOgrenciIds.map(function (oid) {
+    var o = DB.ogrenciler.find(function (x) { return x.id === oid; });
+    return '<span class="inline-flex items-center gap-1.5 rounded-full bg-teal-50 border border-teal-200 pl-2.5 pr-1.5 py-1 text-[11.5px] font-bold text-teal-700">' + esc(o ? o.ad : "?") +
+      '<button onclick="ekOgrenciSil(\'' + esc(oid) + '\')" title="Cikar" class="w-4 h-4 -mr-0.5 rounded-full hover:bg-teal-200 text-teal-600 flex items-center justify-center"><i class="fa-solid fa-xmark text-[9px]"></i></button></span>';
+  }).join("");
+  if (!ui.ekOgrenciIds.length) ekChips = '<span class="text-[11px] text-slate-300 italic">Grup dersi icin ek ogrenci ekle (en fazla ' + EK_OGR_MAX + ')</span>';
+  $("ek-ogrenci-chips").innerHTML = ekChips;
+  $("ek-ogrenci-sayac").textContent = ui.ekOgrenciIds.length + " / " + EK_OGR_MAX;
+
   var dlT = '<option value=""></option>';
   DB.ogretmenler.forEach(function (t) { dlT += '<option value="' + esc(t.ad) + '"></option>'; });
   $("dl-ogretmen").innerHTML = dlT;
@@ -1324,7 +1339,42 @@ function renderFormDestek() {
   if (!hizli.length) pill = '<span class="text-[11px] text-slate-300 italic">Öğretmen eklemek için Öğretmenler sekmesini kullanın</span>';
   $("hizliOgr").innerHTML = pill;
 
+  var ekPanel = '<div id="ek-ogrenciler" class="no-print rounded-2xl border border-slate-100 bg-slate-50/60 p-3 mt-2">' +
+    '<div class="flex items-center justify-between gap-2 mb-1.5">' +
+      '<span class="text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wide"><i class="fa-solid fa-user-group mr-1"></i>Ek Ogrenciler (Grup)</span>' +
+      '<span id="ek-ogrenci-sayac" class="text-[10.5px] font-bold text-slate-400"></span>' +
+    '</div>' +
+    '<div id="ek-ogrenci-chips" class="flex flex-wrap items-center gap-1.5 mb-2"></div>' +
+    '<div class="relative">' +
+      '<input id="ek-ogrenci-arama" list="dl-ogrenci" autocomplete="off" placeholder="Ara ve ekle (Enter)" onkeydown="ekOgrenciEkle(event)" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
+      '<i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-300"></i>' +
+    '</div>' +
+  "</div>";
+  /* Paneli yalnizca bir kez ekle (idempotent; stub DOM"larda da guvenli) */
+  if (!document.getElementById("ek-ogrenciler")) {
+    var hzEl = $("hizliOgr");
+    if (hzEl && hzEl.insertAdjacentHTML) hzEl.insertAdjacentHTML("afterend", ekPanel);
+  }
+
   duzenleBannerGuncelle();
+}
+function ekOgrenciEkle(ev) {
+  var inp = $("ek-ogrenci-arama");
+  var v = (ev && ev.key === "Enter" ? inp.value : "").trim();
+  if (!v) return;
+  var o = DB.ogrenciler.find(function (x) { return x.ad === v; });
+  if (!o) { toast("Ogrenci bulunamadi: " + v, "hata"); return; }
+  if (!ui.ekOgrenciIds) ui.ekOgrenciIds = [];
+  if (ui.ekOgrenciIds.indexOf(o.id) !== -1) { toast(o.ad + " zaten listede", "uyari"); return; }
+  if (ui.ekOgrenciIds.length >= 5) { toast("En fazla 5 ek ogrenci eklenebilir", "uyari"); return; }
+  ui.ekOgrenciIds.push(o.id);
+  inp.value = "";
+  renderFormDestek();
+}
+function ekOgrenciSil(oid) {
+  if (!ui.ekOgrenciIds) ui.ekOgrenciIds = [];
+  ui.ekOgrenciIds = ui.ekOgrenciIds.filter(function (y) { return y !== oid; });
+  renderFormDestek();
 }
 function hizliSec(ad) { $("f-ogretmen").value = ad; }
 function bugunTarih() { $("f-tarih").value = todayKey(); }

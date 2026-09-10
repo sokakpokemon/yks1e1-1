@@ -7,7 +7,8 @@
 - `YÖNETİM — ÖĞRETMEN · ÖĞRENCİ · AYAR` 563–1087 · `TALEP HAVUZU` 1088–1193
 - `BOOT VE DERS PLANLAMA` 1194–1397 · `TAKVİM, DERS LİSTESİ VE PAYLAŞIM` 1398–dosya sonu (2.117)
 - `ek-ders.js` = Ek Ders sekmesi + kısa kod (KS) fonksiyonları
-- Testler: `node ks-harness.mjs` ve `node ks-test-render.mjs` (tek komut: `node test.mjs` — ikisini sırayla çalıştırır, özet verir)
+- Testler: `node ks-harness.mjs`, `node ks-test-render.mjs` ve `node ks-durum-fn.mjs` (tek komut: `node test.mjs` — üçünü sırayla çalıştırır, özet verir)
+- Durum seçici çubuğu (takvim düzenleme): `ui.seciliDurum` + `ui.seciliOgrId`; butonlar `tumSiniflar()`'dan otomatik (DB), en sonda Kapalı. `durumSec(val, ogrId)` seçer, `togOgrSecili(tid, di, saat)` hücreye uygular — aynı hücreye 2. tıklama Boş yapar (döngü yok). Görünen "Müsait Değil" etiketleri "Kapalı" oldu; davranış kaydı `avail.musait` aynı kaldı. Eski "Sınıf Dersi" hücreleri korundu (68 hücre, seed verisinde) — kullanıcı sonradan yeniden işaretleyecek. İşlevsel test: `ks-durum-fn.mjs` (20 test)
 - ⚠️ **Kritik:** index.html'de düzenleme yaparken str_replace takılırsa doğrudan assert'li Node script kullan
 - **Protokol:** tek iş → test → rapor
 

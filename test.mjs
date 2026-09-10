@@ -1,8 +1,8 @@
 /* test.mjs — tüm regresyon testlerini sırayla çalıştırır ve özetler.
-   Her ikisi geçerse "45/45 OK" yazar; biri düşerse hangisinin düştüğünü gösterir. */
+   Üçü de geçerse "68/68 OK" yazar; biri düşerse hangisinin düştüğünü gösterir. */
 import { spawnSync } from "node:child_process";
 
-const suites = ["ks-harness.mjs", "ks-test-render.mjs"];
+const suites = ["ks-harness.mjs", "ks-test-render.mjs", "ks-durum-fn.mjs"];
 
 console.log("YKS Birebir Takip — test runner");
 

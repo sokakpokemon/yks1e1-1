@@ -345,3 +345,33 @@ Not: `.nodetest.txt`, `.writetest.txt`, `app_tmp.js` istek listesindeydi ama rep
   (uygulanmışlık kontrolü `copyFileSync`'ten ÖNCE; tekrar koşuda "Zaten uygulanmış" der, .bak bozulmaz).
 - Doğrulama: `node --check app.js` OK · `node --check ek-ders.js` OK · `node test.mjs` → **169/169 OK** (34+14+20+41+32+28).
 - Geri dönüş: `app.js.yama-gorunum-oncesi.bak` (son yama öncesi hâl; tam öncesi için `backups/` zip'i).
+
+---
+
+# ✅ CHECKPOINT: İstekten Planlamada Grup Seçimi Etkin
+
+**Tarih:** 11 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **201/201 OK**
+
+## Teşhis (kod yazılmadan önce)
+
+- Planlama fonksiyonu `planla()` app.js L1637; havuz render `renderHavuz()` L1222; istek→form `formaAktar()` L1302.
+- `renderFormDestek()` (L1358) paneli yalnız `#f-ogrenci` altına ekliyordu → **`#h-ogrenci` (havuz girişi) altına EKLENMİYORDU**.
+- `formaAktar()` `ui.aktifIstekId` set ediyordu; panel/`ui.ekOgrenciIds` state'ine DOKUNMUYORDU (eski seçim taşınma riski).
+- `planla()` grup dalı (L1661–1697) tek kayıt oluşturuyordu AMA `ui.aktifIstekId`'yi yalnız birebir dal kapatıyordu (L1740) → istek "bekliyor" kalıyordu.
+- İstek kayıt modeli zaten tek öğrenci sahipli (`istekler[].ogrenciId`) — DEĞİŞTİRİLMEDİ.
+
+## Yapılan İş (app.js — baştan yazma YOK, ks-yama-istekten-grup.mjs idempotent yama)
+
+1. **Yama 1:** `renderFormDestek()` paneli `#h-ogrenci` altına da ekler (aynı `ekPanel` markup'ı, idempotent DOM guard — ikinci kez OLUŞTURULMAZ).
+2. **Yama 2:** `planla()` grup dalı kayıttan sonra `ui.aktifIstekId` varsa istek `durum="planlandi"` yapar; **istek sahibi (ogrenciId) ve tüm alanlar aynen kalır**. Birebir dalın eski davranışı birebir korunur.
+3. **Yama 3:** `formaAktar()` panel state'ini temiz başlatır (`ui.ekOgrenciIds=[]`, panel kapalı) — ardışık isteklerde eski seçim taşınmaz.
+4. **Sahip kilidi:** panelde ana öğrenci checkbox'ı `disabled` + "Ana" etiketi (`grupPanelAnaDegisti` mevcut kuralı); sahibi `ogrenciId`, seçilenler `ogrenciIds`; `dersOgrenciIds` tüm katılımcıları döner.
+5. **Çakışma:** `duzeltmeBul` grup üyelerini öğretmen + her öğrenci için kontrol eder, çakanlar ADLARIYLA uyarıda; yoksayılmadıkça kayıt oluşmaz.
+6. **Sınır yok:** 10+ seçimde yalnızca amber `#grup-panel-uyari`; kayıt engellenmez.
+
+## Testler
+
+- Yeni: `ks-istekten-grup.mjs` — **32 test** (panel DOM, tek kayıt, alan semantiği, istek korunumu, isimli çakışma, tekli akış, 10+ engelsiz).
+- `test.mjs` 7 suite'e güncellendi. Yama idempotent: 2. koşuda "Zaten uygulanmış" der (exit 2), dosyayı bozmaz.
+- Doğrulama: `node --check app.js` OK · `node --check ek-ders.js` OK · `node test.mjs` → **201/201 OK** (34+14+20+41+32+28+32).
+- Geri dönüş: `app.js.istekten-grup-oncesi.bak` (yama öncesi hâl).

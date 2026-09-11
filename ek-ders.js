@@ -146,7 +146,7 @@ if (
     /* Öğretmeni bul / yeni öğretmeni kaydet (birebir ile aynı) */
     var t = DB.ogretmenler.find(function (x) { return kucuk(x.ad) === kucuk(ogretmenAd); });
     if (!t) {
-      t = { id: uid(), ad: ogretmenAd, brans: dersId, avail: { sinif: [], musait: [] } };
+      t = { id: uid(), ad: ogretmenAd, brans: dersId, avail: { sinif: {}, musait: [] } };
       DB.ogretmenler.push(t);
       toast("Yeni öğretmen kaydedildi: " + ogretmenAd);
     }

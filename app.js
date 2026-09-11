@@ -308,7 +308,8 @@ var ui = {
   filtre: "hafta", anchor: todayKey(), sekme: "ogretmen",
   editId: null, aktifIstekId: null, ogrId: null, sinifAd: null, analizAcik: true, istekFiltre: "",
   seciliDurum: null, seciliOgrId: null,
-  ekOgrenciIds: null /* COKLU UI: secili ogrenci id dizisi (max 5) */
+  ekOgrenciIds: null /* GRUP PANEL: secili ek ogrenci id dizisi (sinirsiz; 10+ yalnizca uyari) */,
+  panelSecim: null /* GRUP PANEL: { acik, arama, sinif } */
 };
 
 // ---------- Durum seçici çubuk (takvim düzenlemesi) ----------

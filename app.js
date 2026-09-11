@@ -1338,8 +1338,8 @@ function renderFormDestek() {
   "</div>";
   /* Paneli yalnizca bir kez ekle (idempotent; stub DOM"larda da guvenli) */
   if (!document.getElementById("ek-ogrenciler")) {
-    var hzEl = $("hizliOgr");
-    if (hzEl && hzEl.insertAdjacentHTML) hzEl.insertAdjacentHTML("afterend", ekPanel);
+    var fOgrEl = $("f-ogrenci");
+    if (fOgrEl && fOgrEl.insertAdjacentHTML) fOgrEl.insertAdjacentHTML("afterend", ekPanel);
   }
 
   /* COKLU OGRENCI SECIMI chipleri — panel eklendikten SONRA doldurulur (boot null-guvenli) */
@@ -1418,6 +1418,7 @@ function temizleForm() {
   $("f-saat").value = "15:30";
   $("f-yoksay").checked = false;
   $("cakismaUyari").classList.add("hidden");
+  if (ui.ekOgrenciIds && ui.ekOgrenciIds.length) { ui.ekOgrenciIds = []; renderFormDestek(); }
 }
 function hataKart(liste) {
   $("cakismaUyari").classList.remove("hidden");
@@ -1429,7 +1430,7 @@ function hataKart(liste) {
     '<p class="text-[11px] text-rose-400 mt-2">Gerçekten planlamak istiyorsanız <b>“Çakışmayı Yoksay / Ekstra Kontenjan”</b> kutusunu işaretleyip tekrar kaydedin.</p></div></div>';
   $("cakismaUyari").scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
-function duzeltmeBul(adet, yokSay) {
+function duzeltmeBul(adet, yokSay, grupOgrenciIds) {
   var saatKod = ksKodOf(adet.saat);
   var di = dowIdx(adet.tarih);
   var key = di + "-" + saatKod;
@@ -1447,6 +1448,21 @@ function duzeltmeBul(adet, yokSay) {
   var o = DB.ogrenciler.find(function (s) { return s.id === adet.ogrenciId; });
   if (o && o.sinif && (DB.sinifProg[o.sinif] || []).indexOf(key) >= 0) {
     uyari.push(o.ad + " öğrencisinin sınıfı (<b>" + o.sinif + "</b>) o kısa kod saatinde toplu derste.");
+  }
+  /* Grup dersi: ekOgrenciIds'teki her öğrenci de o gün+kod'da boş olmalı (dersOgrenciIds ile) */
+  var grup = Array.isArray(grupOgrenciIds) ? grupOgrenciIds : [];
+  if (grup.length) {
+    var cakisanlar = [];
+    DB.ogrenciler.forEach(function (s) {
+      if (grup.indexOf(s.id) < 0) return;
+      if (s.sinif && (DB.sinifProg[s.sinif] || []).indexOf(key) >= 0) cakisanlar.push(s.ad + " (sınıf dersi)");
+      var dgr = DB.dersler.find(function (l) {
+        return l.id !== (adet.id || "") && l.tarih === adet.tarih && ksKodOf(l.saat) === saatKod && l.durum !== "iptal" &&
+          dersOgrenciIds(l).indexOf(s.id) >= 0;
+      });
+      if (dgr) cakisanlar.push(s.ad + " (" + (dgr.ogrenciAd || "?") + " ile dersi var)");
+    });
+    if (cakisanlar.length) uyari.push("<b>Grup öğrencisi çakışması:</b> " + cakisanlar.join(", ") + " — " + GUN_KISA[di] + " " + saatEtiket(adet.saat) + " saatinde müsait değil.");
   }
   return uyari;
 }
@@ -1469,6 +1485,15 @@ function planla() {
     if (!k) hatalar.push("Ders saati kısa kod saatlerinden biri olmalı (örn. 8 · 15:30-16:10).");
     
   }
+  /* Grup modu: 2+ ek öğrenci seçiliyse tek kayıt ogrenciIds dizisiyle; aksi hâlde birebir akış aynen */
+  var grupOgrenciIds = Array.isArray(ui.ekOgrenciIds) ? ui.ekOgrenciIds.filter(function (oid, i) {
+    return oid != null && ui.ekOgrenciIds.indexOf(oid) === i;
+  }) : [];
+  var grupModu = grupOgrenciIds.length >= 2;
+  if (grupModu) {
+    var eksikler = grupOgrenciIds.filter(function (oid) { return !DB.ogrenciler.some(function (x) { return x.id === oid; }); });
+    if (eksikler.length) hatalar.push("Grup öğrencisi bulunamadı (öğrenci silinmiş olabilir). Listeden çıkarıp tekrar ekleyin.");
+  }
   if (hatalar.length) { hataKart(hatalar); return; }
   if (tarih < todayKey()) {
     hataKart(["Seçilen tarih geçmişte. Geçmişe ders planlamak için listeden dersi düzenleyebilirsiniz."]);
@@ -1483,16 +1508,41 @@ function planla() {
   }
   var t = DB.ogretmenler.find(function (x) { return kucuk(x.ad) === kucuk(ogretmenAd); });
   if (!t) {
-    t = { id: uid(), ad: ogretmenAd, brans: dersId, avail: { sinif: [], musait: [] } };
+    t = { id: uid(), ad: ogretmenAd, brans: dersId, avail: { sinif: {}, musait: [] } };
     DB.ogretmenler.push(t);
     toast("Yeni öğretmen kaydedildi: " + ogretmenAd);
   }
 
-  var cakisma = duzeltmeBul({ ogrenciId: o.id, ogretmenId: t.id, tarih: tarih, saat: saat, id: ui.editId || "" }, yoksay);
+  var cakisma = duzeltmeBul({ ogrenciId: o.id, ogretmenId: t.id, tarih: tarih, saat: saat, id: ui.editId || "" }, yoksay, grupModu ? grupOgrenciIds : null);
   if (cakisma.length && !yoksay) { hataKart(cakisma); return; }
   $("cakismaUyari").classList.add("hidden");
 
-  if (ui.editId) {
+  if (grupModu) {
+    /* Tek ders kaydı — kopya değil; ogrenciIds dizisi + birebir uyumluluk için ogrenciId/ogrenciAd korunur */
+    var tumKimlikler = [o.id].concat(grupOgrenciIds);
+    var kimlikSet = {};
+    tumKimlikler.forEach(function (g) { kimlikSet[g] = 1; });
+    var toplam = Object.keys(kimlikSet).length;
+    if (ui.editId) {
+      var mg = DB.dersler.find(function (x) { return x.id === ui.editId; });
+      if (mg) {
+        mg.ogrenciIds = grupOgrenciIds.slice();
+        mg.ogrenciId = o.id; mg.ogrenciAd = o.ad;
+        mg.dersId = dersId; mg.konu = konu;
+        mg.ogretmenId = t.id; mg.ogretmenAd = t.ad;
+        mg.tarih = tarih; mg.saat = saat; mg.kod = ksKodOf(saat);
+        toast("Grup dersi güncellendi ✓ (" + toplam + " öğrenci)");
+      }
+      ui.editId = null;
+    } else {
+      DB.dersler.push({
+        id: uid(), ogrenciId: o.id, ogrenciIds: grupOgrenciIds.slice(), ogrenciAd: o.ad, dersId: dersId, konu: konu,
+        ogretmenId: t.id, ogretmenAd: t.ad, tarih: tarih, saat: saat, kod: ksKodOf(saat),
+        durum: "planlandi", olusturma: todayKey()
+      });
+      toast("Grup dersi planlandı 🎉 " + toplam + " öğrenci · " + fmtTR(tarih) + " " + saatEtiket(saat));
+    }
+  } else if (ui.editId) {
     var mevcut = DB.dersler.find(function (x) { return x.id === ui.editId; });
     if (mevcut) {
       mevcut.ogrenciId = o.id; mevcut.ogrenciAd = o.ad;
@@ -1968,6 +2018,7 @@ function duzenle(id) {
   var l = DB.dersler.find(function (x) { return x.id === id; });
   if (!l) return;
   ui.editId = id; ui.aktifIstekId = null;
+  ui.ekOgrenciIds = Array.isArray(l.ogrenciIds) ? l.ogrenciIds.filter(function (oid) { return oid && oid !== l.ogrenciId; }) : [];
   $("f-ogrenci").value = l.ogrenciAd;
   $("f-ders").value = l.dersId;
   $("f-konu").value = l.konu || "";

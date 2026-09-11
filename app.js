@@ -1327,58 +1327,164 @@ function renderFormDestek() {
   if (!hizli.length) pill = '<span class="text-[11px] text-slate-300 italic">Öğretmen eklemek için Öğretmenler sekmesini kullanın</span>';
   $("hizliOgr").innerHTML = pill;
 
+  /* GRUP PANEL v2 — chip yerine: arama + sınıf filtresi + checkbox listesi */
   var ekPanel = '<div id="ek-ogrenciler" class="no-print rounded-2xl border border-slate-100 bg-slate-50/60 p-3 mt-2">' +
-    '<div class="flex items-center justify-between gap-2 mb-1.5">' +
-      '<span class="text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wide"><i class="fa-solid fa-user-group mr-1"></i>Ek Ogrenciler (Grup)</span>' +
-      '<span id="ek-ogrenci-sayac" class="text-[10.5px] font-bold text-slate-400"></span>' +
+    '<div class="flex items-center justify-between gap-2">' +
+      '<span class="text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wide"><i class="fa-solid fa-user-group mr-1"></i>Grup Öğrencileri</span>' +
+      '<button type="button" onclick="grupPanelToggle()" class="text-[11px] font-bold text-teal-600 hover:text-teal-700 flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-teal-50 transition-colors"><i id="grup-panel-ok" class="fa-solid fa-chevron-down text-[9px] transition-transform"></i><span id="grup-panel-ok-yazi">Öğrenci Seç</span></button>' +
     '</div>' +
-    '<div id="ek-ogrenci-chips" class="flex flex-wrap items-center gap-1.5 mb-2"></div>' +
-    '<div class="relative">' +
-      '<input id="ek-ogrenci-arama" list="dl-ogrenci" autocomplete="off" placeholder="Ara ve ekle (Enter)" onkeydown="ekOgrenciEkle(event)" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
-      '<i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-300"></i>' +
-    '</div>' +
+    '<div id="grup-ozet" class="mt-2"></div>' +
+    '<div id="grup-panel-govde" class="hidden mt-2 pt-2 border-t border-slate-200/70"></div>' +
   "</div>";
-  /* Paneli yalnizca bir kez ekle (idempotent; stub DOM"larda da guvenli) */
+  /* Paneli yalnızca bir kez ekle (idempotent; stub DOM'larda da güvenli) */
   if (!document.getElementById("ek-ogrenciler")) {
     var fOgrEl = $("f-ogrenci");
     if (fOgrEl && fOgrEl.insertAdjacentHTML) fOgrEl.insertAdjacentHTML("afterend", ekPanel);
   }
-
-  /* COKLU OGRENCI SECIMI chipleri — panel eklendikten SONRA doldurulur (boot null-guvenli) */
-  if (!ui.ekOgrenciIds) ui.ekOgrenciIds = [];
-  var EK_OGR_MAX = 5;
-  ui.ekOgrenciIds = ui.ekOgrenciIds.filter(function (oid) { return DB.ogrenciler.some(function (x) { return x.id === oid; }); });
-  var ekChips = ui.ekOgrenciIds.map(function (oid) {
-    var o = DB.ogrenciler.find(function (x) { return x.id === oid; });
-    return '<span class="inline-flex items-center gap-1.5 rounded-full bg-teal-50 border border-teal-200 pl-2.5 pr-1.5 py-1 text-[11.5px] font-bold text-teal-700">' + esc(o ? o.ad : "?") +
-      '<button onclick="ekOgrenciSil(\'' + esc(oid) + '\')" title="Cikar" class="w-4 h-4 -mr-0.5 rounded-full hover:bg-teal-200 text-teal-600 flex items-center justify-center"><i class="fa-solid fa-xmark text-[9px]"></i></button></span>';
-  }).join("");
-  if (!ui.ekOgrenciIds.length) ekChips = '<span class="text-[11px] text-slate-300 italic">Grup dersi icin ek ogrenci ekle (en fazla ' + EK_OGR_MAX + ')</span>';
-  var chipsEl = $("ek-ogrenci-chips");
-  if (chipsEl) chipsEl.innerHTML = ekChips;
-  var sayacEl = $("ek-ogrenci-sayac");
-  if (sayacEl) sayacEl.textContent = ui.ekOgrenciIds.length + " / " + EK_OGR_MAX;
+  grupPanelCiz();
 
   duzenleBannerGuncelle();
 }
-function ekOgrenciEkle(ev) {
-  var inp = $("ek-ogrenci-arama");
-  var v = (ev && ev.key === "Enter" ? inp.value : "").trim();
-  if (!v) return;
-  var o = DB.ogrenciler.find(function (x) { return x.ad === v; });
-  if (!o) { toast("Ogrenci bulunamadi: " + v, "hata"); return; }
-  if (!ui.ekOgrenciIds) ui.ekOgrenciIds = [];
-  if (ui.ekOgrenciIds.indexOf(o.id) !== -1) { toast(o.ad + " zaten listede", "uyari"); return; }
-  if (ui.ekOgrenciIds.length >= 5) { toast("En fazla 5 ek ogrenci eklenebilir", "uyari"); return; }
-  ui.ekOgrenciIds.push(o.id);
-  inp.value = "";
-  renderFormDestek();
+/* ---- GRUP PANEL v2: arama + sınıf filtresi + checkbox listesi (sınır yok, 10+ yalnızca uyarı) ---- */
+function grupPanelToggle() {
+  if (!ui.panelSecim) ui.panelSecim = { acik: false, arama: "", sinif: "" };
+  ui.panelSecim.acik = !ui.panelSecim.acik;
+  grupPanelCiz();
 }
-function ekOgrenciSil(oid) {
-  if (!ui.ekOgrenciIds) ui.ekOgrenciIds = [];
-  ui.ekOgrenciIds = ui.ekOgrenciIds.filter(function (y) { return y !== oid; });
-  renderFormDestek();
+function grupPanelSecimler() {
+  if (!Array.isArray(ui.ekOgrenciIds)) ui.ekOgrenciIds = [];
+  return ui.ekOgrenciIds.filter(function (oid) { return DB.ogrenciler.some(function (x) { return x.id === oid; }); });
 }
+function grupAnaOgrenciId() {
+  var inp = $("f-ogrenci");
+  var ad = inp ? inp.value : "";
+  if (!ad) return null;
+  var o = DB.ogrenciler.find(function (x) { return kucuk(x.ad) === kucuk(ad); });
+  return o ? o.id : null;
+}
+function grupPanelTumSiniflar() {
+  var set = [];
+  DB.ogrenciler.forEach(function (o) {
+    var s = String(o.sinif || "").trim();
+    if (s && set.indexOf(s) === -1) set.push(s);
+  });
+  return set;
+}
+function grupPanelListe() {
+  var ps = ui.panelSecim || { acik: false, arama: "", sinif: "" };
+  var q = kucuk(ps.arama);
+  var secili = grupPanelSecimler();
+  var anaId = grupAnaOgrenciId();
+  return DB.ogrenciler.filter(function (o) {
+    if (q && kucuk(o.ad).indexOf(q) === -1) return false;
+    if (ps.sinif && String(o.sinif || "").trim() !== ps.sinif) return false;
+    return true;
+  }).map(function (o) {
+    return { o: o, secili: secili.indexOf(o.id) !== -1, ana: o.id === anaId };
+  });
+}
+/* Ana öğrenci değiştiğinde eski ana katılımcı olarak kalır (kopya oluşmaz; kayıtta ana ogrenciIds dışında tutulur) */
+function grupPanelAnaDegisti() {
+  var ana = grupAnaOgrenciId();
+  var eski = ui.panelSecim ? ui.panelSecim.anaId : null;
+  if (eski && eski !== ana && DB.ogrenciler.some(function (x) { return x.id === eski; })) {
+    if (!Array.isArray(ui.ekOgrenciIds)) ui.ekOgrenciIds = [];
+    if (ui.ekOgrenciIds.indexOf(eski) === -1) ui.ekOgrenciIds.push(eski);
+  }
+  if (ui.panelSecim) ui.panelSecim.anaId = ana;
+  return ana;
+}
+function grupPanelSec(oid) {
+  if (!oid) return;
+  if (!ui.panelSecim) ui.panelSecim = { acik: false, arama: "", sinif: "" };
+  var ana = grupPanelAnaDegisti();
+  if (!Array.isArray(ui.ekOgrenciIds)) ui.ekOgrenciIds = [];
+  var i = ui.ekOgrenciIds.indexOf(oid);
+  if (i === -1) {
+    if (ana && oid === ana) return; /* ana öğrenci iki kez seçilemez */
+    ui.ekOgrenciIds.push(oid); /* sabit sınır yok — 10+ yalnızca uyarı */
+  } else {
+    ui.ekOgrenciIds.splice(i, 1);
+  }
+  grupPanelOzetCiz();
+  grupPanelListeCiz();
+}
+function grupPanelAra(v) {
+  if (!ui.panelSecim) ui.panelSecim = { acik: false, arama: "", sinif: "" };
+  ui.panelSecim.arama = v;
+  grupPanelListeCiz();
+}
+function grupPanelSinifSec(v) {
+  if (!ui.panelSecim) ui.panelSecim = { acik: false, arama: "", sinif: "" };
+  ui.panelSecim.sinif = v;
+  grupPanelListeCiz();
+}
+function grupPanelOzetCiz() {
+  var ozetEl = $("grup-ozet");
+  if (!ozetEl) return;
+  if (!ui.panelSecim) ui.panelSecim = { acik: false, arama: "", sinif: "" };
+  var anaId = grupPanelAnaDegisti();
+  var secili = grupPanelSecimler();
+  var katilimcilar = anaId ? [anaId] : [];
+  secili.forEach(function (oid) { if (katilimcilar.indexOf(oid) === -1) katilimcilar.push(oid); });
+  var toplam = katilimcilar.length;
+  var chipler = secili.filter(function (oid) { return oid !== anaId; }).map(function (oid) {
+    var o = DB.ogrenciler.find(function (x) { return x.id === oid; });
+    return '<span class="inline-flex items-center gap-1.5 rounded-full bg-teal-50 border border-teal-200 pl-2.5 pr-1.5 py-1 text-[11.5px] font-bold text-teal-700">' + esc(o ? o.ad : "?") +
+      '<button type="button" onclick="grupPanelSec(\'' + esc(oid) + '\')" title="Çıkar" class="w-4 h-4 -mr-0.5 rounded-full hover:bg-teal-200 text-teal-600 flex items-center justify-center"><i class="fa-solid fa-xmark text-[9px]"></i></button></span>';
+  }).join("");
+  var ic;
+  if (!toplam) {
+    ic = '<span class="text-[11.5px] text-slate-400 italic">Grup dersi için öğrenci seçin (sınır yok)</span>';
+  } else {
+    ic = '<span class="text-[12px] font-bold text-slate-600"><i class="fa-solid fa-circle-check text-teal-500 mr-1"></i>' + toplam + " öğrenci seçildi</span>" +
+      (chipler ? '<span id="grup-ozet-chips" class="flex flex-wrap items-center gap-1.5 mt-1.5">' + chipler + "</span>" : "");
+  }
+  if (toplam >= 10) {
+    ic += '<div id="grup-panel-uyari" class="mt-1.5 rounded-xl bg-amber-50 border border-amber-200 px-3 py-1.5 text-[11.5px] font-semibold text-amber-700"><i class="fa-solid fa-triangle-exclamation mr-1"></i>' + toplam + ' öğrenci seçildi — geniş grup: kaydetmeden önce kontrol edin</div>';
+  }
+  ozetEl.innerHTML = ic;
+}
+function grupPanelListeCiz() {
+  var listeEl = $("grup-panel-liste");
+  if (!listeEl || !ui.panelSecim || !ui.panelSecim.acik) return;
+  var liste = grupPanelListe();
+  if (!liste.length) { listeEl.innerHTML = '<div class="px-3 py-3 text-[11.5px] text-slate-300 italic">Bu filtreye uyan öğrenci yok</div>'; return; }
+  listeEl.innerHTML = liste.map(function (e) {
+    var kutu = '<input type="checkbox"' + (e.secili || e.ana ? " checked" : "") + (e.ana ? " disabled" : "") +
+      ' onchange="grupPanelSec(\'' + esc(e.o.id) + '\')" class="w-4 h-4 rounded border-slate-300 accent-teal-600 cursor-pointer' + (e.ana ? " opacity-50 cursor-not-allowed" : "") + '" />';
+    var anaTag = e.ana ? '<span class="text-[10px] font-extrabold text-teal-600 bg-teal-50 border border-teal-200 rounded-full px-2 py-0.5 ml-auto">Ana</span>' : "";
+    var sinifTag = e.o.sinif ? '<span class="text-[10px] font-bold text-slate-300 ' + (e.ana ? "" : "ml-auto") + ' shrink-0">' + esc(e.o.sinif) + "</span>" : "";
+    return '<label class="flex items-center gap-3 px-3 py-2 hover:bg-teal-50/50 cursor-pointer' + (e.ana ? " bg-slate-50/80" : "") + '">' + kutu +
+      '<span class="text-[13px] font-semibold text-slate-700">' + esc(e.o.ad) + "</span>" + anaTag + sinifTag + "</label>";
+  }).join("");
+}
+function grupPanelCiz() {
+  var govdeEl = $("grup-panel-govde");
+  if (!govdeEl) return;
+  if (!ui.panelSecim) ui.panelSecim = { acik: false, arama: "", sinif: "" };
+  grupPanelOzetCiz();
+  var okEl = $("grup-panel-ok"), okYazi = $("grup-panel-ok-yazi");
+  if (okEl) okEl.className = "fa-solid fa-chevron-" + (ui.panelSecim.acik ? "up" : "down") + " text-[9px] transition-transform";
+  if (okYazi) okYazi.textContent = ui.panelSecim.acik ? "Kapat" : "Öğrenci Seç";
+  if (!ui.panelSecim.acik) { govdeEl.classList.add("hidden"); govdeEl.innerHTML = ""; return; }
+  govdeEl.classList.remove("hidden");
+  var sinifOps = '<option value="">Tüm sınıflar</option>';
+  grupPanelTumSiniflar().forEach(function (s) {
+    sinifOps += '<option value="' + esc(s) + '"' + (ui.panelSecim.sinif === s ? " selected" : "") + ">" + esc(s) + "</option>";
+  });
+  govdeEl.innerHTML =
+    '<div class="flex flex-col sm:flex-row gap-2">' +
+      '<div class="relative flex-1">' +
+        '<input id="grup-panel-arama" type="text" autocomplete="off" placeholder="Öğrenci ara..." value="' + esc(ui.panelSecim.arama) + '" oninput="grupPanelAra(this.value)" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
+        '<i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-300"></i>' +
+      "</div>" +
+      '<select id="grup-panel-sinif" onchange="grupPanelSinifSec(this.value)" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[12.5px] font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-400/40">' + sinifOps + "</select>" +
+    "</div>" +
+    '<div id="grup-panel-liste" class="mt-2 max-h-56 overflow-y-auto rounded-xl border border-slate-200/70 bg-white divide-y divide-slate-100"></div>';
+  grupPanelListeCiz();
+}
+
 function hizliSec(ad) { $("f-ogretmen").value = ad; }
 function bugunTarih() { $("f-tarih").value = todayKey(); }
 function yarinTarih() { $("f-tarih").value = addDaysKey(todayKey(), 1); }
@@ -1420,7 +1526,12 @@ function temizleForm() {
   $("f-saat").value = "15:30";
   $("f-yoksay").checked = false;
   $("cakismaUyari").classList.add("hidden");
-  if (ui.ekOgrenciIds && ui.ekOgrenciIds.length) { ui.ekOgrenciIds = []; renderFormDestek(); }
+  var panelKirli = ui.panelSecim && (ui.panelSecim.acik || ui.panelSecim.arama || ui.panelSecim.sinif);
+  if ((ui.ekOgrenciIds && ui.ekOgrenciIds.length) || panelKirli) {
+    ui.ekOgrenciIds = [];
+    ui.panelSecim = { acik: false, arama: "", sinif: "" };
+    renderFormDestek();
+  }
 }
 function hataKart(liste) {
   $("cakismaUyari").classList.remove("hidden");
@@ -1508,6 +1619,9 @@ function planla() {
     DB.ogrenciler.push(o);
     toast("Yeni öğrenci kaydedildi: " + ogrenciAd);
   }
+  /* GRUP PANEL: ana öğrenci grup listesinde iki kez olamaz (ana değişse bile) */
+  grupOgrenciIds = grupOgrenciIds.filter(function (oid) { return oid !== o.id; });
+  grupModu = grupOgrenciIds.length >= 2;
   var t = DB.ogretmenler.find(function (x) { return kucuk(x.ad) === kucuk(ogretmenAd); });
   if (!t) {
     t = { id: uid(), ad: ogretmenAd, brans: dersId, avail: { sinif: {}, musait: [] } };
@@ -2028,7 +2142,8 @@ function duzenle(id) {
   var l = DB.dersler.find(function (x) { return x.id === id; });
   if (!l) return;
   ui.editId = id; ui.aktifIstekId = null;
-  ui.ekOgrenciIds = Array.isArray(l.ogrenciIds) ? l.ogrenciIds.filter(function (oid) { return oid && oid !== l.ogrenciId; }) : [];
+  ui.ekOgrenciIds = dersOgrenciIds(l).filter(function (oid) { return oid && oid !== l.ogrenciId; });
+  ui.panelSecim = { acik: true, arama: "", sinif: "", anaId: l.ogrenciId || null }; /* GRUP PANEL: düzenlemede panel seçili öğrencilerle açık açılır */
   $("f-ogrenci").value = l.ogrenciAd;
   $("f-ders").value = l.dersId;
   $("f-konu").value = l.konu || "";
@@ -2037,6 +2152,7 @@ function duzenle(id) {
   $("f-saat").value = l.saat;
   $("f-yoksay").checked = false;
   $("cakismaUyari").classList.add("hidden");
+  renderFormDestek();
   duzenleBannerGuncelle();
   $("planKart").scrollIntoView({ behavior: "smooth", block: "start" });
   $("planKart").classList.add("ring-2", "ring-amber-300");

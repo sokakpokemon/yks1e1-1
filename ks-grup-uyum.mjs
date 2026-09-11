@@ -92,7 +92,7 @@ console.log("6) Gerçek tarayıcı DOM simülasyonu (bilinmeyen id → null):");
   t("ilk boot (renderFormDestek dahil) çökmeden tamamlanır", !boot2Err);
   if (boot2Err) console.log(boot2Err.stack.split("\n").slice(0, 5).join("\n"));
   t("ilk boot'ta #ek-ogrenciler paneli DOM'a eklendi", !!reg["ek-ogrenciler"]);
-  t("ilk boot'ta #ek-ogrenci-chips de DOM'da (null değil)", !!reg["ek-ogrenci-chips"]);
+  t("ilk boot'ta #grup-ozet de DOM'da (null değil)", !!reg["grup-ozet"]);
   let api2Err = null, render2Err = null;
   let renderFormDestek2 = null;
   try {
@@ -104,8 +104,8 @@ console.log("6) Gerçek tarayıcı DOM simülasyonu (bilinmeyen id → null):");
   t("2. renderFormDestek çağrısı çökmez", !render2Err);
   if (render2Err) console.log(render2Err.stack.split("\n").slice(0, 5).join("\n"));
   t("panel idempotent: insertAdjacentHTML yalnızca 1 kez çağrıldı", insertSay === 1);
-  t("chip alanı boşken ipucu metni dolu", (reg["ek-ogrenci-chips"] || { innerHTML: "" }).innerHTML.includes("Grup dersi"));
-  t("sayaç 0 / 5 gösterir", (reg["ek-ogrenci-sayac"] || { textContent: "" }).textContent === "0 / 5");
+  t("özet boşken ipucu metni dolu", (reg["grup-ozet"] || { innerHTML: "" }).innerHTML.includes("Grup dersi"));
+  t("5 kişilik sabit sınır kaldırıldı (sayaç id yok, 'sınır yok' ipucu var)", !reg["ek-ogrenci-sayac"] && (reg["grup-ozet"] || { innerHTML: "" }).innerHTML.includes("sınır yok"));
 }
 
 /* 7) Senaryolar: grup kayıt (A), isimli çakışma (B), birebir akış (C) — gerçek form DOM'u simülasyonu */

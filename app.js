@@ -229,7 +229,9 @@ function grupBadgeHTML(ders) {
   if (!uyeler.length) return ""; /* birebir ders → eski görünüm */
   var acik = ui.grupAcikOgrId === ders.id;
   var gosterilecek = acik ? uyeler : (uyeler.length > 2 ? uyeler.slice(0, 2) : uyeler);
+  /* Açık durumda TÜM İSİMLER alt alta (masaüstü); kapalıda baş harf badge'leri */
   var b = function (ad) {
+    if (acik) return '<span class="block w-max rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[10.5px] font-bold text-slate-600 leading-snug">' + esc(ad) + "</span>";
     return '<span class="inline-flex items-center rounded-full bg-slate-100 border border-slate-200 px-1.5 py-0.5 text-[9.5px] font-bold text-slate-500 leading-none">' + esc(ilkHarfler(ad)) + "</span>";
   };
   var html = gosterilecek.map(b).join("");

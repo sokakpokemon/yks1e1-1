@@ -102,7 +102,7 @@ t("4 ek üyede '+2'", grupBadgeHTML(d4).includes(">+2</button>"));
 /* Açma: tüm adlar alt alta */
 ui.grupAcikOgrId = "gtest-3";
 const acik3 = grupBadgeHTML(d3);
-t("açık: tüm baş harf badge'leri (4: ana hariç 3 üye + …)", (acik3.match(/bg-slate-100 border/g) || []).length === 3, acik3);
+t("açık: tüm üye adları TAM ad olarak alt alta (block w-max)", (acik3.match(/block w-max/g) || []).length === 3 && acik3.includes(zeynep.ad) && acik3.includes(emir.ad) && acik3.includes(DB.ogrenciler[3].ad), acik3);
 t("açık: daralt düğmesi (−)", acik3.includes(">−</button>"));
 grupUyeToggle("");
 t("grupUyeToggle('') daraltır + tabloyu yeniden çizer", ui.grupAcikOgrId === null && reg["derslerBolum"].innerHTML.includes("grup-badges"));

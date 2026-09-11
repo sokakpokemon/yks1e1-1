@@ -7,6 +7,22 @@ import { readFileSync, writeFileSync, copyFileSync } from "node:fs";
 const yol = "app.js";
 const once = readFileSync(yol, "utf8");
 if (!once.includes("grupBadgeHTML")) { console.error("HATA: yardımcı fonksiyonlar yok — önce yardımcı yaması gerekli."); process.exit(1); }
+
+/* --- Uygulanmışlık kontrolü: tüm kontroller zaten geçiyorsa DOKUNMA ve çık.
+   (Patch 7, patch 2 metnini değiştirdiği için 2. koşuda yama-2 anchor'u eşleşmez;
+   yedek dosyasının gerçek yama-öncesi durum olarak kalması için copyFileSync'ten ÖNCE kontrol edilir.) --- */
+const kontroller = [
+  ["ders listesinde grupBadgeHTML çağrısı", /esc\(l\.ogrenciAd\) \+ "<\/span>" \+ grupBadgeHTML\(l\)/],
+  ["haftalık tabloda grupUyeler", /var grupUyeler = grupUyeEtiketleri\(ders\)/],
+  ["günlük tabloda grupUyelerG", /var grupUyelerG = grupUyeEtiketleri\(ders\)/],
+  ["WhatsApp'ta grupOgrenciAdlari", /var uyeler = grupOgrenciAdlari\(l\)/],
+  ["PNG'de grupOgrenciAdlari", /grupOgrenciAdlari\(l\)\.length > 1 \? esc\(grupOgrenciAdlari\(l\)\.join/, "png"],
+  ["analizde dersOgrenciIds dağıtımı", /var kimlikler = dersOgrenciIds\(l\)/]
+];
+if (kontroller.every(function (k) { return k[1].test(once); })) {
+  console.log("Zaten uygulanmış — dosya değişmedi (tüm " + kontroller.length + " kontrol geçti).");
+  process.exit(0);
+}
 copyFileSync(yol, "app.js.yama-gorunum-oncesi.bak");
 
 let son = once;
@@ -120,14 +136,6 @@ yama(
 /* --- Assert'ler --- */
 console.log("\nDoğrulama:");
 if (sayac < 1 || sayac > 7) { console.error("✗ beklenmedik yama sayısı: " + sayac); process.exit(1); }
-const kontroller = [
-  ["ders listesinde grupBadgeHTML çağrısı", /esc\(l\.ogrenciAd\) \+ "<\/span>" \+ grupBadgeHTML\(l\)/],
-  ["haftalık tabloda grupUyeler", /var grupUyeler = grupUyeEtiketleri\(ders\)/],
-  ["günlük tabloda grupUyelerG", /var grupUyelerG = grupUyeEtiketleri\(ders\)/],
-  ["WhatsApp'ta grupOgrenciAdlari", /var uyeler = grupOgrenciAdlari\(l\)/],
-  ["PNG'de grupOgrenciAdlari", /grupOgrenciAdlari\(l\)\.length > 1 \? esc\(grupOgrenciAdlari\(l\)\.join/, "png"],
-  ["analizde dersOgrenciIds dağıtımı", /var kimlikler = dersOgrenciIds\(l\)/]
-];
 for (const [ad, re] of kontroller) {
   if (!re.test(son)) { console.error("  ✗ " + ad); process.exit(1); }
   console.log("  ✓ " + ad);

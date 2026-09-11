@@ -229,7 +229,9 @@ function grupBadgeHTML(ders) {
   if (!uyeler.length) return ""; /* birebir ders → eski görünüm */
   var acik = ui.grupAcikOgrId === ders.id;
   var gosterilecek = acik ? uyeler : (uyeler.length > 2 ? uyeler.slice(0, 2) : uyeler);
+  /* Açık durumda TÜM İSİMLER alt alta (masaüstü); kapalıda baş harf badge'leri */
   var b = function (ad) {
+    if (acik) return '<span class="block w-max rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[10.5px] font-bold text-slate-600 leading-snug">' + esc(ad) + "</span>";
     return '<span class="inline-flex items-center rounded-full bg-slate-100 border border-slate-200 px-1.5 py-0.5 text-[9.5px] font-bold text-slate-500 leading-none">' + esc(ilkHarfler(ad)) + "</span>";
   };
   var html = gosterilecek.map(b).join("");
@@ -1865,7 +1867,7 @@ function haftalikOgrtTablo() {
         var durumRenk = ders.durum === "tamamlandi" ? "bg-emerald-50 border-emerald-200" : "bg-blue-50 border-blue-200";
         /* GRUP: grid hücresi dar → grup dersinde üye baş harfleri satırı (birebirde eski görünüm) */
         var grupUyeler = grupUyeEtiketleri(ders);
-        var hucreUst = sinif ? esc(sinif) : (grupUyeler.length ? '<span class="text-[8.5px] font-bold text-slate-400">' + grupUyeler.map(function (a) { return esc(ilkHarfler(a)); }).join(" · ") + "</span>" : '');
+        var hucreUst = grupUyeler.length ? '<span class="text-[8.5px] font-bold text-slate-400">' + grupUyeler.map(function (a) { return esc(ilkHarfler(a)); }).join(" · ") + "</span>" : (sinif ? esc(sinif) : '');
         satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100"><div class="rounded-lg border ' + durumRenk + ' px-1 py-1.5" title="Dolu — kilitli">' +
           '<div class="text-[10.5px] font-bold text-slate-800 leading-tight">' + esc(ogrenciAd.split(" ")[0]) + '</div>' +
           (hucreUst ? '<div class="leading-tight">' + hucreUst + '</div>' : '') +

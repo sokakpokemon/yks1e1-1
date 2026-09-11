@@ -284,3 +284,35 @@ Not: `.nodetest.txt`, `.writetest.txt`, `app_tmp.js` istek listesindeydi ama rep
 - `ks-yama-avail.mjs`, `ks-yama-union.mjs`: assert'li, idempotent yama script'leri (kayit amaçlı)
 - Doğrulama: `node --check app.js` OK · `node test.mjs` → **109/109 OK** (34+14+20+41)
 - `ek-ders.js` dokunulmadı.
+
+---
+
+# ✅ CHECKPOINT: Grup Paneli v2 — Checkbox Panel + Düzenleme Desteği
+
+**Tarih:** 11 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **141/141 OK**
+
+## Yapılan İş (app.js — baştan yazma YOK, hedefli yama)
+
+1. **Chip yapısı kaldırıldı** → `#ek-ogrenciler` paneli: başlık + aç/kapat (`grupPanelToggle`),
+   `#grup-ozet` özeti ve açılır `#grup-panel-govde` gövdesi.
+2. **Panel içeriği:** `#grup-panel-arama` arama kutusu (TR-büyük/küçük duyarsız) +
+   `#grup-panel-sinif` sınıf filtresi (`grupPanelTumSiniflar` DB'den otomatik, "Tüm sınıflar" ilk seçenek) +
+   her öğrenci satırında checkbox; ana öğrencinin kutusu `disabled` + "Ana" etiketi.
+3. **Sınır yok:** sabit 5 öğrenci sınırı kaldırıldı; 10+ seçimde YALNIZCA `#grup-panel-uyari`
+   amber uyarı kartı (engelleme yok); 10'un altında uyarı kaybolur.
+4. **Kapalıyken özet:** panel kapalıyken `#grup-ozet` "N öğrenci seçildi" + çıkarılabilir chipler
+   (taşma yerine kompakt özet).
+5. **Düzenleme:** `duzenle()` ders kaydından `dersOgrenciIds(l)` ile TÜM katılımcıları yükler —
+   ilki ana öğrenci (form + `panelSecim.anaId`), kalanlar `ui.ekOgrenciIds`'te seçili; panel AÇIK açılır.
+   Ekleme/çıkarma canlı; ana değişince eski ana ek listede kopya OLUŞMAZ (`grupPanelAnaDegisti` +
+   `planla()` filtresi); aynı öğrenci iki kez seçilemez (toggle + dedupe).
+6. **Tek öğrenci:** birebir akış birebir aynı — `ogrenciIds` YAZILMAZ (test #7 assert eder).
+7. **DOKUNULMADI:** tablolar, WhatsApp çıktısı, istek havuzu (talimat gereği).
+
+## Testler
+
+- Yeni: `ks-panel-secim.mjs` — **32 test** (panel shell, arama, sınıf filtresi, çift seçim,
+  12 seçim = sınır yok, 10+ uyarı gör/kaybol, ana kuralı, düzenleme yükleme, birebir akış).
+- `test.mjs` güncellendi (5 dosya). Doğrulama: `node --check app.js` OK · `node --check ek-ders.js` OK ·
+  `node test.mjs` → **141/141 OK** (34+14+20+41+32).
+- Bölgeler (~): panel L1331–1485 · duzenle L2144–2147 · planla grup dalı L1601–1653.

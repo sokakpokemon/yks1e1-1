@@ -22,7 +22,7 @@ const t = (name, cond) => { console.log((cond ? "  ✓" : "  ✗") + " " + name)
 
 let api;
 try {
-  api = new Function(scripts + "\n  return { DB, dersOgrenciIds, normalize };\n")();
+  api = new Function(scripts + "\n  return { DB, dersOgrenciIds, normalize, planla, duzeltmeBul, ui, temizleForm };\n")();
   t("boot hatasız", true);
 } catch (e) {
   t("boot hatasız → " + e.message, false);
@@ -106,6 +106,80 @@ console.log("6) Gerçek tarayıcı DOM simülasyonu (bilinmeyen id → null):");
   t("panel idempotent: insertAdjacentHTML yalnızca 1 kez çağrıldı", insertSay === 1);
   t("chip alanı boşken ipucu metni dolu", (reg["ek-ogrenci-chips"] || { innerHTML: "" }).innerHTML.includes("Grup dersi"));
   t("sayaç 0 / 5 gösterir", (reg["ek-ogrenci-sayac"] || { textContent: "" }).textContent === "0 / 5");
+}
+
+/* 7) Senaryolar: grup kayıt (A), isimli çakışma (B), birebir akış (C) — gerçek form DOM'u simülasyonu */
+console.log("7) Senaryolar: grup kayıt, isimli çakışma, birebir akış:");
+{
+  /* id → öğe kayıt defteri; getElementById hep AYNI nesneyi döndürsün (form değerleri ayarlanabilir) */
+  const reg = {};
+  const el = (id) => { if (!reg[id]) reg[id] = { id, innerHTML: "", textContent: "", value: "", checked: false, style: {}, dataset: {}, options: [], classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } }, insertAdjacentHTML(_p, h) { [...h.matchAll(/id="([^"]+)"/g)].forEach(m => { if (!reg[m[1]]) reg[m[1]] = el(m[1]); }); }, appendChild() {}, remove() {}, click() {}, focus() {}, addEventListener() {}, scrollIntoView() {}, querySelectorAll: () => [], getContext: () => null }; return reg[id]; };
+  for (const m of html.matchAll(/id="([^"]+)"/g)) el(m[1]);
+  global.document = {
+    getElementById: (i) => reg[i] || null,
+    addEventListener() {}, removeEventListener() {},
+    createElement: () => el("anon" + Math.random()),
+    body: { appendChild() {}, removeChild() {} },
+    querySelectorAll() { return []; }
+  };
+
+  const api3 = new Function(scripts + "\n  return { DB, dersOgrenciIds, normalize, planla, duzeltmeBul, ui, temizleForm };")();
+  const { DB: DB3, planla, duzeltmeBul, ui: ui3, temizleForm } = api3;
+
+  /* gelecek Pazartesi 15:30 (kod 8) — avail/sinifProg'ta meşgul olmayan bir gün+kod */
+  const _d = new Date(); _d.setDate(_d.getDate() - ((_d.getDay() + 6) % 7) + 7);
+  const gelecekPzt = _d.getFullYear() + "-" + String(_d.getMonth() + 1).padStart(2, "0") + "-" + String(_d.getDate()).padStart(2, "0");
+  const ayse = DB3.ogrenciler.find(s => s.ad === "Ayşe Demir");
+  const zeynep = DB3.ogrenciler.find(s => s.ad === "Zeynep Kaya");
+  const emir = DB3.ogrenciler.find(s => s.ad === "Emir Aydın");
+  const formuDoldur = () => { reg["f-ogrenci"].value = "Ayşe Demir"; reg["f-ders"].value = "mat"; reg["f-konu"].value = "Limit"; reg["f-ogretmen"].value = "SONER AÇIKGÖZ"; reg["f-tarih"].value = gelecekPzt; reg["f-saat"].value = "15:30"; reg["f-yoksay"].checked = false; };
+
+  /* Senaryo A — 2 öğrencili grup kaydı: TEK kayıt, ogrenciIds dizisi */
+  DB3.dersler = [];
+  formuDoldur();
+  ui3.ekOgrenciIds = [zeynep.id, emir.id];
+  planla();
+  const grupKayit = DB3.dersler.filter(l => l.tarih === gelecekPzt && l.kod === "8");
+  t("A: tam 1 kayıt oluştu (kopya değil)", grupKayit.length === 1);
+  t("A: kayıtta ogrenciIds = [Zeynep, Emir]", grupKayit.length === 1 && JSON.stringify(grupKayit[0].ogrenciIds) === JSON.stringify([zeynep.id, emir.id]));
+  t("A: uyumluluk: ogrenciId alanı dolu (eski okuyucular için)", grupKayit.length === 1 && typeof grupKayit[0].ogrenciId === "string" && grupKayit[0].ogrenciId.length > 0);
+  t("A: dersOgrenciIds 3 kimlik verir", grupKayit.length === 1 && api3.dersOgrenciIds(grupKayit[0]).length === 3);
+  t("A: kayıt sonrası grup chip listesi sıfırlandı (temizleForm)", Array.isArray(ui3.ekOgrenciIds) && ui3.ekOgrenciIds.length === 0);
+  DB3.dersler = DB3.dersler.filter(l => !(l.tarih === gelecekPzt && l.kod === "8"));
+
+  /* Senaryo B — çakışan öğrenci ADIYLA uyarılır (dersOgrenciIds ile bulunur) */
+  DB3.dersler.push({ id: "test-conflict-1", ogrenciId: zeynep.id, ogrenciAd: zeynep.ad, dersId: "mat", konu: "", ogretmenId: "t-x", ogretmenAd: "BAŞKA Ö", tarih: gelecekPzt, saat: "15:30", kod: "8", durum: "planlandi", olusturma: "" });
+  const uyariB = duzeltmeBul({ ogrenciId: ayse.id, ogretmenId: DB3.ogretmenler[0].id, tarih: gelecekPzt, saat: "15:30", id: "" }, false, [zeynep.id]);
+  t("B: çakışan grup öğrencisi adıyla uyarıda geçiyor", uyariB.some(m => m.includes(zeynep.ad)));
+  t("B: uyarı ders çakışması olarak nitelendiriliyor", uyariB.some(m => m.includes(zeynep.ad) && m.includes("ile dersi var")));
+  DB3.dersler = DB3.dersler.filter(l => l.id !== "test-conflict-1");
+
+  /* Senaryo C — 1 ek öğrenci bile kaydederse: eski birebir akış AYNEN (ogrenciIds YAZILMAZ) */
+  formuDoldur();
+  ui3.ekOgrenciIds = [emir.id];
+  const sayiOnce = DB3.dersler.length;
+  planla();
+  const yeniKayit = DB3.dersler[sayiOnce];
+  t("C: kayıt oluştu", DB3.dersler.length === sayiOnce + 1 && !!yeniKayit);
+  t("C: eski davranış: ogrenciIds alanı YOK", yeniKayit && !("ogrenciIds" in yeniKayit));
+  t("C: ogrenciId = formdaki öğrenci", yeniKayit && yeniKayit.ogrenciId === ayse.id);
+  t("C: dersOgrenciIds tek kimlik verir", yeniKayit && api3.dersOgrenciIds(yeniKayit).length === 1);
+  DB3.dersler = DB3.dersler.filter(l => l !== yeniKayit);
+
+  /* 8) avail şema sapması: planla() kaydetmeden önce normalize ile aynı şekle getirir */
+  console.log("8) avail şema normalizasyonu (kayıt öncesi):");
+  DB3.dersler = [];
+  ui3.ekOgrenciIds = [];
+  const sapkin = DB3.ogretmenler.find(t2 => t2.ad === "MERT ASİL");
+  sapkin.avail = { sinif: ["0-8", "1-3"], musait: ["2-4"] }; /* sinif DİZİ — normalize() sapması */
+  formuDoldur();
+  reg["f-ders"].value = "ing"; reg["f-ogretmen"].value = "MERT ASİL";
+  planla(); /* '0-8' Sınıf Dersi çakışması → kayıt reddedilir ama avail yine de normalize edilmiş olmalı */
+  t("sinif dizi → obje (Sınıf Dersi değeriyle)", sapkin.avail.sinif && typeof sapkin.avail.sinif === "object" && !Array.isArray(sapkin.avail.sinif) && sapkin.avail.sinif["0-8"] === "Sınıf Dersi" && sapkin.avail.sinif["1-3"] === "Sınıf Dersi");
+  t("musait dizi korunur", Array.isArray(sapkin.avail.musait) && sapkin.avail.musait.length === 1 && sapkin.avail.musait[0] === "2-4");
+  t("Sınıf Dersi uyarısı bu şekille üretiliyor", duzeltmeBul({ ogrenciId: ayse.id, ogretmenId: sapkin.id, tarih: gelecekPzt, saat: "15:30", id: "" }, false, null).some(m => m.includes("Sınıf Dersi")));
+  t("normalize() artık ek değişiklik yapmıyor (şekil birebir)", (() => { const kopya = JSON.parse(JSON.stringify(sapkin.avail)); api3.normalize({ ogretmenler: [sapkin] }); return JSON.stringify(sapkin.avail) === JSON.stringify(kopya); })());
+  sapkin.avail = { sinif: {}, musait: [] };
 }
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");

@@ -194,14 +194,15 @@ function normalize(d) {
 }
 /* ---------- Grup dersi uyumluluk katmanı ----------
    Tek okuma yardımcısı: mevcut ogrenciId alanına ASLA yazmaz, silmez, taşımaz.
-   - ders.ogrenciIds (dizi) varsa → benzersiz, sırasını koruyan dizi
+   - ders.ogrenciIds (dizi) varsa → [ogrenciId, ...ogrenciIds] benzersiz, sırasını koruyan (tüm katılımcılar)
    - yoksa eski kayıt → [ogrenciId]
    - hatalı kayıt (nesne değil / ogrenciIds dizi değil / kimlik yok) → [] */
 function dersOgrenciIds(ders) {
   if (!ders || typeof ders !== "object") return [];
   if (ders.ogrenciIds != null) {
     if (!Array.isArray(ders.ogrenciIds)) return [];
-    return ders.ogrenciIds.filter(function (v, i) { return v != null && ders.ogrenciIds.indexOf(v) === i; });
+    var _tum = [ders.ogrenciId].concat(ders.ogrenciIds); /* ana öğrenci + ek öğrenciler = tüm katılımcılar */
+    return _tum.filter(function (v, i) { return v != null && _tum.indexOf(v) === i; });
   }
   if (ders.ogrenciId != null && ders.ogrenciId !== "") return [ders.ogrenciId];
   return [];
@@ -1513,6 +1514,14 @@ function planla() {
     toast("Yeni öğretmen kaydedildi: " + ogretmenAd);
   }
 
+  /* avail şema sapması (L1483 kuralı): kaydetmeden önce normalize() ile aynı şekle getir */
+  if (!t.avail || typeof t.avail !== "object") t.avail = { sinif: {}, musait: [] };
+  if (!Array.isArray(t.avail.musait)) t.avail.musait = [];
+  if (Array.isArray(t.avail.sinif)) {
+    var _sObj = {}; t.avail.sinif.forEach(function (k) { _sObj[k] = "Sınıf Dersi"; });
+    t.avail.sinif = _sObj;
+  }
+  if (!t.avail.sinif || typeof t.avail.sinif !== "object") t.avail.sinif = {};
   var cakisma = duzeltmeBul({ ogrenciId: o.id, ogretmenId: t.id, tarih: tarih, saat: saat, id: ui.editId || "" }, yoksay, grupModu ? grupOgrenciIds : null);
   if (cakisma.length && !yoksay) { hataKart(cakisma); return; }
   $("cakismaUyari").classList.add("hidden");

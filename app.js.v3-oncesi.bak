@@ -1602,10 +1602,7 @@ function grupPanelSec(oid) {
     var _birlesik = [ui.havuzAnaId].concat(Array.isArray(ui.ekOgrenciIds) ? ui.ekOgrenciIds : []).filter(function (v) { return v != null && v !== ""; });
     if (!Array.isArray(ui.grupPanelSira) || JSON.stringify(ui.grupPanelSira) !== JSON.stringify(_birlesik)) ui.grupPanelSira = _birlesik;
     var _k = ui.grupPanelSira.indexOf(oid);
-    if (_k !== -1) ui.grupPanelSira.splice(_k, 1);
-    /* ISTEK-GRUP-ISTEGI-YAMASI-v3 (A-düzeltme): ÇIKARMA + YENİDEN EKLEMEDE ilk seçim sırası GERİ GELİR —
-       üye her zaman dizinin SONUNA eklenir; sıra [ilk-seçim … son-seçim] kalır, [ana]+ek ayrımı korunur */
-    ui.grupPanelSira.push(oid);
+    if (_k === -1) ui.grupPanelSira.push(oid); else ui.grupPanelSira.splice(_k, 1);
     ui.grupPanelSira = ui.grupPanelSira.filter(function (v, i) { return v != null && v !== "" && ui.grupPanelSira.indexOf(v) === i; });
     ui.havuzAnaId = ui.grupPanelSira[0] || null;
     ui.ekOgrenciIds = ui.grupPanelSira.slice(1);
@@ -1686,9 +1683,7 @@ function grupPanelCiz() {
   if (okYazi) okYazi.textContent = ui.panelSecim.acik ? "Kapat" : "Öğrenci Seç";
   /* ISTEK-GRUP-ISTEGI-YAMASI-v2 (B): kapalıyken markup KORUNUR (yalnızca gizlenir) — arama kutusu id'si DOM'da kalır;
      liste her durumda güncel seçimle çizilir */
-  /* ISTEK-GRUP-ISTEGI-YAMASI-v3 (B-düzeltme): kapalıyken markup BOŞALTILIR (v2 öncesi davranış;
-     grupPanelListeCiz zaten kapalıyken çizmez) — açılırken filtre markup'ı grupPanelGovdeHTML'den taze çizilir */
-  if (!ui.panelSecim.acik) { govdeEl.classList.add("hidden"); govdeEl.innerHTML = ""; return; }
+  if (!ui.panelSecim.acik) { govdeEl.classList.add("hidden"); if (!govdeEl.innerHTML) govdeEl.innerHTML = grupPanelGovdeHTML(); grupPanelListeCiz(); return; }
   govdeEl.classList.remove("hidden");
   govdeEl.innerHTML = grupPanelGovdeHTML();
   grupPanelListeCiz();

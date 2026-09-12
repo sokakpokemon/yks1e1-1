@@ -182,18 +182,6 @@ function normalize(d) {
   d.istekler = Array.isArray(d.istekler) ? d.istekler : [];
   d.dersler = Array.isArray(d.dersler) ? d.dersler : [];
   d.sinifProg = d.sinifProg && typeof d.sinifProg === "object" ? d.sinifProg : {};
-  /* GRUP İSTEK uyumluluğu: isteklerdeki ogrenciIds benzersiz/geçerli/ana-haricî normalize edilir.
-     Eski tekli isteklere (ogrenciIds alanı yok) DOKUNULMAZ — alan eklenmez, yapı bozulmaz. */
-  if (Array.isArray(d.istekler)) d.istekler.forEach(function (r) {
-    if (!r || typeof r !== "object") return;
-    if (!Array.isArray(r.ogrenciIds)) { if (r.ogrenciIds != null) delete r.ogrenciIds; return; }
-    var _gAna = r.ogrenciId, _gTemiz = [];
-    r.ogrenciIds.forEach(function (v) {
-      if (v == null || v === "" || v === _gAna || _gTemiz.indexOf(v) !== -1) return;
-      _gTemiz.push(v);
-    });
-    r.ogrenciIds = _gTemiz;
-  });
   if (Array.isArray(d.ogretmenler)) d.ogretmenler.forEach(function (t) {
     if (!t.avail) t.avail = { sinif: {}, musait: [] };
     if (Array.isArray(t.avail.sinif)) {
@@ -261,85 +249,6 @@ function grupUyeToggle(dersId) {
 function grupUyeSatirlari(ders) {
   /* WhatsApp / PNG düz metin: tüm grup üyeleri, ana öğrenci ilk sırada */
   return grupOgrenciAdlari(ders);
-}
-
-/* ---------- Grup İSTEK uyumluluk katmanı ---------- /* ISTEK-GRUP-ISTEGI-YAMASI v1 */
-/* İdempotent okuma yardımcısı: istek kaydına ASLA yazmaz.
-   - [istek.ogrenciId, ...(istek.ogrenciIds || [])] → benzersiz, boş olmayan, sırasını koruyan üye listesi
-   - eski tekli istek (ogrenciIds yok) → [ogrenciId] — hata vermez
-   - hatalı/boş kayıt → [] */
-function istekOgrenciIds(istek) {
-  if (!istek || typeof istek !== "object") return [];
-  var _tum = [istek.ogrenciId].concat(Array.isArray(istek.ogrenciIds) ? istek.ogrenciIds : []);
-  return _tum.filter(function (v, i) { return v != null && v !== "" && _tum.indexOf(v) === i; });
-}
-/* GRUP İSTEK: havuz tarafındaki ortak grup isteği yardımcıları — panel TEK kopyadır, bağlamla yeniden kullanılır */
-function grupPanelBaglami() { return ui.grupPanelBaglam === "havuz" ? "havuz" : "plan"; }
-function istekGrupUyeleri() {
-  var _tum = [grupAnaOgrenciId()].concat(Array.isArray(ui.ekOgrenciIds) ? ui.ekOgrenciIds : []);
-  return _tum.filter(function (v, i) {
-    return v != null && v !== "" && _tum.indexOf(v) === i &&
-      DB.ogrenciler.some(function (x) { return x.id === v; });
-  });
-}
-function istekGrupPanelAc() {
-  ui.grupPanelBaglam = "havuz";
-  ui.ekOgrenciIds = [];
-  ui.havuzAnaId = null;
-  if (!ui.panelSecim) ui.panelSecim = { acik: false, arama: "", sinif: "" };
-  ui.panelSecim.acik = true; ui.panelSecim.arama = ""; ui.panelSecim.sinif = ""; ui.panelSecim.anaId = null;
-  renderHavuz();
-  renderFormDestek();
-  grupPanelCiz();
-}
-function istekGrupSifirla() {
-  ui.grupPanelBaglam = "plan";
-  ui.ekOgrenciIds = [];
-  ui.havuzAnaId = null;
-  if (ui.panelSecim) { ui.panelSecim.acik = false; ui.panelSecim.arama = ""; ui.panelSecim.sinif = ""; ui.panelSecim.anaId = null; }
-}
-function istekGrupIptal() { istekGrupSifirla(); renderHavuz(); renderFormDestek(); toast("Ortak grup isteği iptal edildi."); }
-function istekGrupEkle() {
-  if (grupPanelBaglami() !== "havuz") return;
-  var uyeler = istekGrupUyeleri();
-  if (uyeler.length < 2) { toast("Ortak grup isteği için en az 2 öğrenci seçin.", "hata"); return; }
-  var dersId = $("h-ders") ? $("h-ders").value : "";
-  if (!dersId) { toast("Ders seçin.", "hata"); return; }
-  var konu = $("h-konu") ? $("h-konu").value.trim() : "";
-  var anaId = uyeler[0], ekler = uyeler.slice(1);
-  var anaO = DB.ogrenciler.find(function (x) { return x.id === anaId; });
-  DB.istekler.push({ id: uid(), ogrenciId: anaId, ogrenciIds: ekler, ogrenciAd: anaO ? anaO.ad : "", dersId: dersId, konu: konu, durum: "bekliyor", olusturma: todayKey() });
-  /* 10+ seçim engellenmez — yalnızca uyarı */
-  if (uyeler.length >= 10) toast(uyeler.length + " öğrencilik geniş grup isteği kaydedildi — kontrol edin.", "uyari");
-  else toast("Ortak grup isteği havuza eklendi ✓ (" + uyeler.length + " öğrenci)");
-  istekGrupSifirla();
-  renderHavuz();
-  renderFormDestek();
-}
-function istekGrupOzetHTML() {
-  if (grupPanelBaglami() !== "havuz") return "";
-  var uyeler = istekGrupUyeleri();
-  var chipler = uyeler.map(function (oid, i) {
-    var o = DB.ogrenciler.find(function (x) { return x.id === oid; });
-    return '<span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10.5px] font-bold ' + (i === 0 ? "bg-slate-800 text-white" : "bg-teal-50 border border-teal-200 text-teal-700") + '">' + esc(o ? o.ad : "?") + (i === 0 ? ' <span class="opacity-70 font-extrabold">(Ana)</span>' : "") + "</span>";
-  }).join("");
-  var uyari = uyeler.length >= 10 ? '<span class="rounded-full bg-amber-100 text-amber-700 px-2.5 py-0.5 text-[10.5px] font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Geniş grup</span>' : "";
-  return '<div id="istek-grup-ozet" class="flex flex-wrap items-center gap-2 mb-3 rounded-2xl border border-teal-100 bg-teal-50/50 px-3.5 py-2.5">' +
-    '<span class="text-[12px] font-extrabold text-teal-700"><i class="fa-solid fa-user-group mr-1.5"></i>Ortak Grup İsteği · ' + uyeler.length + " öğrenci seçildi</span>" + chipler + uyari +
-    '<span class="ml-auto flex items-center gap-2">' +
-      '<button onclick="istekGrupEkle()" class="rounded-full bg-teal-500 hover:bg-teal-600 text-white text-[11.5px] font-bold px-3.5 py-1.5 shadow-sm transition-colors"><i class="fa-solid fa-check mr-1"></i>Grup İsteğini Kaydet</button>' +
-      '<button onclick="istekGrupIptal()" class="rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 text-[11.5px] font-bold px-3 py-1.5 transition-colors">Vazgeç</button>' +
-    "</span></div>";
-}
-/* GRUP İSTEK: paneli aktif bağlamın formuna taşır — GERÇEK DOM'da düğüm taşınır (id çoğaltılmaz);
-   stub DOM'da insertAdjacentElement yokken işlem yapılmaz (idempotent, çoğaltma yok) */
-function grupPanelYerlestir() {
-  var panel = document.getElementById("ek-ogrenciler");
-  if (!panel) return;
-  var hedef = $(grupPanelBaglami() === "havuz" ? "h-ogrenci" : "f-ogrenci");
-  if (!hedef || !hedef.insertAdjacentElement) return;
-  if (panel.previousElementSibling === hedef) return;
-  hedef.insertAdjacentElement("afterend", panel);
 }
 
 function saveDB() {
@@ -444,8 +353,6 @@ var ui = {
   seciliDurum: null, seciliOgrId: null,
   ekOgrenciIds: null /* GRUP PANEL: secili ek ogrenci id dizisi (sinirsiz; 10+ yalnizca uyari) */,
   panelSecim: null /* GRUP PANEL: { acik, arama, sinif } */,
-  grupPanelBaglam: "plan" /* GRUP İSTEK: panelin aktif form bağlamı ("plan" | "havuz") */,
-  havuzAnaId: null /* GRUP İSTEK: havuz bağlamında İLK seçilen öğrenci (ana/sahip) */,
   grupAcikOgrId: null /* GRUP GORUNUM: tum uye adlari acik olan ders id'si (badge toggle) */
 };
 
@@ -1344,17 +1251,11 @@ function renderHavuz() {
   sirali.forEach(function (r, i) {
     var o = DB.ogrenciler.find(function (x) { return x.id === r.ogrenciId; });
     var D2 = DERS[r.dersId];
-    /* GRUP İSTEK: tüm üyeler istekOgrenciIds() üzerinden dinamik isimle, TEK kayıt olarak gösterilir */
-    var uyeHtml = istekOgrenciIds(r).length > 1 ? ' <span class="grup-istek-uyeler inline-flex flex-wrap items-center gap-1 align-middle">' +
-      istekOgrenciIds(r).slice(1).map(function (oid) {
-        var mo = DB.ogrenciler.find(function (x) { return x.id === oid; });
-        return mo ? '<span class="inline-flex items-center rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-500">' + esc(mo.ad) + "</span>" : "";
-      }).join("") + "</span>" : "";
     var bekliyor = r.durum === "bekliyor";
     liste += '<div draggable="' + bekliyor + '" data-istek="' + r.id + '" class="istek-kart flex items-center gap-3 rounded-xl border px-3.5 py-2.5 ' + (bekliyor ? "border-slate-100 hover:border-teal-300 transition-colors cursor-grab active:cursor-grabbing" : "border-green-100 bg-green-50/40") + '"' +
       (bekliyor ? ' ondragstart="istekDrag(event, \'' + r.id + '\'); this.style.opacity=\'0.45\'" ondragend="istekDropHedef=null; this.style.opacity=\'\'"' : "") + ">" +
       avatar((o ? o.ad : r.ogrenciAd), i) +
-      '<div class="flex-1 min-w-0"><div class="flex items-center gap-2 flex-wrap"><b class="text-[13px] text-slate-800">' + esc(o ? o.ad : r.ogrenciAd) + "</b>" + uyeHtml +
+      '<div class="flex-1 min-w-0"><div class="flex items-center gap-2 flex-wrap"><b class="text-[13px] text-slate-800">' + esc(o ? o.ad : r.ogrenciAd) + "</b>" +
       (D2 ? '<span class="rounded-full px-2 py-0.5 text-[10.5px] font-bold ' + D2.bg + " " + D2.tx + '">' + D2.ad + "</span>" : "") +
       '<span class="text-[10px] font-bold rounded-full px-2 py-0.5 ' + (bekliyor ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700") + '">' + (bekliyor ? "Bekliyor" : "Planlandı") + "</span></div>" +
       '<div class="text-[11.5px] text-slate-500 truncate mt-0.5">' + (r.konu ? "<i>Eksik konu:</i> " + esc(r.konu) : '<span class="italic text-slate-300">Konu belirtilmedi</span>') + "</div>" +
@@ -1377,14 +1278,8 @@ function renderHavuz() {
         '<select id="h-ders" class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40">' + dersOps + "</select>" +
         '<input id="h-konu" placeholder="Eksik konu (örn. Paragraf)" autocomplete="off" class="lg:col-span-2 rounded-xl border border-slate-200 px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
         '<button onclick="istekEkle()" class="rounded-full border-2 border-teal-200 text-teal-600 hover:bg-teal-50 text-[13px] font-bold px-4 py-2 transition-colors"><i class="fa-solid fa-plus mr-1.5"></i>İsteği Havuza Ekle</button>' +
-        '<button onclick="istekGrupPanelAc()" class="rounded-full border-2 border-slate-200 text-slate-500 hover:border-teal-300 hover:text-teal-600 hover:bg-teal-50 text-[13px] font-bold px-4 py-2 transition-colors"><i class="fa-solid fa-user-group mr-1.5"></i>Ortak Grup İsteği</button>' +
       "</div>" +
-      istekGrupOzetHTML() + chips + liste + "</div>";
-  /* GRUP İSTEK: havuz bağlamında panel bu formdadır — render sonrası yeniden yerleştir (id çoğaltmadan) */
-  if (grupPanelBaglami() === "havuz") {
-    if (!document.getElementById("ek-ogrenciler")) renderFormDestek();
-    else grupPanelYerlestir();
-  }
+      chips + liste + "</div>";
 }
 function istekFiltrele(id) { ui.istekFiltre = id || ""; renderHavuz(); }
 function istekDrag(ev, id) { istekDropHedef = id; if (ev.dataTransfer) { ev.dataTransfer.effectAllowed = "copy"; try { ev.dataTransfer.setData("text/plain", id); } catch (e) {} } }
@@ -1413,12 +1308,9 @@ function formaAktar(id) {
   $("f-konu").value = r.konu;
   ui.aktifIstekId = r.id;
   ui.editId = null;
-  /* ISTEK-GRUP: grup İSTEĞİNDE tüm üyeler panele otomatik yüklenir (ilki ana/sahip, kalanı seçili);
-     tekli istekte eski davranış birebir korunur (boş seçim, kapalı panel) */
-  var _istekUyeleri = istekOgrenciIds(r).filter(function (oid) { return oid !== r.ogrenciId; });
-  ui.grupPanelBaglam = "plan"; ui.havuzAnaId = null; /* istekten planlama her zaman plan bağlamında */
-  ui.ekOgrenciIds = _istekUyeleri;
-  if (ui.panelSecim) { ui.panelSecim.acik = _istekUyeleri.length > 0; ui.panelSecim.arama = ""; ui.panelSecim.sinif = ""; ui.panelSecim.anaId = r.ogrenciId; }
+  /* ISTEK-GRUP: grup panel seçimini temizle — sahibi ANA öğrenci olarak yüklü, kilidi panelde (checkbox disabled) */
+  ui.ekOgrenciIds = [];
+  if (ui.panelSecim) { ui.panelSecim.acik = false; ui.panelSecim.arama = ""; ui.panelSecim.sinif = ""; }
   duzenleBannerGuncelle();
   $("f-tarih").value = todayKey();
   $("f-saat").value = "15:30";
@@ -1512,7 +1404,6 @@ function renderFormDestek() {
     var hOgrEl = $("h-ogrenci");
     if (hOgrEl && hOgrEl.insertAdjacentHTML) hOgrEl.insertAdjacentHTML("afterend", ekPanel);
   }
-  grupPanelYerlestir();
   grupPanelCiz();
 
   duzenleBannerGuncelle();
@@ -1528,8 +1419,6 @@ function grupPanelSecimler() {
   return ui.ekOgrenciIds.filter(function (oid) { return DB.ogrenciler.some(function (x) { return x.id === oid; }); });
 }
 function grupAnaOgrenciId() {
-  /* GRUP İSTEK: havuz bağlamında ana = İLK seçilen öğrenci (ui.havuzAnaId) */
-  if (grupPanelBaglami() === "havuz") return ui.havuzAnaId || null;
   var inp = $("f-ogrenci");
   var ad = inp ? inp.value : "";
   if (!ad) return null;
@@ -1559,7 +1448,6 @@ function grupPanelListe() {
 }
 /* Ana öğrenci değiştiğinde eski ana katılımcı olarak kalır (kopya oluşmaz; kayıtta ana ogrenciIds dışında tutulur) */
 function grupPanelAnaDegisti() {
-  if (grupPanelBaglami() === "havuz") { if (ui.panelSecim) ui.panelSecim.anaId = ui.havuzAnaId || null; return ui.havuzAnaId || null; }
   var ana = grupAnaOgrenciId();
   var eski = ui.panelSecim ? ui.panelSecim.anaId : null;
   if (eski && eski !== ana && DB.ogrenciler.some(function (x) { return x.id === eski; })) {
@@ -1572,19 +1460,6 @@ function grupPanelAnaDegisti() {
 function grupPanelSec(oid) {
   if (!oid) return;
   if (!ui.panelSecim) ui.panelSecim = { acik: false, arama: "", sinif: "" };
-  /* GRUP İSTEK (havuz bağlamı): İLK seçilen ana olur; ana çıkarılırsa sıradaki üye ana olur; kopya yazılmaz */
-  if (grupPanelBaglami() === "havuz") {
-    if (!Array.isArray(ui.ekOgrenciIds)) ui.ekOgrenciIds = [];
-    if (ui.havuzAnaId === oid) { ui.havuzAnaId = ui.ekOgrenciIds.shift() || null; }
-    else {
-      var _j = ui.ekOgrenciIds.indexOf(oid);
-      if (_j === -1) { if (!ui.havuzAnaId) ui.havuzAnaId = oid; else ui.ekOgrenciIds.push(oid); }
-      else ui.ekOgrenciIds.splice(_j, 1);
-    }
-    grupPanelOzetCiz();
-    grupPanelListeCiz();
-    return;
-  }
   var ana = grupPanelAnaDegisti();
   if (!Array.isArray(ui.ekOgrenciIds)) ui.ekOgrenciIds = [];
   var i = ui.ekOgrenciIds.indexOf(oid);
@@ -1639,7 +1514,7 @@ function grupPanelListeCiz() {
   var liste = grupPanelListe();
   if (!liste.length) { listeEl.innerHTML = '<div class="px-3 py-3 text-[11.5px] text-slate-300 italic">Bu filtreye uyan öğrenci yok</div>'; return; }
   listeEl.innerHTML = liste.map(function (e) {
-    var kutu = '<input type="checkbox"' + (e.secili || e.ana ? " checked" : "") + (e.ana && grupPanelBaglami() !== "havuz" ? " disabled" : "") +
+    var kutu = '<input type="checkbox"' + (e.secili || e.ana ? " checked" : "") + (e.ana ? " disabled" : "") +
       ' onchange="grupPanelSec(\'' + esc(e.o.id) + '\')" class="w-4 h-4 rounded border-slate-300 accent-teal-600 cursor-pointer' + (e.ana ? " opacity-50 cursor-not-allowed" : "") + '" />';
     var anaTag = e.ana ? '<span class="text-[10px] font-extrabold text-teal-600 bg-teal-50 border border-teal-200 rounded-full px-2 py-0.5 ml-auto">Ana</span>' : "";
     var sinifTag = e.o.sinif ? '<span class="text-[10px] font-bold text-slate-300 ' + (e.ana ? "" : "ml-auto") + ' shrink-0">' + esc(e.o.sinif) + "</span>" : "";
@@ -1790,12 +1665,7 @@ function planla() {
   var grupOgrenciIds = Array.isArray(ui.ekOgrenciIds) ? ui.ekOgrenciIds.filter(function (oid, i) {
     return oid != null && ui.ekOgrenciIds.indexOf(oid) === i;
   }) : [];
-  /* GRUP İSTEK: aktif istek grup isteği ise (ogrenciIds dolu) 1 ek ile bile grup dersi olur — üyeler korunur */
-  var grupIstekAktif = !!ui.aktifIstekId && (function () {
-    var _gr = DB.istekler.find(function (x) { return x.id === ui.aktifIstekId; });
-    return !!_gr && istekOgrenciIds(_gr).length > 1;
-  })();
-  var grupModu = grupOgrenciIds.length >= 2 || (grupIstekAktif && grupOgrenciIds.length >= 1);
+  var grupModu = grupOgrenciIds.length >= 2;
   if (grupModu) {
     var eksikler = grupOgrenciIds.filter(function (oid) { return !DB.ogrenciler.some(function (x) { return x.id === oid; }); });
     if (eksikler.length) hatalar.push("Grup öğrencisi bulunamadı (öğrenci silinmiş olabilir). Listeden çıkarıp tekrar ekleyin.");
@@ -1814,7 +1684,7 @@ function planla() {
   }
   /* GRUP PANEL: ana öğrenci grup listesinde iki kez olamaz (ana değişse bile) */
   grupOgrenciIds = grupOgrenciIds.filter(function (oid) { return oid !== o.id; });
-  grupModu = grupOgrenciIds.length >= 2 || (grupIstekAktif && grupOgrenciIds.length >= 1);
+  grupModu = grupOgrenciIds.length >= 2;
   var t = DB.ogretmenler.find(function (x) { return kucuk(x.ad) === kucuk(ogretmenAd); });
   if (!t) {
     t = { id: uid(), ad: ogretmenAd, brans: dersId, avail: { sinif: {}, musait: [] } };

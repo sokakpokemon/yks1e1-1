@@ -232,8 +232,7 @@ t("bozuk kayıtta hata vermez", JSON.stringify(istekOgrenciIds(null)) === "[]" &
 /* 13) Yedek alma/yükleme grup üyelerini eksiksiz korur (deep-equal) */
 console.log("13) Grup istek yedek/geri yükleme:");
 saveDB();
-const _yedekHam = store["yksOto_arsiv_v1"];
-const yedek2 = JSON.parse(JSON.stringify(typeof _yedekHam === "string" ? JSON.parse(_yedekHam) : _yedekHam));
+const yedek2 = JSON.parse(JSON.stringify(store["yksOto_arsiv_v1"]));
 const yuklenen2 = normalize(JSON.parse(JSON.stringify(yedek2)));
 const giYuklenen = yuklenen2.istekler.find(r => r.id === gi.id);
 t("yükleme sonrası grup isteği bulunur", !!giYuklenen);

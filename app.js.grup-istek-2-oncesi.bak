@@ -192,9 +192,7 @@ function normalize(d) {
       if (v == null || v === "" || v === _gAna || _gTemiz.indexOf(v) !== -1) return;
       _gTemiz.push(v);
     });
-    /* ISTEK-GRUP-ISTEGI-YAMASI-v2 (C): kayıpsızlık — temizlik sırayı/üyeyi değiştirmiyorsa DOKUNMA (yedek→yükleme deep-equal
-       korunur); yalnız gerçekten bozuk kayıtlar (kopya/boş/ana-tekrarı) onarılır */
-    if (_gTemiz.length !== r.ogrenciIds.length || _gTemiz.some(function (v, i) { return v !== r.ogrenciIds[i]; })) r.ogrenciIds = _gTemiz;
+    r.ogrenciIds = _gTemiz;
   });
   if (Array.isArray(d.ogretmenler)) d.ogretmenler.forEach(function (t) {
     if (!t.avail) t.avail = { sinif: {}, musait: [] };
@@ -270,24 +268,6 @@ function grupUyeSatirlari(ders) {
    - [istek.ogrenciId, ...(istek.ogrenciIds || [])] → benzersiz, boş olmayan, sırasını koruyan üye listesi
    - eski tekli istek (ogrenciIds yok) → [ogrenciId] — hata vermez
    - hatalı/boş kayıt → [] */
-/* ISTEK-GRUP-ISTEGI-YAMASI-v2 (D): panel gövde markup'ı TEK kaynaktan — grupPanelCiz kapalıyken de aynı markup'ı üretir
-   (kapanınca markup boşaltılmaz; açık dal da bu yardımcıyı kullanır) */
-function grupPanelGovdeHTML() {
-  if (!ui.panelSecim) ui.panelSecim = { acik: false, arama: "", sinif: "" };
-  var sinifOps = '<option value="">Tüm sınıflar</option>';
-  grupPanelTumSiniflar().forEach(function (s) {
-    sinifOps += '<option value="' + esc(s) + '"' + (ui.panelSecim.sinif === s ? " selected" : "") + ">" + esc(s) + "</option>";
-  });
-  return
-    '<div class="flex flex-col sm:flex-row gap-2">' +
-      '<div class="relative flex-1">' +
-        '<input id="grup-panel-arama" type="text" autocomplete="off" placeholder="Öğrenci ara..." value="' + esc(ui.panelSecim.arama) + '" oninput="grupPanelAra(this.value)" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
-        '<i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-300"></i>' +
-      "</div>" +
-      '<select id="grup-panel-sinif" onchange="grupPanelSinifSec(this.value)" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[12.5px] font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-400/40">' + sinifOps + "</select>" +
-    "</div>" +
-    '<div id="grup-panel-liste" class="mt-2 max-h-56 overflow-y-auto rounded-xl border border-slate-200/70 bg-white divide-y divide-slate-100"></div>';
-}
 function istekOgrenciIds(istek) {
   if (!istek || typeof istek !== "object") return [];
   var _tum = [istek.ogrenciId].concat(Array.isArray(istek.ogrenciIds) ? istek.ogrenciIds : []);
@@ -1594,15 +1574,13 @@ function grupPanelSec(oid) {
   if (!ui.panelSecim) ui.panelSecim = { acik: false, arama: "", sinif: "" };
   /* GRUP İSTEK (havuz bağlamı): İLK seçilen ana olur; ana çıkarılırsa sıradaki üye ana olur; kopya yazılmaz */
   if (grupPanelBaglami() === "havuz") {
-    /* ISTEK-GRUP-ISTEGI-YAMASI-v2 (A): tıklama SIRASI korunur (çıkarma→yeniden ekleme sıra atlamaz).
-       SIRA, [ana]+ek birleşimiyle uyumsuzsa (harici reset) yeniden türetilir; her id EN FAZLA 1 kez. */
-    var _birlesik = [ui.havuzAnaId].concat(Array.isArray(ui.ekOgrenciIds) ? ui.ekOgrenciIds : []).filter(function (v) { return v != null && v !== ""; });
-    if (!Array.isArray(ui.grupPanelSira) || JSON.stringify(ui.grupPanelSira) !== JSON.stringify(_birlesik)) ui.grupPanelSira = _birlesik;
-    var _k = ui.grupPanelSira.indexOf(oid);
-    if (_k === -1) ui.grupPanelSira.push(oid); else ui.grupPanelSira.splice(_k, 1);
-    ui.grupPanelSira = ui.grupPanelSira.filter(function (v, i) { return v != null && v !== "" && ui.grupPanelSira.indexOf(v) === i; });
-    ui.havuzAnaId = ui.grupPanelSira[0] || null;
-    ui.ekOgrenciIds = ui.grupPanelSira.slice(1);
+    if (!Array.isArray(ui.ekOgrenciIds)) ui.ekOgrenciIds = [];
+    if (ui.havuzAnaId === oid) { ui.havuzAnaId = ui.ekOgrenciIds.shift() || null; }
+    else {
+      var _j = ui.ekOgrenciIds.indexOf(oid);
+      if (_j === -1) { if (!ui.havuzAnaId) ui.havuzAnaId = oid; else ui.ekOgrenciIds.push(oid); }
+      else ui.ekOgrenciIds.splice(_j, 1);
+    }
     grupPanelOzetCiz();
     grupPanelListeCiz();
     return;
@@ -1633,8 +1611,7 @@ function grupPanelOzetCiz() {
   var ozetEl = $("grup-ozet");
   if (!ozetEl) return;
   if (!ui.panelSecim) ui.panelSecim = { acik: false, arama: "", sinif: "" };
-  /* ISTEK-GRUP-ISTEGI-YAMASI-v2 (E): havuz bağlamında plan tarafı yan etkisi YOK (ek listeye kopya yazılmaz) */
-  var anaId = grupPanelBaglami() === "havuz" ? (ui.havuzAnaId || null) : grupPanelAnaDegisti();
+  var anaId = grupPanelAnaDegisti();
   var secili = grupPanelSecimler();
   var katilimcilar = anaId ? [anaId] : [];
   secili.forEach(function (oid) { if (katilimcilar.indexOf(oid) === -1) katilimcilar.push(oid); });
@@ -1678,11 +1655,21 @@ function grupPanelCiz() {
   var okEl = $("grup-panel-ok"), okYazi = $("grup-panel-ok-yazi");
   if (okEl) okEl.className = "fa-solid fa-chevron-" + (ui.panelSecim.acik ? "up" : "down") + " text-[9px] transition-transform";
   if (okYazi) okYazi.textContent = ui.panelSecim.acik ? "Kapat" : "Öğrenci Seç";
-  /* ISTEK-GRUP-ISTEGI-YAMASI-v2 (B): kapalıyken markup KORUNUR (yalnızca gizlenir) — arama kutusu id'si DOM'da kalır;
-     liste her durumda güncel seçimle çizilir */
-  if (!ui.panelSecim.acik) { govdeEl.classList.add("hidden"); if (!govdeEl.innerHTML) govdeEl.innerHTML = grupPanelGovdeHTML(); grupPanelListeCiz(); return; }
+  if (!ui.panelSecim.acik) { govdeEl.classList.add("hidden"); govdeEl.innerHTML = ""; return; }
   govdeEl.classList.remove("hidden");
-  govdeEl.innerHTML = grupPanelGovdeHTML();
+  var sinifOps = '<option value="">Tüm sınıflar</option>';
+  grupPanelTumSiniflar().forEach(function (s) {
+    sinifOps += '<option value="' + esc(s) + '"' + (ui.panelSecim.sinif === s ? " selected" : "") + ">" + esc(s) + "</option>";
+  });
+  govdeEl.innerHTML =
+    '<div class="flex flex-col sm:flex-row gap-2">' +
+      '<div class="relative flex-1">' +
+        '<input id="grup-panel-arama" type="text" autocomplete="off" placeholder="Öğrenci ara..." value="' + esc(ui.panelSecim.arama) + '" oninput="grupPanelAra(this.value)" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
+        '<i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-300"></i>' +
+      "</div>" +
+      '<select id="grup-panel-sinif" onchange="grupPanelSinifSec(this.value)" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[12.5px] font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-400/40">' + sinifOps + "</select>" +
+    "</div>" +
+    '<div id="grup-panel-liste" class="mt-2 max-h-56 overflow-y-auto rounded-xl border border-slate-200/70 bg-white divide-y divide-slate-100"></div>';
   grupPanelListeCiz();
 }
 

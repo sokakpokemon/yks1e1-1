@@ -2,7 +2,7 @@
    Dördü de geçerse "86/86 OK" yazar; biri düşerse hangisinin düştüğünü gösterir. */
 import { spawnSync } from "node:child_process";
 
-const suites = ["ks-harness.mjs", "ks-test-render.mjs", "ks-durum-fn.mjs", "ks-grup-uyum.mjs", "ks-panel-secim.mjs", "ks-grup-gorunum.mjs", "ks-istekten-grup.mjs"];
+const suites = ["ks-harness.mjs", "ks-test-render.mjs", "ks-durum-fn.mjs", "ks-grup-uyum.mjs", "ks-panel-secim.mjs", "ks-grup-gorunum.mjs", "ks-istekten-grup.mjs", "ks-grup-istegi.mjs"];
 
 console.log("YKS Birebir Takip — test runner");
 

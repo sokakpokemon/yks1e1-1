@@ -594,3 +594,24 @@ Eski kayıtların diğer alanları deep-equal korundu; kopya ders/istek/grup kay
 - Dönem seçici UI, dönem bazlı filtreleme ve dönem geçiş akışı henüz YOK (bu dilim bilinçli olarak yalnızca veri-uyumluluk).
 - `planla()` ve istek ekleme, yeni kayıtlara henüz otomatik `donemId` YAZMAZ; `donemId`'siz yeni kayıt sonraki normalize'da `aktifDonemId`'ye taşınır (veri kaybı yok).
 - Eski yedek dosyaları eski şemayla kalır; yükleme anında dönemlenir (normal).
+
+---
+
+# ✅ CHECKPOINT: Dönem Damgası — Yeni Ders/İstek Kayıtları Aktif Dönemle Doğuyor (DONEM-DAMGA-YAMASI)
+
+**Tarih:** 13 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **492/492 OK** (442 eski + 50 yeni)
+
+## Yapılan İş (app.js — baştan yazma YOK, ks-yama-donem-damga.mjs hedefli yama)
+
+- **Yeni:** `aktifDonemId()` helper (donemleriBaslat'tan sonra) — `DB.aktifDonemId` doluysa ONU; yoksa/boşsa/geçersizse `"donem-2026-2027"` döner; yeni kayda asla undefined/null/boş yazılmaz.
+- **4 kayıt noktası damgalandı:** `planla()` birebir YENİ ders dalı, `planla()` grup YENİ ders dalı, `istekEkle()` tekli istek, `istekGrupEkle()` grup istek → hepsine `donemId: aktifDonemId()` eklendi.
+- **Düzenleme dalları DEĞİŞMEDİ:** `planla()` birebir/grup güncelleme dalları ve planlama-istek-kapatma yolu yalnızca alan günceller; mevcut `donemId` korunur ("donem-2025-2026" kaydı düzenlemede aynı kalır). Eksik donemId'li kayda düzenleme sırasında zorla eklenmez — backfill `normalize`'a (DONEM-ILK) bırakıldı.
+- `normalize()`, `donemleriBaslat`, yedek yükleme, grup mantığı, çakışma kontrolleri, UI/HTML/takvim/analiz/dönem seçici/Excel/`ek-ders.js` değişmedi.
+
+## Testler
+
+- Yeni: `ks-donem-damga.mjs` — **50 test** (aktif dönem A/B ile yeni ders damgası, fallback senaryoları: undefined/boş/boşluk/null/sayı, tekli + grup istek damgası, grup ders damgası, eski donemId'li ders/istek düzenlemede koruma, donemId dışı alan deep-equal koruması, 2. bağlam yolu, 4 damga sayısı).
+- `test.mjs` 12 süit oldu. Yama idempotent: 2. koşu "Zaten uygulanmış" (exit 2), SHA doğrulandı — dosya değişmez.
+- Doğrulama: `node --check app.js` OK · `node --check ek-ders.js` OK · `node test.mjs` → **492/492 OK**.
+- Geri dönüş: `app.js.donem-damga-oncesi.bak`.
+- Kalan riskler: dönem seçici UI henüz YOK (bu dilim yalnızca kayıt damgası); `istekler` güncelleme yolu (duzenle/havuz silme) donemId'ye dokunmaz ancak ileride eklenecek dönem-filtreleme bu damgaya dayanacak.

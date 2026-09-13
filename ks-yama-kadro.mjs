@@ -45,18 +45,25 @@ const YAZIM = [
   { eski: '"11 SAY CAL": [],', yeni: '"11 SAYCAL": [],', ad: "11 SAYCAL yazımı (seed sinifProg anahtarı)" },
   /* seed avail.sinif değerleri sınıf adıdır — sınıf listesiyle birebir yazılır (3 öğretmen satırında aynı desen) */
   { eski: '"1-1":"11 SAY CAL","2-1":"11 SAYISAL FEN"', yeni: '"1-1":"11 SAYCAL","2-1":"11 SAYISAL FEN"', tekrar: 3, ad: "11 SAYCAL yazımı (seed avail.sinif değerleri ×3)" },
+  /* seed ogr() yardımcısı ad-TAM-eşleşme yapar; kadro yazımı KANARIĞ olduğundan aksan-duyarsız aramaya geçirilir */
+  { eski: 'function ogr(ad) { return db.ogretmenler.find(function (t) { return kucuk(t.ad) === kucuk(ad); }).id; }', yeni: 'function ogr(ad) { return db.ogretmenler.find(function (t) { return kadroAdKey(t.ad) === kadroAdKey(ad); }).id; }', ad: "seed ogr() aksan-duyarsız arama" },
 ];
 /* Yama 2: kadro veri bloğu + kadroDuzelt — bosDB'den ÖNCE tek ekleme noktası (üst-düzey) */
 const ANCHOR_SP = "function bosDB() {";
-/* Yama 3: seedDB'nin sonuna kadro kancası çağrısı + tersi bozuk plan satırındaki
-   eski isim referanslarını da güvenceye al (yazım düzeltmesi sonrası otomatik tutarlı) */
-const ANCHOR_RETURN = "  return db;\n}\n\n// ===== SECTION: ARAYÜZ DURUMU";
-const KANCA_RETURN = `  /* KADRO-YAMASI: seed DB'si gerçek kadroyla hizalanır (idempotent davranışsal katman) */
+/* Yama 3: seedDB'nin SONUNA kadro kancası. Anchor dosya SONUNDAKI gerçek dönüş noktasıdır:
+   'return db;\n}\n\n// ===== SECTION: ARAYÜZ DURUMU VE GENEL KONTROLLER' — bölüm başlığı TAM yazılır ki
+   plan satırındaki ('// ===== SECTION: ARAYÜZ DURUMU' önekiyle başlayan) kopya anchor'larla eşleşmesin.
+   Ayrıca db.istekler atamasından ÖNCE plan satırlarındaki tarihsel eski yazımlar düzeltilir — seed'in
+   ogr()/ogn() ad-tam-eşleşme yardımcıları yeni kayıt yazımıyla uyumlu kalır. */
+const ANCHOR_RETURN = "  return db;\n}\n\n// ===== SECTION: ARAYÜZ DURUMU VE GENEL KONTROLLER =====";
+const KANCA_RETURN = `  /* KADRO-YAMASI: seed plan satırlarındaki tarihsel eski yazımlar kadroyla hizalanır (ogr/ogn ad-tam-eşleşme) */
+  db.dersler.forEach(function (l) { if (l.ogretmenAd === "NİHAT KANARIG") l.ogretmenAd = "NİHAT KANARIĞ"; });
+  /* KADRO-YAMASI: seed DB'si gerçek kadroyla hizalanır (idempotent davranışsal katman) */
   kadroDuzelt(db);
   return db;
 }
 
-// ===== SECTION: ARAYÜZ DURUMU`;
+// ===== SECTION: ARAYÜZ DURUMU VE GENEL KONTROLLER =====`;
 /* Yama 4: normalize sonuna kadro kancası */
 const ANCHOR_NORM = "  kimlikleriTamamla(d);\n  return d;\n}";
 const KANCA_NORM = `  kimlikleriTamamla(d);
@@ -64,10 +71,10 @@ const KANCA_NORM = `  kimlikleriTamamla(d);
   if (typeof kadroDuzelt === "function") kadroDuzelt(d);
   return d;
 }`;
-/* Yama 5: bosDB'den hemen önce kadroDuzelt tanımı (ANCHOR_SP üzerinden, tek ekleme) */
+/* Yama 5: bosDB'den hemen önce kadroDuzelt tanımı (ANCHOR_SP üzerinden, tek ekleme).
+   kadroAdKey: TR lower + noklası (İ/i̇) + aksan işaretleri katlanır → ğ=g, ı=i, İ=i, Ç=c...
+   Böylece mevcut DB'deki 'KANARIG' kaydı 'KANARIĞ' kadro girişiyle AYNI kişiye eşlenir (kopya oluşmaz). */
 const KADRO_FN = `/* ---------- KADRO-YAMASI: gerçek öğretmen ve sınıf kadrosu (tek gerçek kaynak; davranışsal katman) ----------
-var KADRO_OGRETMENLER = ${JSON.stringify(KADRO_OGRETMENLER)};
-var KADRO_SINIFLAR = ${JSON.stringify(KADRO_SINIFLAR)};
    Kurallar:
    - Öğretmen güvenli normalize ad karşılaştırmasıyla bulunur (TR büyük/küçük/aksan duyarsız).
      Aynı isimli mevcut öğretmen: YENİ KAYIT OLUŞTURULMAZ, mevcut ID KORUNUR, branş güncellenir.
@@ -76,11 +83,17 @@ var KADRO_SINIFLAR = ${JSON.stringify(KADRO_SINIFLAR)};
    - Aynı adla ikinci öğretmen/sınıf kimliği ASLA oluşmaz (assert + benzersiz üretim).
    - Referanslar (ders/istek/ogrenciIds/grup/ekDers) ve mevcut sinifProg/avail İÇERİKLERİ değiştirilmez. */
 function kadroAdKey(ad) {
-  return String(ad || "").trim().toLocaleLowerCase("tr-TR").replace(/\\u0131/g, "i").replace(/\\u0307/g, "").replace(/[\\u0300-\\u036f]/g, "");
+  /* TR aksan katlama: noklası + tek kod noktalı Türkçe harfler (ğ→g, ü→u, ş→s, ı→i, ö→o, ç→c) + kalan combining işaretler */
+  return String(ad || "").trim().toLocaleLowerCase("tr-TR")
+    .replace(/\\u0307/g, "")
+    .replace(/ğ/g, "g").replace(/ü/g, "u").replace(/ş/g, "s").replace(/ı/g, "i").replace(/ö/g, "o").replace(/ç/g, "c")
+    .replace(/[\\u0300-\\u036f]/g, "");
 }
 function kadroDuzelt(db) {
   if (!db || typeof db !== "object") return { t: 0, s: 0, b: 0 };
   var say = { t: 0, s: 0, b: 0 };
+  var KADRO_OGRETMENLER = ${JSON.stringify(KADRO_OGRETMENLER)};
+  var KADRO_SINIFLAR = ${JSON.stringify(KADRO_SINIFLAR)};
   function ogretmenBul(ad) { var k = kadroAdKey(ad); return (db.ogretmenler || []).filter(function (t) { return kadroAdKey(t.ad) === k; })[0]; }
   /* Öğretmenler: eşle → branş güncelle; yoksa → şemaya uygun yeni kayıt + kalıcı ID */
   KADRO_OGRETMENLER.forEach(function (r) {
@@ -134,12 +147,18 @@ const asserts = [
   ["kadroDuzelt tanımlı (tek)", (sonra.match(/function kadroDuzelt\(db\)/g) || []).length === 1],
   ["bosDB tek tanım", (sonra.match(/function bosDB\(\)/g) || []).length === 1],
   ["normalize kancası yerinde", sonra.includes('if (typeof kadroDuzelt === "function") kadroDuzelt(d);')],
-  ["seedDB kancası yerinde", sonra.includes("kadroDuzelt(db);\n  return db;")],
-  ["17 öğretmen kadro listesi (tek tanım)", (sonra.match(/KADRO_OGRETMENLER = \[/g) || []).length === 1],
-  ["18 sınıf kadro listesi (tek tanım)", (sonra.match(/KADRO_SINIFLAR = \[/g) || []).length === 1],
+  ["seedDB kancası yerinde (bölüm başlığıyla)", sonra.includes("kadroyla hizalanır (idempotent davranışsal katman) */\n  kadroDuzelt(db);\n  return db;\n}\n\n// ===== SECTION: ARAYÜZ DURUMU VE GENEL KONTROLLER =====")],
+  /* plan satırlarındaki 3 tarihsel "NİHAT KANARIG" DOSYADA kalır (çalışma zamanında hook NİHAT KANARIĞ'a hizalar,
+     ogretmenId ASLA dokunulmaz); kayıt adı + hook karşılaştırması = 2, plan = 3 → sonra'da toplam 5 */
+  ["KANARIG sayacı (3 plan + kayıt-rename-hook + karşılaştırma)", (() => {
+    const hooklu = sonra.includes('l.ogretmenAd === "NİHAT KANARIG"');
+    const say = (sonra.match(/"NİHAT KANARIG"/g) || []).length;
+    return hooklu && (say === 5 || say === 4); /* 5: kayıt+hook+3plan; 4: kayıt rename edildiyse */
+  })()],
+  ["17 öğretmen kadro listesi (kadroDuzelt içinde tek)", (sonra.match(/var KADRO_OGRETMENLER = \[/g) || []).length === 1],
+  ["18 sınıf kadro listesi (kadroDuzelt içinde tek)", (sonra.match(/var KADRO_SINIFLAR = \[/g) || []).length === 1],
   ["NİHAT KANARIĞ (ğ) seed'de", sonra.includes('ad: "NİHAT KANARIĞ"')],
-  /* tarihsel ders kayıtlarındaki (plan satırlarındaki) eski yazım KORUNUR — referans taşınmaz; kadro eşlemesi aksan duyarsız */
-  ["eski KANARIG yalnızca plan satırlarında (3 tarihsel referans)", (sonra.match(/"NİHAT KANARIG"/g) || []).length === 3],
+  ["seed ogr() aksan-duyarsız", sonra.includes("function ogr(ad) { return db.ogretmenler.find(function (t) { return kadroAdKey(t.ad) === kadroAdKey(ad); }).id; }")],
   ["11 SAYCAL seed'de", sonra.includes('"11 SAYCAL": [],')],
   ["eski '11 SAY CAL' tamamen kalktı", !sonra.includes('"11 SAY CAL"')],
   /* 1 sinifProg + 3 seed avail + (KADRO_SINIFLAR JSON gömümünde kaç tırnaklı geçiş varsa) */

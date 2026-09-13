@@ -476,3 +476,64 @@ Pad+zaman+rastgele bileşimi çakışmayı pratikte imkânsız kılar; `benzersi
 - `sinifIds`, ad-anahtarlı sınıf sistemine EK katmandır; sınıf adı elle (doğrudan DB düzenlemeyle) değiştirilirse haritada eski ad kalır — sonraki normalize yeni ada YENİ kimlik üretir (kayıp yok, ama aynı sınıfın kimliği değişir).
 - `kimlikKaydet` henüz hiçbir çağrı noktasına bağlanmadı (mevcut `saveDB` akışı + normalize kapısı yeterli); ileride istenirse çağrı noktalarına eklenebilir.
 - Öğrenci/öğretman silme sinifIds'i TEMİZLEMEZ (sınıf kendi varlığıdır; davranış bilinçli).
+
+# Gerçek Öğretmen ve Sınıf Kadrosu (2026-09-13)
+
+Seed/DB artık gerçek kadroyu taşır; `kadroDuzelt()` tek gerçek kaynak. localStorage: `yksOto_arsiv_v1`.
+
+## Öğretmenler (17) — ad → branş
+
+| Ad | Branş | ID |
+|---|---|---|
+| BELGİN ÇOLAK | kim | (seed UUID, korundu) |
+| EREN BİLGİLİ | tur | (seed UUID, korundu) |
+| FATMA KURT | tur | (seed UUID, korundu) |
+| FİKRİYE KIYAR | cgr | (seed UUID, korundu) |
+| KARDELEN ASLAN | kim | (seed UUID, korundu) |
+| SELİNA KUTLU | kim | (seed UUID, korundu) |
+| MEHMET ŞAŞAR | mat | (seed UUID, korundu) |
+| MERT ASİL | ing | (seed UUID, korundu) |
+| MERVE GEREK | mat | (seed UUID, korundu) |
+| MUSTAFA GÜRKAN | fiz | (seed UUID, korundu) |
+| MİNE GÜRKAN | mat | (seed UUID, korundu) |
+| NİHAT KANARIĞ | tar | (seed UUID, korundu) |
+| RAVİDE DERYA | fiz | (seed UUID, korundu) |
+| SALİM URTİMUR | mat | (seed UUID, korundu) |
+| SONER AÇIKGÖZ | mat | (seed UUID, korundu) |
+| TAHSİN ASLAN | mat | (seed UUID, korundu) |
+| ŞAHİN DOĞANAY | biy | (seed UUID, korundu) |
+
+## Sınıflar (18) — ad → ID
+
+| Sınıf | ID |
+|---|---|
+| MEZUN SAY 1 | ks-snf-0001 |
+| MEZUN SAY 2 | ks-snf-0002 |
+| MEZUN SAY 3 | ks-snf-0003 |
+| MEZUN EA 1 | ks-snf-0004 |
+| MEZUN EA 2 | ks-snf-0005 |
+| 12 SAY 1 | ks-snf-0006 |
+| 12 SAY 2 | ks-snf-0007 |
+| 12 SAY CAL | ks-snf-0008 |
+| 12 EA 1 | ks-snf-0009 |
+| 12 DİL | ks-snf-0010 |
+| 11 SAY 1 | ks-snf-0011 |
+| 11 SAY 2 | ks-snf-0012 |
+| 11 SAY 3 | ks-snf-0013 |
+| 11 SAYCAL | ks-snf-0014 |
+| 11 SAYISAL FEN | ks-snf-0015 |
+| 11 EA 1 | ks-snf-0016 |
+| 10.SINIF | ks-snf-0017 |
+| 9.SINIF | ks-snf-0018 |
+
+## Kadro uygulaması (ks-yama-kadro.mjs)
+
+- **Yeni (app.js):** `kadroDuzelt()` — `normalize()` ve `loadDB()` içinden çağrılır; tek kapıdan geçer.
+- Yazım hizalama: kayıt adı `NİHAT KANARIĞ`, sınıf `11 SAYCAL`; seed plan satırlarındaki tarihsel `NİHAT KANARIG`/`11 SAY CAL` referansları çalışma zamanında aksan-duyarsız eşlenir (dosyada kalır, değiştirilmez).
+- `kadroAdKey()`: Türkçe aksan katlama (ı→i, İ→i, ğ→g, ş→s, ç→c, ö/ü/o/u…) + combining işaret temizliği → `KANARIG` = `KANARIĞ`, `SAY CAL` = `SAYCAL` güvenli eşleşme.
+- Seed `ogr()` yardımcısı aksan-duyarsız ad çözümlemesiyle güncellendi (taze boot çökmez).
+- Kural: aynı normalize adla kayıt varsa YENİ kayıt AÇILMAZ, ID korunur, branş güncellenir; aynı adla iki öğretmen assert ile engellenir.
+- Kadro-dışı (eski/placeholder) öğretmenler SİLİNMEZ; yalnızca eksik ID'leri tamamlanır (silme ayrı iş).
+- Geri dönüş: `app.js.kadro-oncesi.bak`.
+- Süit: `ks-gercek-kadro.mjs` (80 test, test.mjs'e eklendi).
+- **Toplam: 395/395 OK** (315 mevcut + 80 yeni).

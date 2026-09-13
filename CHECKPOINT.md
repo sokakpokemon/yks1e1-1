@@ -7,7 +7,7 @@
 - `YÖNETİM — ÖĞRETMEN · ÖĞRENCİ · AYAR` 563–1087 · `TALEP HAVUZU` 1088–1193
 - `BOOT VE DERS PLANLAMA` 1194–1397 · `TAKVİM, DERS LİSTESİ VE PAYLAŞIM` 1398–dosya sonu (2.117)
 - `ek-ders.js` = Ek Ders sekmesi + kısa kod (KS) fonksiyonları
-- Testler: `node ks-harness.mjs`, `node ks-test-render.mjs`, `node ks-durum-fn.mjs` ve `node ks-grup-uyum.mjs` (tek komut: `node test.mjs` — dördünü sırayla çalıştırır, özet verir; toplam **86/86**: 68 mevcut + 18 grup-uyum)
+- Testler (tek komut: `node test.mjs` — 8 süiti sırayla çalıştırır, özet verir; toplam **269/269**): `ks-harness` 34 · `ks-test-render` 14 · `ks-durum-fn` 20 · `ks-grup-uyum` 41 · `ks-panel-secim` 32 · `ks-grup-gorunum` 28 · `ks-istekten-grup` 32 · `ks-grup-istegi` 68
 - Durum seçici çubuğu (takvim düzenleme): `ui.seciliDurum` + `ui.seciliOgrId`; butonlar `tumSiniflar()`'dan otomatik (DB), en sonda Kapalı. `durumSec(val, ogrId)` seçer, `togOgrSecili(tid, di, saat)` hücreye uygular — aynı hücreye 2. tıklama Boş yapar (döngü yok). Görünen "Müsait Değil" etiketleri "Kapalı" oldu; davranış kaydı `avail.musait` aynı kaldı. Eski "Sınıf Dersi" hücreleri korundu (68 hücre, seed verisinde) — kullanıcı sonradan yeniden işaretleyecek. İşlevsel test: `ks-durum-fn.mjs` (20 test)
 - ⚠️ **Kritik:** index.html'de düzenleme yaparken str_replace takılırsa doğrudan assert'li Node script kullan
 - **Protokol:** tek iş → test → rapor
@@ -375,3 +375,56 @@ Not: `.nodetest.txt`, `.writetest.txt`, `app_tmp.js` istek listesindeydi ama rep
 - `test.mjs` 7 suite'e güncellendi. Yama idempotent: 2. koşuda "Zaten uygulanmış" der (exit 2), dosyayı bozmaz.
 - Doğrulama: `node --check app.js` OK · `node --check ek-ders.js` OK · `node test.mjs` → **201/201 OK** (34+14+20+41+32+28+32).
 - Geri dönüş: `app.js.istekten-grup-oncesi.bak` (yama öncesi hâl).
+
+---
+
+# ✅ CHECKPOINT: Grup İsteği — Ortak Talep Modeli + Uyumluluk
+
+**Tarih:** 12 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → 201/201 + yeni süit (dönem toplamı)
+
+## Veri Modeli + Uyumluluk
+
+- `istekler[]` eski tekli `{ ogrenciId, ... }` aynen çalışır; grup isteği `{ ogrenciId: ana, ogrenciIds: [ekler], ... }`.
+- `ogrenciIds` yalnız ana dışı, benzersiz ek üyeler; ayrı `ogrenciAdlari` alanı YOK — adlar `DB.ogrenciler`'den dinamik üretilir.
+- `istekOgrenciIds(istek)` idempotent: `[ogrenciId, ...(ogrenciIds||[])]` benzersiz/geçerli; `ogrenciIds` olmayan eski istekte hata vermez.
+- `normalize()` eski tekliyi kayıpsız tutar; yeni diziyi benzersiz + ana dışı normalize eder. `yedekAl/yedekOku` grup üyelerini deep-equal korur.
+- **ksVer kısa kod göçüne dokunulmadı**; yeni göç sistemi eklenmedi.
+
+## Akış
+
+- Havuzda "Ortak Grup İsteği": mevcut checkbox paneli YENİDEN kullanılır (arama + sınıf filtresi + "Tüm sınıflar" + sayaç; aynı id'ler iki formda çoğaltılmaz). Min 2 zorunlu; 10+ seçimde yalnızca uyarı, engel yok; ilk seçilen ana `ogrenciId`, kalanlar `ogrenciIds`.
+- Havuzda grup isteği TEK kayıt; üyeler `istekOgrenciIds()` ile listelenir.
+- İstekten grup planlama: tüm üyeler otomatik seçili; TEK ders kaydı; `ders.ogrenciId` ana + `ders.ogrenciIds` ekler; `dersOgrenciIds(ders)` tüm katılımcılar; çakışma öğretmen + tüm üyeler, çakanlar ADLARIYLA; planlama sonrası istekte yalnızca `durum:"planlandi"` değişir (deep-copy snapshot ile kanıtlı).
+
+## Testler
+
+- `ks-grup-istegi.mjs` — assert'li süit (eski istek bozulmuyor, yedek/geri yükleme, min-2, ana/benzerlik, 10+ engelsiz, tek kayıt, isimli görünüm, tek ders, otomatik üye, çakışma, deep-copy yalnız-durum, idempotans).
+- Geri dönüş: `app.js.grup-istegi-oncesi.bak`, `app.js.grup-istek-2-oncesi.bak`, `ks-grup-istegi.onceci.bak`.
+
+---
+
+# ✅ CHECKPOINT: Grow-Only Sıra Register'ı + Panel Gövde + Tarih-Bağımsız Render
+
+**Tarih:** 13 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **269/269 OK**
+
+## Kök Neden (ks-izle-sira.mjs ile kanıtlandı)
+
+- Grup seçim register'ı **silmede küçülüyordu**: remove→re-add sonrası `[Emir, Zeynep]` (beklenen `[Zeynep, Emir]`) — Zeynep eski slotunu yitirip sona itiliyordu.
+- `grupPanelGovdeHTML()` liste div'ini **boş** üretiyordu → açık panelde `#grup-panel-govde` innerHTML'inde öğrenci satırları/`checked` yok (süit 7 kırmızı).
+- `ks-test-render.mjs` tarih-bağımlıydı: `ui.anchor` bugünün gününe (Pazar) sabitleniyor, seed dersleri Pzt–Cmt olduğu için günlük tablo "ders yok" çiziyordu (4 kırmızı; `gunlukTablo`+`seedDB` kodu 201/201 yedeğiyle birebir aynıydı — kod bozulmamıştı).
+
+## Yapılan İş (ks-yama-v5.mjs — idempotent, assert'li, exact-anchor; app.js baştan yazma YOK)
+
+- **A) Grow-only register:** register yalnız büyür — kaldırma SİLMEZ, yeniden seçim eski slota döner, duplicate girmez; panel listesi register sırası filtrelenerek üretilir; register yalnız yeni form/başka istek bağlamına geçişte kontrollü sıfırlanır (her render/toggle'da kurulmaz).
+- **B) Panel gövde:** `grupPanelGovdeHTML()` arama + sınıf filtresi + öğrenci listesi + sayaç üretir; kapalıyken `#grup-panel-govde` gerçekten BOŞ; aç-kapat-aç sonrası seçim sırası ve checkbox durumları korunur.
+- **C/D) Süit düzeltmeleri (assertion gevşetilmedi):** `grupPanelToggle()` satırı açık-panel çizimiyle değiştirildi (`formaAktar` paneli zaten açık açtığından toggle kapatıyordu) + `grupPanelCiz` EXPORTS/destructuring'e eklendi + D-loadDB parçası idempotent hale getirildi.
+- **E) Render tarih-bağımsızlığı:** `ui.anchor` seed haftasının Pazartesi'sine sabitlendi (mutlak bugüne değil).
+
+## Doğrulama
+
+- Yama 2. koşu: "zaten uygulanmış" der (exit 2), dosyayı değiştirmez.
+- `node --check app.js` · `node --check ek-ders.js` · `node --check ks-grup-istegi.mjs` → OK.
+- `node test.mjs` → **269/269 OK** (34+14+20+41+32+28+32+68).
+- Remove→re-add kanıtı: `[Zeynep, Emir]` → kaldır → `[Emir]` → yeniden ekle → `[Zeynep, Emir]` (slot korunur).
+- Geri dönüş: `app.js.v5-oncesi.bak`.
+- Kalan riskler: tanı scriptleri (`ks-izle-sira.mjs`, `ks-tani-id.mjs`, `ks-salt-duzen.mjs`, `ks-teshis-runtime.mjs`, `ks-dom-duplicate-check.mjs`, `ks-fix-panel.mjs`) kök dizinde duruyor; `ks-test-render` seed haftasına bağlı (mutlak takvim değil).

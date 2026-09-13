@@ -287,21 +287,7 @@ function grupPanelGovdeHTML() {
       "</div>" +
       '<select id="grup-panel-sinif" onchange="grupPanelSinifSec(this.value)" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[12.5px] font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-400/40">' + sinifOps + "</select>" +
     "</div>" +
-    '<div id="grup-panel-liste" class="mt-2 max-h-56 overflow-y-auto rounded-xl border border-slate-200/70 bg-white divide-y divide-slate-100">' + grupPanelListeHTML() + '</div>';
-}
-/* ISTEK-GRUP-ISTEGI-YAMASI-v5 (B2): liste markup'ı TEK kaynaktan — grupPanelGovdeHTML ve
-   grupPanelListeCiz aynı üreticiyi kullanır; govde innerHTML'i Ana/checked içerir. */
-function grupPanelListeHTML() {
-  var liste = grupPanelListe();
-  if (!liste.length) return '<div class="px-3 py-3 text-[11.5px] text-slate-300 italic">Bu filtreye uyan öğrenci yok</div>';
-  return liste.map(function (e) {
-    var kutu = '<input type="checkbox"' + (e.secili || e.ana ? " checked" : "") + (e.ana && grupPanelBaglami() !== "havuz" ? " disabled" : "") +
-      ' onchange="grupPanelSec(\'' + esc(e.o.id) + '\')" class="w-4 h-4 rounded border-slate-300 accent-teal-600 cursor-pointer' + (e.ana ? " opacity-50 cursor-not-allowed" : "") + '" />';
-    var anaTag = e.ana ? '<span class="text-[10px] font-extrabold text-teal-600 bg-teal-50 border border-teal-200 rounded-full px-2 py-0.5 ml-auto">Ana</span>' : "";
-    var sinifTag = e.o.sinif ? '<span class="text-[10px] font-bold text-slate-300 ' + (e.ana ? "" : "ml-auto") + ' shrink-0">' + esc(e.o.sinif) + "</span>" : "";
-    return '<label class="flex items-center gap-3 px-3 py-2 hover:bg-teal-50/50 cursor-pointer' + (e.ana ? " bg-slate-50/80" : "") + '">' + kutu +
-      '<span class="text-[13px] font-semibold text-slate-700">' + esc(e.o.ad) + "</span>" + anaTag + sinifTag + "</label>";
-  }).join("");
+    '<div id="grup-panel-liste" class="mt-2 max-h-56 overflow-y-auto rounded-xl border border-slate-200/70 bg-white divide-y divide-slate-100"></div>';
 }
 function istekOgrenciIds(istek) {
   if (!istek || typeof istek !== "object") return [];
@@ -1611,25 +1597,18 @@ function grupPanelSec(oid) {
   if (!ui.panelSecim) ui.panelSecim = { acik: false, arama: "", sinif: "" };
   /* GRUP İSTEK (havuz bağlamı): İLK seçilen ana olur; ana çıkarılırsa sıradaki üye ana olur; kopya yazılmaz */
   if (grupPanelBaglami() === "havuz") {
-    /* ISTEK-GRUP-ISTEGI-YAMASI-v5 (A): ui.grupPanelSira GROW-ONLY İLK-SEÇİM SIRA KAYDI'dır —
-       YENİDEN OLUŞTURULMAZ; yalnızca BÜYÜR. Yeni öğrenci kaydın sonuna eklenir; ÇIKARMA kaydı bozmaz
-       (slot korunur); yeniden seçimde öğrenci KAYITTAKİ eski slotuna DÖNER (sona itilmez);
-       her id kayıtta EN FAZLA 1 kez. Görünür üyelik kaydın sırasına göre dizilir:
-       ilk üye ana (havuzAnaId/ogrenciId), kalanı ekler (ogrenciIds). */
-    if (!Array.isArray(ui.grupPanelSira)) ui.grupPanelSira = [];
-    var _uyeler = [ui.havuzAnaId].concat(Array.isArray(ui.ekOgrenciIds) ? ui.ekOgrenciIds : [])
-      .filter(function (v) { return v != null && v !== ""; });
-    var _kayit = ui.grupPanelSira.filter(function (v) { return v != null && v !== ""; });
-    if (_uyeler.indexOf(oid) !== -1) {
-      _uyeler = _uyeler.filter(function (v) { return v !== oid; }); /* ÇIKARMA — sıra kaydı KORUNUR */
-    } else {
-      _uyeler.push(oid); /* EKLEME */
-      if (_kayit.indexOf(oid) === -1) _kayit.push(oid); /* yalnızca İLK seçimde kayda girer */
-      _uyeler.sort(function (a, b) { return _kayit.indexOf(a) - _kayit.indexOf(b); }); /* kayıt sırasına diz */
-    }
-    ui.grupPanelSira = _kayit.filter(function (v, i) { return _kayit.indexOf(v) === i; });
-    ui.havuzAnaId = _uyeler[0] || null;
-    ui.ekOgrenciIds = _uyeler.slice(1);
+    /* ISTEK-GRUP-ISTEGI-YAMASI-v2 (A): tıklama SIRASI korunur (çıkarma→yeniden ekleme sıra atlamaz).
+       SIRA, [ana]+ek birleşimiyle uyumsuzsa (harici reset) yeniden türetilir; her id EN FAZLA 1 kez. */
+    var _birlesik = [ui.havuzAnaId].concat(Array.isArray(ui.ekOgrenciIds) ? ui.ekOgrenciIds : []).filter(function (v) { return v != null && v !== ""; });
+    if (!Array.isArray(ui.grupPanelSira) || JSON.stringify(ui.grupPanelSira) !== JSON.stringify(_birlesik)) ui.grupPanelSira = _birlesik;
+    var _k = ui.grupPanelSira.indexOf(oid);
+    if (_k !== -1) ui.grupPanelSira.splice(_k, 1);
+    /* ISTEK-GRUP-ISTEGI-YAMASI-v3 (A-düzeltme): ÇIKARMA + YENİDEN EKLEMEDE ilk seçim sırası GERİ GELİR —
+       üye her zaman dizinin SONUNA eklenir; sıra [ilk-seçim … son-seçim] kalır, [ana]+ek ayrımı korunur */
+    ui.grupPanelSira.push(oid);
+    ui.grupPanelSira = ui.grupPanelSira.filter(function (v, i) { return v != null && v !== "" && ui.grupPanelSira.indexOf(v) === i; });
+    ui.havuzAnaId = ui.grupPanelSira[0] || null;
+    ui.ekOgrenciIds = ui.grupPanelSira.slice(1);
     grupPanelOzetCiz();
     grupPanelListeCiz();
     return;
@@ -1685,8 +1664,17 @@ function grupPanelOzetCiz() {
 }
 function grupPanelListeCiz() {
   var listeEl = $("grup-panel-liste");
-  if (!listeEl) return;
-  listeEl.innerHTML = grupPanelListeHTML(); /* YAMASI-v5 (C): tek üretici; kapalıyken grupPanelCiz çağırmaz */
+  if (!listeEl || !ui.panelSecim || !ui.panelSecim.acik) return;
+  var liste = grupPanelListe();
+  if (!liste.length) { listeEl.innerHTML = '<div class="px-3 py-3 text-[11.5px] text-slate-300 italic">Bu filtreye uyan öğrenci yok</div>'; return; }
+  listeEl.innerHTML = liste.map(function (e) {
+    var kutu = '<input type="checkbox"' + (e.secili || e.ana ? " checked" : "") + (e.ana && grupPanelBaglami() !== "havuz" ? " disabled" : "") +
+      ' onchange="grupPanelSec(\'' + esc(e.o.id) + '\')" class="w-4 h-4 rounded border-slate-300 accent-teal-600 cursor-pointer' + (e.ana ? " opacity-50 cursor-not-allowed" : "") + '" />';
+    var anaTag = e.ana ? '<span class="text-[10px] font-extrabold text-teal-600 bg-teal-50 border border-teal-200 rounded-full px-2 py-0.5 ml-auto">Ana</span>' : "";
+    var sinifTag = e.o.sinif ? '<span class="text-[10px] font-bold text-slate-300 ' + (e.ana ? "" : "ml-auto") + ' shrink-0">' + esc(e.o.sinif) + "</span>" : "";
+    return '<label class="flex items-center gap-3 px-3 py-2 hover:bg-teal-50/50 cursor-pointer' + (e.ana ? " bg-slate-50/80" : "") + '">' + kutu +
+      '<span class="text-[13px] font-semibold text-slate-700">' + esc(e.o.ad) + "</span>" + anaTag + sinifTag + "</label>";
+  }).join("");
 }
 function grupPanelCiz() {
   var govdeEl = $("grup-panel-govde");

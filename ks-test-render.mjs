@@ -69,6 +69,10 @@ t("sınıf hücresi 0-1 anahtarında", ghtml.includes("9-A"));
 
 /* 3) gunlukTablo — 12 sütun (11 ders + mola), mola 4-5 arası */
 console.log("3) gunlukTablo günlük tablo:");
+/* YAMASI-v5 (E2): seed dersleri seed haftasının Pzt–Cmt günlerinde; günSecim seed haftasının
+   Pazartesi'sine sabitlenir → her test gününde (Pazar dahil) aynı dolu tablo. */
+const _gunSeed = (() => { const d = new Date(api.ui.anchor + "T12:00:00"); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); })();
+api.ui.gunSecim = _gunSeed;
 const dhtml = gunlukTablo();
 t("Mola sütunu var", dhtml.includes("Mola"));
 const thead = dhtml.slice(0, dhtml.indexOf("</thead>"));

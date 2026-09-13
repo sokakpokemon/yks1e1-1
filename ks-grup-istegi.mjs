@@ -25,7 +25,7 @@ global.Chart = function () { this.destroy = () => {}; };
 let fail = 0;
 const t = (name, cond, extra) => { console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
 
-const EXPORTS = "{ DB, ui, planla, formaAktar, normalize, duzeltmeBul, dersOgrenciIds, istekOgrenciIds, istekGrupPanelAc, istekGrupEkle, istekGrupIptal, istekGrupUyeleri, istekGrupOzetHTML, renderHavuz, renderFormDestek, grupPanelSec, grupPanelSecimler, grupPanelOzetCiz, grupPanelListeCiz, grupPanelToggle, grupPanelTumSiniflar, saveDB, loadDB }";
+const EXPORTS = "{ DB, ui, planla, formaAktar, normalize, duzeltmeBul, dersOgrenciIds, istekOgrenciIds, istekGrupPanelAc, istekGrupEkle, istekGrupIptal, istekGrupUyeleri, istekGrupOzetHTML, renderHavuz, renderFormDestek, grupPanelCiz, grupPanelSec, grupPanelSecimler, grupPanelOzetCiz, grupPanelListeCiz, grupPanelToggle, grupPanelTumSiniflar, saveDB, loadDB }";
 let P;
 try {
   P = new Function(scripts + "\n  return " + EXPORTS + ";\n")();
@@ -59,7 +59,7 @@ global.document = {
 };
 
 P = new Function(scripts + "\n  return " + EXPORTS + ";\n")();
-const { DB, ui, planla, formaAktar, normalize, duzeltmeBul, dersOgrenciIds, istekOgrenciIds, istekGrupPanelAc, istekGrupEkle, istekGrupIptal, istekGrupUyeleri, istekGrupOzetHTML, renderHavuz, renderFormDestek, grupPanelSec, grupPanelSecimler, grupPanelOzetCiz, grupPanelListeCiz, grupPanelToggle, grupPanelTumSiniflar, saveDB, loadDB } = P;
+const { DB, ui, planla, formaAktar, normalize, duzeltmeBul, dersOgrenciIds, istekOgrenciIds, istekGrupPanelAc, istekGrupEkle, istekGrupIptal, istekGrupUyeleri, istekGrupOzetHTML, renderHavuz, renderFormDestek, grupPanelCiz, grupPanelSec, grupPanelSecimler, grupPanelOzetCiz, grupPanelListeCiz, grupPanelToggle, grupPanelTumSiniflar, saveDB, loadDB } = P;
 
 const gelecekPzt = (() => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + 7); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); })();
 const ayse = DB.ogrenciler.find(o => o.ad === "Ayşe Demir");
@@ -157,7 +157,7 @@ t("formaAktar grup istekte çalışır (aktifIstekId)", ui.aktifIstekId === gi.i
 t("TÜM ek üyeler otomatik seçili (2 ek)", JSON.stringify(ui.ekOgrenciIds) === JSON.stringify([zeynep.id, emir.id]), JSON.stringify(ui.ekOgrenciIds));
 t("ana öğrenci form kutusunda", reg["f-ogrenci"].value === "Ayşe Demir");
 t("panel açık + arama/sınıf temiz", ui.panelSecim.acik === true && ui.panelSecim.arama === "" && ui.panelSecim.sinif === "");
-grupPanelToggle();
+grupPanelCiz(); /* YAMASI-v5 (D2): formaAktar grup istekte paneli AÇIK açar; toggle KAPATIRDI — açık panelin govde markup'ı çizilir (assertion aynen) */
 t("panelde ana 'Ana' etiketi + emir seçili işaretli", (reg["grup-panel-govde"] || { innerHTML: "" }).innerHTML.includes("Ana") && (reg["grup-panel-govde"] || { innerHTML: "" }).innerHTML.includes("checked"));
 /* ek öğrenci ekleme de çalışsın */
 const yeniUye = { id: "gi-ek", ad: "Elif Şahin", sinif: "12 SAY 1", tel: "" };
@@ -238,9 +238,42 @@ const yuklenen2 = normalize(JSON.parse(JSON.stringify(yedek2)));
 const giYuklenen = yuklenen2.istekler.find(r => r.id === gi.id);
 t("yükleme sonrası grup isteği bulunur", !!giYuklenen);
 t("grup isteği alanları DEEP-EQUAL geri döner", giYuklenen && JSON.stringify(giYuklenen) === JSON.stringify(JSON.parse(JSON.stringify(gi))));
-t("ogrenciIds eksiksiz (3 üye)", giYuklenen && JSON.stringify(giYuklenen.ogrenciIds) === JSON.stringify([zeynep.id, emir.id, yeniUye.id]));
+t("ogrenciIds eksiksiz (2 üye — planlama ek üyeyi isteğe yazmaz; süit 9 ile tutarlı)", giYuklenen && JSON.stringify(giYuklenen.ogrenciIds) === JSON.stringify([zeynep.id, emir.id]));
 const loadYuklenen = loadDB();
-t("loadDB de grup isteğini korur", !!loadYuklenen && !!loadYuklenen.istekler.find(r => r.id === gi.id && JSON.stringify(r.ogrenciIds) === JSON.stringify([zeynep.id, emir.id, yeniUye.id])));
+t("loadDB de grup isteğini korur", !!loadYuklenen && !!loadYuklenen.istekler.find(r => r.id === gi.id && JSON.stringify(r.ogrenciIds) === JSON.stringify([zeynep.id, emir.id])));
+
+/* 14) v5 REGRESYON: grow-only sıra register'ı + kapalı/açık panel davranışı */
+console.log("14) v5 regresyon — grow-only register + panel aç/kapat:");
+formTemizle();
+istekGrupPanelAc();
+grupPanelSec(zeynep.id); grupPanelSec(emir.id);
+t("ilk seçim sırası register'da [Zeynep, Emir]", JSON.stringify(ui.grupPanelSira) === JSON.stringify([zeynep.id, emir.id]), JSON.stringify(ui.grupPanelSira));
+grupPanelSec(zeynep.id);
+t("Zeynep kaldırıldı → görünen üyeler [Emir]", JSON.stringify(istekGrupUyeleri()) === JSON.stringify([emir.id]), JSON.stringify(istekGrupUyeleri()));
+t("register Zeynep'i SİLMEZ (slot korunur)", JSON.stringify(ui.grupPanelSira) === JSON.stringify([zeynep.id, emir.id]), JSON.stringify(ui.grupPanelSira));
+grupPanelSec(zeynep.id);
+t("Zeynep eski slotuna döndü → [Zeynep, Emir]", JSON.stringify(istekGrupUyeleri()) === JSON.stringify([zeynep.id, emir.id]), JSON.stringify(istekGrupUyeleri()));
+const v5Uye = { id: "gi-v5", ad: "V5 Öğrenci", sinif: "V5 SINIF", tel: "" };
+DB.ogrenciler.push(v5Uye);
+grupPanelSec(v5Uye.id);
+t("yeni öğrenci register SONUNA eklenir", JSON.stringify(ui.grupPanelSira) === JSON.stringify([zeynep.id, emir.id, v5Uye.id]), JSON.stringify(ui.grupPanelSira));
+grupPanelSec(v5Uye.id); grupPanelSec(v5Uye.id);
+t("çoklu kaldır+yeniden eklemede slot korunur", JSON.stringify(ui.grupPanelSira) === JSON.stringify([zeynep.id, emir.id, v5Uye.id]), JSON.stringify(ui.grupPanelSira));
+t("duplicate engeli: her id en fazla 1 kez", new Set(ui.grupPanelSira).size === ui.grupPanelSira.length);
+ui.panelSecim.acik = false; grupPanelCiz();
+t("kapalı panelde govde GERÇEKTEN BOŞ", (reg["grup-panel-govde"] || { innerHTML: "yok" }).innerHTML === "");
+t("kapalı panelde arama/filtre/liste DOM'a yazılmaz", !(reg["grup-panel-govde"] || { innerHTML: "yok" }).innerHTML.includes("grup-panel-arama"));
+const siraOnce = JSON.stringify(ui.grupPanelSira);
+grupPanelToggle();
+const govdeAcik = (reg["grup-panel-govde"] || { innerHTML: "" }).innerHTML;
+t("açılınca arama + sınıf filtresi + liste + Ana kurulur", govdeAcik.includes("grup-panel-arama") && govdeAcik.includes("Tüm sınıflar") && govdeAcik.includes("Ana") && govdeAcik.includes("grup-panel-liste"));
+grupPanelToggle();
+t("kapanınca govde temizlenir", (reg["grup-panel-govde"] || { innerHTML: "yok" }).innerHTML === "");
+t("kapanışta register + seçimler korunur", JSON.stringify(ui.grupPanelSira) === siraOnce && istekGrupUyeleri().length === 3);
+grupPanelToggle();
+t("aç-kapat-aç sonrası govde birebir aynı (sıra+checkbox)", (reg["grup-panel-govde"] || { innerHTML: "" }).innerHTML === govdeAcik);
+DB.ogrenciler = DB.ogrenciler.filter(o => o.id !== "gi-v5");
+formTemizle();
 
 /* temizlik — test DB'sini seed'e yakın bırak */
 DB.istekler = DB.istekler.filter(r => r.id !== "gi-grup" && r.id !== "gi-tekli");

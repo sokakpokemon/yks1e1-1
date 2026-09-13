@@ -4,7 +4,6 @@
    ================================================================ */
 
 // ===== SECTION: SABİTLER VE KISA KOD (KS) =====
-var KS_KIMLIK = 1; /* KİMLİK-YAMASI şema sürümü */
 // ---------- Sabitler ----------
 var AYLAR = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
 var GUNLER = ["Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi","Pazar"];
@@ -177,57 +176,6 @@ function avatar(ad, i) {
 function bosDB() {
   return { kurulus: todayKey(), ksVer: 2, ogretmenler: [], ogrenciler: [], sinifProg: {}, istekler: [], dersler: [] };
 }
-/* ---------- Kalıcı benzersiz ID altyapısı (KİMLİK-YAMASI) ----------
-   Amaç: öğrenci/öğretmen/sınıf kayıtlarının kalıcı, çakışmasız kimlikleri.
-   - ogrenciler[].id / ogretmenler[].id: zaten var olan UUID tabanlı id'ler — MEVCUT GEÇERLİ İD'LERE DOKUNULMAZ.
-     Eksik/çakışan id'ler tek boot'ta üretilip KAYDEDİLİR; sonraki açılışlarda id değişmez (kalıcılık).
-   - Sınıf kimliği: sinifProg anahtarları AD İLE aynı kalmaya devam eder (geriye dönük uyum);
-     ek olarak DB.sinifIds[ad] = KIMLIK-ID haritası üretilir. sinifAdiDegistir/silme haritayı günceller.
-   - Aynı isimli iki kayıt asla karışmaz: id üretimi kaydın KENDİSİNE (türü+sırası) bağlı, isme değil.
-   - Referanslar (ders.ogrenciId/ogretmenId/ogrenciIds, istek.ogrenciId/ogrenciIds, ders.ogretmenId,
-     ekDers.ogretmenId) normalize'da ASLA DEĞİŞTİRİLMEZ/TAŞINMAZ — kimlikler yalnızca eksik ID'leri tamamlar. */
-function kimlikUret(tur, i) {
-  return "ks-" + String(tur).slice(0, 3) + "-" + String(i + 1).padStart(4, "0") + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
-}
-/* DB'deki eksik/çakışan ID'leri tek geçişte tamamlar; IDEMPOTENT: geçerli id'lere ASLA dokunmaz.
-   Dönüş: { o: eklenen öğrenci, t: eklenen öğretmen, s: eklenen sınıf } sayıları (değişiklik yoksa 0). */
-function kimlikleriTamamla(db) {
-  db = db || DB;
-  if (!db || typeof db !== "object") return { o: 0, t: 0, s: 0 };
-  var say = { o: 0, t: 0, s: 0 };
-  function benzersiz(aday) {
-    var k = String(aday), n = 2;
-    function cakisiyor(h) { return db.ogrenciler.some(function (x) { return x.id === h; }) || db.ogretmenler.some(function (x) { return x.id === h; }) || (db.sinifIds && db.sinifIds[h] != null); }
-    while (cakisiyor(k)) k = String(aday) + "-" + (n++);
-    return k;
-  }
-  /* Öğrenci ve öğretmen id'leri — mevcut geçerli değerler KORUNUR (öncelik: sıradaki boot'ta aynen kalır) */
-  (Array.isArray(db.ogrenciler) ? db.ogrenciler : []).forEach(function (o, i) {
-    if (!o || typeof o !== "object") return;
-    if (o.id == null || o.id === "") { o.id = benzersiz(kimlikUret("ogr", i)); say.o++; }
-  });
-  (Array.isArray(db.ogretmenler) ? db.ogretmenler : []).forEach(function (t, i) {
-    if (!t || typeof t !== "object") return;
-    if (t.id == null || t.id === "") { t.id = benzersiz(kimlikUret("ogr", i)); say.t++; }
-  });
-  /* Sınıf kimlikleri: sinifProg anahtarları + avail.sinif değerleri + ekDersler[].sinif
-     İDEMPOTENT: sinifIds içinde zaten var olan ada DOKUNULMAZ (id tekrar çalıştırmada değişmez). */
-  if (!db.sinifIds || typeof db.sinifIds !== "object" || Array.isArray(db.sinifIds)) db.sinifIds = {};
-  var adlar = {};
-  Object.keys(db.sinifProg || {}).forEach(function (s) { if (s) adlar[s] = 1; });
-  (Array.isArray(db.ogrenciler) ? db.ogrenciler : []).forEach(function (o) { if (o && o.sinif) adlar[o.sinif] = 1; });
-  if (Array.isArray(db.ekDersler)) db.ekDersler.forEach(function (l) { if (l && l.sinif) adlar[l.sinif] = 1; });
-  if (Array.isArray(db.ogretmenler)) db.ogretmenler.forEach(function (t) {
-    if (t && t.avail && t.avail.sinif && typeof t.avail.sinif === "object") Object.keys(t.avail.sinif).forEach(function (k) { var v = t.avail.sinif[k]; if (v && v !== "Sınıf Dersi") adlar[v] = 1; }); /* "Sınıf Dersi" placeholder'ı sınıf adı değildir */
-  });
-  Object.keys(adlar).forEach(function (ad) {
-    if (db.sinifIds[ad] != null && db.sinifIds[ad] !== "") return; /* mevcut kimlik korunur */
-    db.sinifIds[ad] = benzersiz(kimlikUret("snf", Object.keys(db.sinifIds).length));
-    say.s++;
-  }
-  );
-  return say;
-}
 function normalize(d) {
   d.ogretmenler = Array.isArray(d.ogretmenler) ? d.ogretmenler : [];
   d.ogrenciler = Array.isArray(d.ogrenciler) ? d.ogrenciler : [];
@@ -256,9 +204,6 @@ function normalize(d) {
     if (!t.avail.sinif || typeof t.avail.sinif !== "object") t.avail.sinif = {};
     if (!Array.isArray(t.avail.musait)) t.avail.musait = [];
   });
-  /* KİMLİK-YAMASI: eksik ID'leri burada tamamla — boot, yedek yükleme ve her saveDB öncesi aynı kapıdan geçer.
-     kimlikleriTamamla idempotenttir; mevcut geçerli ID'lere (öğrenci/öğretmen id, sinifIds girdileri) dokunmaz. */
-  kimlikleriTamamla(d);
   return d;
 }
 /* ---------- Grup dersi uyumluluk katmanı ----------
@@ -320,10 +265,7 @@ function grupUyeSatirlari(ders) {
   return grupOgrenciAdlari(ders);
 }
 
-/* ---------- Grup İSTEK uyumluluk katmanı ---------- */
-/* Sınıf kimliği okuma yardımcısı (KİMLİK-YAMASI): ada göre KALICI id — sinifIds'te yoksa boş döner.
-   Okuma yan etkisizdir; kimlik üretimi yalnızca normalize() içinde yapılır. */
-function sinifId(ad) { return (DB.sinifIds && DB.sinifIds[ad] != null) ? DB.sinifIds[ad] : ""; }
+/* ---------- Grup İSTEK uyumluluk katmanı ---------- /* ISTEK-GRUP-ISTEGI-YAMASI v1 */
 /* İdempotent okuma yardımcısı: istek kaydına ASLA yazmaz.
    - [istek.ogrenciId, ...(istek.ogrenciIds || [])] → benzersiz, boş olmayan, sırasını koruyan üye listesi
    - eski tekli istek (ogrenciIds yok) → [ogrenciId] — hata vermez
@@ -441,9 +383,6 @@ function saveDB() {
   try { localStorage.setItem(LS_KEY, JSON.stringify(DB)); }
   catch (e) { toast("Veri kaydedilemedi (tarayıcı deposu dolu olabilir). Yedek alın.", "hata"); }
 }
-/* KİMLİK-YAMASI: kimlik eksikleri localStorage'a YAZILMADAN önce kapanır → her kayıt kalıcı, benzersiz ID taşır.
-   kimlikleriTamamla idempotenttir; zaten tam olan DB'de hiçbir alanı değiştirmez (JSON birebir aynı kalır). */
-function kimlikKaydet() { kimlikleriTamamla(DB); return saveDB(); }
 function loadDB() {
   try {
     var raw = localStorage.getItem(LS_KEY);
@@ -452,7 +391,6 @@ function loadDB() {
   return null;
 }
 var DB = loadDB() || seedDB();
-kimlikleriTamamla(DB); /* KİMLİK-YAMASI: seed/restore sonrası eksik kimlikler ilk açılışta kapanır ve kaydedilir */
 saveDB();
 var __KS_RAPOR = ksGec(); saveDB();
 
@@ -1259,9 +1197,6 @@ function sinifEkle() {
   if (!ad) { toast("Sınıf adı boş olamaz.", "hata"); return; }
   if (DB.sinifProg[ad]) { toast("\"" + ad + "\" adında bir sınıf zaten var.", "uyari"); return; }
   DB.sinifProg[ad] = [];
-  /* KİMLİK-YAMASI-BÖLGE2: yeni sınıfa kalıcı kimlik (sinifIds) */
-  if (!DB.sinifIds || typeof DB.sinifIds !== "object") DB.sinifIds = {};
-  if (DB.sinifIds[ad] == null || DB.sinifIds[ad] === "") DB.sinifIds[ad] = kimlikUret("snf", Object.keys(DB.sinifIds).length);
   ui.sinifAd = ad;
   toast("Sınıf eklendi: " + ad);
   renderYonetim(); renderFormDestek();
@@ -1276,11 +1211,6 @@ function sinifAdiDegistir() {
   if (DB.sinifProg[yeni]) { toast('"' + yeni + '" adında bir sınıf zaten var.', 'hata'); return; }
   // Sınıf programını taşı
   if (DB.sinifProg[eski]) { DB.sinifProg[yeni] = DB.sinifProg[eski]; delete DB.sinifProg[eski]; }
-  /* KİMLİK-YAMASI-BÖLGE2: sınıf kimliği ada değil kayda bağlı — yeniden adlandırmada KORUNUR */
-  if (DB.sinifIds && typeof DB.sinifIds === "object") {
-    if (DB.sinifIds[eski] != null && DB.sinifIds[eski] !== "" && (DB.sinifIds[yeni] == null || DB.sinifIds[yeni] === "")) DB.sinifIds[yeni] = DB.sinifIds[eski];
-    if (yeni !== eski) delete DB.sinifIds[eski];
-  }
   // Bu sınıftaki öğrencilerin sınıf bilgisini güncelle
   DB.ogrenciler.forEach(function(o){ if (o.sinif === eski) o.sinif = yeni; });
   // Bu sınıftaki planlanmış derslerin öğrenci sınıf bilgisini güncelle
@@ -1301,8 +1231,6 @@ function sinifSil() {
     onay: "Evet, Sil", tehlikeli: true
   }, function () {
     delete DB.sinifProg[s];
-    /* KİMLİK-YAMASI-BÖLGE2: silinen sınıfın kimliği de arşivden kalkar */
-    if (DB.sinifIds) delete DB.sinifIds[s];
     ui.sinifAd = tumSiniflar()[0] || null;
     toast("Sınıf programı silindi.");
     yenile();

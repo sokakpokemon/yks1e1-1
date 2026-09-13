@@ -6,6 +6,7 @@
 - `ARAYÜZ DURUMU VE GENEL KONTROLLER` 289–367 · `RENDER: ÖZET VE ANALİZ` 368–562
 - `YÖNETİM — ÖĞRETMEN · ÖĞRENCİ · AYAR` 563–1087 · `TALEP HAVUZU` 1088–1193
 - `BOOT VE DERS PLANLAMA` 1194–1397 · `TAKVİM, DERS LİSTESİ VE PAYLAŞIM` 1398–dosya sonu (2.117)
+- **ID şeması (KİMLİK-YAMASI, 13 Eylül 2026):** `ogrenciler[].id` / `ogretmenler[].id` = UUID (mevcut) veya eksikse `ks-ogr-XXXX-<t36>-<r6>`; sınıf kimliği `DB.sinifIds[ad]` = `ks-snf-XXXX-<t36>-<r6>` (sinifProg anahtarları AD olarak kalır, geriye dönük uyum). Tamamlama `kimlikleriTamamla()` — `normalize()` sonunda + boot'ta çalışır, İDEMPOTENT (mevcut geçerli ID'lere dokunmaz, tekrar çalıştırmada ID değişmez). Referanslar (ders/istek `ogrenciId/ogretmenId/ogrenciIds`) asla taşınmaz. Test: `ks-benzersiz-id.mjs` (46 test). Aşağıdaki kendi checkpoint bölümüne bakın.
 - `ek-ders.js` = Ek Ders sekmesi + kısa kod (KS) fonksiyonları
 - Testler (tek komut: `node test.mjs` — 8 süiti sırayla çalıştırır, özet verir; toplam **269/269**): `ks-harness` 34 · `ks-test-render` 14 · `ks-durum-fn` 20 · `ks-grup-uyum` 41 · `ks-panel-secim` 32 · `ks-grup-gorunum` 28 · `ks-istekten-grup` 32 · `ks-grup-istegi` 68
 - Durum seçici çubuğu (takvim düzenleme): `ui.seciliDurum` + `ui.seciliOgrId`; butonlar `tumSiniflar()`'dan otomatik (DB), en sonda Kapalı. `durumSec(val, ogrId)` seçer, `togOgrSecili(tid, di, saat)` hücreye uygular — aynı hücreye 2. tıklama Boş yapar (döngü yok). Görünen "Müsait Değil" etiketleri "Kapalı" oldu; davranış kaydı `avail.musait` aynı kaldı. Eski "Sınıf Dersi" hücreleri korundu (68 hücre, seed verisinde) — kullanıcı sonradan yeniden işaretleyecek. İşlevsel test: `ks-durum-fn.mjs` (20 test)
@@ -428,3 +429,50 @@ Not: `.nodetest.txt`, `.writetest.txt`, `app_tmp.js` istek listesindeydi ama rep
 - Remove→re-add kanıtı: `[Zeynep, Emir]` → kaldır → `[Emir]` → yeniden ekle → `[Zeynep, Emir]` (slot korunur).
 - Geri dönüş: `app.js.v5-oncesi.bak`.
 - Kalan riskler: tanı scriptleri (`ks-izle-sira.mjs`, `ks-tani-id.mjs`, `ks-salt-duzen.mjs`, `ks-teshis-runtime.mjs`, `ks-dom-duplicate-check.mjs`, `ks-fix-panel.mjs`) kök dizinde duruyor; `ks-test-render` seed haftasına bağlı (mutlak takvim değil).
+
+---
+
+# ✅ CHECKPOINT: Kalıcı Benzersiz ID Altyapısı (KİMLİK-YAMASI)
+
+**Tarih:** 13 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **315/315 OK** (269 eski + 46 yeni)
+
+## ID Şeması
+
+| Varlık | Kimlik | Format | Nerede üretilir |
+|---|---|---|---|
+| Öğrenci | `ogrenciler[].id` | mevcut UUID korunur; eksikse `ks-ogr-XXXX-<t36>-<r6>` | `kimlikleriTamamla` (normalize + boot) |
+| Öğretmen | `ogretmenler[].id` | mevcut UUID korunur; eksikse `ks-ogr-XXXX-<t36>-<r6>` | aynı |
+| Sınıf | `DB.sinifIds[ad]` | `ks-snf-XXXX-<t36>-<r6>` | aynı + `sinifEkle` |
+
+- Sınıflar AD ile yaşamaya devam eder (`sinifProg` anahtarları, `avail.sinif` değerleri, `ekDersler[].sinif` DEĞİŞMEDİ);
+  `sinifIds` yalnızca EK kimlik katmanıdır — UI/dönem/Excel bu adımda değiştirilmedi.
+- "Sınıf Dersi" placeholder değeri sınıf adı SAYILMAZ.
+- Aynı isimli iki kayıt asla karışmaz: ID kayda bağlı, isme değil; üretimde mevcut tüm ID'lerle çakışma engeli var (`benzersiz()`).
+
+## Değişen Fonksiyonlar (app.js — baştan yazma YOK, hedefli yama)
+
+- **Yeni:** `kimlikUret`, `kimlikleriTamamla` (L188–228), `sinifId` (okuma, yan etkisiz), `kimlikKaydet` (tamamlama+saveDB).
+- **`normalize()`:** sonuna `kimlikleriTamamla(d)` eklendi → boot, `loadDB`, yedek yükleme tek kapıdan geçer.
+- **Boot:** `var DB = loadDB() || seedDB(); kimlikleriTamamla(DB); saveDB();` → seed yolu da kimlikli.
+- **`sinifEkle`/`sinifAdiDegistir`/`sinifSil`:** sinifIds yaşam döngüsü (üret / yeniden adlandırmada TAŞI / silmede kaldır).
+- Yamalar: `ks-yama-kimlik.mjs`, `ks-yama-kimlik2.mjs` (assert'li, idempotent — 2. koşu exit 2, dosyayı bozmaz).
+- Geri dönüş: `app.js.kimlik-oncesi.bak`, `app.js.kimlik-bolge2-oncesi.bak`.
+
+## Garantiler (testle kanıtlı, ks-benzersiz-id.mjs — 46 test)
+
+- Mevcut geçerli ID'ler (öğrenci/öğretmen/ders/sinifIds) birebir korunur; tekrar çalıştırmada 0 değişiklik (idempotans).
+- Eksik ID üretimi: normalize/loadDB 3 kez üst üste → aynı ID'ler; aynı isimli 2 öğrenciye 2 farklı ID.
+- Referans koruması: ders `ogrenciId/ogretmenId/ogrenciIds`, istek `ogrenciId/ogrenciIds`, grup dersi üyeleri ve `dersOgrenciIds()` çıktısı değişmez.
+- Yedek al→yükle (normalize yolu): öğrenci/öğretmen/sinifIds/ders referansları kayıpsız; ikinci döngüde de aynı.
+- Eski süitler gevşetilmeden/silinmeden 269/269 aynen geçti.
+
+## ID Adlandırmaları
+
+`kimlikUret(tur, i)` = `"ks-" + tur.slice(0,3) + "-" + (i+1).padStart(4,"0") + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,8)`.
+Pad+zaman+rastgele bileşimi çakışmayı pratikte imkânsız kılar; `benzersiz()` üstüne `-2, -3…` son ekiyle ikinci savunma katmanı ekler.
+
+## Kalan Riskler
+
+- `sinifIds`, ad-anahtarlı sınıf sistemine EK katmandır; sınıf adı elle (doğrudan DB düzenlemeyle) değiştirilirse haritada eski ad kalır — sonraki normalize yeni ada YENİ kimlik üretir (kayıp yok, ama aynı sınıfın kimliği değişir).
+- `kimlikKaydet` henüz hiçbir çağrı noktasına bağlanmadı (mevcut `saveDB` akışı + normalize kapısı yeterli); ileride istenirse çağrı noktalarına eklenebilir.
+- Öğrenci/öğretman silme sinifIds'i TEMİZLEMEZ (sınıf kendi varlığıdır; davranış bilinçli).

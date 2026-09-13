@@ -4,7 +4,6 @@
    ================================================================ */
 
 // ===== SECTION: SABİTLER VE KISA KOD (KS) =====
-var KS_KIMLIK = 1; /* KİMLİK-YAMASI şema sürümü */
 // ---------- Sabitler ----------
 var AYLAR = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
 var GUNLER = ["Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi","Pazar"];
@@ -185,7 +184,7 @@ function bosDB() {
      ek olarak DB.sinifIds[ad] = KIMLIK-ID haritası üretilir. sinifAdiDegistir/silme haritayı günceller.
    - Aynı isimli iki kayıt asla karışmaz: id üretimi kaydın KENDİSİNE (türü+sırası) bağlı, isme değil.
    - Referanslar (ders.ogrenciId/ogretmenId/ogrenciIds, istek.ogrenciId/ogrenciIds, ders.ogretmenId,
-     ekDers.ogretmenId) normalize'da ASLA DEĞİŞTİRİLMEZ/TAŞINMAZ — kimlikler yalnızca eksik ID'leri tamamlar. */
+     ekDers.ogretmenId) normalize'da DEĞİŞTİRİLMEZ — yalnızca sahip kayıt yoksa boş diziye düşürülür. */
 function kimlikUret(tur, i) {
   return "ks-" + String(tur).slice(0, 3) + "-" + String(i + 1).padStart(4, "0") + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
 }
@@ -212,13 +211,13 @@ function kimlikleriTamamla(db) {
   });
   /* Sınıf kimlikleri: sinifProg anahtarları + avail.sinif değerleri + ekDersler[].sinif
      İDEMPOTENT: sinifIds içinde zaten var olan ada DOKUNULMAZ (id tekrar çalıştırmada değişmez). */
-  if (!db.sinifIds || typeof db.sinifIds !== "object" || Array.isArray(db.sinifIds)) db.sinifIds = {};
+  if (!db.sinifIds || typeof db.sinifIds !== "object") db.sinifIds = {};
   var adlar = {};
   Object.keys(db.sinifProg || {}).forEach(function (s) { if (s) adlar[s] = 1; });
   (Array.isArray(db.ogrenciler) ? db.ogrenciler : []).forEach(function (o) { if (o && o.sinif) adlar[o.sinif] = 1; });
   if (Array.isArray(db.ekDersler)) db.ekDersler.forEach(function (l) { if (l && l.sinif) adlar[l.sinif] = 1; });
   if (Array.isArray(db.ogretmenler)) db.ogretmenler.forEach(function (t) {
-    if (t && t.avail && t.avail.sinif && typeof t.avail.sinif === "object") Object.keys(t.avail.sinif).forEach(function (k) { var v = t.avail.sinif[k]; if (v && v !== "Sınıf Dersi") adlar[v] = 1; }); /* "Sınıf Dersi" placeholder'ı sınıf adı değildir */
+    if (t && t.avail && t.avail.sinif && typeof t.avail.sinif === "object") Object.keys(t.avail.sinif).forEach(function (k) { var v = t.avail.sinif[k]; if (v) adlar[v] = 1; });
   });
   Object.keys(adlar).forEach(function (ad) {
     if (db.sinifIds[ad] != null && db.sinifIds[ad] !== "") return; /* mevcut kimlik korunur */
@@ -452,7 +451,6 @@ function loadDB() {
   return null;
 }
 var DB = loadDB() || seedDB();
-kimlikleriTamamla(DB); /* KİMLİK-YAMASI: seed/restore sonrası eksik kimlikler ilk açılışta kapanır ve kaydedilir */
 saveDB();
 var __KS_RAPOR = ksGec(); saveDB();
 
@@ -1259,9 +1257,6 @@ function sinifEkle() {
   if (!ad) { toast("Sınıf adı boş olamaz.", "hata"); return; }
   if (DB.sinifProg[ad]) { toast("\"" + ad + "\" adında bir sınıf zaten var.", "uyari"); return; }
   DB.sinifProg[ad] = [];
-  /* KİMLİK-YAMASI-BÖLGE2: yeni sınıfa kalıcı kimlik (sinifIds) */
-  if (!DB.sinifIds || typeof DB.sinifIds !== "object") DB.sinifIds = {};
-  if (DB.sinifIds[ad] == null || DB.sinifIds[ad] === "") DB.sinifIds[ad] = kimlikUret("snf", Object.keys(DB.sinifIds).length);
   ui.sinifAd = ad;
   toast("Sınıf eklendi: " + ad);
   renderYonetim(); renderFormDestek();
@@ -1276,11 +1271,6 @@ function sinifAdiDegistir() {
   if (DB.sinifProg[yeni]) { toast('"' + yeni + '" adında bir sınıf zaten var.', 'hata'); return; }
   // Sınıf programını taşı
   if (DB.sinifProg[eski]) { DB.sinifProg[yeni] = DB.sinifProg[eski]; delete DB.sinifProg[eski]; }
-  /* KİMLİK-YAMASI-BÖLGE2: sınıf kimliği ada değil kayda bağlı — yeniden adlandırmada KORUNUR */
-  if (DB.sinifIds && typeof DB.sinifIds === "object") {
-    if (DB.sinifIds[eski] != null && DB.sinifIds[eski] !== "" && (DB.sinifIds[yeni] == null || DB.sinifIds[yeni] === "")) DB.sinifIds[yeni] = DB.sinifIds[eski];
-    if (yeni !== eski) delete DB.sinifIds[eski];
-  }
   // Bu sınıftaki öğrencilerin sınıf bilgisini güncelle
   DB.ogrenciler.forEach(function(o){ if (o.sinif === eski) o.sinif = yeni; });
   // Bu sınıftaki planlanmış derslerin öğrenci sınıf bilgisini güncelle
@@ -1301,8 +1291,6 @@ function sinifSil() {
     onay: "Evet, Sil", tehlikeli: true
   }, function () {
     delete DB.sinifProg[s];
-    /* KİMLİK-YAMASI-BÖLGE2: silinen sınıfın kimliği de arşivden kalkar */
-    if (DB.sinifIds) delete DB.sinifIds[s];
     ui.sinifAd = tumSiniflar()[0] || null;
     toast("Sınıf programı silindi.");
     yenile();

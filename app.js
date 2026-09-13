@@ -260,6 +260,50 @@ function donemleriBaslat(db) {
   });
   return say;
 }
+/* DONEM-SECICI-YAMASI: dönem seçici + aktif dönem filtre katmanı.
+   Tek güvenilir filtre kuralı: record.donemId === DB.aktifDonemId.
+   ogrenciler/ogretmenler/sinifIds GLOBAL kalır; bu katman onlara DOKUNMAZ.
+   Geçersiz/eksik aktifDonemId → güvenli fallback "donem-2026-2027". */
+/* DONEM-SECICI-YAMASI: dönem seçici + aktif dönem filtre katmanı.
+   Tek güvenilir filtre kuralı: record.donemId === DB.aktifDonemId.
+   ogrenciler/ogretmenler/sinifIds GLOBAL kalır; bu katman onlara DOKUNMAZ.
+   Geçersiz/eksik aktifDonemId → güvenli fallback "donem-2026-2027". */
+function aktifDonemKayitlari(dizi) {
+  if (!Array.isArray(dizi)) return [];
+  var hedef = aktifDonemId();
+  /* DONEM-SECICI-V2: donemId'siz ESKİ kayıtlar (boot sonrası eklenen/yedekten gelen) mevcut DONEM-ILK
+     uyumluluk kuralıyla aynı kabul edilir: boş donemId = "donem-2026-2027". Non-mutating: hiçbir kayıt
+     yerinde değiştirilmez, mevcut donemId değerleri ASLA üzerine yazılmaz. */
+  return dizi.filter(function (r) { return r && (r.donemId || DONEM_ILK_ID) === hedef; });
+}
+/* Dönem seçici: DB.donemler[]'den beslenir; value = dönem id; açılışta DB.aktifDonemId seçili.
+   DB.donemler boş/eksikse mevcut dönem uyumluluk katmanı BOZULMAZ: yalnız "donem-2026-2027"
+   güvenli şekilde kullanılır (seçici tek seçenek). Null-safe: kutu DOM'da yoksa hiçbir şey yapmaz. */
+function donemSecKutusuHTML() {
+  var donemler = (DB && Array.isArray(DB.donemler) && DB.donemler.length) ? DB.donemler : [{ id: DONEM_ILK_ID, ad: "2026/2027", aktif: true }];
+  var secili = aktifDonemId();
+  if (!donemler.some(function (d) { return d && d.id === secili; })) secili = donemler[0].id;
+  var ops = donemler.map(function (d) {
+    if (!d || !d.id) return "";
+    return '<option value="' + esc(d.id) + '"' + (d.id === secili ? " selected" : "") + ">" + esc(d.ad || d.id) + "</option>";
+  }).join("");
+  return '<div id="donemSeciciKutu" class="no-print flex flex-wrap items-center gap-2 rounded-2xl border border-slate-100 bg-slate-50/70 px-3 py-2">' +
+    '<span class="text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wide whitespace-nowrap"><i class="fa-solid fa-layer-group mr-1"></i>Dönem</span>' +
+    '<select id="donemSecici" onchange="donemSec(this.value)" class="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[12.5px] font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-400/40 max-w-full">' + ops + "</select>" +
+    "</div>";
+}
+/* Dönem değişimi: DB.aktifDonemId güncellenir, aktif işaretleri hizalanır, saveDB + yenile.
+   Geçersiz id gelirse sessizce yoksayılır (fallback: mevcut aktif dönem aynen kalır). */
+function donemSec(id) {
+  var donemler = (DB && Array.isArray(DB.donemler)) ? DB.donemler : [];
+  var donem = donemler.filter(function (d) { return d && d.id === id; })[0];
+  if (!donem) return;
+  DB.aktifDonemId = donem.id;
+  donemler.forEach(function (d) { if (d) d.aktif = (d.id === donem.id); });
+  saveDB();
+  yenile();
+}
+
 /* DONEM-DAMGA-YAMASI: yeni kayıt damgası için güvenli aktif dönem ID'si.
    DB.aktifDonemId doluysa O KULLANILIR; yoksa/boşsa/geçersizse "donem-2026-2027".
    Yeni kayda asla undefined/null/boş donemId yazılmaz. */
@@ -734,10 +778,10 @@ function donemAlt() {
 }
 function penceredeDersler() {
   var p = pencere();
-  var liste = DB.dersler.filter(function (l) {
+  var liste = aktifDonemKayitlari(DB.dersler).filter(function (l) {
     if (!p.start) return true;
     return l.tarih >= p.start && l.tarih <= p.end;
-  });
+  }); /* DONEM-SECICI-YAMASI: yalnız aktif dönemin dersleri */
   liste.sort(function (a, b) { return a.tarih === b.tarih ? (a.saat < b.saat ? -1 : 1) : (a.tarih < b.tarih ? -1 : 1); });
   return liste;
 }
@@ -996,7 +1040,10 @@ function renderYonetim() {
   });
   pills += "</div>";
   var icerik = ui.sekme === "ogretmen" ? ogretmenTab() : ui.sekme === "ogrenci" ? ogrenciTab() : ayarTab();
-  $("yonetimBolum").innerHTML = '<div class="kart p-5"><div class="flex flex-wrap items-center justify-between gap-3 mb-5">' +
+  /* DONEM-SECICI-V2: dönem seçici yönetim kartının İÇİNE, başa gömülür — innerHTML her render'da
+     yeniden yazılırken seçici de AYNI TEK kutu olarak yeniden üretilir: duplicate imkânsız,
+     insertAdjacentHTML YOK (eski DOM enjeksiyon sayaçları bozulmaz), kutu asla kaybolmaz. */
+  $("yonetimBolum").innerHTML = '<div class="kart p-5">' + donemSecKutusuHTML() + '<div class="flex flex-wrap items-center justify-between gap-3 mb-5">' +
     '<h2 class="text-[15px] font-bold text-slate-900 flex items-center gap-2"><i class="fa-solid fa-sliders text-slate-300"></i> Veri Yönetimi ve Program Tanımlama</h2>' + pills + "</div>" + icerik + "</div>";
 }
 
@@ -1520,18 +1567,18 @@ function tumunuSil() {
    ================================================================ */
 // ===== SECTION: TALEP HAVUZU =====
 function renderHavuz() {
-  var bekleyen = DB.istekler.filter(function (r) { return r.durum === "bekliyor"; }).length;
+  var bekleyen = aktifDonemKayitlari(DB.istekler).filter(function (r) { return r.durum === "bekliyor"; }).length; /* DONEM-SECICI-YAMASI: yalnız aktif dönem */
   var dersOps = '<option value="" disabled>Ders seçin</option>';
   DERSLER.forEach(function (d) { dersOps += '<option value="' + d.id + '">' + d.ad + "</option>"; });
 
   // -- Ders filtresi çipleri: Tüm Dersler + her ders için ayrı anlık filtre --
   var aktif = ui.istekFiltre || "";
-  var gosterilen = DB.istekler.filter(function (r) { return !aktif || r.dersId === aktif; });
+  var gosterilen = aktifDonemKayitlari(DB.istekler).filter(function (r) { return !aktif || r.dersId === aktif; }); /* DONEM-SECICI-YAMASI: yalnız aktif dönem */
   var chips = '<div class="flex flex-wrap items-center gap-1.5 mb-3">' +
     '<span class="text-[10.5px] font-bold text-slate-400 uppercase tracking-wide mr-1"><i class="fa-solid fa-filter mr-1"></i>İstek Filtresi:</span>';
   chips += '<button onclick="istekFiltrele(\'\')" class="rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors ' + (!aktif ? "bg-slate-800 text-white shadow-sm" : "bg-slate-100 text-slate-500 hover:bg-slate-200") + '">Tüm Dersler <span class="opacity-60">(' + DB.istekler.length + ")</span></button>";
   DERSLER.forEach(function (d) {
-    var n = DB.istekler.filter(function (r) { return r.dersId === d.id; }).length;
+    var n = aktifDonemKayitlari(DB.istekler).filter(function (r) { return r.dersId === d.id; }).length; /* DONEM-SECICI-YAMASI: yalnız aktif dönem */
     if (!n) return;
     chips += '<button onclick="istekFiltrele(\'' + d.id + '\')" class="rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors ' + (aktif === d.id ? d.bg + " " + d.tx + " ring-2 ring-offset-1 ring-slate-300" : d.bg + " " + d.tx + " opacity-60 hover:opacity-100") + '">' + d.ad + " (" + n + ")</button>";
   });
@@ -2166,7 +2213,7 @@ function haftalikOgrtTablo() {
   // Bu öğretmenin bu dönemin derslerini saat/gün bazında eşle
   var p = pencere();
   var dersMap = {};
-  DB.dersler.forEach(function (l) {
+  aktifDonemKayitlari(DB.dersler).forEach(function (l) { /* DONEM-SECICI-YAMASI: yalnız aktif dönem */
     if (l.ogretmenId !== t.id && (l.ogretmenAd || "") !== t.ad) return;
     if (l.durum === "iptal") return;
     if (p.start && (l.tarih < p.start || l.tarih > p.end)) return;
@@ -2311,7 +2358,7 @@ function gunlukTablo() {
   var gunAdi = gunAdlari[gun.getDay()];
 
   // O güne ait aktif dersleri al
-  var gunDersler = DB.dersler.filter(function (l) {
+  var gunDersler = aktifDonemKayitlari(DB.dersler).filter(function (l) { /* DONEM-SECICI-YAMASI: yalnız aktif dönem */
     return l.tarih === gunKey && l.durum !== "iptal";
   });
 

@@ -615,3 +615,23 @@ Eski kayıtların diğer alanları deep-equal korundu; kopya ders/istek/grup kay
 - Doğrulama: `node --check app.js` OK · `node --check ek-ders.js` OK · `node test.mjs` → **492/492 OK**.
 - Geri dönüş: `app.js.donem-damga-oncesi.bak`.
 - Kalan riskler: dönem seçici UI henüz YOK (bu dilim yalnızca kayıt damgası); `istekler` güncelleme yolu (duzenle/havuz silme) donemId'ye dokunmaz ancak ileride eklenecek dönem-filtreleme bu damgaya dayanacak.
+
+---
+
+# ✅ CHECKPOINT: Dönem Seçici + Aktif Döneme Göre Filtreleme — İlk UI Dilimi (DONEM-SECICI-V2)
+
+**Tarih:** 13 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **569/569 OK** (492 eski + 77 yeni)
+
+## Yapılan İş (app.js — baştan yazma YOK, ks-yama-donem-secici.mjs hedefli yama)
+
+- **Dönem seçici:** Yönetim kartının İÇİNE, başa gömülü (`renderYonetim` innerHTML prepend — v2; her render'da tam 1 kutu, duplicate imkânsız, `insertAdjacentHTML` YOK). Veri kaynağı `DB.donemler[]` (value = dönem id, metin = dönem ad); açılışta `DB.aktifDonemId` selected. `DB.donemler` boş/eksikse yalnız "donem-2026-2027" güvenli şekilde gösterilir. Bu dilimde yeni dönem ekleme BUTONU/FORMU YOK — yalnız mevcut dönemler arasında geçiş.
+- **Dönem değişimi (`donemSec(id)`):** `DB.aktifDonemId` güncellenir → `donemler[].aktif` işaretleri hizalanır → `saveDB()` → `yenile()` (ders listesi, günlük tablo, haftalık grid, istek havuzu dahil anında yeniden çizilir; sayfa yenilemesi gerekmez). Geçersiz id sessizce yoksayılır.
+- **Tek filtre katmanı:** `aktifDonemKayitlari(dizi)` — kural `record.donemId === DB.aktifDonemId`; donemId'siz ESKİ kayıt "donem-2026-2027" kabul edilir (non-mutating: hiçbir kayıt yerinde değiştirilmez, mevcut donemId asla üzerine yazılmaz). Uygulandığı 4 görünüm: `penceredeDersler` (ders listesi + günlük + haftalık ortak kaynağı), `gunlukTablo`, `haftalikOgrtTablo`, `renderHavuz` (bekleyen sayacı + gösterilen liste + chip sayaçları).
+- **Dokunulmayanlar:** `ogrenciler`, `ogretmenler`, `sinifIds`, `sinifProg` GLOBAL kaldı (filtre yok); ders/istek/grup referansları ve `donemId` değerleri değişmedi; yeni kayıt damgalama (DONEM-DAMGA) aynen; `normalize()`, `donemleriBaslat()`, `aktifDonemId()`, yedek yükleme değişmedi; analiz/özet/takvim/Excel/`ek-ders.js` değişmedi.
+
+## Testler
+
+- Yeni: `ks-donem-secici.mjs` — **77 test** (seçenek üretimi, açılış seçimi, `aktifDonemId` güncellemesi, `saveDB` çağrısı, yeniden çizim, ders listesi/günlük/haftalık/havuz filtreleri, 2025/2026 ↔ 2026/2027 geçiş senaryosu, grup ders filtresi, tek dönemli veri, duplicate seçici, referans dokunulmazlığı, planlama formu bütünlüğü).
+- `test.mjs` 13 süit oldu. Doğrulama: `node --check app.js` OK · `node --check ek-ders.js` OK · `node test.mjs` → **569/569 OK** (eski iki süitteki kaulan kırılganlığı v2 ile kökten giderildi).
+- Yama idempotent: 2. koşu "Zaten uygulanmış (DONEM-SECICI-V2)" (exit 2), SHA doğrulandı — dosya değişmez.
+- Kalan riskler: dönem listesi hâlâ tek dönem (yeni dönem ekleme sonraki dilim); donemId'siz kayıtlar yalnız okuma anında "2026/2027" kabul edilir (yerinde yazım bilinçli olarak sonraki normalize'a bırakıldı).

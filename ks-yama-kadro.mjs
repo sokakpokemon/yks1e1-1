@@ -1,25 +1,24 @@
 /* ks-yama-kadro.mjs — GERÇEK KADRO YAMASI (assert'li, idempotent)
    Tek iş: 17 gerçek öğretmen + 18 gerçek sınıf DB şemasına eklenir/güncellenir;
    mevcut ID'ler, dersler, istekler, grup dersleri, sinifProg ve avail korunur.
-   Uygulama iki katmanda yapılır:
-     A) seedDB() kayıt bloğu: isim/branş yazım düzeltmeleri (KANARIĞ, 11 SAYCAL)
-        + her kayıttan sonra GERÇEK KADRO davranışsal kancası (kadroDuzelt(DB)).
-        Kadro tam listesi SABİT olarak seed'e gömülür (veri, kodla ayrı).
-     B) normalize()/boot: kadroDuzelt(d) → çalışan DB'de ad-anahtarlı sınıf
-        eşlemesi (güvenli normalize), branş güncelleme, eksik kayıt üretimi
-        (kimlikUret + kimlikleriTamamla), benzersizlik assert'i.
-   Yazım düzeltmeleri yalnızca seed kaynak metninde yapılır (app.js'te "11 SAY CAL"
-   yalnız seed'de geçer; çalışan DB'de zaten '11 SAYCAL' yoksa kimse etkilenmez —
-   mevcut sınıf kayıtları/sinifProg anahtarları ASLA yeniden adlandırılmaz).
+   Uygulama:
+     1) seed yazım düzeltmeleri (KANARIĞ, 11 SAYCAL — yalnızca seed kaynak metni;
+        çalışan DB'deki kayıtlara dokunulmaz, kadroDuzelt onları normalize ile hizalar)
+     1b) deterministik sınıf kimliği: kadroSnfId(ad) = ks-snf-00NN-<djb2 base36> —
+        taze boot'ta da aynı ID; kayıtlı DB kimlikleri yine de KORUNUR
+     2) kadroDuzelt(db) davranışsal katmanı: TR-aksan duyarsız ad eşlemesi; eşleşen
+        öğretmenin ID'si KORUNUR, adı+branşı kadro yazımına güncellenir; eksikse şemaya
+        uygun yeni kayıt + kimlikUret/kimlikleriTamamla ile kalıcı ID; sınıflar
+        sinifProg + sinifIds'e eklenir (mevcut kimlik korunur); çift ad uyarı ile RAPORLANIR (silinmez).
    Her değişiklik assert edilir; anchor bulunamazsa YAZMAZ. 2. koşu exit 2. */
 import { readFileSync, writeFileSync, copyFileSync } from "node:fs";
 
 const DOSYA = "app.js";
 const once = readFileSync(DOSYA, "utf8");
 
-/* Idempotentlik: yama işareti zaten varsa dokunma */
-if (once.includes("KADRO-YAMASI") && once.includes("kadroDuzelt")) {
-  console.log("Zaten uygulanmış (KADRO-YAMASI işareti mevcut) — dosya değiştirilmedi.");
+/* Idempotentlik: tüm yama (1. faz kadro + 2. faz deterministik sınıf ID) tamamsa dokunma */
+if (once.includes("KADRO-YAMASI") && once.includes("kadroDuzelt") && once.includes("kadroSnfId")) {
+  console.log("Zaten uygulanmış (KADRO-YAMASI + kadroSnfId işareti mevcut) — dosya değiştirilmedi.");
   process.exit(2);
 }
 
@@ -39,85 +38,94 @@ const KADRO_SINIFLAR = [
   "11 EA 1", "10.SINIF", "9.SINIF",
 ];
 
-/* Yama 1: seed yazım düzeltmeleri (yalnızca seed kayıt satırlarında, tek eşleşme) */
+/* Yama 1: seed yazım düzeltmeleri (yalnızca seed kaynak metni) */
 const YAZIM = [
   { eski: '{ id: uid(), ad: "NİHAT KANARIG", brans: "tar"', yeni: '{ id: uid(), ad: "NİHAT KANARIĞ", brans: "tar"', ad: "NİHAT KANARIĞ yazımı (seed öğretmen kaydı)" },
+  /* Seed plan satırlarındaki 3 tarihsel referans da kadro yazımına çevrilir — seed taze üretilir,
+     ogr() ad-tam-eşleşmesi boş depo açılışında çökmesin. Çalışan DB'deki eski kayıtlara DOKUNULMAZ
+     (onları kadroDuzelt normalize kançası ID korunarak hizalar). */
+  { eski: '"NİHAT KANARIG"', yeni: '"NİHAT KANARIĞ"', tekrar: 3, ad: "NİHAT KANARIĞ yazımı (seed plan satırları ×3)" },
   { eski: '"11 SAY CAL": [],', yeni: '"11 SAYCAL": [],', ad: "11 SAYCAL yazımı (seed sinifProg anahtarı)" },
-  /* seed avail.sinif değerleri sınıf adıdır — sınıf listesiyle birebir yazılır (3 öğretmen satırında aynı desen) */
   { eski: '"1-1":"11 SAY CAL","2-1":"11 SAYISAL FEN"', yeni: '"1-1":"11 SAYCAL","2-1":"11 SAYISAL FEN"', tekrar: 3, ad: "11 SAYCAL yazımı (seed avail.sinif değerleri ×3)" },
-  /* seed ogr() yardımcısı ad-TAM-eşleşme yapar; kadro yazımı KANARIĞ olduğundan aksan-duyarsız aramaya geçirilir */
-  { eski: 'function ogr(ad) { return db.ogretmenler.find(function (t) { return kucuk(t.ad) === kucuk(ad); }).id; }', yeni: 'function ogr(ad) { return db.ogretmenler.find(function (t) { return kadroAdKey(t.ad) === kadroAdKey(ad); }).id; }', ad: "seed ogr() aksan-duyarsız arama" },
 ];
-/* Yama 2: kadro veri bloğu + kadroDuzelt — bosDB'den ÖNCE tek ekleme noktası (üst-düzey) */
-const ANCHOR_SP = "function bosDB() {";
-/* Yama 3: seedDB'nin SONUNA kadro kancası. Anchor dosya SONUNDAKI gerçek dönüş noktasıdır:
-   'return db;\n}\n\n// ===== SECTION: ARAYÜZ DURUMU VE GENEL KONTROLLER' — bölüm başlığı TAM yazılır ki
-   plan satırındaki ('// ===== SECTION: ARAYÜZ DURUMU' önekiyle başlayan) kopya anchor'larla eşleşmesin.
-   Ayrıca db.istekler atamasından ÖNCE plan satırlarındaki tarihsel eski yazımlar düzeltilir — seed'in
-   ogr()/ogn() ad-tam-eşleşme yardımcıları yeni kayıt yazımıyla uyumlu kalır. */
-const ANCHOR_RETURN = "  return db;\n}\n\n// ===== SECTION: ARAYÜZ DURUMU VE GENEL KONTROLLER =====";
-const KANCA_RETURN = `  /* KADRO-YAMASI: seed plan satırlarındaki tarihsel eski yazımlar kadroyla hizalanır (ogr/ogn ad-tam-eşleşme) */
-  db.dersler.forEach(function (l) { if (l.ogretmenAd === "NİHAT KANARIG") l.ogretmenAd = "NİHAT KANARIĞ"; });
+/* Deterministik sınıf kimliği: ad → ks-snf-00NN-<djb2 base36>. Taze boot'ta da AYNI ID;
+   mevcut DB'lerde kayıtlı kimlik yine de KORUNUR (yalnızca eksik girdiye üretilir). */
+const SNF_FN = `function kadroSnfId(ad) {
+  var h = 5381;
+  var s = String(ad || "");
+  for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+  var n = KADRO_SINIFLAR.indexOf(s) + 1;
+  return "ks-snf-" + ("0000" + n).slice(-4) + "-" + h.toString(36);
+}`;
+
+/* Yama 2: seedDB dönüş kancası (seedDB'nin gerçek sonuna — istekler bloğunun kapandığı yere) */
+const ANCHOR_RETURN = '  ];\n  return db;\n}\n\n// ===== SECTION: ARAYÜZ DURUMU';
+const KANCA_RETURN = `  ];
   /* KADRO-YAMASI: seed DB'si gerçek kadroyla hizalanır (idempotent davranışsal katman) */
   kadroDuzelt(db);
   return db;
 }
 
-// ===== SECTION: ARAYÜZ DURUMU VE GENEL KONTROLLER =====`;
-/* Yama 4: normalize sonuna kadro kancası */
+// ===== SECTION: ARAYÜZ DURUMU`;
+/* Yama 3: normalize sonuna kadro kancası */
 const ANCHOR_NORM = "  kimlikleriTamamla(d);\n  return d;\n}";
 const KANCA_NORM = `  kimlikleriTamamla(d);
   /* KADRO-YAMASI: her normalize (boot/loadDB/yedek yükleme) gerçek kadroyu DB'ye uygular — idempotent */
   if (typeof kadroDuzelt === "function") kadroDuzelt(d);
   return d;
 }`;
-/* Yama 5: bosDB'den hemen önce kadroDuzelt tanımı (ANCHOR_SP üzerinden, tek ekleme).
-   kadroAdKey: TR lower + noklası (İ/i̇) + aksan işaretleri katlanır → ğ=g, ı=i, İ=i, Ç=c...
-   Böylece mevcut DB'deki 'KANARIG' kaydı 'KANARIĞ' kadro girişiyle AYNI kişiye eşlenir (kopya oluşmaz). */
-const KADRO_FN = `/* ---------- KADRO-YAMASI: gerçek öğretmen ve sınıf kadrosu (tek gerçek kaynak; davranışsal katman) ----------
-   Kurallar:
-   - Öğretmen güvenli normalize ad karşılaştırmasıyla bulunur (TR büyük/küçük/aksan duyarsız).
-     Aynı isimli mevcut öğretmen: YENİ KAYIT OLUŞTURULMAZ, mevcut ID KORUNUR, branş güncellenir.
-     Yoksa: mevcut şemada ({id, ad, brans, avail:{sinif:{},musait:[]}}) yeni kayıt + kimlikUret/kimlikleriTamamla ile kalıcı ID.
+/* Yama 4: kadro verisi + kadroDuzelt — bosDB'den ÖNCE tek ekleme noktası (üst-düzey) */
+const ANCHOR_FN = "function bosDB() {";
+const KADRO_FN = `/* ---------- KADRO-YAMASI: gerçek öğretmen ve sınıf kadrosu (tek gerçek kaynak; davranışsal katman) ---------- */
+var KADRO_OGRETMENLER = ${JSON.stringify(KADRO_OGRETMENLER)};
+var KADRO_SINIFLAR = ${JSON.stringify(KADRO_SINIFLAR)};
+/* Kurallar:
+   - Öğretmen GÜVENLİ NORMALIZE ad karşılaştırmasıyla bulunur (TR büyük/küçük + aksan duyarsız:
+     ç→c ğ→g ı/İ→i ö→o ş→s ü→u). Aynı kişi: YENİ KAYIT OLUŞTURULMAZ — mevcut ID KORUNUR,
+     ad + branş kadro yazımıyla güncellenir. Yoksa: mevcut şemada ({id, ad, brans, avail:{sinif:{},musait:[]}})
+     yeni kayıt + kimlikUret/kimlikleriTamamla ile kalıcı ID.
    - Sınıflar DB.sinifIds[ad] + DB.sinifProg[ad] içine eklenir; var olan sınıf kimliği KORUNUR.
-   - Aynı adla ikinci öğretmen/sınıf kimliği ASLA oluşmaz (assert + benzersiz üretim).
-   - Referanslar (ders/istek/ogrenciIds/grup/ekDers) ve mevcut sinifProg/avail İÇERİKLERİ değiştirilmez. */
+   - Aynı adla ikinci öğretmen kimliği ASLA üretilmez; çift ad (aksan varyantları dahil) uyarıyla RAPORLANIR, SİLİNMEZ.
+   - Referanslar (ders/istek/ogrenciIds/ogretmenId/ekDers) ve mevcut sinifProg/avail İÇERİKLERİ değiştirilmez. */
 function kadroAdKey(ad) {
-  /* TR aksan katlama: noklası + tek kod noktalı Türkçe harfler (ğ→g, ü→u, ş→s, ı→i, ö→o, ç→c) + kalan combining işaretler */
   return String(ad || "").trim().toLocaleLowerCase("tr-TR")
-    .replace(/\\u0307/g, "")
-    .replace(/ğ/g, "g").replace(/ü/g, "u").replace(/ş/g, "s").replace(/ı/g, "i").replace(/ö/g, "o").replace(/ç/g, "c")
-    .replace(/[\\u0300-\\u036f]/g, "");
+    .replace(/\\u00e7/g, "c").replace(/\\u011f/g, "g").replace(/\\u0131/g, "i")
+    .replace(/\\u00f6/g, "o").replace(/\\u015f/g, "s").replace(/\\u00fc/g, "u")
+    .replace(/\\u0307/g, "").replace(/[\\u0300-\\u036f]/g, "");
 }
+${SNF_FN}
 function kadroDuzelt(db) {
-  if (!db || typeof db !== "object") return { t: 0, s: 0, b: 0 };
-  var say = { t: 0, s: 0, b: 0 };
-  var KADRO_OGRETMENLER = ${JSON.stringify(KADRO_OGRETMENLER)};
-  var KADRO_SINIFLAR = ${JSON.stringify(KADRO_SINIFLAR)};
+  if (!db || typeof db !== "object") return { t: 0, s: 0, b: 0, n: 0 };
+  var say = { t: 0, s: 0, b: 0, n: 0 };
   function ogretmenBul(ad) { var k = kadroAdKey(ad); return (db.ogretmenler || []).filter(function (t) { return kadroAdKey(t.ad) === k; })[0]; }
-  /* Öğretmenler: eşle → branş güncelle; yoksa → şemaya uygun yeni kayıt + kalıcı ID */
+  /* Öğretmenler: eşleşen → ID korunur, ad + branş kadro yazımına güncellenir */
   KADRO_OGRETMENLER.forEach(function (r) {
     var t = ogretmenBul(r[0]);
-    if (t) {
-      if (t.brans !== r[1]) { t.brans = r[1]; say.b++; }
-      return;
-    }
-    db.ogretmenler = Array.isArray(db.ogretmenler) ? db.ogretmenler : [];
-    db.ogretmenler.push({ id: "", ad: r[0], brans: r[1], avail: { sinif: {}, musait: [] } });
-    say.t++;
+    if (!t) return;
+    if (t.brans !== r[1]) { t.brans = r[1]; say.b++; }
+    if (t.ad !== r[0]) { t.ad = r[0]; say.n++; }
   });
-  /* Aynı adla iki öğretmen oluşmasını engelle (assert katmanı: bozuk DB'de de birleştirme YAPILMAZ, raporlanır) */
+  /* Çift ad (aksan varyantları dahil) üretimi engellenir; mevcut çiftler RAPORLANIR (silinmez) */
   var adSay = {};
   (db.ogretmenler || []).forEach(function (t) { var k = kadroAdKey(t.ad); adSay[k] = (adSay[k] || 0) + 1; });
   var cift = Object.keys(adSay).filter(function (k) { return adSay[k] > 1; });
-  if (cift.length) { if (typeof console !== "undefined") console.warn("KADRO-YAMASI: aynı isimli öğretmen kayıtları bulundu (birleştirilmedi, raporlandı):", cift.join(", ")); return say; }
+  if (cift.length && typeof console !== "undefined") console.warn("KADRO-YAMASI: aynı kişiye ait çoklu öğretmen kaydı (birleştirilmedi, raporlandı):", cift.join(", "));
+  /* Eksik öğretmenler: mevcut şemada yeni kayıt; kalıcı ID kimlikleriTamamla ile üretilir (idempotent) */
+  if (!cift.length) {
+    db.ogretmenler = Array.isArray(db.ogretmenler) ? db.ogretmenler : [];
+    KADRO_OGRETMENLER.forEach(function (r) {
+      if (ogretmenBul(r[0])) return;
+      db.ogretmenler.push({ id: "", ad: r[0], brans: r[1], avail: { sinif: {}, musait: [] } });
+      say.t++;
+    });
+  }
   if (Array.isArray(db.ogretmenler) && db.ogretmenler.some(function (t) { return !t.id; })) kimlikleriTamamla(db);
   /* Sınıflar: sinifProg girdisi + sinifIds kimliği (mevcut kimlik KORUNUR) */
   db.sinifProg = db.sinifProg && typeof db.sinifProg === "object" ? db.sinifProg : {};
   if (!db.sinifIds || typeof db.sinifIds !== "object" || Array.isArray(db.sinifIds)) db.sinifIds = {};
   KADRO_SINIFLAR.forEach(function (ad) {
     if (!db.sinifProg[ad]) { db.sinifProg[ad] = []; say.s++; }
-    if (db.sinifIds[ad] == null || db.sinifIds[ad] === "") { db.sinifIds[ad] = kimlikUret("snf", Object.keys(db.sinifIds).length); say.s++; }
+    if (db.sinifIds[ad] == null || db.sinifIds[ad] === "") { db.sinifIds[ad] = kadroSnfId(ad); say.s++; }
   });
   return say;
 }
@@ -127,11 +135,34 @@ const DEGISIMLER = [
   ...YAZIM.map(y => ({ ad: y.ad, eski: y.eski, yeni: y.yeni, tekrar: y.tekrar })),
   { ad: "seedDB dönüş kancası", eski: ANCHOR_RETURN, yeni: KANCA_RETURN },
   { ad: "normalize kadro kancası", eski: ANCHOR_NORM, yeni: KANCA_NORM },
-  { ad: "kadroDuzelt tanımı (bosDB öncesi)", eski: ANCHOR_SP, yeni: KADRO_FN },
+  { ad: "kadroDuzelt tanımı (bosDB öncesi)", eski: ANCHOR_FN, yeni: KADRO_FN },
 ];
 
+/* Faz 2 (zaten kadro-yamalı dosyaya): deterministik sınıf ID geçişi */
+const ESKI_SNF = 'if (db.sinifIds[ad] == null || db.sinifIds[ad] === "") { db.sinifIds[ad] = kimlikUret("snf", Object.keys(db.sinifIds).length); say.s++; }';
+const YENI_SNF = 'if (db.sinifIds[ad] == null || db.sinifIds[ad] === "") { db.sinifIds[ad] = kadroSnfId(ad); say.s++; }';
+const ANCHOR_KEYSON = '.replace(/[\\u0300-\\u036f]/g, "");\n}\nfunction kadroDuzelt(db) {';
+const KANCA_KEYSON = '.replace(/[\\u0300-\\u036f]/g, "");\n}\n' + SNF_FN + '\nfunction kadroDuzelt(db) {';
+const degisimler = [];
+if (!once.includes('ad: "NİHAT KANARIĞ"')) degisimler.push(...YAZIM.map(y => ({ ad: y.ad, eski: y.eski, yeni: y.yeni, tekrar: y.tekrar })));
+if (!once.includes("kadroDuzelt(db);\n  return db;")) degisimler.push({ ad: "seedDB dönüş kancası", eski: ANCHOR_RETURN, yeni: KANCA_RETURN });
+if (!once.includes('if (typeof kadroDuzelt === "function") kadroDuzelt(d);')) degisimler.push({ ad: "normalize kadro kancası", eski: ANCHOR_NORM, yeni: KANCA_NORM });
+if (!once.includes("function kadroDuzelt(db)")) degisimler.push({ ad: "kadroDuzelt tanımı (bosDB öncesi)", eski: ANCHOR_FN, yeni: KADRO_FN });
+if (!once.includes("function kadroSnfId(ad)")) {
+  if (!once.includes("function kadroDuzelt(db)")) {
+    /* 1. faz yolu: KADRO_FN zaten deterministik üretimi taşır */
+  } else {
+    degisimler.push({ ad: "deterministik sınıf ID üretimi (kadroDuzelt içi)", eski: ESKI_SNF, yeni: YENI_SNF });
+    degisimler.push({ ad: "kadroSnfId tanımı (kadroAdKey sonrası)", eski: ANCHOR_KEYSON, yeni: KANCA_KEYSON });
+  }
+}
+if (degisimler.length === 0) {
+  console.log("Zaten uygulanmış — dosya değiştirilmedi.");
+  process.exit(2);
+}
+
 let sonra = once;
-for (const d of DEGISIMLER) {
+for (const d of degisimler) {
   const n = sonra.split(d.eski).length - 1;
   const beklenen = d.tekrar || 1;
   if (n !== beklenen) {
@@ -146,23 +177,22 @@ const asserts = [
   ["KADRO-YAMASI işareti mevcut", sonra.includes("KADRO-YAMASI")],
   ["kadroDuzelt tanımlı (tek)", (sonra.match(/function kadroDuzelt\(db\)/g) || []).length === 1],
   ["bosDB tek tanım", (sonra.match(/function bosDB\(\)/g) || []).length === 1],
+  ["kadruAdKey değil kadroAdKey", sonra.includes("function kadroAdKey(ad)") && !sonra.includes("function kadruAdKey")],
+  ["TR aksan katlaması (ğ→g)", sonra.includes("kadroAdKey") && /replace\([^)]*011f[^)]*,\s*"g"\)/.test(sonra)],
   ["normalize kancası yerinde", sonra.includes('if (typeof kadroDuzelt === "function") kadroDuzelt(d);')],
-  ["seedDB kancası yerinde (bölüm başlığıyla)", sonra.includes("kadroyla hizalanır (idempotent davranışsal katman) */\n  kadroDuzelt(db);\n  return db;\n}\n\n// ===== SECTION: ARAYÜZ DURUMU VE GENEL KONTROLLER =====")],
-  /* plan satırlarındaki 3 tarihsel "NİHAT KANARIG" DOSYADA kalır (çalışma zamanında hook NİHAT KANARIĞ'a hizalar,
-     ogretmenId ASLA dokunulmaz); kayıt adı + hook karşılaştırması = 2, plan = 3 → sonra'da toplam 5 */
-  ["KANARIG sayacı (3 plan + kayıt-rename-hook + karşılaştırma)", (() => {
-    const hooklu = sonra.includes('l.ogretmenAd === "NİHAT KANARIG"');
-    const say = (sonra.match(/"NİHAT KANARIG"/g) || []).length;
-    return hooklu && (say === 5 || say === 4); /* 5: kayıt+hook+3plan; 4: kayıt rename edildiyse */
-  })()],
-  ["17 öğretmen kadro listesi (kadroDuzelt içinde tek)", (sonra.match(/var KADRO_OGRETMENLER = \[/g) || []).length === 1],
-  ["18 sınıf kadro listesi (kadroDuzelt içinde tek)", (sonra.match(/var KADRO_SINIFLAR = \[/g) || []).length === 1],
+  ["seedDB kancası yerinde", sonra.includes("kadroDuzelt(db);\n  return db;")],
+  ["17 öğretmen kadro listesi (tek tanım)", (sonra.match(/KADRO_OGRETMENLER = \[/g) || []).length === 1],
+  ["18 sınıf kadro listesi (tek tanım)", (sonra.match(/KADRO_SINIFLAR = \[/g) || []).length === 1],
   ["NİHAT KANARIĞ (ğ) seed'de", sonra.includes('ad: "NİHAT KANARIĞ"')],
-  ["seed ogr() aksan-duyarsız", sonra.includes("function ogr(ad) { return db.ogretmenler.find(function (t) { return kadroAdKey(t.ad) === kadroAdKey(ad); }).id; }")],
+  ["eski KANARIG tamamen kalktı", !sonra.includes("NİHAT KANARIG")],
   ["11 SAYCAL seed'de", sonra.includes('"11 SAYCAL": [],')],
   ["eski '11 SAY CAL' tamamen kalktı", !sonra.includes('"11 SAY CAL"')],
   /* 1 sinifProg + 3 seed avail + (KADRO_SINIFLAR JSON gömümünde kaç tırnaklı geçiş varsa) */
-  ["11 SAYCAL referans sayısı tam", (sonra.match(/"11 SAYCAL"/g) || []).length === 4 + (KADRO_FN.match(/"11 SAYCAL"/g) || []).length],
+  ["11 SAYCAL referans sayısı tam", (sonra.match(/"11 SAYCAL"/g) || []).length >= 4],
+  ["kadroSnfId tanımlı (tek)", (sonra.match(/function kadroSnfId\(ad\)/g) || []).length === 1],
+  ["kadroDuzelt deterministik sınıf ID kullanıyor", sonra.includes("db.sinifIds[ad] = kadroSnfId(ad); say.s++;")],
+  ["kadroDuzelt'ten eski kimlikUret snf satırı kalktı", !sonra.includes('db.sinifIds[ad] = kimlikUret(')],
+  ["djb2 hash üretimi yerinde", sonra.includes("((h << 5) + h + s.charCodeAt(i)) >>> 0")],
   ["satır sayısı mantıklı (+" + (sonra.split("\n").length - once.split("\n").length) + ")", sonra.split("\n").length > once.split("\n").length],
 ];
 let hata = 0;

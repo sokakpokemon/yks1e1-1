@@ -174,50 +174,62 @@ function avatar(ad, i) {
 }
 
 // ---------- Veri katmanı ----------
-/* ---------- KADRO-YAMASI: gerçek öğretmen ve sınıf kadrosu (tek gerçek kaynak; davranışsal katman) ----------
-   Kurallar:
-   - Öğretmen güvenli normalize ad karşılaştırmasıyla bulunur (TR büyük/küçük/aksan duyarsız).
-     Aynı isimli mevcut öğretmen: YENİ KAYIT OLUŞTURULMAZ, mevcut ID KORUNUR, branş güncellenir.
-     Yoksa: mevcut şemada ({id, ad, brans, avail:{sinif:{},musait:[]}}) yeni kayıt + kimlikUret/kimlikleriTamamla ile kalıcı ID.
+/* ---------- KADRO-YAMASI: gerçek öğretmen ve sınıf kadrosu (tek gerçek kaynak; davranışsal katman) ---------- */
+var KADRO_OGRETMENLER = [["BELGİN ÇOLAK","kim"],["EREN BİLGİLİ","tur"],["FATMA KURT","tur"],["FİKRİYE KIYAR","cgr"],["KARDELEN ASLAN","kim"],["SELİNA KUTLU","kim"],["MEHMET ŞAŞAR","mat"],["MERT ASİL","ing"],["MERVE GEREK","mat"],["MUSTAFA GÜRKAN","fiz"],["MİNE GÜRKAN","mat"],["NİHAT KANARIĞ","tar"],["RAVİDE DERYA","fiz"],["SALİM URTİMUR","mat"],["SONER AÇIKGÖZ","mat"],["TAHSİN ASLAN","mat"],["ŞAHİN DOĞANAY","biy"]];
+var KADRO_SINIFLAR = ["MEZUN SAY 1","MEZUN SAY 2","MEZUN SAY 3","MEZUN EA 1","MEZUN EA 2","12 SAY 1","12 SAY 2","12 SAY CAL","12 EA 1","12 DİL","11 SAY 1","11 SAY 2","11 SAY 3","11 SAYCAL","11 SAYISAL FEN","11 EA 1","10.SINIF","9.SINIF"];
+/* Kurallar:
+   - Öğretmen GÜVENLİ NORMALIZE ad karşılaştırmasıyla bulunur (TR büyük/küçük + aksan duyarsız:
+     ç→c ğ→g ı/İ→i ö→o ş→s ü→u). Aynı kişi: YENİ KAYIT OLUŞTURULMAZ — mevcut ID KORUNUR,
+     ad + branş kadro yazımıyla güncellenir. Yoksa: mevcut şemada ({id, ad, brans, avail:{sinif:{},musait:[]}})
+     yeni kayıt + kimlikUret/kimlikleriTamamla ile kalıcı ID.
    - Sınıflar DB.sinifIds[ad] + DB.sinifProg[ad] içine eklenir; var olan sınıf kimliği KORUNUR.
-   - Aynı adla ikinci öğretmen/sınıf kimliği ASLA oluşmaz (assert + benzersiz üretim).
-   - Referanslar (ders/istek/ogrenciIds/grup/ekDers) ve mevcut sinifProg/avail İÇERİKLERİ değiştirilmez. */
+   - Aynı adla ikinci öğretmen kimliği ASLA üretilmez; çift ad (aksan varyantları dahil) uyarıyla RAPORLANIR, SİLİNMEZ.
+   - Referanslar (ders/istek/ogrenciIds/ogretmenId/ekDers) ve mevcut sinifProg/avail İÇERİKLERİ değiştirilmez. */
 function kadroAdKey(ad) {
-  /* TR aksan katlama: noklası + tek kod noktalı Türkçe harfler (ğ→g, ü→u, ş→s, ı→i, ö→o, ç→c) + kalan combining işaretler */
   return String(ad || "").trim().toLocaleLowerCase("tr-TR")
-    .replace(/\u0307/g, "")
-    .replace(/ğ/g, "g").replace(/ü/g, "u").replace(/ş/g, "s").replace(/ı/g, "i").replace(/ö/g, "o").replace(/ç/g, "c")
-    .replace(/[\u0300-\u036f]/g, "");
+    .replace(/\u00e7/g, "c").replace(/\u011f/g, "g").replace(/\u0131/g, "i")
+    .replace(/\u00f6/g, "o").replace(/\u015f/g, "s").replace(/\u00fc/g, "u")
+    .replace(/\u0307/g, "").replace(/[\u0300-\u036f]/g, "");
+}
+function kadroSnfId(ad) {
+  var h = 5381;
+  var s = String(ad || "");
+  for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+  var n = KADRO_SINIFLAR.indexOf(s) + 1;
+  return "ks-snf-" + ("0000" + n).slice(-4) + "-" + h.toString(36);
 }
 function kadroDuzelt(db) {
-  if (!db || typeof db !== "object") return { t: 0, s: 0, b: 0 };
-  var say = { t: 0, s: 0, b: 0 };
-  var KADRO_OGRETMENLER = [["BELGİN ÇOLAK","kim"],["EREN BİLGİLİ","tur"],["FATMA KURT","tur"],["FİKRİYE KIYAR","cgr"],["KARDELEN ASLAN","kim"],["SELİNA KUTLU","kim"],["MEHMET ŞAŞAR","mat"],["MERT ASİL","ing"],["MERVE GEREK","mat"],["MUSTAFA GÜRKAN","fiz"],["MİNE GÜRKAN","mat"],["NİHAT KANARIĞ","tar"],["RAVİDE DERYA","fiz"],["SALİM URTİMUR","mat"],["SONER AÇIKGÖZ","mat"],["TAHSİN ASLAN","mat"],["ŞAHİN DOĞANAY","biy"]];
-  var KADRO_SINIFLAR = ["MEZUN SAY 1","MEZUN SAY 2","MEZUN SAY 3","MEZUN EA 1","MEZUN EA 2","12 SAY 1","12 SAY 2","12 SAY CAL","12 EA 1","12 DİL","11 SAY 1","11 SAY 2","11 SAY 3","11 SAYCAL","11 SAYISAL FEN","11 EA 1","10.SINIF","9.SINIF"];
+  if (!db || typeof db !== "object") return { t: 0, s: 0, b: 0, n: 0 };
+  var say = { t: 0, s: 0, b: 0, n: 0 };
   function ogretmenBul(ad) { var k = kadroAdKey(ad); return (db.ogretmenler || []).filter(function (t) { return kadroAdKey(t.ad) === k; })[0]; }
-  /* Öğretmenler: eşle → branş güncelle; yoksa → şemaya uygun yeni kayıt + kalıcı ID */
+  /* Öğretmenler: eşleşen → ID korunur, ad + branş kadro yazımına güncellenir */
   KADRO_OGRETMENLER.forEach(function (r) {
     var t = ogretmenBul(r[0]);
-    if (t) {
-      if (t.brans !== r[1]) { t.brans = r[1]; say.b++; }
-      return;
-    }
-    db.ogretmenler = Array.isArray(db.ogretmenler) ? db.ogretmenler : [];
-    db.ogretmenler.push({ id: "", ad: r[0], brans: r[1], avail: { sinif: {}, musait: [] } });
-    say.t++;
+    if (!t) return;
+    if (t.brans !== r[1]) { t.brans = r[1]; say.b++; }
+    if (t.ad !== r[0]) { t.ad = r[0]; say.n++; }
   });
-  /* Aynı adla iki öğretmen oluşmasını engelle (assert katmanı: bozuk DB'de de birleştirme YAPILMAZ, raporlanır) */
+  /* Çift ad (aksan varyantları dahil) üretimi engellenir; mevcut çiftler RAPORLANIR (silinmez) */
   var adSay = {};
   (db.ogretmenler || []).forEach(function (t) { var k = kadroAdKey(t.ad); adSay[k] = (adSay[k] || 0) + 1; });
   var cift = Object.keys(adSay).filter(function (k) { return adSay[k] > 1; });
-  if (cift.length) { if (typeof console !== "undefined") console.warn("KADRO-YAMASI: aynı isimli öğretmen kayıtları bulundu (birleştirilmedi, raporlandı):", cift.join(", ")); return say; }
+  if (cift.length && typeof console !== "undefined") console.warn("KADRO-YAMASI: aynı kişiye ait çoklu öğretmen kaydı (birleştirilmedi, raporlandı):", cift.join(", "));
+  /* Eksik öğretmenler: mevcut şemada yeni kayıt; kalıcı ID kimlikleriTamamla ile üretilir (idempotent) */
+  if (!cift.length) {
+    db.ogretmenler = Array.isArray(db.ogretmenler) ? db.ogretmenler : [];
+    KADRO_OGRETMENLER.forEach(function (r) {
+      if (ogretmenBul(r[0])) return;
+      db.ogretmenler.push({ id: "", ad: r[0], brans: r[1], avail: { sinif: {}, musait: [] } });
+      say.t++;
+    });
+  }
   if (Array.isArray(db.ogretmenler) && db.ogretmenler.some(function (t) { return !t.id; })) kimlikleriTamamla(db);
   /* Sınıflar: sinifProg girdisi + sinifIds kimliği (mevcut kimlik KORUNUR) */
   db.sinifProg = db.sinifProg && typeof db.sinifProg === "object" ? db.sinifProg : {};
   if (!db.sinifIds || typeof db.sinifIds !== "object" || Array.isArray(db.sinifIds)) db.sinifIds = {};
   KADRO_SINIFLAR.forEach(function (ad) {
     if (!db.sinifProg[ad]) { db.sinifProg[ad] = []; say.s++; }
-    if (db.sinifIds[ad] == null || db.sinifIds[ad] === "") { db.sinifIds[ad] = kimlikUret("snf", Object.keys(db.sinifIds).length); say.s++; }
+    if (db.sinifIds[ad] == null || db.sinifIds[ad] === "") { db.sinifIds[ad] = kadroSnfId(ad); say.s++; }
   });
   return say;
 }
@@ -558,10 +570,10 @@ function seedDB() {
     "9.SINIF": []
   };
 
-  function ogr(ad) { return db.ogretmenler.find(function (t) { return kadroAdKey(t.ad) === kadroAdKey(ad); }).id; }
+  function ogr(ad) { return db.ogretmenler.find(function (t) { return kucuk(t.ad) === kucuk(ad); }).id; }
   function ogn(ad) { return db.ogrenciler.find(function (s) { return kucuk(s.ad) === kucuk(ad); }).id; }
 
-  var plan = [[0,0,16,"Ayşe Demir","mat","Fonksiyonlarda Uygulama","SONER AÇIKGÖZ"],[0,0,14,"Zeynep Kaya","mat","Denklem Çözme","MİNE GÜRKAN"],[0,1,9,"Emir Aydın","mat","Sayılar ve İşlemler","TAHSİN ASLAN"],[0,3,12,"Emir Aydın","mat","Türev Temelleri","MERVE GEREK"],[0,4,16,"Ayşe Demir","mat","Problemler","SALİM URTİMUR"],[0,2,13,"Ayşe Demir","fiz","Kuvvet ve Hareket","RAVİDE DERYA"],[0,5,13,"Emir Aydın","fiz","Newton Yasaları","MUSTAFA GÜRKAN"],[0,1,11,"Elif Koç","kim","Periyodik Tablo","BELGİN ÇOLAK"],[0,3,16,"Elif Koç","kim","Asitler ve Bazlar","KARDELEN ASLAN"],[0,5,11,"Elif Koç","kim","Organik Kimya Giriş","SELİNA KUTLU"],[0,2,17,"Zeynep Kaya","biy","Hücre ve Organelleri","ŞAHİN DOĞANAY"],[0,1,15,"Ecrin Şahin","tur","Paragrafta Anlam","FATMA KURT"],[0,4,11,"Ecrin Şahin","tur","Sözcükte Anlam","EREN BİLGİLİ"],[0,5,15,"Elif Koç","tur","Dil Bilgisi Tekrarı","FATMA KURT"],[0,4,14,"Yusuf Can","cgr","Türkiye'nin Yer Şekilleri","FİKRİYE KIYAR"],[0,5,10,"Zeynep Kaya","tar","Kurtuluş Savaşı","NİHAT KANARIG"],[0,2,10,"Yusuf Can","ing","Tense & Preposition Tekrarı","MERT ASİL"],[-1,0,13,"Ayşe Demir","mat","Problemler","SONER AÇIKGÖZ"],[-1,0,11,"Emir Aydın","mat","Polinomlar","MEHMET ŞAŞAR"],[-1,2,11,"Yusuf Can","kim","Gaz Yasaları","SELİNA KUTLU"],[-1,3,10,"Ayşe Demir","mat","Limit","TAHSİN ASLAN"],[-1,3,14,"Emir Aydın","mat","İntegral","MİNE GÜRKAN"],[-1,4,15,"Zeynep Kaya","mat","Üçgende Benzerlik","MERVE GEREK"],[-1,1,14,"Ecrin Şahin","tur","Paragraf Analizi","FATMA KURT"],[-1,4,13,"Yusuf Can","tar","İlk Türk Devletleri","NİHAT KANARIG"],[-1,2,9,"Elif Koç","biy","Ekoloji","ŞAHİN DOĞANAY"],[-1,2,15,"Yusuf Can","cgr","İklim Bilgisi","KARDELEN ASLAN"],[-1,1,16,"Zeynep Kaya","kim","Mol Kavramı","BELGİN ÇOLAK"],[-1,0,11,"Ecrin Şahin","ing","Reading Practice","MERT ASİL"],[-2,0,9,"Zeynep Kaya","fiz","Elektrik","RAVİDE DERYA"],[-2,1,11,"Elif Koç","mat","Sayılar","SONER AÇIKGÖZ"],[-2,2,13,"Yusuf Can","tur","Sözcükte Anlam","EREN BİLGİLİ"],[-2,2,16,"Ayşe Demir","mat","Fonksiyonlar","MEHMET ŞAŞAR"],[-2,3,11,"Ecrin Şahin","ing","Vocabulary","MERT ASİL"],[-2,4,9,"Emir Aydın","fiz","İş ve Enerji","MUSTAFA GÜRKAN"],[-2,4,16,"Zeynep Kaya","mat","Denklem Sistemleri","SALİM URTİMUR"],[-2,5,12,"Elif Koç","tar","İnkılap Tarihi","NİHAT KANARIG"]];
+  var plan = [[0,0,16,"Ayşe Demir","mat","Fonksiyonlarda Uygulama","SONER AÇIKGÖZ"],[0,0,14,"Zeynep Kaya","mat","Denklem Çözme","MİNE GÜRKAN"],[0,1,9,"Emir Aydın","mat","Sayılar ve İşlemler","TAHSİN ASLAN"],[0,3,12,"Emir Aydın","mat","Türev Temelleri","MERVE GEREK"],[0,4,16,"Ayşe Demir","mat","Problemler","SALİM URTİMUR"],[0,2,13,"Ayşe Demir","fiz","Kuvvet ve Hareket","RAVİDE DERYA"],[0,5,13,"Emir Aydın","fiz","Newton Yasaları","MUSTAFA GÜRKAN"],[0,1,11,"Elif Koç","kim","Periyodik Tablo","BELGİN ÇOLAK"],[0,3,16,"Elif Koç","kim","Asitler ve Bazlar","KARDELEN ASLAN"],[0,5,11,"Elif Koç","kim","Organik Kimya Giriş","SELİNA KUTLU"],[0,2,17,"Zeynep Kaya","biy","Hücre ve Organelleri","ŞAHİN DOĞANAY"],[0,1,15,"Ecrin Şahin","tur","Paragrafta Anlam","FATMA KURT"],[0,4,11,"Ecrin Şahin","tur","Sözcükte Anlam","EREN BİLGİLİ"],[0,5,15,"Elif Koç","tur","Dil Bilgisi Tekrarı","FATMA KURT"],[0,4,14,"Yusuf Can","cgr","Türkiye'nin Yer Şekilleri","FİKRİYE KIYAR"],[0,5,10,"Zeynep Kaya","tar","Kurtuluş Savaşı","NİHAT KANARIĞ"],[0,2,10,"Yusuf Can","ing","Tense & Preposition Tekrarı","MERT ASİL"],[-1,0,13,"Ayşe Demir","mat","Problemler","SONER AÇIKGÖZ"],[-1,0,11,"Emir Aydın","mat","Polinomlar","MEHMET ŞAŞAR"],[-1,2,11,"Yusuf Can","kim","Gaz Yasaları","SELİNA KUTLU"],[-1,3,10,"Ayşe Demir","mat","Limit","TAHSİN ASLAN"],[-1,3,14,"Emir Aydın","mat","İntegral","MİNE GÜRKAN"],[-1,4,15,"Zeynep Kaya","mat","Üçgende Benzerlik","MERVE GEREK"],[-1,1,14,"Ecrin Şahin","tur","Paragraf Analizi","FATMA KURT"],[-1,4,13,"Yusuf Can","tar","İlk Türk Devletleri","NİHAT KANARIĞ"],[-1,2,9,"Elif Koç","biy","Ekoloji","ŞAHİN DOĞANAY"],[-1,2,15,"Yusuf Can","cgr","İklim Bilgisi","KARDELEN ASLAN"],[-1,1,16,"Zeynep Kaya","kim","Mol Kavramı","BELGİN ÇOLAK"],[-1,0,11,"Ecrin Şahin","ing","Reading Practice","MERT ASİL"],[-2,0,9,"Zeynep Kaya","fiz","Elektrik","RAVİDE DERYA"],[-2,1,11,"Elif Koç","mat","Sayılar","SONER AÇIKGÖZ"],[-2,2,13,"Yusuf Can","tur","Sözcükte Anlam","EREN BİLGİLİ"],[-2,2,16,"Ayşe Demir","mat","Fonksiyonlar","MEHMET ŞAŞAR"],[-2,3,11,"Ecrin Şahin","ing","Vocabulary","MERT ASİL"],[-2,4,9,"Emir Aydın","fiz","İş ve Enerji","MUSTAFA GÜRKAN"],[-2,4,16,"Zeynep Kaya","mat","Denklem Sistemleri","SALİM URTİMUR"],[-2,5,12,"Elif Koç","tar","İnkılap Tarihi","NİHAT KANARIĞ"]];
   plan.forEach(function (r) {
     var _h = r[2];
     var _no = ksKodOf((_h < 10 ? "0" + _h : "" + _h) + ":00") || "4"; /* 12:00 belirsiz → 4. ders (11:20-12:00) */
@@ -581,8 +593,6 @@ function seedDB() {
     { id: uid(), ogrenciId: ogn("Yusuf Can"), ogrenciAd: "Yusuf Can", dersId: "ing", konu: "Reading Stratejileri", durum: "bekliyor", olusturma: addDaysKey(todayKey(), -3), saat: "14:40" },
     { id: uid(), ogrenciId: ogn("Ayşe Demir"), ogrenciAd: "Ayşe Demir", dersId: "fiz", konu: "İş, Güç ve Enerji", durum: "bekliyor", olusturma: addDaysKey(todayKey(), -2), saat: "11:20" }
   ];
-  /* KADRO-YAMASI: seed plan satırlarındaki tarihsel eski yazımlar kadroyla hizalanır (ogr/ogn ad-tam-eşleşme) */
-  db.dersler.forEach(function (l) { if (l.ogretmenAd === "NİHAT KANARIG") l.ogretmenAd = "NİHAT KANARIĞ"; });
   /* KADRO-YAMASI: seed DB'si gerçek kadroyla hizalanır (idempotent davranışsal katman) */
   kadroDuzelt(db);
   return db;

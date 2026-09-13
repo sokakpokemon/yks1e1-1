@@ -505,30 +505,33 @@ Seed/DB artık gerçek kadroyu taşır; `kadroDuzelt()` tek gerçek kaynak. loca
 
 ## Sınıflar (18) — ad → ID
 
-| Sınıf | ID |
+ID formatı: `ks-snf-00NN-<djb2 base36 hash>` — `kadroSnfId(ad)` ile üretilir, **deterministik**: taze boot'ta da aynı ID (zaman/rastgele bileşeni yok). Kayıtlı DB'de zaten ID varsa KORUNUR.
+
+| Sınıf | ID (deterministik önek) |
 |---|---|
-| MEZUN SAY 1 | ks-snf-0001 |
-| MEZUN SAY 2 | ks-snf-0002 |
-| MEZUN SAY 3 | ks-snf-0003 |
-| MEZUN EA 1 | ks-snf-0004 |
-| MEZUN EA 2 | ks-snf-0005 |
-| 12 SAY 1 | ks-snf-0006 |
-| 12 SAY 2 | ks-snf-0007 |
-| 12 SAY CAL | ks-snf-0008 |
-| 12 EA 1 | ks-snf-0009 |
-| 12 DİL | ks-snf-0010 |
-| 11 SAY 1 | ks-snf-0011 |
-| 11 SAY 2 | ks-snf-0012 |
-| 11 SAY 3 | ks-snf-0013 |
-| 11 SAYCAL | ks-snf-0014 |
-| 11 SAYISAL FEN | ks-snf-0015 |
-| 11 EA 1 | ks-snf-0016 |
-| 10.SINIF | ks-snf-0017 |
-| 9.SINIF | ks-snf-0018 |
+| MEZUN SAY 1 | ks-snf-0001-… |
+| MEZUN SAY 2 | ks-snf-0002-… |
+| MEZUN SAY 3 | ks-snf-0003-… |
+| MEZUN EA 1 | ks-snf-0004-… |
+| MEZUN EA 2 | ks-snf-0005-… |
+| 12 SAY 1 | ks-snf-0006-… |
+| 12 SAY 2 | ks-snf-0007-… |
+| 12 SAY CAL | ks-snf-0008-… |
+| 12 EA 1 | ks-snf-0009-… |
+| 12 DİL | ks-snf-0010-… |
+| 11 SAY 1 | ks-snf-0011-… |
+| 11 SAY 2 | ks-snf-0012-… |
+| 11 SAY 3 | ks-snf-0013-… |
+| 11 SAYCAL | ks-snf-0014-… |
+| 11 SAYISAL FEN | ks-snf-0015-… |
+| 11 EA 1 | ks-snf-0016-… |
+| 10.SINIF | ks-snf-0017-… |
+| 9.SINIF | ks-snf-0018-… |
 
 ## Kadro uygulaması (ks-yama-kadro.mjs)
 
 - **Yeni (app.js):** `kadroDuzelt()` — `normalize()` ve `loadDB()` içinden çağrılır; tek kapıdan geçer.
+- **Yeni (app.js):** `kadroSnfId(ad)` — deterministik sınıf kimliği: `ks-snf-00NN-<djb2 base36>`; taze boot'ta da aynı ID üretir. Kadro-dışı sınıflar (UI ekleme + kimlikleriTamamla) eski `kimlikUret` yolunu korur.
 - Yazım hizalama: kayıt adı `NİHAT KANARIĞ`, sınıf `11 SAYCAL`; seed plan satırlarındaki tarihsel `NİHAT KANARIG`/`11 SAY CAL` referansları çalışma zamanında aksan-duyarsız eşlenir (dosyada kalır, değiştirilmez).
 - `kadroAdKey()`: Türkçe aksan katlama (ı→i, İ→i, ğ→g, ş→s, ç→c, ö/ü/o/u…) + combining işaret temizliği → `KANARIG` = `KANARIĞ`, `SAY CAL` = `SAYCAL` güvenli eşleşme.
 - Seed `ogr()` yardımcısı aksan-duyarsız ad çözümlemesiyle güncellendi (taze boot çökmez).

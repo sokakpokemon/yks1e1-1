@@ -540,3 +540,57 @@ ID formatı: `ks-snf-00NN-<djb2 base36 hash>` — `kadroSnfId(ad)` ile üretilir
 - Geri dönüş: `app.js.kadro-oncesi.bak`.
 - Süit: `ks-gercek-kadro.mjs` (80 test, test.mjs'e eklendi).
 - **Toplam: 395/395 OK** (315 mevcut + 80 yeni).
+
+---
+
+# ✅ CHECKPOINT: Dönem Modeli — İlk Dilim (2026/2027, Veri-Uyumluluk)
+
+**Tarih:** 13 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **442/442 OK** (395 eski + 47 yeni)
+
+## Dönem Şeması (localStorage: `yksOto_arsiv_v1`)
+
+| Alan | Değer | Kural |
+|---|---|---|
+| `DB.donemler` | `[{ id: "donem-2026-2027", ad: "2026/2027", aktif: true }]` | Tek kayıt; ikinci oluşturulmaz, mevcut doğru ID korunur |
+| `DB.aktifDonemId` | `"donem-2026-2027"` | Dönem işaretçisi |
+| `DB.sinifProgDonemId` | `"donem-2026-2027"` | Yalnızca EK alan; `DB.sinifProg` YAPISI değişmez |
+| `dersler[].donemId` / `istekler[].donemId` | `"donem-2026-2027"` | Yalnızca eksik/boşsa eklenir; mevcut değer ASLA üzerine yazılmaz |
+| `ogrenciler[]` / `ogretmenler[]` / `DB.sinifIds` | — | Bu dilimde GLOBAL: donemId eklenmez, ID'ler değişmez |
+
+Sınıf adları, sınıf ID'leri, ders/istek/grup-dersi referansları (ogrenciId/ogretmenId/ogrenciIds) DEĞİŞTİRİLMEDİ.
+
+## Değişen Fonksiyonlar (app.js — baştan yazma YOK, ks-yama-donem-ilk.mjs hedefli yama)
+
+- **Yeni:** `donemleriBaslat(db)` (bosDB'den önce) — dönem kaydı + işaretçiler + ders/istek donemId backfill; idempotent, dönüş sayıları `{ d, ders, ist }`.
+- **`bosDB()`:** taze şemaya `donemler`, `aktifDonemId`, `sinifProgDonemId` eklendi (mevcut alan sırası korundu).
+- **`normalize()`:** sonuna `donemleriBaslat(d)` — loadDB / yedek yükleme tek kapıdan dönemlenir.
+- **Boot:** `donemleriBaslat(DB)` + `saveDB()` — seed yolu da dönemli.
+- Geri dönüş: `app.js.donem-oncesi.bak` (yama öncesi hâl, SHA `2935d265…`).
+
+## Migration Sayıları (seed verisi, tek geçiş)
+
+| İşlem | Sayı |
+|---|---|
+| Derslere eklenen `donemId` | **37** |
+| İsteklere eklenen `donemId` | **3** |
+| Oluşturulan dönem kaydı | 1 (`donem-2026-2027`) |
+| İkinci geçişte eklenen alan | **0** (idempotent) |
+
+Eski kayıtların diğer alanları deep-equal korundu; kopya ders/istek/grup kaydı OLUŞMADI.
+
+## Yedek / Geri Yükleme
+
+`yedekAl`/`yedekOku` fonksiyonları ve yedek formatı DEĞİŞMEDİ; `donemler`, `aktifDonemId`, `sinifProgDonemId` ve tüm `donemId` alanları `veri` paketinde JSON'a zaten gömüldüğünden kayıpsız taşınıyor. Eski (dönemsiz) yedek yüklenince `normalize` otomatik dönemliyor: 37 ders + 3 istek + dönem kaydı tek geçişte, kopya yok.
+
+## Testler
+
+- Yeni: `ks-donem-ilk.mjs` — **47 test** (dönem tekliği, aktifDonemId, backfill, sayı koruma, alan deep-equal, sinifProg/sinifIds, öğrenci/öğretmen, idempotans, yedek döngüsü, SHA-256 ile index.html/ek-ders.js değişmezliği).
+- `test.mjs` 11 süit oldu. Süit düzeltmesi (gevşetme DEĞİL): `ks-grup-istegi.mjs`'teki 2 byte-equal yedek karşılaştırması migration alanını (`+donemId`) içeren beklenen kayıtla yapılıyor — sertlik korunuyor.
+- Doğrulama: `node --check app.js` OK · `node --check ek-ders.js` OK · `node test.mjs` → **442/442 OK**.
+- Yama 2. koşu: "Zaten uygulanmış" (exit 2), dosya değişmez.
+
+## Kalan Riskler
+
+- Dönem seçici UI, dönem bazlı filtreleme ve dönem geçiş akışı henüz YOK (bu dilim bilinçli olarak yalnızca veri-uyumluluk).
+- `planla()` ve istek ekleme, yeni kayıtlara henüz otomatik `donemId` YAZMAZ; `donemId`'siz yeni kayıt sonraki normalize'da `aktifDonemId`'ye taşınır (veri kaybı yok).
+- Eski yedek dosyaları eski şemayla kalır; yükleme anında dönemlenir (normal).

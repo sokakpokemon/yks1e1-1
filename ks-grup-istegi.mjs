@@ -92,7 +92,8 @@ console.log("2) Eski tekli istek yedek/geri yükleme:");
 const yedek1 = JSON.parse(JSON.stringify({ istekler: [eskiTekli], ogretmenler: DB.ogretmenler, ogrenciler: DB.ogrenciler, dersler: DB.dersler, sinifProg: DB.sinifProg }));
 const yuklenen1 = normalize(yedek1);
 const eskiYuklenen = yuklenen1.istekler[0];
-t("yedek→yükleme sonrası tekli istek birebir", JSON.stringify(eskiYuklenen) === JSON.stringify(eskiTekli));
+/* DONEM-ILK-YAMASI: normalize eski isteğe donemId ekler (dönem modeli migration alanı) — beklenen kayıt donemId'li; deep-equal aynı sertlikte */
+t("yedek→yükleme sonrası tekli istek birebir (+donemId migration)", JSON.stringify(eskiYuklenen) === JSON.stringify(Object.assign({}, eskiTekli, { donemId: DB.aktifDonemId })));
 t("yükleme sonrası istekOgrenciIds aynı", JSON.stringify(istekOgrenciIds(eskiYuklenen)) === JSON.stringify([ayse.id]));
 
 /* 3) Ortak grup isteği: en az 2 öğrenci zorunlu */
@@ -237,7 +238,8 @@ const yedek2 = JSON.parse(JSON.stringify(typeof _yedekHam === "string" ? JSON.pa
 const yuklenen2 = normalize(JSON.parse(JSON.stringify(yedek2)));
 const giYuklenen = yuklenen2.istekler.find(r => r.id === gi.id);
 t("yükleme sonrası grup isteği bulunur", !!giYuklenen);
-t("grup isteği alanları DEEP-EQUAL geri döner", giYuklenen && JSON.stringify(giYuklenen) === JSON.stringify(JSON.parse(JSON.stringify(gi))));
+/* DONEM-ILK-YAMASI: yükleme normalize'ı isteğe donemId ekler — beklenen kayıt gi+donemId; alanlara dokunulmazlığı hâlâ byte-seviyede assert eder */
+t("grup isteği alanları DEEP-EQUAL geri döner (+donemId migration)", giYuklenen && JSON.stringify(giYuklenen) === JSON.stringify(Object.assign({}, JSON.parse(JSON.stringify(gi)), { donemId: DB.aktifDonemId })));
 t("ogrenciIds eksiksiz (2 üye — planlama ek üyeyi isteğe yazmaz; süit 9 ile tutarlı)", giYuklenen && JSON.stringify(giYuklenen.ogrenciIds) === JSON.stringify([zeynep.id, emir.id]));
 const loadYuklenen = loadDB();
 t("loadDB de grup isteğini korur", !!loadYuklenen && !!loadYuklenen.istekler.find(r => r.id === gi.id && JSON.stringify(r.ogrenciIds) === JSON.stringify([zeynep.id, emir.id])));

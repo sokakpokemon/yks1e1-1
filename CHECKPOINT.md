@@ -635,3 +635,60 @@ Eski kayıtların diğer alanları deep-equal korundu; kopya ders/istek/grup kay
 - `test.mjs` 13 süit oldu. Doğrulama: `node --check app.js` OK · `node --check ek-ders.js` OK · `node test.mjs` → **569/569 OK** (eski iki süitteki kaulan kırılganlığı v2 ile kökten giderildi).
 - Yama idempotent: 2. koşu "Zaten uygulanmış (DONEM-SECICI-V2)" (exit 2), SHA doğrulandı — dosya değişmez.
 - Kalan riskler: dönem listesi hâlâ tek dönem (yeni dönem ekleme sonraki dilim); donemId'siz kayıtlar yalnız okuma anında "2026/2027" kabul edilir (yerinde yazım bilinçli olarak sonraki normalize'a bırakıldı).
+
+---
+
+# ✅ CHECKPOINT: Excel Uyumlu CSV Dışa/İçe Aktarma (Aktif Dönem) — EXCEL-CSV-YAMASI
+
+**Tarih:** 14 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **654/654 OK** (569 eski + 85 yeni)
+
+## CSV Kararı ve Gerekçesi
+
+- Gerçek .xlsx ÜRETİLMEDİ; **Excel uyumlu CSV** seçildi: UTF-8 BOM (U+FEFF) + noktalı virgül (`;`) ayraç + CRLF satır sonu + çift tırnak kaçışlaması (`""`).
+- Gerekçe: sandbox çevrimdışı çalışır; SheetJS/dış kütüphane gereksiz bağımlılık oluşturur; BOM+`;` kombinasyonu Türkçe Excel'de çift tıklamayla doğrudan açılır; parser/serializer uygulama içinde küçük ve test edilebilir kaldı (`csvHucre/csvSatir/csvDosya/csvParse` — split(';') DEĞİL, gerçek quote-aware parser: quoted alanlar, kaçışlı tırnak ve çok satırlı hücreler doğru okunur, BOM kaldırılır).
+
+## Üç Dosya (schema: "yks-csv-v1")
+
+| Dosya | dataset | Kapsam |
+|---|---|---|
+| `yks-kadro-global.csv` | `kadro` | TÜM öğrenciler + TÜM öğretmenler + TÜM `DB.sinifIds` — dönem filtresi YOK (global); `donemId` sütunu boş |
+| `yks-dersler-<aktifDonemId>.csv` | `dersler` | YALNIZ `aktifDonemKayitlari(DB.dersler)` — başka dönem dersi ASLA girmez |
+| `yks-istekler-<aktifDonemId>.csv` | `istekler` | YALNIZ `aktifDonemKayitlari(DB.istekler)` — başka dönem isteği ASLA girmez |
+
+- Sabit başlıklar: kadro `schema;dataset;donemId;tip;id;ad;brans;sinifId;sinifAd;ekAlanlarJson` · ders/istek `schema;dataset;donemId;tip;id;ogrenciId;ogrenciIds;ogrenciAd;ogretmenId;ogretmenAd;dersId;dersAd;konu;tarih;saat;kod;sinif;durum[;olusturma];ekAlanlarJson`.
+- `ogrenciIds` ek üyeleri `"|"` ile birleşir (sıra korunur), boşsa boş hücre; içe aktarımda tekrar diziye çevrilir.
+- `ekAlanlarJson` standart başlık dışı alanları kayıpsız taşır; korumalı alanlar (id, donemId, ogrenciId, ogrenciIds, ogretmenId, dersId, sinif, tip) uygulanmaz.
+- UI: Yönetim → Ayarlar içinde "Excel / CSV Veri Yönetimi" kartı: `Tüm CSV'leri İndir` (tarayıcı engellerse 3 ayrı buton çalışır) + `Kadro/Aktif Dersler/Aktif İstekler CSV İndir` + `CSV İçe Aktar` (multi-file, null-safe input) + `Son İçe Aktarmayı Geri Al` + sonuç/hata alanı.
+
+## ID/UPSERT ve Referans Kuralları
+
+- Birincil eşleştirme YALNIZ ID ile; aynı isimli öğrenci/öğretmenler ASLA ada göre birleştirilmez (ID farklıysa ayrı kişi).
+- Boş ID → mevcut helper'larla üretim: öğrenci/öğretmen `kimlikUret` + benzersiz savunması (üretilen sayacı raporlanır); sınıf → ada göre mevcut sınıfa bağlan, yoksa `kadroSnfId` deterministik üretim.
+- Dolu ID: aynı ID varsa güncelle; ID başka türde kullanılıyorsa RED; yoksa ekle. Ders/istek yalnız kendi `id`'siyle upsert; isim/tarih/konu eşleştirmesi YOK.
+- Referans doğrulama (ada göre tahmin YOK): `ogrenciId`, `ogrenciIds` üyeleri, derslerde `ogretmenId` zorunlu; `sinif` doluysa `DB.sinifIds`'te çözülmeli; `dersId` DERS tanımında yoksa satır RED (sessiz değişim yok). İsteklerde `ogretmenId` boş olabilir (istek şemasında alan yok).
+- Ders/istek `donemId` ZORUNLU ve aktif döneme eşit; boş/farklı → satır numarasıyla RED. Mevcut kaydın `donemId`'si ASLA değiştirilmez (aynı ID başka döneme aitse RED).
+- Aynı dosyada yinelenen ID hata. Hata mesajı: dataset + satır + kolon + sebep.
+
+## Atomik İçe Aktarma ve Geri Alma
+
+1) Tüm dosyalar parse → 2) tüm satırlar doğrulanır (kadro önce uygulanmış gibi; referans kontrolleri birleşik) → 3) DB'nin derin kopyası üzerinde upsert → 4) her şey başarılıysa `DB = kopya` + TEK `saveDB()` + `yenile()`; tek hata bile varsa hiçbir dosya uygulanmaz, DB/localStorage/ekran byte-birebir aynı kalır.
+- Başarılı işlem öncesi `EXCEL_CSV_SNAPSHOT` (oturum içi); "Son İçe Aktarmayı Geri Al" DB'yi snapshot'a döndürür + `saveDB()` + `yenile()` — yeni kayıtlar ve güncellemeler birlikte geri alınır. Başarısız işlemde buton çıkmaz.
+- İçe aktarma ekleme/güncelleme yapar; silme yapmaz; CSV'de olmayan kayıtlar korunur. İkinci kez aynı CSV içe aktarıldığında duplicate OLUŞMAZ (idempotent upsert).
+
+## Dokunulmayanlar
+
+index.html, ek-ders.js, vendor/* (SHA-256 yazma öncesi+sonrası doğrulandı), sinifProg/sinifProgDonemler içeriği, mevcut donemId değerleri, mevcut kadro ID'leri, ders/istek referansları, tablo/analiz hesapları, KS göçü, yedek formatı/davranışı, dönem seçici + aktifDonemKayitlari filtre kapısı. **Program verisi (sinifProg) bu dilimin CSV kapsamının DIŞINDA** (bilinçli).
+
+## Testler ve Sayılar
+
+- Yeni süit: `ks-excel-csv.mjs` — **85 test** (BOM/`;`/CRLF çıktısı; Türkçe+tırnak+`;`+satır sonu parse/serialize yuvarlama; kadro global kapsamı; yalnız aktif dönem; başka dönem kaydının girmemesi; `ogrenciIds` sırası; aynı isimli iki öğrenci farklı ID; ID-upsert duplicate üretmez; eksik ID üretimi; `kadroSnfId` kullanımı; ada göre yanlış birleştirme yok; bilinmeyen referans satır numarasıyla RED; farklı donemId RED; eski donemId korunumu; hatalı dosyada DB+localStorage değişmez; başarıda TEK saveDB+yenile; snapshot geri alma; aynı CSV 2. içe aktarımda duplicate yok; index.html/ek-ders.js/vendor işaret/hash kontrolü).
+- `test.mjs` 14 süit oldu. Yama: `ks-yama-excel-csv.mjs` (assert'li, idempotent — 2. koşu "Zaten uygulanmış" exit 2). Geri dönüş: `app.js.excel-csv-oncesi.bak`.
+- **Sayılar: BASELINE 569 (13 eski süit) + 85 yeni = 654/654 OK.**
+- Doğrulama: `node --check app.js` · `node --check ek-ders.js` · `node --check ks-excel-csv.mjs` · `node --check test.mjs` → OK.
+
+## Kalan Riskler
+
+- "Tüm CSV'leri İndir" bazı tarayıcılarda 2+ indirmeyi engelleyebilir (3 ayrı buton yedek yol, çalışır durumda).
+- Çok büyük arşivlerde CSV içe aktarma tek senkron işlemde çalışır (UI kilitlenmesi mümkün ama veri riski yok — atomik).
+- `ekAlanlarJson` içinde iç içe nesne/diziler JSON olarak taşınır; Excel hücresinde elle düzenlenirse bozuk JSON sessizce yoksayılır (alan korunur, kayıp yok).
+- Farklı dönemlerde indirilen CSV'ler dosya adında dönem ID taşır; karışıklık önlenir.

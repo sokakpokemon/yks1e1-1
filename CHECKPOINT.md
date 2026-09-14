@@ -692,3 +692,47 @@ index.html, ek-ders.js, vendor/* (SHA-256 yazma öncesi+sonrası doğrulandı), 
 - Çok büyük arşivlerde CSV içe aktarma tek senkron işlemde çalışır (UI kilitlenmesi mümkün ama veri riski yok — atomik).
 - `ekAlanlarJson` içinde iç içe nesne/diziler JSON olarak taşınır; Excel hücresinde elle düzenlenirse bozuk JSON sessizce yoksayılır (alan korunur, kayıp yok).
 - Farklı dönemlerde indirilen CSV'ler dosya adında dönem ID taşır; karışıklık önlenir.
+
+---
+
+# ✅ CHECKPOINT: Yönetim'den 2027/2028 Dönemi Oluşturma + Dönemli Sınıf Programı (DONEM-OLUSTURMA-YAMASI)
+
+## Yapılan İş (app.js — baştan yazma YOK, ks-yama-donem-olusturma.mjs hedefli yama)
+
+- **P1) donemSec(id):** aktifDonemId + sinifProgDonemId AYNI id'ye hizalanır; `sinifProguDonemeBagla(id)` ile DB.sinifProg aktif dönemin programına bağlanır; saveDB + mevcut yenile akışı aynen korunur.
+- **P2) donemleriBaslat:** çok dönemli DB'de aktifDonemId/sinifProgDonemId SIFIRLANMAZ (yalnız boş/geçersiz id'de güvenli fallback donem-2026-2027); DONEM_ILK `aktif` damgası yalnız TEK dönemli (yeni yedek/boot) DB'de uygulanır → donemSec'in aktif-işaret sözleşmesiyle uyumlu, idempotent.
+- **P2b) donemleriBaslat dönüşünden ÖNCE** `sinifProgDonemleriBaslat(db)` çağrısı → migration kapısı normalize/loadDB/yedek-yükleme yolunun tamamını kapsar.
+- **P3) Yeni blok (tumunuSil'den önce):** `sinifProgDonemleriBaslat` + `sinifProgAktif` + `sinifProguDonemeBagla` + `yeniDonemOlustur` + `donemSeciliSinifProg`.
+- **A3) donemSecKutusuHTML:** dönem seçicinin YANINA "Yeni Dönem Oluştur" butonu (id `donemYeniBtn`; innerHTML her render'da yeniden yazıldığından duplicate imkânsız; kaynakta tam 1 tanım).
+
+## Yeni Dönem Şeması
+
+- `DB.sinifProgDonemler = { donemId: { sınıfAdı: [hücre anahtarları] } }` — dönemli sınıf programı deposu.
+- `DB.donemler[]` kaydı: `{ id: "donem-2027-2028", ad: "2027/2028", aktif }`.
+- **Uyumluluk katmanı:** DB.sinifProg = sinifProgDonemler[sinifProgDonemId] **TA KENDİSİ (identity rebind)** — renderer'lar DB.sinifProg okumaya devam eder; program düzenlemeleri depoya yansır, dönem değişiminde kaybolmaz.
+
+## sinifProg Migration ve Program Koruması
+
+- Eski tek dönemlik DB.sinifProg, öncelik zinciriyle KAYIPSIZ bağlanır: `sinifProgDonemId → aktifDonemId → "donem-2026-2027"` (deep-copy; referans sızıntısı yok).
+- sinifProgDonemler zaten varsa: mevcut programlar SİLİNMEZ/üzerine yazılmaz; yalnız EKSİK dönem anahtarlarına `{}` eklenir.
+- Dönem değişince: başka dönemin programı ASLA üzerine yazılmaz; 2026/2027 ↔ 2027/2028 geçişlerinde program/ders/istek deep-equal geri gelir.
+- `yeniDonemOlustur`: ilk basışta donemler'e TEK kayıt; dersler[]/istekler[] KOPYALAMAZ; 2027/2028 programı BOŞ `{}` başlar; aktif işaretler tek döneme hizalanır; zaten varsa yalnız o döneme geçer + toast "zaten var"; art arda tıklama duplicate üretmez. ogrenciler/ogretmenler/sinifIds GLOBAL kalır.
+
+## Testler ve Sayılar
+
+- Yeni süit: `ks-donem-olusturma.mjs` — **87 test** (migration kayıpsızlık + öncelik zinciri; mevcut programların korunması; tek kez oluşturma; ders/istek kopyalanmaması; boş yeni dönem programı; global verilerin birebir korunumu; aktifDonemId+sinifProgDonemId birlikte güncellenmesi; geçişte eski programın deep-equal dönüşü; identity-rebind; idempotans; seçici+buton duplicate üretmez; saveDB/yedek döngüsünde kayıpsızlık; index.html/ek-ders.js/vendor hash).
+- `test.mjs` 15 süit oldu. Yama: `ks-yama-donem-olusturma.mjs` (assert'li, idempotent — 2. koşu "Zaten uygulanmış" exit 2). Geri dönüş: `app.js.donem-olusturma-oncesi.bak`.
+- **Sayılar: BASELINE 654 (14 eski süit) + 87 yeni = 741/741 OK.** Süit dağılımı: harness 34, test-render 14, durum-fn 20, grup-uyum 41, panel-secim 32, grup-gorunum 28, istekten-grup 32, grup-istegi 68, benzersiz-id 46, gercek-kadro 80, donem-ilk 47, donem-damga 50, donem-secici 77, excel-csv 85, donem-olusturma 87.
+- Doğrulama: `node --check app.js` · `node --check ek-ders.js` · `node --check ks-donem-olusturma.mjs` · `node --check ks-yama-donem-olusturma.mjs` → OK.
+
+## Dokunulmayanlar (hash doğrulaması)
+
+- `index.html` SHA-256 `5b691039…` değişmedi (yama işareti YOK); `ek-ders.js` SHA-256 `662ec4f1…` değişmedi (yama işareti YOK); `vendor/*` 5 dosya okunur ve değişmez.
+- `app.js`: `84a9d485…` → `120b87df…` (yalnız yama bölgeleri; yedek `app.js.donem-olusturma-oncesi.bak` = eski SHA).
+- Mevcut ders/istek `donemId` değerleri ve yeni kayıt damga mantığı değişmedi (ks-donem-damga 50/50); dönem seçici davranış sözleşmesi aynen korundu (ks-donem-secici 77/77).
+
+## Kalan Riskler
+
+- Program düzenleme UI'ı DB.sinifProg (view) üzerinden yazıyor: davranış doğru; ileride depoya doğrudan yazacak yeni özellikler sinifProgDonemler[dönemId] anahtarını kullanmalı.
+- 2027/2028 ilk oluşturmada program kasıtlı BOŞ başlar (eski dönem programı kopyalanmaz); kullanıcı yeni dönemde programı kurar.
+- Dönemsiz ESKİ yedek yüklemede program donem-2026-2027'ye bağlanır; 2027/2028 aktifken alınan yedeklerde sinifProgDonemler kayıpsız taşınır (87 test ile doğrulandı).

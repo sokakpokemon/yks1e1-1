@@ -284,64 +284,6 @@ function aktifDonemKayitlari(dizi) {
 /* Dönem seçici: DB.donemler[]'den beslenir; value = dönem id; açılışta DB.aktifDonemId seçili.
    DB.donemler boş/eksikse mevcut dönem uyumluluk katmanı BOZULMAZ: yalnız "donem-2026-2027"
    güvenli şekilde kullanılır (seçici tek seçenek). Null-safe: kutu DOM'da yoksa hiçbir şey yapmaz. */
-
-/* ---- SABLON-KOPYA-YAMASI: "Programı Sablondan Kopyala" kartı (kalıcı #donem-ui-host içine) ----
-   - donemHostOnar bu kartı host'a TEK kez ekler; donemHostTazele seçimleri koruyarak tazeler →
-     donemSec/yeniDonemOlustur/alt sekme geçişi sonrası TEK kopya (duplicate imkânsız).
-   - Yeni dönem oluşturma programı OTOMATİK kopyalamaz; kopyalama yalnız kullanıcı butonuyla. */
-function sablonKopyaUIHTML(secimler) {
-  secimler = secimler || {};
-  var donemler = (DB && Array.isArray(DB.donemler)) ? DB.donemler : [];
-  var hedef = secimler.hedef || aktifDonemId();
-  var kaynak = secimler.kaynak || "";
-  if (!donemler.some(function (d) { return d && d.id === hedef; })) hedef = donemler.length ? donemler[0].id : "";
-  var kandidate = donemler.filter(function (d) { return d && d.id !== hedef; });
-  if (!kaynak || !kandidate.some(function (d) { return d.id === kaynak; })) kaynak = kandidate.length ? kandidate[0].id : "";
-  var opt = function (seciliId) {
-    return donemler.filter(function (d) { return d && d.id; }).map(function (d) {
-      return '<option value="' + esc(d.id) + '"' + (d.id === seciliId ? " selected" : "") + ">" + esc(d.ad || d.id) + "</option>";
-    }).join("");
-  };
-  return '<div id="sablon-kopya-ui" class="no-print rounded-2xl border border-slate-100 bg-slate-50/70 px-3 py-2.5 mb-2">' +
-    '<div class="flex flex-wrap items-center gap-2">' +
-      '<span class="text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wide whitespace-nowrap"><i class="fa-regular fa-clone mr-1"></i>Programı Sablondan Kopyala</span>' +
-      '<select id="sablon-kaynak-donem" onchange="sablonKopyaOnayTazele()" class="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-[12px] font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-400/40">' + opt(kaynak) + "</select>" +
-      '<span class="text-[11px] text-slate-300 font-bold"><i class="fa-solid fa-arrow-right-long"></i></span>' +
-      '<select id="sablon-hedef-donem" onchange="sablonKopyaOnayTazele()" class="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-[12px] font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-400/40">' + opt(hedef) + "</select>" +
-      '<button id="sablon-kopyala-btn" onclick="sablonKopyaBaslat()" class="rounded-xl bg-teal-500 hover:bg-teal-600 text-white text-[11.5px] font-bold px-3.5 py-1.5 shadow-sm transition-colors whitespace-nowrap"><i class="fa-regular fa-clone mr-1"></i>Programı Kopyala</button>' +
-    "</div>" +
-    '<p id="sablon-kopya-uyari" class="hidden text-[11px] font-semibold text-rose-600 mt-1.5 mb-0"></p>' +
-  "</div>";
-}
-/* Uyarı: kaynak = hedef veya hedef dolu → görünür uyari; buton akışı yine de sunucu-tarafı güvenlikle RED. */
-function sablonKopyaOnayTazele() {
-  try {
-    var kEl = document.getElementById("sablon-kaynak-donem");
-    var hEl = document.getElementById("sablon-hedef-donem");
-    var uyariEl = document.getElementById("sablon-kopya-uyari");
-    if (!kEl || !hEl || !uyariEl) return;
-    var k = kEl.value, h = hEl.value;
-    var msg = "";
-    if (!k || !h || k === h) msg = "Kaynak ve hedef dönem farklı olmalı.";
-    else if (!sablonKopyaProgramBosMu(DB.sinifProgDonemler ? DB.sinifProgDonemler[h] : null)) msg = "Hedef dönem dolu — mevcut program korunur, ezme yok. Kopyalama için boş bir dönem seçin.";
-    if (msg) { uyariEl.textContent = msg; uyariEl.classList.remove("hidden"); }
-    else uyariEl.classList.add("hidden");
-  } catch (e) { /* DOM yoksa sessiz */ }
-}
-function sablonKopyaBaslat() {
-  var kEl = document.getElementById("sablon-kaynak-donem");
-  var hEl = document.getElementById("sablon-hedef-donem");
-  if (!kEl || !hEl) { toast("Dönem seçicileri bulunamadı.", "hata"); return; }
-  var k = kEl.value, h = hEl.value;
-  if (!k || !h || k === h) { toast("Kaynak ve hedef dönem farklı olmalı.", "uyari"); return; }
-  if (!DB.sinifProgDonemler || !sablonKopyaProgramBosMu(DB.sinifProgDonemler[h])) {
-    toast("Hedef dönem dolu — mevcut program korunur, ezme yok.", "hata");
-    return;
-  }
-  sablonKopyaUygula(k, h);
-}
-/* SABLON-KOPYA-YAMASI UI sonu */
-
 function donemSecKutusuHTML() {
   var donemler = (DB && Array.isArray(DB.donemler) && DB.donemler.length) ? DB.donemler : [{ id: DONEM_ILK_ID, ad: "2026/2027", aktif: true }];
   var secili = aktifDonemId();
@@ -935,41 +877,12 @@ function donemHostOnar() {
   yeni.id = "donem-ui-host";
   yeni.className = "no-print mb-3";
   yeni.innerHTML = kutu;
-  /* SABLON-KOPYA-YAMASI: "Programı Sablondan Kopyala" kartı host İÇİNE (donemSeciciKutu kardeşi) */
-  try { yeni.insertAdjacentHTML("beforeend", sablonKopyaUIHTML({ hedef: aktifDonemId() })); } catch (eSk) {}
   try { (yb.parentNode || document.body).insertBefore(yeni, yb); } catch (e6) { try { document.body.appendChild(yeni); } catch (e7) {} }
 }
 /* Tazelik kuralı: host kuruluysa seçenekleri her yenilemede donemSecKutusuHTML()'den
    tazele — yeniDonemOlustur() sonrası yeni dönem seçicide anında görünür. */
 function donemHostTazele(host) {
-  /* SABLON-KOPYA-YAMASI: tazelemede şablon-kopya kartının seçimleri DOM'dan okunup KORUNUR (override'da seçim kaybı yok) */
-  var sablonSecim = null;
-  try {
-    var kEl = document.getElementById("sablon-kaynak-donem"), hEl = document.getElementById("sablon-hedef-donem");
-    if (kEl && hEl && kEl.value && hEl.value) sablonSecim = { kaynak: kEl.value, hedef: hEl.value };
-  } catch (eSk0) { sablonSecim = null; }
   try { var taze = (typeof donemSecKutusuHTML === "function") ? donemSecKutusuHTML() : null; if (taze) host.innerHTML = taze; } catch (e8) {}
-  try {
-    var sk = document.getElementById("sablon-kopya-ui");
-    if (!sk) {
-      if (typeof sablonKopyaUIHTML === "function") {
-        host.insertAdjacentHTML("beforeend", sablonKopyaUIHTML(sablonSecim || { hedef: aktifDonemId() }));
-      }
-    }
-  } catch (eSk1) {}
-  if (sablonSecim) {
-    try {
-      var k2 = document.getElementById("sablon-kaynak-donem"), h2 = document.getElementById("sablon-hedef-donem");
-      /* Veri güdümlü seçim koruma: seçenek id'leri yalnız markup'taki value="id" özniteliklerinden okunur (ada göre tahmin YOK) */
-      var secenekIds = function (el) { return String((el && el.innerHTML) || "").match(/value="([^"]+)"/g) || []; };
-      if (k2 && h2) {
-        var idler = { k: secenekIds(k2), h: secenekIds(h2) };
-        if (idler.k.indexOf('value="' + sablonSecim.kaynak + '"') !== -1) k2.value = sablonSecim.kaynak;
-        if (idler.h.indexOf('value="' + sablonSecim.hedef + '"') !== -1) h2.value = sablonSecim.hedef;
-      }
-    } catch (eSk2) {}
-  }
-  try { sablonKopyaOnayTazele(); } catch (eSk3) {}
 }
 /* Zincirleme onarım: microtask (aynı tikte sonradan yazan render'dan SONRA koşar) —
    yenile() → renderYonetim → (defer) ek-ders override sırasını kapatır. */
@@ -2318,81 +2231,6 @@ function sinifProgCsvImportTetik(input) {
   });
 }
 /* SINIFPROG-CSV-YAMASI sonu */
-
-
-/* ================================================================
-   SABLON-KOPYA-YAMASI: boş döneme kaynak dönem SINIF PROGRAMINI kopyalama
-   - Kapsam: YALNIZ sınıf programı (DB.sinifProgDonemler). Dersler/istekler KOPYALANMAZ.
-   - Dolu hedef ASLA ezilmez: hedefte tek bir hücre bile varsa işlem RED, veri değişmez.
-   - Deep-copy zorunlu: kök ve iç içe tüm nesne/dizi referansları kaynakla PAYLAŞILMAZ.
-   - Hedef aktifse DB.sinifProg yeniden identity-rebind edilir; inaktifse görünüm değişmez.
-   - DB.aktifDonemId ve DB.sinifProgDonemId bu işlemden ETKİLENMEZ.
-   - Başarılı akış TEK saveDB() + mevcut yenile(); onay mevcut onayAc/onayOnayla altyapısıyla.
-   ================================================================ */
-function sablonKopyaProgramBosMu(prog) {
-  if (!prog || typeof prog !== "object" || Array.isArray(prog)) return true;
-  var adlar = Object.keys(prog);
-  for (var i = 0; i < adlar.length; i++) {
-    var hucreler = prog[adlar[i]];
-    if (Array.isArray(hucreler) && hucreler.length > 0) return false;
-  }
-  return true;
-}
-function sablonKopyaDonemAdi(id) {
-  var d = ((DB && Array.isArray(DB.donemler)) ? DB.donemler : []).filter(function (x) { return x && x.id === id; })[0];
-  return d ? (d.ad || d.id) : String(id || "?");
-}
-function sablonKopyaUygula(kaynakId, hedefId) {
-  /* Güvenlik: herhangi bir koşul bozuksa HİÇBİR veri değişmez */
-  if (!kaynakId || !hedefId || kaynakId === hedefId) return false;
-  if (!DB || !DB.sinifProgDonemler || typeof DB.sinifProgDonemler !== "object") return false;
-  if (!DB.donemler || !Array.isArray(DB.donemler)) return false;
-  var donemVar = function (id) { return DB.donemler.some(function (d) { return d && d.id === id; }); };
-  if (!donemVar(kaynakId) || !donemVar(hedefId)) return false; /* kaynak/hedef yok */
-  var kaynakProg = DB.sinifProgDonemler[kaynakId];
-  if (!kaynakProg || typeof kaynakProg !== "object" || Array.isArray(kaynakProg)) return false; /* kaynak canonical değil */
-  var hedefProg = DB.sinifProgDonemler[hedefId];
-  if (!sablonKopyaProgramBosMu(hedefProg)) return false; /* hedef dolu — ezme YOK */
-  var aktifId = aktifDonemId();
-  if (aktifId === kaynakId && kaynakId !== hedefId) {
-    /* kaynak aktif dönem: DB.sinifProg TEK canonical kaynak olmalı; bağlantısız eski görünüm kopyalanamaz */
-  }
-  var kaynakView = DB.sinifProg;
-  if (kaynakId === aktifId && kaynakView && typeof kaynakView === "object" && !Array.isArray(kaynakView)) {
-    var ayni = JSON.stringify(kaynakView) === JSON.stringify(kaynakProg);
-    if (!ayni) return false; /* kaynak aktif ama canonical depo ile uyumsuz — RED (veri değişmez) */
-  }
-  /* AÇIK onay: kaynak + hedef adları metin içinde; mevcut onayAc/onayOnayla altyapısı */
-  var kaynakAd = sablonKopyaDonemAdi(kaynakId);
-  var hedefAd = sablonKopyaDonemAdi(hedefId);
-  onayAc({
-    baslik: "Sınıf programı kopyalansın mı?",
-    metin: "<b>" + esc(kaynakAd) + "</b> döneminin sınıf programı, BOŞ olan <b>" + esc(hedefAd) + "</b> dönemine kopyalanacak. " +
-      "Yalnızca sınıf programı kopyalanır — <b>dersler ve istekler kopyalanmaz</b>. Hedefteki mevcut program yoktur (boş).",
-    onay: "Evet, Programı Kopyala"
-  }, function () {
-    /* Onay verildi; koşullar YENİDEN doğrulanır (onay beklerken veri değişmiş olabilir) */
-    var k2 = DB.sinifProgDonemler[kaynakId];
-    var h2 = DB.sinifProgDonemler[hedefId];
-    if (!k2 || typeof k2 !== "object" || Array.isArray(k2)) return;
-    if (!sablonKopyaProgramBosMu(h2)) { toast("Hedef dönem bu arada doldu — kopyalama iptal, hiçbir veri değişmedi.", "uyari"); return; }
-    /* DEEP-COPY: JSON döngüsü → kök ve iç içe tüm referanslar kaynakla AYNI OLAMAZ */
-    var kopya = JSON.parse(JSON.stringify(k2));
-    if (kopya === k2) return; /* paranoia: referans paylaşımı olamaz */
-    DB.sinifProgDonemler[hedefId] = kopya;
-    /* Hedef aktif dönem ise DB.sinifProg yeniden identity-rebind (depodaki TA KENDİSİ) */
-    if (aktifDonemId() === hedefId) {
-      DB.sinifProg = DB.sinifProgDonemler[hedefId];
-      if (DB.sinifProg !== DB.sinifProgDonemler[hedefId]) return; /* rebind assert'i — başarısızsa yazma yok */
-    }
-    /* DB.aktifDonemId ve DB.sinifProgDonemId ASLA değişmez (dokunulmadı) */
-    saveDB();
-    yenile();
-    toast("Sınıf programı kopyalandı ✓ — " + kaynakAd + " → " + hedefAd);
-  });
-  return true;
-}
-/* SABLON-KOPYA-YAMASI sonu */
 
 function yedekAl() {
   var paket = { uygulama: "YKS Birebir Takip", surum: 1, tarih: new Date().toISOString(), veri: DB };

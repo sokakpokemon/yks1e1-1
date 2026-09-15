@@ -842,3 +842,38 @@ index.html, ek-ders.js, vendor/* (SHA-256 yazma öncesi+sonrası doğrulandı), 
 - Backup: `app.js.sinifprog-csv-oncesi.bak` (hash `41db0ee4…`, üzerine YAZILMADI). app.js hash: `41db0ee4…` → `696168df…`.
 - app.js te yeni: `sinifProgCsvSatirlari`, `sinifProgCsvIndir`, `sinifProgCsvUygula`, `sinifProgCsvImportTetik` (+ SINIFPROG_CSV_BASLIK/SNAPSHOT). Mevcut csvHucre/csvSatir/csvDosya/csvParse/csvIndir/csvDosyalarOku YENİDEN KULLANILDI.
 - index.html, ek-ders.js, vendor/* DEĞİŞMEDİ. Kalan risk: gerçek tarayıcıda **Ctrl+Shift+R (Mac: Cmd+Shift+R)** sert yenileme gerekir.
+
+---
+
+# ✅ CHECKPOINT: Şablon Dönemden Sınıf Programı Kopyalama (SABLON-KOPYA-YAMASI)
+
+**Tarih:** 15 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **936/936 OK** (864 eski + 72 yeni `ks-sablon-kopya.mjs`)
+
+## Kopyalama Veri Modeli
+- Yalnız sınıf programı kopyalanır: `DB.sinifProgDonemler[kaynakId]` → `DB.sinifProgDonemler[hedefId]`. Dersler/istekler/dönemId alanları KOPYALANMAZ.
+- Boş hedef kuralı: `sablonKopyaProgramBosMu(prog)` — tüm sınıf dizileri boşsa (veya prog null/dizi) boş sayılır; hedefte TEK hücre bile varsa işlem RED, veri değişmez (ezme/birleştirme YOK).
+- Deep-copy: JSON döngüsü (`JSON.parse(JSON.stringify(kaynak))`) — kök ve iç içe tüm referanslar kaynakla paylaşilamaz (süitte notStrictEqual kanıtı).
+- Identity-rebind: hedef aktif dönemse `DB.sinifProg = DB.sinifProgDonemler[hedefId]` (TA KENDİSİ); inaktif hedefte aktif görünüm (referans + içerik) DEĞİŞMEZ.
+- `DB.aktifDonemId` ve `DB.sinifProgDonemId` işlemden ASLA etkilenmez; başarılı akış TEK `saveDB()` + mevcut `yenile()`.
+
+## Onay ve Veri Değistirmeme Kuralları
+- AÇIK onay: mevcut `onayAc`/`onayOnayla` altyapısı; metin kaynak+hedef dönem adlarını içerir, "dersler ve istekler kopyalanmaz" yazar.
+- Onay beklerken koşullar YENİDEN doğrulanır (kaynak bozulduysa/hedef dolduysa iptal, veri değişmez).
+- RED durumları (veri değişmez): kaynak/hedef yok, kaynak=hedef, kaynak canonical değil, hedef dolu, onay reddi, kaynak aktif ama canonical depo ile uyumsuz.
+
+## UI (yalnız kalıcı #donem-ui-host içine)
+- Sabit id'ler: `#sablon-kopya-ui`, `#sablon-kaynak-donem`, `#sablon-hedef-donem`, `#sablon-kopyala-btn`, `#sablon-kopya-uyari`.
+- Seçenekler `DB.donemler`'den, value gerçek id (ada göre tahmin YOK); hedef varsayılan aktifDonemId, kaynak hedef-dışı ilk dönem.
+- Kaynak=hedef veya hedef dolu → görünür `#sablon-kopya-uyari` (buton akışı yine de güvenlikle RED).
+- `donemHostOnar` kartı host'a TEK kez ekler; `donemHostTazele` seçimleri DOM'dan okuyup KORUR (override'da seçim kaybı yok). Yeni dönem oluşturma programı OTOMATİK kopyalamaz.
+
+## Süit ve Sonuç
+- Yeni süit: `ks-sablon-kopya.mjs` — **72 test** (boot; boş hedefe başarılı kopya; kaynak deep-equal korunumu; kök+iç içe referans notStrictEqual; çapraz hücre-değişimi etkisizliği; inaktif hedef → aktif görünüm değişmez; aktif hedef → identity-rebind; aktifDonemId/sinifProgDonemId değişmez; ders/istek kopyalanmaz; dolu hedef RED + korunum; kaynak=hedef RED; onay reddi DB/LS byte-birebir; TEK saveDB; yeni dönemde otomatik kopya yok; tekrar kopyada hedef ezilmez; yedek döngüsü; UI id'ler; GERÇEK DOM: boot+3 render+4 alt sekme sonrası host=1 secici=1 btn=1 sablon=1 sablonBtn=1, seçim korunumu, gerçek kopyala akışı).
+- test.mjs: 18 süit, tam 1 kayıt. **BASELINE 864/864 (17 süit) → FINAL 936/936 (18 süit); eski süitlerde düşüş 0.**
+
+## Yama Kimliği ve Hash'ler
+- Yama: `ks-yama-sablon-kopya.mjs` (assert'li, idempotent; 2. koşu "Zaten uygulanmış" + exit 2, app.js hash `bd456895…` değişmez).
+- Backup: `app.js.sablon-kopya-oncesi.bak` — SHA-256 `696168dff65305c7998d6cb0edbd0d7213a0f1559392584775e1488f9966a8d8` (yama öncesi; üzerine YAZILMADI).
+- app.js: `696168df…` → `bd456895…` (yalnız 4 hedefli bölge). index.html, ek-ders.js, vendor/* DEĞİŞMEDİ.
+- Syntax: `node --check` app.js / ek-ders.js / test.mjs / ks-sablon-kopya.mjs / ks-yama-sablon-kopya.mjs → OK.
+- Kalan risk: gerçek tarayıcıda eski app.js önbellekten gelebilir → **Ctrl+Shift+R (Mac: Cmd+Shift+R)** sert yenileme.

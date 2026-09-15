@@ -1784,7 +1784,6 @@ function csvImportUygula(dosyalar) {
   dosyalar.forEach(function (d) {
     var c = csvCozDosya(d.metin, d.ad);
     if (c.hata) { hatalar.push(c.hata); return; }
-    if (c.dataset === "sinifProg") { hatalar.push(csvHata(d.ad, 1, "dataset", "sinifProg dataset'i genel içe aktarmada desteklenmez — Sınıf Programı CSV İçe Aktar butonunu kullanın")); return; }
     if (["kadro", "dersler", "istekler"].indexOf(c.dataset) === -1) { hatalar.push(csvHata(d.ad, 1, "dataset", "Bilinmeyen dataset: " + c.dataset)); return; }
     cozulen.push(c);
   });
@@ -2021,13 +2020,10 @@ function csvYonetimKartHTML() {
         '<button onclick="csvKadroIndir()" class="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-[11.5px] font-bold px-3.5 py-2 transition-colors"><i class="fa-solid fa-users mr-1"></i>Kadro CSV İndir</button>' +
         '<button onclick="csvDersIndir()" class="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-[11.5px] font-bold px-3.5 py-2 transition-colors"><i class="fa-solid fa-calendar-days mr-1"></i>Aktif Dersleri CSV İndir</button>' +
         '<button onclick="csvIstekIndir()" class="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-[11.5px] font-bold px-3.5 py-2 transition-colors"><i class="fa-solid fa-inbox mr-1"></i>Aktif İstekleri CSV İndir</button>' +
-        '<button onclick="sinifProgCsvIndir()" class="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-[11.5px] font-bold px-3.5 py-2 transition-colors"><i class="fa-solid fa-table-cells mr-1"></i>Aktif Sınıf Programı CSV İndir</button>' +
       "</div>" +
       '<div class="flex flex-wrap items-center gap-2 mt-3">' +
         '<input id="csvDosyaInput" type="file" accept=".csv,text/csv" multiple class="hidden" onchange="csvImportTetik(this)" />' +
         '<button onclick="document.getElementById(\'csvDosyaInput\').click()" class="rounded-full border-2 border-teal-200 text-teal-600 hover:bg-teal-50 text-[11.5px] font-bold px-3.5 py-2 transition-colors"><i class="fa-solid fa-file-import mr-1"></i>CSV İçe Aktar</button>' +
-        '<input id="sinifProgCsvInput" type="file" accept=".csv,text/csv" class="hidden" onchange="sinifProgCsvImportTetik(this)" />' +
-        '<button onclick="document.getElementById(\'sinifProgCsvInput\').click()" title="Yalnız aktif dönemin sınıf programı (dataset=sinifProg)" class="rounded-full border-2 border-teal-200 text-teal-600 hover:bg-teal-50 text-[11.5px] font-bold px-3.5 py-2 transition-colors"><i class="fa-solid fa-table-cells mr-1"></i>Sınıf Programı CSV İçe Aktar</button>' +
         '<button id="csvGeriBtn" onclick="csvGeriAl()" class="hidden rounded-full border-2 border-rose-200 text-rose-500 hover:bg-rose-50 text-[11.5px] font-bold px-3.5 py-2 transition-colors"><i class="fa-solid fa-rotate-left mr-1"></i>Son İçe Aktarmayı Geri Al</button>' +
       "</div>" +
       '<div id="csvMesaj" class="text-[11.5px] text-slate-500 mt-2"></div>' +
@@ -2071,167 +2067,6 @@ function ayarTab() {
       '<p class="text-[10.5px] text-slate-400 mt-3"><i class="fa-solid fa-shield-halved mr-1"></i>Sıfırlamadan önce mutlaka yedek alın.</p>' +
     "</div>" + csvYonetimKartHTML() + "</div>";
 }
-
-/* ================================================================
-   SINIFPROG-CSV-YAMASI: aktif dönem sınıf programı CSV dışa/içe aktarma
-   - Dosya: yks-sinif-programi-<aktifDonemId>.csv — TEK dönem taşır.
-   - Kolon başlığı (tam): schema;dataset;donemId;donemAd;sinifId;sinifAd;gun;kod;saat;durum;deger;degerJson
-   - schema=yks-csv-v1 (mevcut CSV_SCHEMA), dataset=sinifProg.
-   - sinifId DB.sinifIds'ten gelir (ID-birincil; ada göre eşleştirme YOK);
-     sinifAd yalnız görüntüleme alanıdır.
-   - gun/kod/saat KS kısa kod semantiği: sinifProg hücre anahtarı "G-K" biçimindedir
-     (G = 0..6 gün, K = KISA_KOD no); saat = KISA_KOD[K].b başlangıç saati.
-   - durum: "sinif" (sınıf dersi hücresi); boş hücreler satır üretilmez ama import'ta
-     mevcut satır silinerek temsil edilir (round-trip kayıpsız).
-   - deger/degerJson: sinifProg yapısını kayıpsız taşıyan bilgi alanları.
-   - İçe aktarma atomiktir: tüm satırlar doğrulanmadan DB/localStorage değişmez;
-     başarılı işlem TEK saveDB + identity-rebind + yenile.
-   - Mevcut csvHucre/csvSatir/csvDosya/csvParse/csvIndir YENİDEN KULLANILIR (parser yazılmaz).
-   ================================================================ */
-var SINIFPROG_CSV_BASLIK = ["schema","dataset","donemId","donemAd","sinifId","sinifAd","gun","kod","saat","durum","deger","degerJson"];
-var SINIFPROG_CSV_SNAPSHOT = null; /* son BAŞARILI sinifProg içe aktarması öncesi DB snapshot (oturum içi) */
-
-function sinifProgCsvSaatOf(kod) {
-  var k = KISA_KOD.filter(function (x) { return String(x.no) === String(kod); })[0];
-  return k ? k.b : "";
-}
-function sinifProgCsvSatirlari() {
-  var donemId = aktifDonemId();
-  var donemAd = "";
-  ((DB && Array.isArray(DB.donemler)) ? DB.donemler : []).forEach(function (d) {
-    if (d && d.id === donemId) donemAd = d.ad || "";
-  });
-  var prog = sinifProgAktif(donemId) || {};
-  var satirlar = [];
-  Object.keys(prog).forEach(function (sinifAd) {
-    var cells = prog[sinifAd];
-    if (!Array.isArray(cells)) return;
-    var sinifId = (DB.sinifIds && DB.sinifIds[sinifAd] != null) ? String(DB.sinifIds[sinifAd]) : "";
-    cells.slice().sort(function (a, b) {
-      var pa = String(a).split("-"), pb = String(b).split("-");
-      return (Number(pa[0]) - Number(pb[0])) || (Number(pa[1]) - Number(pb[1]));
-    }).forEach(function (key) {
-      var p = String(key).split("-");
-      var gun = p[0], kod = p.slice(1).join("-");
-      var saat = sinifProgCsvSaatOf(kod);
-      if (!saat) return; /* bilinmeyen kod: satır üretme (import zaten reddeder) */
-      satirlar.push([
-        CSV_SCHEMA, "sinifProg", donemId, donemAd, sinifId, sinifAd,
-        gun, kod, saat, "sinif", key, JSON.stringify({ key: key })
-      ]);
-    });
-  });
-  return satirlar;
-}
-function sinifProgCsvIndir() {
-  var donemId = aktifDonemId();
-  csvIndir("yks-sinif-programi-" + donemId + ".csv", SINIFPROG_CSV_BASLIK, sinifProgCsvSatirlari());
-  toast("Aktif dönem sınıf programı CSV indirildi ✓ (" + donemId + ")");
-}
-/* ---- sinifProg içe aktarma: parse → validate (tam) → TEK commit ---- */
-function sinifProgCsvUygula(dosyalar) {
-  var hedefDonem = aktifDonemId();
-  var hatalar = [];
-  var satirlar = []; /* { sn, sinifId, sinifAd, gun, kod, saat, durum, deger, degerJson } */
-  dosyalar.forEach(function (d) {
-    var satirMatrisi = csvParse(d.metin);
-    if (!satirMatrisi.length) { hatalar.push(csvHata(d.ad, 1, "dosya", "Dosya boş")); return; }
-    var baslik = satirMatrisi[0];
-    var beklenen = SINIFPROG_CSV_BASLIK.join(";");
-    if (baslik.join(";") !== beklenen) { hatalar.push(csvHata(d.ad, 1, "başlık", "Kolon başlığı uyuşmuyor: " + baslik.join(";"))); return; }
-    satirMatrisi.slice(1).forEach(function (r, idx) {
-      var sn = idx + 2;
-      if (!r || !r.length || r.every(function (c) { return String(c).trim() === ""; })) return; /* tamamen boş satır yoksayılır */
-      var o = {};
-      SINIFPROG_CSV_BASLIK.forEach(function (k, i) { o[k] = r[i] != null ? r[i] : ""; });
-      o._sn = sn;
-      satirlar.push(o);
-    });
-  });
-  if (!hatalar.length) {
-    if (!satirlar.length) hatalar.push(csvHata("sinifProg", 1, "dosya", "Veri satırı yok"));
-    var goren = {};
-    satirlar.forEach(function (v) {
-      var sn = v._sn;
-      if ((v.schema || "").trim() !== CSV_SCHEMA) { hatalar.push(csvHata("sinifProg", sn, "schema", "Bilinmeyen schema: " + (v.schema || "(boş)"))); return; }
-      if ((v.dataset || "").trim() !== "sinifProg") { hatalar.push(csvHata("sinifProg", sn, "dataset", "Bilinmeyen dataset: " + (v.dataset || "(boş)"))); return; }
-      var dn = (v.donemId || "").trim();
-      if (!dn) { hatalar.push(csvHata("sinifProg", sn, "donemId", "donemId boş (zorunlu)")); return; }
-      if (dn !== hedefDonem) { hatalar.push(csvHata("sinifProg", sn, "donemId", "Dosya dönemi aktif dönemle uyuşmuyor (" + dn + " ≠ " + hedefDonem + ") — karışık/başka dönem RED")); return; }
-      var sinifId = (v.sinifId || "").trim();
-      var sinifAd = (v.sinifAd || "").trim();
-      if (!sinifId) { hatalar.push(csvHata("sinifProg", sn, "sinifId", "sinifId boş (zorunlu)")); return; }
-      if (!sinifAd) { hatalar.push(csvHata("sinifProg", sn, "sinifAd", "sinifAd boş")); return; }
-      /* ID-birincil eşleştirme: ada göre tahmin YOK. sinifId DB.sinifIds'ten gelmeli. */
-      var adById = null;
-      Object.keys(DB.sinifIds || {}).forEach(function (ad) { if (String(DB.sinifIds[ad]) === sinifId) adById = ad; });
-      if (!adById) { hatalar.push(csvHata("sinifProg", sn, "sinifId", "Bilinmeyen sinifId: " + sinifId)); return; }
-      if (adById !== sinifAd) { hatalar.push(csvHata("sinifProg", sn, "sinifAd", "sinifAd sinifId ile uyuşmuyor (" + sinifAd + " ≠ " + adById + ") — ada göre eşleştirme yapılmaz")); return; }
-      var gun = String(v.gun || "").trim();
-      if (!/^\d+$/.test(gun) || Number(gun) < 0 || Number(gun) > 6) { hatalar.push(csvHata("sinifProg", sn, "gun", "Geçersiz gün: " + gun)); return; }
-      var kod = String(v.kod || "").trim();
-      var kodGecerli = KISA_KOD.some(function (x) { return String(x.no) === kod; });
-      if (!kodGecerli) { hatalar.push(csvHata("sinifProg", sn, "kod", "Geçersiz KS kısa kod: " + kod)); return; }
-      var saat = String(v.saat || "").trim();
-      var kodSaat = sinifProgCsvSaatOf(kod);
-      if (saat !== kodSaat) { hatalar.push(csvHata("sinifProg", sn, "saat", "Saat KS koduyla uyuşmuyor (" + saat + " ≠ " + kodSaat + ")")); return; }
-      var durum = String(v.durum || "").trim();
-      if (durum !== "sinif") { hatalar.push(csvHata("sinifProg", sn, "durum", "Geçersiz durum: " + (durum || "(boş)") + " (yalnız sinif)")); return; }
-      var deger = String(v.deger || "").trim();
-      var key = gun + "-" + kod;
-      if (deger !== key) { hatalar.push(csvHata("sinifProg", sn, "deger", "deger hücre anahtarıyla uyuşmuyor (" + deger + " ≠ " + key + ")")); return; }
-      var degerJson = String(v.degerJson || "").trim();
-      if (degerJson) { try { var _j = JSON.parse(degerJson); if (!_j || typeof _j !== "object") throw 0; } catch (e) { hatalar.push(csvHata("sinifProg", sn, "degerJson", "Bozuk JSON")); return; } }
-      var dupKey = sinifId + "|" + key;
-      if (goren[dupKey]) { hatalar.push(csvHata("sinifProg", sn, "satır", "Yinelenen satır: " + sinifAd + " " + key)); return; }
-      goren[dupKey] = 1;
-    });
-  }
-  if (hatalar.length) return { ok: false, hatalar: hatalar };
-  /* Tüm satırlar doğrulandı → derin kopya üzerinde uygula (mevcut programdan round-trip: silinen satır = boş hücre) */
-  var kopya = JSON.parse(JSON.stringify(DB));
-  var yeniProg = {};
-  var adlardan = {};
-  satirlar.forEach(function (v) {
-    var sinifId = String(v.sinifId).trim();
-    adlardan[sinifId] = String(v.sinifAd).trim();
-  });
-  Object.keys(adlardan).forEach(function (sid) { yeniProg[adlardan[sid]] = []; });
-  satirlar.forEach(function (v) {
-    yeniProg[String(v.sinifAd).trim()].push(String(v.deger).trim());
-  });
-  Object.keys(yeniProg).forEach(function (ad) { yeniProg[ad].sort(function (a, b) { var pa = a.split("-"), pb = b.split("-"); return (Number(pa[0]) - Number(pb[0])) || (Number(pa[1]) - Number(pb[1])); }); });
-  kopya.sinifProgDonemler[hedefDonem] = yeniProg;
-  kopya.sinifProgDonemId = hedefDonem;
-  kopya.sinifProg = kopya.sinifProgDonemler[hedefDonem]; /* identity-rebind (JSON döngüsü sonrası referans eşitliği korunur) */
-  return { ok: true, kopya: kopya, satir: satirlar.length, sinif: Object.keys(yeniProg).length };
-}
-function sinifProgCsvImportTetik(input) {
-  csvDosyalarOku(input, function (dosyalar) {
-    var sonuc = sinifProgCsvUygula(dosyalar);
-    if (!sonuc.ok) {
-      var mesaj = "Sınıf programı içe aktarma REDDEDİLDİ — hiçbir değişiklik yapılmadı.";
-      if (sonuc.hatalar && sonuc.hatalar.length) {
-        mesaj += " İlk hatalar: " + sonuc.hatalar.slice(0, 4).map(function (h) {
-          return "[satır " + h.satir + (h.kolon ? " · " + h.kolon : "") + "] " + h.sebep;
-        }).join(" | ");
-      }
-      toast(mesaj, "hata");
-      if ($("csvMesaj")) $("csvMesaj").innerHTML = '<span class="text-rose-600 font-bold">' + esc(mesaj) + "</span>";
-      return;
-    }
-    /* Başarılı: snapshot al → identity-rebind commit → TEK saveDB + yenile */
-    SINIFPROG_CSV_SNAPSHOT = JSON.stringify(DB);
-    DB = sonuc.kopya;
-    saveDB();
-    yenile();
-    var ozet = "Sınıf programı içe aktarıldı ✓ — " + sonuc.sinif + " sınıf, " + sonuc.satir + " hücre (" + aktifDonemId() + ")";
-    toast(ozet);
-    if ($("csvMesaj")) $("csvMesaj").innerHTML = '<span class="text-teal-600 font-bold">' + esc(ozet) + "</span>";
-  });
-}
-/* SINIFPROG-CSV-YAMASI sonu */
-
 function yedekAl() {
   var paket = { uygulama: "YKS Birebir Takip", surum: 1, tarih: new Date().toISOString(), veri: DB };
   var blob = new Blob([JSON.stringify(paket, null, 2)], { type: "application/json" });

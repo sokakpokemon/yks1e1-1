@@ -162,14 +162,14 @@ console.log("5) Bilinmeyen sinifId ve geçersiz satırlar (satır numarasıyla):
     const s = sinifProgCsvUygula([{ ad: "x.csv", metin: dosyaMetni([r]) }]);
     t(isim, !s.ok && s.hatalar.some((h) => h.kolon === kolon && h.satir === 2), JSON.stringify(s.hatalar || []));
   };
-  dene("bilinmeyen sinifId RED", (r) => { r[2] = "ks-snf-yok"; }, "sinifId");
-  dene("sinifAd/sinifId uyuşmazlığı RED (ada göre bağlama YOK)", (r) => { r[3] = "12 DİL & FEN"; }, "sinifAd");
-  dene("geçersiz gun RED", (r) => { r[4] = "9"; }, "gun");
-  dene("geçersiz kod RED", (r) => { r[5] = "99"; }, "kod");
-  dene("saat/kod uyuşmazlığı RED", (r) => { r[6] = "08:50"; }, "saat");
-  dene("geçersiz durum RED", (r) => { r[7] = "kapali"; }, "durum");
-  dene("deger/anahtar uyuşmazlığı RED", (r) => { r[8] = "7-8"; }, "deger");
-  dene("bozuk degerJson RED", (r) => { r[9] = "{bozuk"; }, "degerJson");
+  dene("bilinmeyen sinifId RED", (r) => { r[4] = "ks-snf-yok"; }, "sinifId");
+  dene("sinifAd/sinifId uyuşmazlığı RED (ada göre bağlama YOK)", (r) => { r[5] = "12 DİL & FEN"; }, "sinifAd");
+  dene("geçersiz gun RED", (r) => { r[6] = "9"; }, "gun");
+  dene("geçersiz kod RED", (r) => { r[7] = "99"; }, "kod");
+  dene("saat/kod uyuşmazlığı RED", (r) => { r[8] = "08:50"; }, "saat");
+  dene("geçersiz durum RED", (r) => { r[9] = "kapali"; }, "durum");
+  dene("deger/anahtar uyuşmazlığı RED", (r) => { r[10] = "7-8"; }, "deger");
+  dene("bozuk degerJson RED", (r) => { r[11] = "{bozuk"; }, "degerJson");
   const dup = sinifProgCsvUygula([{ ad: "x.csv", metin: dosyaMetni([iyi, iyi]) }]);
   t("duplicate satır RED (2. satır 3)", !dup.ok && dup.hatalar.some((h) => h.kolon === "satır" && h.satir === 3));
   t("yanlış başlık RED", !sinifProgCsvUygula([{ ad: "x.csv", metin: "schema;dataset\r\n" + CSV_SCHEMA + ";sinifProg\r\n" }]).ok);
@@ -193,10 +193,12 @@ console.log("6) Atomiklik: hatalı import DB/localStorage byte-birebir; başarı
   /* başarılı import: davranışla — kopya uygulandı, saveDB yazdı, rebind korundu */
   const s2 = sinifProgCsvUygula([{ ad: "x.csv", metin: dosyaMetni([iyi]) }]);
   t("başarılı import ok", s2.ok === true && !!s2.kopya);
+  DB = s2.kopya; /* app akışı: DB = sonuc.kopya → sandbox DB'si güncellenir */
   t("başarılı import: dosyada olmayan hücre silinir (1-8 kaldı; 2-9/5-11 yoktu)", alanEsit(DB.sinifProgDonemler[DONEM_A]["12 SAY 1"], ["1-8"]));
   t("başarılı import sonrası identity-rebind", DB.sinifProg === DB.sinifProgDonemler[DB.sinifProgDonemId]);
   /* geri koy: bölüm 7+8 için tam programı geri yükle */
-  sinifProgCsvUygula([{ ad: "x.csv", metin: metinA }]);
+  const s3 = sinifProgCsvUygula([{ ad: "x.csv", metin: metinA }]);
+  DB = s3.kopya; /* restore de DB atamasıyla uygulanır */
   t("tam dosya tekrar import → orijinal hücreler geri geldi", alanEsit(DB.sinifProgDonemler[DONEM_A]["12 SAY 1"], ["1-8", "2-9", "5-11"]));
 }
 
@@ -217,10 +219,13 @@ console.log("8) Eski yedek: precedence kuralı (normalize kapısı):");
   /* Eski yedek: sinifProgDonemler YOK, yalnız tek DB.sinifProg */
   const eskiYedek = {
     kurulus: "2025-01-01", ksVer: 2,
-    ogretmenler: DB.ogretmenler, ogrenciler: DB.ogrenciler,
+    ogretmenler: derinKopya(DB.ogretmenler), ogrenciler: derinKopya(DB.ogrenciler),
     sinifProg: { "12 SAY 1": ["1-8"], "ESKİ SINIF": ["2-3"] },
     dersler: derinKopya(DB.dersler), istekler: []
   };
+  /* fixture'ı suite kurulumundan bağımsızlaştır: kesin karşılaştırma için referans paylaşımı yok */
+  eskiYedek.ogrenciler = [{ id: "ogr-eski-1", ad: "Eski Öğrenci", sinif: "12 SAY 1", tel: "" }];
+  eskiYedek.ogretmenler = [{ id: "ort-eski-1", ad: "Eski Öğretmen", brans: "mat", avail: { sinif: {}, musait: [] } }];
   /* 8.1: sinifProgDonemler zaten VARSA (canonical harita dolu) eski sinifProg EZMEMELİ */
   const canOnce = derinKopya(DB.sinifProgDonemler);
   normalize(derinKopya(eskiYedek) /* <- bu DB'yi ezmez; ayrı nesne üzerinde çağrılır */);
@@ -235,7 +240,11 @@ console.log("8) Eski yedek: precedence kuralı (normalize kapısı):");
     alanEsit(v2.sinifProgDonemler[v2.sinifProgDonemId]["12 SAY 1"], ["1-8"]) && alanEsit(v2.sinifProgDonemler[v2.sinifProgDonemId]["ESKİ SINIF"], ["2-3"]));
   t("eski yedek: DB.sinifProg identity-rebind edilmiş canonical nesne", v2.sinifProg === v2.sinifProgDonemler[v2.sinifProgDonemId]);
   t("eski yedek: ders/istekler korunur", alanEsit(v2.dersler, eskiYedek.dersler) && v2.istekler.length === 0);
-  t("eski yedek: ogrenci/ogretmen korunur; sinifIds eski sınıfları kapsıyor", alanEsit(v2.ogrenciler, eskiYedek.ogrenciler) && alanEsit(v2.ogretmenler, eskiYedek.ogretmenler) && v2.sinifIds["ESKİ SINIF"] != null && v2.sinifIds["12 SAY 1"] != null);
+  /* normalize (kadroDuzelt) eksik öğretmen kadrosunu TAMAMLAR — mevcut öğrenci/öğretmen KORUNMALI (subset), yedekteki kimlikler değişmez */
+  t("eski yedek: ogrenci/ogretmen korunur (kadro tamamlayabilir); sinifIds eski sınıfları kapsıyor",
+    eskiYedek.ogrenciler.every((o) => v2.ogrenciler.some((x) => x.id === o.id && x.ad === o.ad)) &&
+    eskiYedek.ogretmenler.every((o) => v2.ogretmenler.some((x) => x.id === o.id && x.ad === o.ad)) &&
+    v2.sinifIds["ESKİ SINIF"] != null && v2.sinifIds["12 SAY 1"] != null && v2.sinifIds["12 DİL"] != null);
   /* 8.3+8.4: stale sinifProg ezme senaryosu: 2026/2027 dolu + 2027/2028 boş haritaya eski stale sinifProg yüklenirse */
   const canli = {
     kurulus: "2026-01-01", ksVer: 2,

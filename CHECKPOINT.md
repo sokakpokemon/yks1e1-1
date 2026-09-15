@@ -801,3 +801,44 @@ index.html, ek-ders.js, vendor/* (SHA-256 yazma öncesi+sonrası doğrulandı), 
 - ek-ders.js 4 sekmeli override yerinde kalıyor (kasıtlı): dönem kontrolü, yb'yi ezen her yazımı onaran observer + kardeş host ile korunuyor.
 - MutationObserver desteklemeyen çok eski tarayıcılarda observer kurulmaz (kod try/catch'li, çökmez; modern tarayıcıların tamamı destekler).
 - Kart-içi seçici varken `host.remove()` observer'ı yeniden tetikler; observer kart-içi seçiciyi görünce no-op döner → sonsuz döngü YOK (süitte kanıtlandı).
+
+## SINIFPROG-CSV-YAMASI (2026-09-15) — aktif dönem sınıf programı CSV + eski yedek uyumluluğu
+
+### Final Test Sonucu
+
+- **864/864 OK** (17 eski süit: 807 + yeni `ks-sinifprog-csv.mjs`: 57). Tüm eski assertion satırları aynen; gevşetme yok.
+
+### CSV Şeması
+
+- Dosya: `yks-sinif-programi-<aktifDonemId>.csv` — TEK dönem taşır.
+- Kolon başlığı (tam): `schema;dataset;donemId;donemAd;sinifId;sinifAd;gun;kod;saat;durum;deger;degerJson`
+- UTF-8 BOM + noktalı virgül ayraç + CRLF; `schema=yks-csv-v1`, `dataset=sinifProg`.
+- Hücre anahtarı: `gun-kod` (G=0..6, K=KISA_KOD no); `saat=KISA_KOD[K].b`; `durum=sinif`; `deger=anahtar`; `degerJson={"key":"G-K"}`.
+- `sinifId` DB.sinifIds.ten gelir (ID-birincil; ada göre esleştirme YOK); `sinifAd`/`donemAd` yalnız görüntüleme alanı.
+- Buton: Yönetim > Ayarlar & Yedekleme > Excel/CSV Veri Yönetimi → Aktif Sınıf Programı CSV İndir + sinifProg içe aktarma (mevcut csvDosyalarOku akışı).
+
+### Aktif Dönem Kuralı
+
+- Export yalnız `sinifProgAktif(aktifDonemId())` içeriğini yazar; başka dönemden tek satır sızmaz (süitte kanıtlandı).
+- Import ta dosya `donemId` ≠ `aktifDonemId()` ise KESİN RED; bilinmeyen dönem otomatik OLUŞTURULMAZ; karışık dönem dosyası RED.
+
+### Atomic Import
+
+- Tüm satırlar parse+validate edilmeden DB/localStorage/DOM değişmez; tek hata → byte-birebir değişiklik yok (süitte kanıt).
+- Başarılı: oturum-içi snapshot (`SINIFPROG_CSV_SNAPSHOT`) → `DB.sinifProgDonemler[aktifDonemId]=yeniProg`, `sinifProgDonemId=aktifDonemId`, `DB.sinifProg=…` (identity-rebind) → TEK `saveDB()` + `yenile()`.
+- Round-trip kayıpsız: dosyada olmayan hücre SİLİNİR (boş hücre temsili), dolu hücreler deep-equal geri gelir.
+
+### Eski Yedek Precedence (normalize / sinifProgDonemleriBaslat kapısı)
+
+1. Geçerli `sinifProgDonemler` + `sinifProgDonemId` VARSA canonical harita KORUNUR; stale `sinifProg` haritayı ezmez.
+2. Eski yedekte harita yoksa `DB.sinifProg` hedef (aktif/varsayılan) döneme DEEP-COPY ile bağlanır.
+3. Diğer dönem programları (ör. 2027/2028 boş) asla doldurulmaz/ezilmez; 2026/2027 korunur.
+4. İşlem sonunda `DB.sinifProg === DB.sinifProgDonemler[DB.sinifProgDonemId]` (identity-rebind) — dönem değişimi + yedek yükleme sonrası da korunur.
+5. Dersler/istekler/öğrenci/öğretmen/sinifIds değişmez (normalize eksik kadroyu tamamlayabilir; mevcut kayıtlara dokunmaz).
+
+### Yama Kimliği
+
+- Dosya: `ks-yama-sinifprog-csv.mjs` — assert li, idempotent; 2. koşu "Zaten uygulanmış" + **exit 2**, app.js hash değişmez.
+- Backup: `app.js.sinifprog-csv-oncesi.bak` (hash `41db0ee4…`, üzerine YAZILMADI). app.js hash: `41db0ee4…` → `696168df…`.
+- app.js te yeni: `sinifProgCsvSatirlari`, `sinifProgCsvIndir`, `sinifProgCsvUygula`, `sinifProgCsvImportTetik` (+ SINIFPROG_CSV_BASLIK/SNAPSHOT). Mevcut csvHucre/csvSatir/csvDosya/csvParse/csvIndir/csvDosyalarOku YENİDEN KULLANILDI.
+- index.html, ek-ders.js, vendor/* DEĞİŞMEDİ. Kalan risk: gerçek tarayıcıda **Ctrl+Shift+R (Mac: Cmd+Shift+R)** sert yenileme gerekir.

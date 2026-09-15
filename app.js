@@ -293,10 +293,13 @@ function donemSecKutusuHTML() {
     return '<option value="' + esc(d.id) + '"' + (d.id === secili ? " selected" : "") + ">" + esc(d.ad || d.id) + "</option>";
   }).join("");
   /* DONEM-OLUSTURMA-YAMASI: dönem seçicinin yanında "Yeni Dönem Oluştur" kontrolü (tek buton, duplicate imkânsız — innerHTML her render'da yeniden yazılır) */
-  var yeniBtn = '<button id="donemYeniBtn" onclick="yeniDonemOlustur()" title="2027/2028 dönemini oluştur ve ona geç" class="rounded-xl border border-teal-200 bg-teal-50 text-teal-700 hover:bg-teal-100 px-3 py-1.5 text-[11.5px] font-bold transition-colors whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i>Yeni Dönem Oluştur</button>';
+  var yeniBtn = '<button id="yeni-donem-btn" data-id="donemYeniBtn" onclick="yeniDonemOlustur()" title="2027/2028 dönemini oluştur ve ona geç" class="rounded-xl border border-teal-200 bg-teal-50 text-teal-700 hover:bg-teal-100 px-3 py-1.5 text-[11.5px] font-bold transition-colors whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i>Yeni Dönem Oluştur</button>';
+  /* DONEM-SECICI-UI-YAMASI: kart-içi seçici sabit kimlikli (select #donem-secici, buton #yeni-donem-btn;
+     eski id'ler data-id uyumluluk takma adı). Kart İÇİ bu markup ek-ders.js override'ı selse bile
+     donemHostOnar() kartın ÜSTÜNDEKİ kalıcı #donem-ui-host'u TEK kez geri getirir. */
   return '<div id="donemSeciciKutu" class="no-print flex flex-wrap items-center gap-2 rounded-2xl border border-slate-100 bg-slate-50/70 px-3 py-2">' +
     '<span class="text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wide whitespace-nowrap"><i class="fa-solid fa-layer-group mr-1"></i>Dönem</span>' +
-    '<select id="donemSecici" onchange="donemSec(this.value)" class="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[12.5px] font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-400/40 max-w-full">' + ops + "</select>" + yeniBtn +
+    '<select id="donem-secici" data-id="donemSecici" onchange="donemSec(this.value)" class="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[12.5px] font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-400/40 max-w-full">' + ops + "</select>" + yeniBtn +
     "</div>";
 }
 /* Dönem değişimi: DB.aktifDonemId güncellenir, aktif işaretleri hizalanır, saveDB + yenile.
@@ -840,6 +843,51 @@ function yenile() {
   renderHavuz();
   renderDersler();
   renderFormDestek();
+  donemHostOnarZincir();
+}
+
+/* ---- DONEM-SECICI-UI-YAMASI: kalıcı dönem kontrolü (host onarımı) ----
+   Gerçek sayfada ek-ders.js (defer) renderYonetim'i 4 sekmeli sarmalayıcıyla ezer ve
+   yonetimBolum.innerHTML'i donemSeciciKutu OLMADAN yeniden yazar. Bu durumda seçici
+   kart-içinden silinir; donemHostOnar() bunu saptayıp #yonetimBolum'un hemen ÜSTÜNE
+   (yan gözükür, alt sekmelerden bağımsız) TEK kalıcı #donem-ui-host kurar.
+   Kart-içi seçici DOM'da VARSA host'u kaldırır → çift kayıt/duplicate imkânsız.
+   Options'lar her yenileme akışında (donemSec/sec/yeniDonemOlustur → yenile) tazelenir. */
+function donemHostOnar() {
+  var yb = null;
+  try { yb = (typeof document !== "undefined") ? document.getElementById("yonetimBolum") : null; } catch (e0) { yb = null; }
+  if (!yb) return;
+  var kartIciSecici = false;
+  try { kartIciSecici = !!(yb.innerHTML && yb.innerHTML.indexOf('id="donemSeciciKutu"') !== -1); } catch (e1) { kartIciSecici = false; }
+  var host = null;
+  try { host = document.getElementById("donem-ui-host"); } catch (e2) { host = null; }
+  if (kartIciSecici) {
+    /* çift kayıt önleme: host varsa DOM'dan çıkar (id kayıt defterinden düşer) */
+    if (host) { try { host.remove(); } catch (e3) {} }
+    return;
+  }
+  if (host) { donemHostTazele(host); return; } /* zaten kurulu — no-op + seçenekleri tazele */
+  var kutu = null;
+  try { kutu = (typeof donemSecKutusuHTML === "function") ? donemSecKutusuHTML() : null; } catch (e4) { kutu = null; }
+  if (!kutu) return;
+  var yeni = null;
+  try { yeni = document.createElement("div"); } catch (e5) { yeni = null; }
+  if (!yeni) return;
+  yeni.id = "donem-ui-host";
+  yeni.className = "no-print mb-3";
+  yeni.innerHTML = kutu;
+  try { (yb.parentNode || document.body).insertBefore(yeni, yb); } catch (e6) { try { document.body.appendChild(yeni); } catch (e7) {} }
+}
+/* Tazelik kuralı: host kuruluysa seçenekleri her yenilemede donemSecKutusuHTML()'den
+   tazele — yeniDonemOlustur() sonrası yeni dönem seçicide anında görünür. */
+function donemHostTazele(host) {
+  try { var taze = (typeof donemSecKutusuHTML === "function") ? donemSecKutusuHTML() : null; if (taze) host.innerHTML = taze; } catch (e8) {}
+}
+/* Zincirleme onarım: microtask (aynı tikte sonradan yazan render'dan SONRA koşar) —
+   yenile() → renderYonetim → (defer) ek-ders override sırasını kapatır. */
+function donemHostOnarZincir() {
+  try { Promise.resolve().then(donemHostOnar); } catch (e1) {}
+  try { setTimeout(donemHostOnar, 0); } catch (e2) {}
 }
 function sec(ad) { ui.sekme = ad; renderYonetim(); }
 

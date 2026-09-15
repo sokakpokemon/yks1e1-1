@@ -197,6 +197,36 @@ Not: `index.html`, 7 Eylül checkpoint'inden sonra kısa kod sistemiyle değişt
 
 - Taşınan font verisi bayt bayt korundu: 2 adet woff2, 48.256 B + 85.068 B
   (base64 decode edilip `wOF2` magic byte'larıyla doğrulandı).
+
+# ✅ CHECKPOINT: Dönem Seçici UI — Kalıcı Host + Gerçek DOM Onarımı (DONEM-SECICI-UI-YAMASI)
+
+## Kök Neden (kanıtlı)
+- `index.html` L7: `ek-ders.js` **defer** → app.js'ten SONRA çalışır; ek-ders.js L413-431'de `renderYonetim`'i 4 sekmeli sarmalayıcıyla **EZER** ve `yonetimBolum.innerHTML`'i `donemSeciciKutu` OLMADAN yeniden yazar → kart-içi dönem seçici + "Yeni Dönem Oluştur" her yenilemede siliniyordu (kullanıcı bulgusu birebir buydu).
+- Teşhis: `ks-dom-semantik-donem.mjs` (gerçek DOM semantiği: bilinmeyen id → null, innerHTML yazımı eski çocukları siler, qSA gerçek tekrar sayar; microtask+timer flush ile defer sırası taklidi) — yama öncesi boot+flush sonrası kart-içi kutu 0, onarım sonrası host=1/secici=1/buton=1.
+
+## Çözüm (yalnız app.js — 2 hedefli bölge, baştan yazma YOK)
+- **ID'ler:** kart-içi seçici markup `id="donemSeciciKutu"` GERÇEK id ile korunur (host sarmalayıcı eklenmedi — gerçek DOM'da çift kayıt üretirdi); select → `id="donem-secici"` (`data-id="donemSecici"` uyumluluk takma adı), buton → `id="yeni-donem-btn"` (`data-id="donemYeniBtn"`).
+- **Kalıcı host:** `donemHostOnar()` — kart-içi seçici `yb.innerHTML`'de YOKSA `#yonetimBolum`'un hemen ÜSTÜNE tek `id="donem-ui-host"` kurar (taze `donemSecKutusuHTML()` options); VARSA host'u kaldırır (çift görünüm/duplicate imkânsız); host kuruluysa options tazeler (`donemHostTazele` — yeni dönem anında seçicide).
+- **Bağlantı:** `donemHostOnarZincir()` (microtask + setTimeout 0) `yenile()` kuyruğunun sonuna 1 kez eklendi → tüm yollar (boot, donemSec, sec, yeniDonemOlustur) otomatik kapsanır.
+
+## Kalıcılık kuralı
+- Host `#yonetimBolum`'un **KARDEŞİDİR** (içinde değil): renderYonetim/alt sekme yazımları host'a dokunamaz. Her yenileme akışında: kart-içi seçici varsa host kaldırılır, yoksa kurulur/tazelenir.
+- `donemSec(this.value)` ve `yeniDonemOlustur()` mevcut veri mantığıyla çalışır (aktifDonemId+sinifProgDonemId hizalama, `sinifProguDonemeBagla`, saveDB, yenile, toast) — hiçbiri yeniden yazılmadı.
+
+## Testler ve Sayılar
+- Yeni süit: `ks-donem-secici-gorunum.mjs` (**44 test**, GERÇEK DOM semantiği) — test.mjs'e 1 kez eklendi. **TEK KOŞU: 785/785 OK (16 süit).**
+- Eski 15 süit baseline birebir (düşüş YOK): harness 34 · test-render 14 · durum-fn 20 · grup-uyum 41 · panel-secim 32 · grup-gorunum 28 · istekten-grup 32 · grup-istegi 68 · benzersiz-id 46 · gercek-kadro 80 · donem-ilk 47 · donem-damga 50 · donem-secici 77 · excel-csv 85 · donem-olusturma 87.
+- Teşhis: `ks-dom-semantik-donem.mjs` — boot + 3 render + 5 alt sekme + dönem değişimi + yeni dönem + tekrar 3 render; her adımda host/selector/buton = 1, options tazeliği ve selected korunumu doğrulandı.
+- Yama: `ks-yama-donem-secici-ui.mjs` (assert'li, idempotent) — 1. koşu uyguladı; 2. koşu exit 2 "Zaten uygulanmış", hash birebir aynı.
+
+## Yedek ve Dosyalar
+- Yedek: `app.js.donem-secici-oncesi.bak` (SHA-256 `120b87df40115b28330a69d3a782294e351438dcd04fd752a756a4fa76faec0d` — yama öncesi birebir; üzerine YAZILMADI).
+- `app.js`: `120b87df…` → `0f021b76…` (yalnız 2 hedefli bölge; bölge dışı byte-birebir kanıtlı). `test.mjs`: süit kaydı 1 kez.
+- Değişmeyen: `index.html`, `ek-ders.js`, `vendor/*` (HTML değişikliği GEREKMEDİ — host app.js'ten ekleniyor).
+
+## Kalan Riskler
+- ek-ders.js 4 sekmeli override'ı yerinde kalıyor: gerçek sayfada dönem kontrolü kartın ÜSTÜNDEKİ kalıcı host'ta yaşar (kart-içinde görünmez — bu kasıtlı). Host, yb'nin kardeşi olduğu için yb içi her yazıma dayanıklıdır; yb'nin KENDİSİ DOM'dan kaldırılırsa (mevcut kodda yok) host kaybolabilir.
+- Gerçek tarayıcıda ilk açılışta eski app.js önbellekten gelebilir → sert yenileme (Ctrl+Shift+R / Cmd+Shift+R).
 - Toplam kesilen: 178.371 bayt. Dosya başlıklarının diğer hiçbir yeri değişmedi
   (script, çıktının girdinin birebir "satır 11–14 → link" dönüşümü olduğunu assert etti).
 - Script ikinci kez çalıştırıldığında güvenli şekilde reddetti (idempotent değil, korumalı).

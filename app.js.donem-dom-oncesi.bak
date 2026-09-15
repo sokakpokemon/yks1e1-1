@@ -867,7 +867,6 @@ function donemHostOnar() {
     return;
   }
   if (host) { donemHostTazele(host); return; } /* zaten kurulu — no-op + seçenekleri tazele */
-  try { if (typeof console !== "undefined" && console.info) console.info("[DONEM-DOM-DÜZELTMESİ] kalıcı dönem kontrolü kuruldu (#donem-ui-host)."); } catch (eK) {}
   var kutu = null;
   try { kutu = (typeof donemSecKutusuHTML === "function") ? donemSecKutusuHTML() : null; } catch (e4) { kutu = null; }
   if (!kutu) return;
@@ -886,65 +885,11 @@ function donemHostTazele(host) {
 }
 /* Zincirleme onarım: microtask (aynı tikte sonradan yazan render'dan SONRA koşar) —
    yenile() → renderYonetim → (defer) ek-ders override sırasını kapatır. */
-/* DONEM-DOM-DÜZELTMESİ (idempotent ensureDonemUI): kök neden — ek-ders.js (defer) görevi
-   renderYonetim'i 4 sekmeli sarmalayıcıyla EZER ve yonetimBolum.innerHTML'i donemSeciciKutu
-   OLMADAN yeniden yazar; donemHostOnarZincir'in microtask+setTimeout-0 zinciri TEK atımlıktır
-   → defer görevi bu timer'ı geçtiğinde (script ağ/cache gecikmesi) onarım hiç koşmaz ve
-   gerçek tarayıcıda #donem-secici 0 kalır. donemOnarimPlanla(): yb.innerHTML'e bağlı TEK
-   seferlik MutationObserver kurar; kart-içi seçici silinen her yb yazımında donemHostOnar()'ı
-   setTimeout 0 ile planlar. Observer tek kez kurulur (idempotent); host zaten kuruluysa veya
-   kart-içi seçici varsa işlem yapmaz → her render'da çoğaltma/console spam YOK. */
-function donemOnarimPlanla() {
-  try {
-    if (typeof document === "undefined") return;
-    var yb0 = document.getElementById("yonetimBolum");
-    if (!yb0 || yb0.__donemOnarimBagli) return;
-    yb0.__donemOnarimBagli = true;
-    if (typeof MutationObserver !== "function") return;
-    var mo = new MutationObserver(function () {
-      var k = null;
-      try { k = document.getElementById("yonetimBolum"); } catch (e1) { k = null; }
-      if (k && k.__donemOnarimBagli === false) return; /* yb yeniden kurulduysa eski observer yok sayar */
-      var ici = false;
-      try { ici = !!(k && k.innerHTML && k.innerHTML.indexOf('id="donemSeciciKutu"') !== -1); } catch (e2) { ici = false; }
-      if (ici) return; /* kart-içi seçici mevcut — host gerekmez */
-      var h = null;
-      try { h = document.getElementById("donem-ui-host"); } catch (e3) { h = null; }
-      if (h) return; /* host zaten kurulu — işlem yok */
-      try { setTimeout(donemHostOnar, 0); } catch (e4) {}
-    });
-    try { mo.observe(yb0, { childList: true, subtree: false, attributes: false, characterData: false }); } catch (e5) {}
-  } catch (e6) {}
-}
-/* DONEM-DOM-SELF-CHECK: #donem-ui-host / #donem-secici / #yeni-donem-btn DOM'da eksikse
-   console.error ile AÇIK hata; varsa sayıları + aktif dönem id'sini raporlar.
-   Yalnızca boot'un en sonunda 1 kez çağrılır (bkz. Başlangıç bölümü) — render başına DEĞİL. */
-function donemOzDenetim() {
-  try {
-    if (typeof document === "undefined") return;
-    var sayac = function (id) {
-      try { if (document.querySelectorAll) { var n = document.querySelectorAll('[id="' + id + '"]').length; if (n) return n; } } catch (e1) {}
-      try { return document.getElementById(id) ? 1 : 0; } catch (e2) { return 0; }
-    };
-    var h = sayac("donem-ui-host"), s = sayac("donem-secici"), b = sayac("yeni-donem-btn");
-    var yb = null;
-    try { yb = document.getElementById("yonetimBolum"); } catch (e3) { yb = null; }
-    var kartIci = false;
-    try { kartIci = !!(yb && yb.innerHTML && yb.innerHTML.indexOf('id="donemSeciciKutu"') !== -1); } catch (e4) { kartIci = false; }
-    if ((h < 1 && !kartIci) || s < 1 || b < 1) {
-      console.error("[DONEM-DOM-SELF-CHECK] Dönem kontrolü DOM'da EKSİK: host=" + h + " secici=" + s + " buton=" + b + " kartIciSecici=" + kartIci + " — donemOnarimPlanla observer'ı ve donemHostOnar() onarımını bekliyor.");
-      return;
-    }
-    var ak = "";
-    try { ak = (typeof aktifDonemId === "function") ? String(aktifDonemId()) : String((typeof DB !== "undefined") && DB ? DB.aktifDonemId : "?"); } catch (e5) { ak = "?"; }
-    console.info("[DONEM-DOM-SELF-CHECK] host=" + h + " secici=" + s + " buton=" + b + " kartIciSecici=" + kartIci + " · aktifDonemId=" + ak);
-  } catch (e6) { try { console.error("[DONEM-DOM-SELF-CHECK] öz-denetim hatası: " + e6); } catch (e7) {} }
-}
 function donemHostOnarZincir() {
   try { Promise.resolve().then(donemHostOnar); } catch (e1) {}
   try { setTimeout(donemHostOnar, 0); } catch (e2) {}
 }
-function sec(ad) { ui.sekme = ad; renderYonetim(); donemOnarimPlanla(); } /* DONEM-DOM-DÜZELTMESİ: alt sekme değişimlerinde de tek onarım planlanır (idempotent guard) */
+function sec(ad) { ui.sekme = ad; renderYonetim(); }
 
 /* ================================================================
    1) ÖZET RAPOR: istatistik kartları + pasta grafik
@@ -3509,9 +3454,6 @@ function indirApp() {
 /* ---- Başlangıç ---- */
 renderFormDestek();
 yenile();
-donemOnarimPlanla(); /* DONEM-DOM-DÜZELTMESİ: boot'un en son noktası — observer mutlaka kurulur */
-/* DONEM-DOM-SELF-CHECK: yalnızca BİR KEZ, onarım zinciri bittikten sonra (setTimeout 0) raporlar — render döngüsünde DEĞİL. */
-setTimeout(donemOzDenetim, 0);
 document.addEventListener("keydown", function (e) {
   if (e.key === "Escape") { onayKapat(); waKapat(); pngKapat(); }
 });

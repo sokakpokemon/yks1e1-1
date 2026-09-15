@@ -766,3 +766,38 @@ index.html, ek-ders.js, vendor/* (SHA-256 yazma öncesi+sonrası doğrulandı), 
 - Program düzenleme UI'ı DB.sinifProg (view) üzerinden yazıyor: davranış doğru; ileride depoya doğrudan yazacak yeni özellikler sinifProgDonemler[dönemId] anahtarını kullanmalı.
 - 2027/2028 ilk oluşturmada program kasıtlı BOŞ başlar (eski dönem programı kopyalanmaz); kullanıcı yeni dönemde programı kurar.
 - Dönemsiz ESKİ yedek yüklemede program donem-2026-2027'ye bağlanır; 2027/2028 aktifken alınan yedeklerde sinifProgDonemler kayıpsız taşınır (87 test ile doğrulandı).
+---
+
+# ✅ CHECKPOINT: Dönem Seçici — Gerçek Tarayıcı DOM Düzeltmesi (DONEM-DOM-DÜZELTMESİ)
+
+**Tarih:** 15 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **807/807 OK** (785 eski + 22 yeni)
+
+## Kök Neden (kanıtla)
+
+- Kullanıcı bulgusu birebir doğruydu: `fetch('app.js')` içinde `donem-secici` VAR, gerçek DOM'da `document.querySelectorAll('#donem-secici').length === 0`.
+- `ek-ders.js` (defer, index.html L7 → app.js'ten SONRA çalışır) `renderYonetim`'i 4 sekmeli sarmalayıcıyla EZER ve `yonetimBolum.innerHTML`'i `donemSeciciKutu` OLMADAN yeniden yazar (ek-ders.js L414-433).
+- 13 Eylül yamasındaki `donemHostOnarZincir` (microtask + setTimeout 0) **TEK atımlıktı**: defer görevi bu timer'ı geçtiğinde (script ağ/cache gecikmesi) onarım hiç koşmaz → gerçek tarayıcıda seçici 0 kalır. Harness'ta flush sırası farklı olduğu için eski 44 testlik süit bunu yakalayamıyordu.
+
+## Kalıcı Çözüm (yalnız app.js — 4 hedefli bölge, baştan yazma YOK; yama: ks-yama-donem-dom.mjs)
+
+- **A2)** `donemHostOnar()`: host'u kurarken TEK SEFERLİK `console.info("[DONEM-DOM-DÜZELTMESİ] kalıcı dönem kontrolü kuruldu")` kanıtı (host kuruluysa erken döner — spam YOK).
+- **B)** `donemOnarimPlanla()`: `#yonetimBolum`'e bağlı TEK seferlik MutationObserver (`__donemOnarimBagli` guard); kart-içi seçici silinen her yb yazımında `donemHostOnar()`'ı setTimeout 0 ile planlar. Yani **hangi gecikmede gelirse gelsin**, ek-ders.js'in yb'yi ezme yazımı artık onarımı TETİKLER.
+- **C)** `sec()`: alt sekme değişimlerinde de `donemOnarimPlanla()` (idempotent guard).
+- **D)** Boot son noktası: `donemOnarimPlanla()` + `setTimeout(donemOzDenetim, 0)`.
+- **Self-check (`donemOzDenetim`):** boot'ta YALNIZ 1 kez, onarım zinciri bittikten sonra koşar; `#donem-ui-host`/`#donem-secici`/`#yeni-donem-btn` eksikse `console.error("[DONEM-DOM-SELF-CHECK] … EKSİK …")`, varsa `host=1 secici=1 buton=1 kartIciSecici=false · aktifDonemId=…` yazar.
+- `donemSec()`/`yeniDonemOlustur()` veri mantığı DEĞİŞMEDİ (aktifDonemId+sinifProgDonemId hizalama, saveDB, sinifProguDonemeBagla, yenile, duplicate-dönem engeli); gerçek id'ler korundu (data-id takma adları aynı); host/select/buton her senaryoda tam 1.
+
+## Testler ve Kanıtlar
+
+- Yeni süit: `ks-donem-secici-dom.mjs` (**22 test**, GERÇEK DOM semantiği + MutationObserver simülasyonu) — test.mjs'e 1 kez eklendi. Kapsam: null-on-miss, innerHTML çocuk silme, insertAdjacentHTML id kaydı, boot sonrası 1,1,1, 3 render, 4 alt sekme geçişi (Öğretmen/Öğrenci & Sınıf/Ek Ders/Ayarlar & Yedekleme), gecikmeli override → 0 → observer onarımı → 1,1,1, selected↔aktifDonemId, duplicate-dönem engeli, self-check açık hata.
+- Baseline birebir: 785/785 (16 eski süit; düşüş 0). Yeni toplam **807/807**.
+- Yama: assert'li, idempotent — 2. koşu `"Zaten uygulanmış"` + **exit 2**; hash `41db0ee4…` değişmedi.
+- Hash'ler: app.js `0f021b76…` → `41db0ee4…`; `index.html` `5b691039…`, `ek-ders.js` `662ec4f1…`, `vendor/*` (5 dosya) DEĞİŞMEDİ.
+- Yedekler: `app.js.donem-secici-oncesi.bak` (`120b87df…`, üzerine YAZILMADI) + `app.js.donem-dom-oncesi.bak` (`0f021b76…`, bu yamanın ön-durumu).
+
+## Kalan Riskler
+
+- Gerçek tarayıcıda ilk açılışta eski app.js önbellekten gelebilir → **Ctrl+Shift+R (sert yenileme)** gerekli.
+- ek-ders.js 4 sekmeli override yerinde kalıyor (kasıtlı): dönem kontrolü, yb'yi ezen her yazımı onaran observer + kardeş host ile korunuyor.
+- MutationObserver desteklemeyen çok eski tarayıcılarda observer kurulmaz (kod try/catch'li, çökmez; modern tarayıcıların tamamı destekler).
+- Kart-içi seçici varken `host.remove()` observer'ı yeniden tetikler; observer kart-içi seçiciyi görünce no-op döner → sonsuz döngü YOK (süitte kanıtlandı).

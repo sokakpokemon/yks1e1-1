@@ -3304,9 +3304,18 @@ function haftalikOgrtTablo() {
         /* PAZAR-BIREBIR-GORUNUM-YAMASI: birebir hücresi = TAM AD + KONU + SINIF (3 ayrı satır);
            null-on-miss: ogrenci bulunamazsa DB.ogrenciler ad eşlemesiyle fallback, o da yoksa boş.
            Uzun metin taşması: truncate + min-w-0 + orantılı padding/font/leading korunur. */
-        /* BIREBIR-GORUNUM-ORTAK-YAMASI: ortak yardımcıyla günlük tablo ile AYNI hücre (ders adı yok) */
-        satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100">' +
-          birebirHucreHTML(ders, ogrenci, ogrenciAd, sinif, durumRenk) + '</td>';
+        var tamAd = (function () {
+          if (ogrenci && ogrenci.ad) return ogrenci.ad;
+          if (ders.ogrenciId) { var o2 = DB.ogrenciler.find(function(x){ return x.id === ders.ogrenciId; }); if (o2 && o2.ad) return o2.ad; }
+          return ogrenciAd || "";
+        })();
+        var hucreKonu = ders.konu ? '<div class="text-[8.5px] text-slate-500 leading-tight truncate whitespace-nowrap min-w-0" title="' + esc(ders.konu) + '">' + esc(ders.konu) + '</div>' : '';
+        satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100"><div class="rounded-lg border ' + durumRenk + ' px-1 py-1.5 min-w-0" title="Dolu — kilitli">' +
+          '<div class="text-[10px] font-bold text-slate-800 leading-tight truncate whitespace-nowrap min-w-0" title="' + esc(tamAd) + '">' + esc(tamAd) + '</div>' +
+          hucreKonu +
+          (sinif ? '<div class="text-[8px] font-bold text-slate-400 leading-tight truncate whitespace-nowrap min-w-0">' + esc(sinif) + '</div>' : '') +
+          (dersBilgi ? '<div class="text-[8px] font-bold mt-0.5 ' + dersBilgi.tx + '">' + dersBilgi.ad + '</div>' : '') +
+          '</div></td>';
       } else {
         // BOŞ HÜCRE → DROP ZONE (havuzdaki istek kartı buraya bırakılabilir)
         var hk = KISA_KOD[hi].b;
@@ -3387,28 +3396,6 @@ function istekBurak(ev, el, ogrtId, tarih, saat) {
   renderDersler();
   renderOzet();
   renderAnaliz();
-}
-
-
-/* BIREBIR-GORUNUM-ORTAK-YAMASI: günlük + haftalık birebir hücresi TEK kaynak.
-   Satır sırası: (1) TAM AD, (2) gerçek konu (yalnız dolu + ders adı/sınıf adından farklıysa),
-   (3) sınıf. Ders adı (DERS[dersId].ad) ASLA gösterilmez; konu asla ders adından türetilmez. */
-function birebirHucreHTML(ders, ogrenci, ogrenciAd, sinif, durumRenk) {
-  var tamAd = (function () {
-    if (ogrenci && ogrenci.ad) return ogrenci.ad;
-    if (ders.ogrenciId) { var o2 = DB.ogrenciler.find(function(x){ return x.id === ders.ogrenciId; }); if (o2 && o2.ad) return o2.ad; }
-    return ogrenciAd || "";
-  })();
-  var dersBilgi = DERS[ders.dersId];
-  var dersAdi = dersBilgi ? dersBilgi.ad : "";
-  var konu = (typeof ders.konu === "string" ? ders.konu : "").trim();
-  var konuGecerli = konu.length > 0 && konu !== dersAdi && konu !== (sinif || "") && konu !== tamAd;
-  var hucreKonu = konuGecerli ? '<div class="text-[9px] text-slate-500 leading-tight truncate whitespace-nowrap min-w-0" title="' + esc(konu) + '">' + esc(konu) + '</div>' : '';
-  return '<div class="rounded-lg border ' + (durumRenk || "bg-blue-50 border-blue-200") + ' px-1 py-1.5 min-w-0" title="Dolu — kilitli">' +
-    '<div class="text-[10px] font-bold text-slate-800 leading-tight truncate whitespace-nowrap min-w-0" title="' + esc(tamAd) + '">' + esc(tamAd) + '</div>' +
-    hucreKonu +
-    (sinif ? '<div class="text-[8px] font-bold text-slate-400 leading-tight truncate whitespace-nowrap min-w-0">' + esc(sinif) + '</div>' : '') +
-    '</div>';
 }
 
 function gunlukTablo() {
@@ -3498,13 +3485,16 @@ function gunlukTablo() {
         } else if (ders) {
           var ogrenci = DB.ogrenciler.find(function(x){ return x.id === ders.ogrenciId; });
           var sinif = ogrenci ? ogrenci.sinif : "";
+          var dersBilgi = DERS[ders.dersId];
+          var hucreIcerik = sinif || esc(ders.ogrenciAd || "").split(" ")[0];
           /* GRUP: günlük tabloda üye baş harfleri alt satırda (birebirde eklenmez) */
           var grupUyelerG = grupUyeEtiketleri(ders);
-          var durumRenkG = ders.durum === "tamamlandi" ? "bg-emerald-50 border-emerald-200" : "bg-blue-50 border-blue-200";
-          /* BIREBIR-GORUNUM-ORTAK-YAMASI: haftalik tablo ile AYNI hücre (tam ad + gerçek konu + sınıf; ders adı yok) */
+          var altYazi = (grupUyelerG.length ? grupUyelerG.map(function (a) { return ilkHarfler(a); }).join(" · ") + (dersBilgi ? " · " : "") : "") + (dersBilgi ? dersBilgi.ad : "");
+          var renk = ders.durum === "tamamlandi" ? "text-emerald-600" : "text-slate-700";
+
           html += '<td class="px-1.5 py-2 border-r border-slate-200 hover:bg-blue-50 transition-colors">' +
-            birebirHucreHTML(ders, ogrenci, ders.ogrenciAd || "", sinif, durumRenkG);
-          if (grupUyelerG.length) html += '<div class="text-[8.5px] text-slate-400 mt-0.5">' + grupUyelerG.map(function (a) { return ilkHarfler(a); }).join(" · ") + '</div>';
+            '<div class="text-[11.5px] font-bold ' + renk + ' leading-tight">' + esc(hucreIcerik) + '</div>';
+          if (altYazi) html += '<div class="text-[8.5px] text-slate-400 mt-0.5">' + esc(altYazi) + '</div>';
           html += '</td>';
         } else {
           html += '<td class="px-1.5 py-2 border-r border-slate-200"></td>';

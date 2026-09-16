@@ -1135,3 +1135,42 @@ yalnızca şu yollardan biri ile mümkündür (kullanıcı kararı gerekir):
 - Sınırlar: `ek-ders.js`, `index.html`, `vendor/*` değişmedi (süit hash'leri yeşil kanıt); özet/CSV/dönem/çakışma mantığı byte-korundu.
 - Preview: **Ctrl+Shift+R** (sert yenileme) ile eski app.js önbelleği temizlenmeli.
 
+
+# ✅ CHECKPOINT: Birebir Hücre Ortak Görünüm — Test Süitleri Hizalama (BIREBIR-GORUNUM-ORTAK-YAMASI)
+
+**Tarih:** 16 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **1246/1246 OK** (1211 baseline + 35 yeni/güncellenen)
+
+## Durum
+- **app.js'e bu dilimde DOKUNULMADI** — `birebirHucreHTML()` ortak yardımcısı (L3397) zaten hedef durumda:
+  satır sırası (1) TAM AD, (2) gerçek konu (yalnız dolu + ders adı/sınıf/tam ad'dan farklıysa), (3) sınıf; ders adı ASLA yok; konu ders adından türetilmez.
+  `gunlukTablo()` ve `haftalikOgrtTablo()` her ikisi de aynı yardımcıyı kullanıyor → iki tablo birebir aynı hücre.
+- Baseline `node test.mjs` → **1010/1211 OK, 4 süit kırmızı** (fail-closed protokol işletildi; kod yazmadan teşhis).
+
+## Kök Neden (kırmızı 8 test)
+Bayat assertionlar eski hücre formatını (ilk ad + `MATEMATİK` + `hucreIcerik`/`altYazi` + byte-hash) donduruyordu; ortak-yardımcı yaması bunları meşru olarak değiştirmişti. Protokol gereği gevşetme yerine davranış-testlerine dönüştürüldü:
+
+| Süit | Değişen assertion |
+|---|---|
+| `ks-grup-gorunum.mjs` | "MATEMATİK hücrede" → "grup hücresinde TAM AD var, ders adı YOK" |
+| `ks-donem-secici.mjs` | `text-[11.5px]` → `text-[10px] font-bold` (ortak hücre bloğu) |
+| `ks-ekders-gorunum.mjs` | `hucreIcerik`/`altYazi` kaynak satırları → "ortak yardımcı kullanıyor + hücrede ders adı üretilmiyor" |
+| `ks-ekders-ozet-csv.mjs` | gunlukTablo byte-hash → davranış garantileri (ortak yardımcı + amber dal + aktif dönem filtresi); PAZAR-BIREBIR keyword listesine `birebirHucreHTML` eklendi |
+
+## Yeni Süit: `ks-birebir-gorunum.mjs` (34 test, test.mjs'e tam 1 kez)
+Gerçek davranış testleri: iki tabloda aynı ders → tam ad/sınıf/konu BİREBİR aynı metin+markup · ders adı (MATEMATİK) her iki hücre bloğunda YOK · 6 konu-gizleme durumu (boş/whitespace/null/ders adı/sınıf/tam ad) · uzun ad/konu truncate+min-w-0+title · Pazar satırı ve slot eşleşmesi · grup/Ek Ders amber/Sınıf Dersi rose/Kapalı slate/Boş drop-zone korunumu · aktif dönem dışı kayıt gizli · ek-ders.js/index.html hash freeze.
+
+## Backup ve SHA-256 (yama öncesi hâller; üzerine yazılmadı)
+```
+5b7168d8…  ks-grup-gorunum.mjs.birebir-gorunum-oncesi.bak
+fed0c20f…  ks-donem-secici.mjs.birebir-gorunum-oncesi.bak
+4bf31b9b…  ks-ekders-gorunum.mjs.birebir-gorunum-oncesi.bak
+e9722b76…  ks-ekders-ozet-csv.mjs.birebir-gorunum-oncesi.bak
+d3a8941d…  test.mjs.birebir-gorunum-oncesi.bak
+7eea1ea7…  app.js (değişmedi — backup ile birebir)
+```
+`index.html` (`5b6910…`) ve `ek-ders.js` (`662ec4…`) değişmedi.
+
+## Doğrulama
+- `node --check app.js` · `node --check ek-ders.js` → OK
+- `node test.mjs` → **1246/1246 OK**, kırmızı süit YOK.
+- Preview: **Ctrl+Shift+R** (sert yenileme) sonrası aynı birebir dersi günlük ve haftalık tabloda kontrol edin — iki hücre tam ad + sınıf + varsa gerçek konu gösterir, ders adı hiçbirinde yoktur.

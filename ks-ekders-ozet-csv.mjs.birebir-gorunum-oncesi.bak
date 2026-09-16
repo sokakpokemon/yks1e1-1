@@ -139,11 +139,7 @@ const appKaynak = readFileSync("app.js", "utf8");
 const blok = (b) => { const i = appKaynak.indexOf(b); let j = appKaynak.indexOf("\nfunction ", i + 10); if (j === -1) j = appKaynak.length; return appKaynak.slice(i, j); };
 const bakKaynak = readFileSync("app.js.ekders-ozet-csv-oncesi.bak", "utf8");
 const bakBlok = (src, b) => { const i = src.indexOf(b); let j = src.indexOf("\nfunction ", i + 10); if (j === -1) j = src.length; return src.slice(i, j); };
-/* BIREBIR-GORUNUM-ORTAK-YAMASI sonrası gunlukTablo gövdesi meşru olarak değişti
-   (ortak birebirHucreHTML yardımcısı). Byte-hash dondurması yerine davranış garantileri:
-   ortak yardımcı çağrısı + Ek Ders amber dalı + aktif dönem filtresi KORUNUR. */
-t("gunlukTablo ortak birebir hücre yardımcısını kullanıyor", blok("function gunlukTablo() {").includes("birebirHucreHTML(ders, ogrenci, ders.ogrenciAd || \"\", sinif, durumRenkG)"));
-t("gunlukTablo Ek Ders amber dalı KORUNDU", blok("function gunlukTablo() {").includes("bg-amber-50") && blok("function gunlukTablo() {").includes("Ek Ders"));
+t("gunlukTablo kodu değişmedi", sha(blok("function gunlukTablo() {")) === sha(bakBlok(bakKaynak, "function gunlukTablo() {")));
 /* PAZAR-BIREBIR-GORUNUM-YAMASI sonrası haftalikOgrtTablo gövdesi meşru olarak değişti
    (Pazar normal gün satırı + birebir kartta tam ad/konu/sınıf). Aşırı geniş byte-hash dondurması
    yerine daha kesin davranış garantileri: fonksiyon imzası + Ek Ders aktif-dönem filtresi +
@@ -160,7 +156,7 @@ t("haftalikOgrtTablo diff'i yalnız PAZAR-BIREBIR işaretli bölgede", (() => {
   const satirlarEski = eskiBlok.split("\n");
   const satirlarYeni = hotBlok.split("\n");
   const farkli = satirlarYeni.filter((s) => !satirlarEski.includes(s));
-  const KELIMELER = ["PAZAR-BIREBIR-GORUNUM-YAMASI", "BIREBIR-GORUNUM-ORTAK-YAMASI", "birebirHucreHTML", "tamAd", "hucreKonu", "min-w-0", "truncate", "dnd-kilit", "esc(", "ogrenciAd", "ogrenci.", "ders.ogrenciId", "ogrenci bulunamazsa", "})();"];
+  const KELIMELER = ["PAZAR-BIREBIR-GORUNUM-YAMASI", "tamAd", "hucreKonu", "min-w-0", "truncate", "dnd-kilit", "esc(", "ogrenciAd", "ogrenci.", "ders.ogrenciId", "ogrenci bulunamazsa", "})();"];
   return farkli.every((s) => KELIMELER.some((k) => s.includes(k)));
 })());
 t("csvHucre değişmedi", sha(blok("function csvHucre(v) {")) === sha(bakBlok(bakKaynak, "function csvHucre(v) {")));

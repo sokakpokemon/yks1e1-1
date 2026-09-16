@@ -206,9 +206,7 @@ console.log("7) Günlük tablo filtresi:");
   donemSec(DONEM_B);
   const htmlB = gunlukTablo();
   t("2025/2026 seçilince günlük tabloda eski ders GÖRÜNÜR", htmlB.includes("Ayşe") || htmlB.includes("test-eski-2025-ders") === false /* isim bazlı: en az tablo boş değil */);
-  /* BIREBIR-GORUNUM-ORTAK-YAMASI sonrası birebir hücre text-[10px] tam ad bloğu kullanır
-     (eski text-[11.5px] ders adı satırı kaldırıldı — davranış testi: hücre dolu olmalı) */
-  t("2025/2026 günlük tablosunda ders satırı var", htmlB.includes("text-[10px] font-bold"));
+  t("2025/2026 günlük tablosunda ders satırı var", htmlB.includes("text-[11.5px] font-bold"));
   donemSec(DONEM_A);
   DB.dersler = DB.dersler.filter((l) => l !== eski);
   ui.gunSecim = "";

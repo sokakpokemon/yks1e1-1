@@ -170,12 +170,9 @@ console.log("10) Birebir/grup hücre koruması:");
 const bolge = (fn) => { const i = appKaynak.indexOf(fn); const j = appKaynak.indexOf("\nfunction ", i + 10); return appKaynak.slice(i, j); };
 const gunlukBolge = bolge("function gunlukTablo() {");
 const haftalikBolge = bolge("function haftalikOgrtTablo() {");
-/* BIREBIR-GORUNUM-ORTAK-YAMASI sonrası günlük birebir hücre ORTAK yardımcıyla (birebirHucreHTML)
-   çizilir: tam ad + gerçek konu + sınıf; ders adı YOK. Eski hucreIcerik/altYazi kaynak satırları
-   meşru olarak değişti — davranış eşdeğerleriyle değiştirildi. */
-t("gunlukTablo ortak hücre yardımcısını kullanıyor (birebirHucreHTML)", gunlukBolge.includes("birebirHucreHTML(ders, ogrenci, ders.ogrenciAd || \"\", sinif, durumRenkG)"));
+t("gunlukTablo birebir ders-hücre gövdesi (hucreIcerik) aynen", gunlukBolge.includes('var hucreIcerik = sinif || esc(ders.ogrenciAd || "").split(" ")[0];'));
 t("gunlukTablo grup satırı (grupUyelerG) aynen", gunlukBolge.includes("var grupUyelerG = grupUyeEtiketleri(ders);"));
-t("gunlukTablo hücresinde ders adı üretilmiyor", !gunlukBolge.includes('hucreIcerik') && !/dersBilgi\s*\?\s*['"]\s*·/.test(gunlukBolge));
+t("gunlukTablo altYazi birleşimi aynen", gunlukBolge.includes('join(" · ") + (dersBilgi ? " · " : "")'));
 t("haftalik grup satırı (grupUyeler) aynen", haftalikBolge.includes("var grupUyeler = grupUyeEtiketleri(ders);"));
 t("haftalik birebir hücre bloğu (hucreUst) aynen", haftalikBolge.includes("var hucreUst = grupUyeler.length ?"));
 t("durumRenk satırı aynen (birebir mavi/emerald)", haftalikBolge.includes('var durumRenk = ders.durum === "tamamlandi" ? "bg-emerald-50 border-emerald-200" : "bg-blue-50 border-blue-200";'));

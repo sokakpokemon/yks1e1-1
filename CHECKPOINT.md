@@ -877,3 +877,23 @@ index.html, ek-ders.js, vendor/* (SHA-256 yazma öncesi+sonrası doğrulandı), 
 - app.js: `696168df…` → `bd456895…` (yalnız 4 hedefli bölge). index.html, ek-ders.js, vendor/* DEĞİŞMEDİ.
 - Syntax: `node --check` app.js / ek-ders.js / test.mjs / ks-sablon-kopya.mjs / ks-yama-sablon-kopya.mjs → OK.
 - Kalan risk: gerçek tarayıcıda eski app.js önbellekten gelebilir → **Ctrl+Shift+R (Mac: Cmd+Shift+R)** sert yenileme.
+
+---
+
+# ✅ CHECKPOINT: D0 — Render Sahipliği Hardening (Gerçek DOM Regresyon Süiti)
+
+**Tarih:** 16 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **966/966 OK** (936 eski + 30 yeni `ks-render-sahipligi.mjs`)
+
+## Envanter ve Karar (A — üretim patch'i GEREKMEDİ)
+- Gerçek DOM sahipliği kanıtlandı: `#donem-ui-host` `#yonetimBolum`'un **KARDEŞİ**dir → ek-ders.js'in `renderYonetim` override'ı yalnız `yb.innerHTML`'i (yb İÇİNİ) ezebilir; host'a ve host içindeki dönem/şablon UI'ya erişemez. `donemHostOnar`/`donemHostTazele` (app.js) host'u kurar/tazeler; `donemOnarimPlanla` MutationObserver ile gecikmeli defer yazımlarını onarır; `donemOzDenetim` boot sonunda beşliyi raporlar.
+- `ks-donem-secici-dom.mjs` (22) ve `ks-sablon-kopya.mjs` (72) gerçek-DOM suite'leri zaten boot/render/sekme sayımlarını kanıtlıyordu; app.js'te gerçek eksik YOK → **app.js, ek-ders.js, index.html DEĞİŞMEDİ; backup OLUŞTURULMADI** (patch gereksizdi).
+
+## Yeni Süit: ks-render-sahipligi.mjs (30 test, test.mjs'e tam 1 kez eklendi)
+Gerçek DOM semantiği (bilinmeyen id→null, innerHTML eski çocukları siler, insertAdjacentHTML kayıt, qSA gerçek tekrar): beşli `#donem-ui-host/#donem-secici/#yeni-donem-btn/#sablon-kopya-ui/#sablon-kopyala-btn` boot, 3 render, 4 alt sekme (Öğretmen/Öğrenci & Sınıf/Ek Ders/Ayarlar & Yedekleme) + geri dönüş sonrası hep 1,1,1,1,1; host kardeşlik kanıtı (override host'u silemez); duplicate id yok; dönem seçimi + aktifDonemId/sinifProgDonemId hizası sekme geçişlerinde korunur; şablon kaynak/hedef seçimleri korunur; dolu hedefe şablon kopyalama RED + LS byte-birebir; tekrarlı yeni-dönem butonu duplicate oluşturmaz; render/sekme geçişi localStorage ve sinifProg/sinifProgDonemler'i DEĞİŞTİRMEZ; ikinci kalıcı host eklenmez.
+
+## Hash'ler (değişmeyenler)
+`app.js` `bd456895…` · `ek-ders.js` `662ec4f1…` · `index.html` `5b691039…` · `vendor/*` (5 dosya) — hepsi birebir aynı. Değişen yalnız: `ks-render-sahipligi.mjs` (yeni, `f23a513f…`) ve `test.mjs` (`19d96290…` → süit kaydı 1 eklenti).
+
+## Sonuç ve Sonraki Adım
+- BASELINE 936/936 (19 süit) → FINAL **966/966 (20 süit)**; eski süitlerde düşüş 0, assertion değişikliği 0.
+- **Sonraki ayrı adım (D1):** ek-ders.js `renderYonetim` override'ının tam sahiplik refactor'u — öncesinde override öncesi/sonrası DOM davranışının semantic karşılaştırması zorunlu.

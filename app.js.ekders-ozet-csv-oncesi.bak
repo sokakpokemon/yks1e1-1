@@ -1075,13 +1075,11 @@ function renderOzet() {
       '<div class="text-[10.5px] text-slate-500 mt-1.5">' + alt + "</div></div></div>";
   }
 
-  var ekDerslerAktif = aktifDonemKayitlari(Array.isArray(DB.ekDersler) ? DB.ekDersler : []).filter(function (l) { return l && l.durum !== "iptal"; }); /* EKDERS-OZET-CSV-YAMASI: ayrı kategori; toplam birebir ders sayısına EKLENMEZ */
-var kartlar =
+  var kartlar =
     kart("#e6fffa", "#2dd4bf", "fa-regular fa-clock", c1Ad, toplam, "birebir ders · " + donemAlt()) +
     kart("#ebf8ff", "#60a5fa", "fa-solid fa-users", "Aktif Öğrenci", ogrenciSayi, "takip edilen öğrenci · " + donemAlt()) +
     kart("#fefcbf", "#f59e0b", "fa-solid fa-calendar-check", c3Ad, planlanan, "planlanan ders sayısı") +
-    kart("#faf5ff", "#a78bfa", "fa-solid fa-book-open", "Toplam Ders", tumArsiv, "tüm zamanlar") +
-    kart("#fffbeb", "#f59e0b", "fa-solid fa-clipboard-list", "Ek Ders", ekDerslerAktif.length, "sınıf ek dersi · " + donemAlt()); /* EKDERS-OZET-CSV-YAMASI: ayrı "Ek Ders" kategorisi */
+    kart("#faf5ff", "#a78bfa", "fa-solid fa-book-open", "Toplam Ders", tumArsiv, "tüm zamanlar");
 
   // Ders dağılımı
   var dagilim = {}, sirali = [];
@@ -1178,12 +1176,6 @@ function renderAnaliz() {
   var dag = {};
   ak.forEach(function (l) { dag[l.dersId || "?"] = (dag[l.dersId || "?"] || 0) + 1; });
   var sirali = Object.keys(dag).map(function (k) { return { id: k, n: dag[k] }; }).sort(function (a, b) { return b.n - a.n; });
-  /* EKDERS-OZET-CSV-YAMASI: ek dersler ayrı "Ek Ders" kategorisi — birebir/grup sayımlarına KARIŞMAZ, her kayıt TEK kez sayılır */
-  var ekDerslerAktif = aktifDonemKayitlari(Array.isArray(DB.ekDersler) ? DB.ekDersler : []).filter(function (l) { return l && l.durum !== "iptal"; });
-  var ekToplam = ekDerslerAktif.length;
-  var ekOgrt = {};
-  ekDerslerAktif.forEach(function (l) { var k = l.ogretmenAd || "Bilinmiyor"; ekOgrt[k] = (ekOgrt[k] || 0) + 1; });
-  var ekOgrtSirali = Object.keys(ekOgrt).map(function (k) { return { k: k, n: ekOgrt[k] }; }).sort(function (a, b) { return b.n - a.n; }).slice(0, 5);
   var uyari = "";
   if (sirali.length === 0) {
     uyari = '<div class="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[13px] text-slate-400"><i class="fa-solid fa-circle-info text-slate-300"></i> Bu dönemde analiz yapılabilecek ders bulunmuyor.</div>';
@@ -1239,14 +1231,6 @@ function renderAnaliz() {
             liste(topOgrt, function (k) { return topOgrtAd[k] || k; }, "Bu dönemde ders kaydı yok.") + "</div>" +
         "</div>" +
         '<div class="px-5 pb-5">' + uyari + "</div>" +
-        /* EKDERS-OZET-CSV-YAMASI: ayrı "Ek Ders" kategorisi kartı (yalnız aktif dönem, iptal hariç) */
-        '<div class="px-5 pb-5"><div class="rounded-2xl border border-amber-100 bg-amber-50/50 p-4"><h4 class="text-[12px] font-bold text-amber-700 uppercase tracking-wide flex items-center gap-2 mb-2"><i class="fa-solid fa-clipboard-list"></i> Ek Ders kategorisi</h4>' +
-          (ekToplam ? '<p class="text-[12.5px] text-slate-600"><b>' + ekToplam + " ek ders</b> bu dönemde planlandı (birebir/grup ders sayılarına dahil değildir). Ek Ders ayrı bir kategoridir.</p>" +
-            (ekOgrtSirali.length ? '<div class="mt-2 space-y-1">' + ekOgrtSirali.map(function (x, i) {
-              return '<div class="flex items-center gap-3 py-1.5 border-b border-amber-100/60 last:border-0"><span class="w-6 h-6 rounded-full text-[10.5px] font-extrabold flex items-center justify-center shrink-0 bg-amber-100 text-amber-700">' + (i + 1) + "</span><span class='flex-1 min-w-0 text-[13px] font-semibold text-slate-700 truncate'>" + esc(x.k) + "</span><span class='text-[11px] font-bold text-slate-400 bg-white rounded-full px-2.5 py-1 whitespace-nowrap'>" + x.n + " ek ders</span></div>";
-            }).join("") + "</div>" : "")
-          : '<p class="text-[12px] text-slate-400 py-2 text-center">Bu dönemde ek ders kaydı yok.</p>') +
-        "</div></div>" +
       "</div></div>";
 }
 function analizToggle() { ui.analizAcik = !ui.analizAcik; renderAnaliz(); }
@@ -1713,22 +1697,6 @@ var CSV_EOL = "\r\n";
 var EXCEL_CSV_SNAPSHOT = null; /* son BAŞARILI içe aktarma öncesi DB snapshot (oturum içi) */
 
 /* ---- CSV serializer: quote-aware, UTF-8 BOM + ; + CRLF ---- */
-
-/* ---- EKDERS-OZET-CSV-YAMASI: Ek Ders CSV dışa aktarma (yalnızca export; import ayrı dilim) ----
-   Kolon şeması: schema;dataset;donemId;tip;id;... (mevcut yardımcılarla UTF-8 BOM + ; + CRLF).
-   ID alanları korunur; isimle eşleştirme/birleştirme YOK. Yalnız aktif dönemin kayıtları girer. */
-var CSV_BASLIK_EKDERS = ["schema","dataset","donemId","tip","id","sinif","sinifId","dersId","dersAd","konu","ogretmenId","ogretmenAd","tarih","saat","kod","durum","olusturma","ekAlanlarJson"];
-function csvEkDersSatirlari() {
-  var donem = aktifDonemId();
-  return aktifDonemKayitlari(Array.isArray(DB.ekDersler) ? DB.ekDersler : []).filter(function (l) { return l && l.durum !== "iptal"; }).map(function (l) {
-    return [CSV_SCHEMA, "ekders", l.donemId || donem, "ekders", l.id || "", l.sinif || "", sinifId(l.sinif) || "", l.dersId || "", csvDersAd(l.dersId), l.konu || "", l.ogretmenId || "", l.ogretmenAd || "", l.tarih || "", l.saat || "", l.kod || "", l.durum || "", l.olusturma || "", csvEkAlanlar(l)];
-  });
-}
-function csvEkDersIndir() {
-  var id = aktifDonemId();
-  csvIndir("yks-ek-dersler-" + id + ".csv", CSV_BASLIK_EKDERS, csvEkDersSatirlari());
-  toast("Aktif dönem ek ders CSV indirildi ✓ (" + id + ")");
-}
 function csvHucre(v) {
   var s = (v == null) ? "" : String(v);
   if (s.indexOf('"') !== -1 || s.indexOf(CSV_SEP) !== -1 || s.indexOf("\n") !== -1 || s.indexOf("\r") !== -1) {
@@ -1870,8 +1838,8 @@ function csvIstekIndir() {
   toast("Aktif dönem istek CSV indirildi ✓ (" + id + ")");
 }
 function csvTumunuIndir() {
-  csvKadroIndir(); csvDersIndir(); csvIstekIndir(); csvEkDersIndir(); /* EKDERS-OZET-CSV-YAMASI: ek ders dosyası eklendi */
-  toast("4 CSV indirildi ✓ — tarayıcı engellerse ayrı butonları kullanın.", "uyari");
+  csvKadroIndir(); csvDersIndir(); csvIstekIndir();
+  toast("3 CSV indirildi ✓ — tarayıcı engellerse ayrı butonları kullanın.", "uyari");
 }
 
 /* ---- İÇE AKTARMA (atomik upsert) ----
@@ -2153,8 +2121,7 @@ function csvYonetimKartHTML() {
         '<button onclick="csvTumunuIndir()" class="rounded-full bg-teal-500 hover:bg-teal-600 text-white text-[11.5px] font-bold px-3.5 py-2 shadow-sm transition-colors"><i class="fa-solid fa-download mr-1"></i>Tüm CSV\'leri İndir</button>' +
         '<button onclick="csvKadroIndir()" class="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-[11.5px] font-bold px-3.5 py-2 transition-colors"><i class="fa-solid fa-users mr-1"></i>Kadro CSV İndir</button>' +
         '<button onclick="csvDersIndir()" class="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-[11.5px] font-bold px-3.5 py-2 transition-colors"><i class="fa-solid fa-calendar-days mr-1"></i>Aktif Dersleri CSV İndir</button>' +
-        '<button onclick="csvIstekIndir()" class="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-[11.5px] font-bold px-3.5 py-2 transition-colors"><i class="fa-solid fa-inbox mr-1"></i>Aktif İstekleri CSV İndir</button>' + +
-        '<button onclick="csvEkDersIndir()" class="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-[11.5px] font-bold px-3.5 py-2 transition-colors"><i class="fa-solid fa-clipboard-list mr-1"></i>Aktif Ek Dersleri CSV İndir</button>' /* EKDERS-OZET-CSV-YAMASI */
+        '<button onclick="csvIstekIndir()" class="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-[11.5px] font-bold px-3.5 py-2 transition-colors"><i class="fa-solid fa-inbox mr-1"></i>Aktif İstekleri CSV İndir</button>' +
         '<button onclick="sinifProgCsvIndir()" class="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-[11.5px] font-bold px-3.5 py-2 transition-colors"><i class="fa-solid fa-table-cells mr-1"></i>Aktif Sınıf Programı CSV İndir</button>' +
       "</div>" +
       '<div class="flex flex-wrap items-center gap-2 mt-3">' +

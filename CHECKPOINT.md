@@ -978,3 +978,53 @@ Gerçek DOM semantiği (bilinmeyen id→null, innerHTML eski çocukları siler, 
 ## Preview Notu
 
 - Gerçek tarayıcıda eski app.js önbellekten gelebilir → **sert yenileme (Ctrl+Shift+R / Cmd+Shift+R)**.
+
+---
+
+# ✅ CHECKPOINT: Ek Ders Dönem Damgası + İki Yönlü Çakışma (EK-DERS-DONEM-YAMASI)
+
+**Tarih:** 16 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **1113/1113 OK** (1056 eski + 57 yeni)
+
+## Yapılan İş (yalnız app.js — ek-ders.js, index.html, vendor/* DOKUNULMADI)
+
+1. **A) Ek ders donemId damgası (saveDB kapısı, L658):** `saveDB()` localStorage'a yazmadan önce
+   `DB.ekDersler` içindeki donemId'siz kayıtları `aktifDonemId()` ile damgalar. ek-ders.js push →
+   `yenile()` → `saveDB()` kapısından geçtiği için tüm yeni ek dersler otomatik dönemli doğar
+   (ek-ders.js'e dokunulmadı; dolu donemId ASLA üzerine yazılmaz, idempotent).
+2. **A) Backfill (donemleriBaslat, L264):** donemId'siz eski ek dersler TEK KEZ `DONEM_ILK_ID`
+   ("donem-2026-2027")'ye bağlanır (`say.ek` sayacı); ders/istek backfill'leri aynen korunur.
+3. **B) İki yönlü çakışma (duzeltmeBul, L2975):** birebir planlarken öğretmenin AKTİF DÖNEMDEKİ
+   (`aktifDonemKayitlari` filtresiyle) ek dersi de uyarılır; mesajda sınıf + ders adı + tarih/saat
+   okunur. Diğer dönemdeki ve iptal edilmiş ek dersler uyarıya girmez. `ekDuzeltmeBul` birebir
+   derslere bakmaya DEVAM eder (ek-ders.js değişmedi).
+
+## Testler
+
+- Yeni süit: `ks-ek-ders-donem.mjs` — **57 test** (damga, aktif dönem değişimi, backfill idempotansı
+  2./3. koşu, dolu donemId koruması, ders/istek migration bozulmaz, dönem filtresi ayrımı, yedek
+  round-trip kayıpsızlık, iki yönlü çakışma + uyarı içeriği, farklı dönem/iptal hariç tutma,
+  avail.musait Kapalı + avail.sinif koruması, kapsam dışı render'ların ekDersler referansı içermemesi,
+  index.html/ek-ders.js/vendor SHA-256 bütünlüğü, test.mjs'e tek bağlantı).
+- `test.mjs` 24 süite güncellendi (tek bağlantı). Eski 23 süit düşüş YOK: **1056/1056**.
+
+## Doğrulama
+
+- `node --check app.js` ✓ · `node --check ek-ders.js` ✓
+- `node test.mjs` → **1113/1113 OK** (24 süit)
+- Yama 2. koşu: "Zaten uygulanmış" (exit 2), dosyaya dokunmaz (app.js hash birebir aynı).
+
+## Yedek ve Dosyalar
+
+| Dosya | SHA-256 | Durum |
+|---|---|---|
+| app.js.ek-ders-donem-oncesi.bak | `fd1f3326165c6b95e0066d067fa72a8dc8850fc8dc5dfbebe0f836fcd93dfab8` | yama öncesi birebir (üzerine yazılmadı) |
+| app.js | `4efb45d675c4c1fe80aa909734af21e9f42b7193c8103d72e42669c5745b1cc8` | yamalı |
+| ek-ders.js | `662ec4f1cffc1bb0b7882f876bcf0de581925139f066589a6de0d35862b4aaf7` | DEĞİŞMEDİ |
+| index.html | `5b691039f85c612b02a19ce11635260b3a523ae2256196fb581a1ba9f9dd00dd` | DEĞİŞMEDİ |
+| vendor/* (5 dosya) | checkpoint ile birebir | DEĞİŞMEDİ |
+
+## Kapsam Dışı (bilinçli)
+
+- Gunluk tablo, haftalık öğretmen programı, özet/analiz, CSV export/import ek ders görünümleri
+  BU dilimde değiştirilmedi (render fonksiyonlarında ekDersler referansı hâlâ yok — testle kanıtlı).
+- Preview: eski app.js önbellekten gelebilir → **Ctrl+Shift+R** sert yenileme.

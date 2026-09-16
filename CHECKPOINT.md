@@ -1065,3 +1065,46 @@ Gerçek DOM semantiği (bilinmeyen id→null, innerHTML eski çocukları siler, 
 - Birebir/grup hücre blokları byte-identical (kaynak satır kanıtı + runtime "seed birebir dersi amber DEĞİL").
 - Geri dönüş: `app.js.ekders-gorunum-oncesi.bak` (üzerine yazılmadı).
 - Preview'da güncel görünüm için sert yenileme: **Ctrl+Shift+R** (Cmd+Shift+R).
+
+---
+
+# ⛔ DURDURULDU (FAIL-CLOSED): Pazar Satırı + Birebir Hücresi Görünüm Yaması
+
+**Tarih:** 16 Eylül 2026 · **Durum:** ❌ UYGULANMADI — app.js baseline'a geri alındı, değişiklik yok.
+
+## Teşhis (salt-okuma, kanıtlı)
+
+- **KAPSAM A (Pazar):** `app.js` satır 3284–3285, `haftalikOgrtTablo()` içinde:
+  `if (isPazar || musaitDegil)` dalı tüm Pazar hücrelerini `bg-slate-100` + her hücrede tekrar eden
+  `"Pazar"` metniyle gri/kilitli çiziyor (`(isPazar ? "Pazar" : "—")`). Kök neden: Pazar, ders
+  eşlemeden ÖNCE koşulsuz kilitli kabul ediliyor; dersMap/ekMap g-6 anahtarları hiç okunmuyor.
+- **KAPSAM B (birebir hücre):** satır ~3305: `esc(ogrenciAd.split(" ")[0])` — yalnız İLK AD;
+  konu (`ders.konu`) hiç gösterilmiyor; sınıf (`ogrenci.sinif`) tek satırda sıkışık. Alanlar
+  doğru: tam ad → `DB.ogrenciler` (`ogrenciId`), konu → `ders.konu`, sınıf → `ogrenci.sinif`.
+
+## Yama denemesi ve neden geri alındı
+
+- `ks-yama-pazar-birebir.mjs` yazıldı (assert'li, exact-anchor, idempotent; backup
+  `app.js.pazar-birebir-oncesi.bak` SHA-256 `487fadb3ccf4fcc5e7181116b1f47c7224eb85d1e574e3594c10701bd5c974f3`).
+- Yama uygulandı → `node test.mjs`: **yeni kırmızı suite oluştu** →
+  `ks-ekders-ozet-csv.mjs` "haftalikOgrtTablo kodu değişmedi" hash-koruma testi kırmızıya düştü
+  (suite, app.js'in önceki .bak'ındaki `haftalikOgrtTablo` bloğunun byte-hash'ini assert ediyor).
+- Talimat gereği: kırmızı suite listesi tam olarak `ks-ek-ders-donem.mjs` + `ks-ekders-gorunum.mjs`
+  olmalı; mevcut suite assertion'ları değiştirilemez; yeni kırmızı suite fail-closed tetikler.
+- **Aksiyon:** `app.js` yedekten birebir geri alındı (SHA birebir `487fadb3…` doğrulandı);
+  `node test.mjs` → **1096/1206, kırmızı: yalnız ks-ek-ders-donem.mjs (2) + ks-ekders-gorunum.mjs (3)** — baseline ile aynı.
+
+## Yeniden denemek için yol haritası
+
+Bu suite hash-koruması `haftalikOgrtTablo`'nun TAM bloğunu kilitlediği için görünüm değişikliği
+yalnızca şu yollardan biri ile mümkündür (kullanıcı kararı gerekir):
+1. `ks-ekders-ozet-csv.mjs`'in hash-koruma assertion'ını güncellemeye izin vermek (bu turda yasak),
+2. Pazar/birebir görünümünü `haftalikOgrtTablo`'nun DIŞINA taşımak (ör. CSS overlay / ayrı render
+   katmanı) — hash bloğuna dokunmadan. Bu ayrı bir tasarım işidir, bu tek iş turunda yapılmadı.
+
+## Son durum doğrulaması
+
+- `node --check app.js` · `node --check ek-ders.js` · `node --check test.mjs` → OK
+- `node test.mjs` → 1096/1206 OK; kırmızı: baseline'daki 2 bilinen suite (aynen korundu)
+- Değişen dosya: YOK (app.js geri alındı; `ks-yama-pazar-birebir.mjs` ve backup kayıt amaçlı duruyor)
+- Preview: eski app.js önbellekten gelmesin diye **Ctrl+Shift+R** (değişiklik olmadı, bilgi amaçlı).

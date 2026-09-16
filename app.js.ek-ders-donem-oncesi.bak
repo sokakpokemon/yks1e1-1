@@ -243,7 +243,7 @@ var DONEM_ILK_ID = "donem-2026-2027";
 var DONEM_ILK_AD = "2026/2027";
 function donemleriBaslat(db) {
   if (!db || typeof db !== "object") return { d: 0, ders: 0, ist: 0 };
-  var say = { d: 0, ders: 0, ist: 0, ek: 0 }; /* EK-DERS-DONEM-YAMASI: ek ders backfill sayacı */
+  var say = { d: 0, ders: 0, ist: 0 };
   if (!Array.isArray(db.donemler)) db.donemler = [];
   var mevcut = db.donemler.filter(function (x) { return x && x.id === DONEM_ILK_ID; })[0];
   if (!mevcut) { db.donemler.push({ id: DONEM_ILK_ID, ad: DONEM_ILK_AD, aktif: true }); say.d = 1; mevcut = db.donemler[db.donemler.length - 1]; }
@@ -260,12 +260,6 @@ function donemleriBaslat(db) {
   (Array.isArray(db.istekler) ? db.istekler : []).forEach(function (r) {
     if (!r || typeof r !== "object") return;
     if (r.donemId == null || r.donemId === "") { r.donemId = DONEM_ILK_ID; say.ist++; }
-  });
-  /* EK-DERS-DONEM-YAMASI: donemId'siz eski ek dersler TEK KEZ ilk döneme bağlanır (idempotent);
-     mevcut dolu donemId ASLA üzerine yazılmaz. */
-  (Array.isArray(db.ekDersler) ? db.ekDersler : []).forEach(function (l) {
-    if (!l || typeof l !== "object") return;
-    if (l.donemId == null || l.donemId === "") { l.donemId = DONEM_ILK_ID; say.ek++; }
   });
   /* DONEM-OLUSTURMA-YAMASI: dönemli sınıf programı migration'ı aynı kapıdan (idempotent) */
   if (typeof sinifProgDonemleriBaslat === "function") sinifProgDonemleriBaslat(db);
@@ -655,12 +649,6 @@ function grupPanelYerlestir() {
 }
 
 function saveDB() {
-  /* EK-DERS-DONEM-YAMASI: ek ders kayıtları localStorage'a yazılmadan ÖNCE aktif döneme damgalanır.
-     ek-ders.js push → yenile() → saveDB kapısı buradan geçer; mevcut dolu donemId ASLA üzerine yazılmaz
-     (idempotent: dolu alanda dokunulmaz, ikinci koşuda hiçbir alan değişmez). */
-  if (typeof DB !== "undefined" && DB && Array.isArray(DB.ekDersler)) DB.ekDersler.forEach(function (l) {
-    if (l && typeof l === "object" && (l.donemId == null || l.donemId === "")) l.donemId = aktifDonemId();
-  });
   try { localStorage.setItem(LS_KEY, JSON.stringify(DB)); }
   catch (e) { toast("Veri kaydedilemedi (tarayıcı deposu dolu olabilir). Yedek alın.", "hata"); }
 }
@@ -2972,15 +2960,6 @@ function duzeltmeBul(adet, yokSay, grupOgrenciIds) {
       return l.ogretmenId === ogr.id && l.tarih === adet.tarih && ksKodOf(l.saat) === saatKod && l.durum !== "iptal" && l.id !== (adet.id || "");
     });
     if (cakisan) uyari.push("Aynı kısa kod saatinde " + ogr.ad + " öğretmeninin <b>" + cakisan.ogrenciAd + "</b> ile başka bir dersi var (" + fmtTR(cakisan.tarih) + " " + saatEtiket(cakisan.saat) + ").");
-    /* EK-DERS-DONEM-YAMASI: iki yönlü çakışma — birebir planlarken öğretmenin AKTİF DÖNEMDEKİ ek dersi de uyarılır.
-       Diğer dönemdeki ek dersler uyarıya DAHİL EDİLMEZ; mesajda sınıf + ders adı + tarih/saat okunur. */
-    var cakisanEkDers = aktifDonemKayitlari(Array.isArray(DB.ekDersler) ? DB.ekDersler : []).find(function (l) {
-      return l.ogretmenId === ogr.id && l.tarih === adet.tarih && ksKodOf(l.saat) === saatKod && l.durum !== "iptal" && l.id !== (adet.id || "");
-    });
-    if (cakisanEkDers) {
-      var _ekD = DERS[cakisanEkDers.dersId] || DERS.tur;
-      uyari.push("Aynı saatte " + ogr.ad + " öğretmeninin <b>" + esc(cakisanEkDers.sinif) + "</b> sınıfıyla bir <b>" + _ekD.ad + "</b> ek dersi var (" + fmtTR(cakisanEkDers.tarih) + " " + saatEtiket(cakisanEkDers.saat) + ").");
-    }
   }
   var o = DB.ogrenciler.find(function (s) { return s.id === adet.ogrenciId; });
   if (o && o.sinif && (DB.sinifProg[o.sinif] || []).indexOf(key) >= 0) {

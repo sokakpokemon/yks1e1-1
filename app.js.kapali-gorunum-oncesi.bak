@@ -1290,7 +1290,7 @@ function ogretmenTab() {
           tumSiniflar().map(function (s) {
             return '<span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-200 border border-amber-300 inline-block"></span> ' + esc(s) + '</span>';
           }).join("") +
-          '<span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-100 border border-slate-300 inline-block"></span> Kapalı</span> /* KAPALI-GORUNUM-YAMASI */' +
+          '<span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-rose-200 border border-rose-300 inline-block"></span> Kapalı</span>' +
         "</div></div>" +
       gridTablo("togOgrSecili('" + t2.id + "'", t2.avail, "ogretmen") +
       "</div>";
@@ -1324,17 +1324,17 @@ function gridTablo(onclickOnce, avail, tip) {
     for (var g2 = 0; g2 < 7; g2++) {
       var key = g2 + "-" + ks.no;
       var durum = tip === "ogretmen"
-        ? ((avail.sinif && key in avail.sinif) ? "sinif" : avail.musait.indexOf(key) >= 0 ? "kapali" : "") /* KAPALI-GORUNUM-YAMASI: musait → kapali dalına bağlandı (gri/soluk görünüm) */
+        ? ((avail.sinif && key in avail.sinif) ? "sinif" : avail.musait.indexOf(key) >= 0 ? "musait" : "")
         : (avail.indexOf(key) >= 0 ? "var" : "");
       var cls = "hucreBtn border ";
       var baslik = GUN_KISA[g2] + " " + saatYazi;
       if (durum === "sinif") { cls += "bg-amber-200 border-amber-300 hover:bg-amber-300"; baslik += " · Sınıf Dersi"; }
-      else if (durum === "kapali") { cls += "bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-400 opacity-70"; baslik += " · Kapalı"; } /* KAPALI-GORUNUM-YAMASI: kapalı hücre soluk/gri — tıklanabilir kalır */
+      else if (durum === "kapali") { cls += "bg-rose-200 border-rose-300 hover:bg-rose-300"; baslik += " · Kapalı"; }
       else if (durum === "var") { cls += "bg-blue-200 border-blue-300 hover:bg-blue-300"; baslik += " · Toplu ders"; }
       else { cls += "bg-white border-slate-200 hover:border-teal-300 hover:bg-teal-50"; baslik += " · Boş"; }
       h += '<td class="p-0.5"><button class="' + cls + '" title="' + baslik + '" onclick="' + onclickOnce + "," + g2 + "," + ks.no + ')">' +
         (durum === "sinif" ? '<span class="text-[7.5px] font-extrabold text-amber-700/80 leading-tight whitespace-nowrap">' + esc((avail.sinif[key] || "SD").substring(0, 14)) + '</span>' :
-         durum === "kapali" ? "" : /* KAPALI-GORUNUM-YAMASI: "K" kırmızı etiketi kaldırıldı — Kapalı bilgisi title'da */
+         durum === "kapali" ? '<span class="text-[8.5px] font-extrabold text-rose-500/70">K</span>' :
          durum === "var" ? '<span class="text-[8.5px] font-extrabold text-blue-600/60">DV</span>' : "") +
         "</button></td>";
     }

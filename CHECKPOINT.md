@@ -924,3 +924,57 @@ Gerçek DOM semantiği (bilinmeyen id→null, innerHTML eski çocukları siler, 
 
 - Eski indirilmiş `yks-kadro-global.csv` dosyalarıyla yeni dosyalar karıştırılabilir; sorun değil — import ID bazlı ve sıra-bağımsız.
 - Gerçek tarayıcıda eski app.js önbellekten gelebilir → sert yenileme (Ctrl+Shift+R / Cmd+Shift+R).
+
+---
+
+# ✅ CHECKPOINT: Kapalı Hücre Görünümü — Gri/Soluk + Tıklanabilir (KAPALI-GORUNUM-YAMASI)
+
+**Tarih:** 16 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **1056/1056 OK** (22 eski süit + 1 yeni süit, 23 süit)
+
+## Kök Neden (kanıtlı — ks-teshis-kapali.mjs / ks-teshis2-kapali.mjs)
+
+- `gridTablo()` ogretmen dalı `avail.musait`'teki anahtar için `durum = "musait"` üretiyordu (app.js L1327),
+  ancak görünüm dalları yalnız `"sinif"/"kapali"/"var"` içindi → **"musait" hiçbir dala girmiyor**, kapalı hücre
+  BEYAZ/boş hücre stiliyle basılıyordu. Kırmızı "Kapalı" hücre stili (L1332) ölü koddandı.
+- Tıklanabilirlik zaten BOZUK DEĞİLDİ: hücrelerde `disabled`/`readonly`/`pointer-events:none` yok;
+  `togOgrSecili` kapalı seçiliyken `avail.musait`'e yazıyor + `saveDB` kalıcılığı çalışıyordu (teshis ile kanıtlandı).
+- Sorun tamamen **render dalı eşleşmesi** kapsamındaydı; patch yalnızca görünümü düzeltti.
+
+## Yama (ks-yama-kapali-gorunum.mjs — assert'li, idempotent, app.js baştan yazma YOK)
+
+1. `durum = "musait"` → `"kapali"` dalına bağlandı (L1327) — kapalı hücre artık stiline düşer.
+2. Kapalı hücre stili: `bg-rose-200 border-rose-300 hover:bg-rose-300` → **`bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-400 opacity-70`** (soluk/gri).
+3. Hücre içi kırmızı `K` etiketi KALDIRILDI; "Kapalı" bilgisi `title` ile korunur ("Pzt 1 · 08:50-09:30 · Kapalı").
+4. Legend'daki Kapalı karesi gri/soluk yapıldı (legend tutarlılığı).
+- Değişmeyen: `durumSeciciHTML` (Kapalı butonu seçicide rose vurgulu kalır — kasıtlı), `durumSec`,
+  `togOgrSecili` davranış gövdesi, `togOgr`, `haftalikOgrtTablo`, `saveDB`, `index.html`, `ek-ders.js`, `vendor/*`.
+
+## Davranış Sonucu
+
+- Kapalı hücre: gri/soluk (`bg-slate-100` + `opacity-70`), **tıklanabilir ve seçilebilir**; "Kapalı" seçiliyken
+  tıklama `avail.musait`'e yazar, `saveDB` ile localStorage'a kalıcı; 2. tıklama boşaltır (döngü korunur).
+- Boş hücre (beyaz) ve sınıf hücresi (amber) görünümü/davranışı birebir aynı.
+- Veri şeması değişmedi: `avail.musait` dizi anahtarları (`GÜN-KOD`) aynen; geriye dönük uyum korunur.
+
+## Testler
+
+- Yeni süit: `ks-kapali-gorunum.mjs` — **19 test** (kapalı render DOM/grafik/disable/pointer kontrolü,
+  tıklama→avail.musait→saveDB→localStorage kalıcılığı, boş/sınıf durumlarının korunumu, sınır bölgeleri: MARK sayımı 4, haftalikOgrtTablo/saveDB/togOgrSecili dokunulmazlık).
+- `test.mjs`'e tam **1 kez** eklendi (23 süit).
+- Baseline (yama öncesi): **1037/1037 OK (22 süit)** → FINAL **1056/1056 OK (23 süit)**; eski süitlerde düşüş 0.
+
+## Yedek ve Dosyalar
+
+| Dosya | SHA-256 |
+|---|---|
+| app.js (yama ÖNCESİ, backup `app.js.kapali-gorunum-oncesi.bak`) | `f4d05cf31e96a0ab35026f9995ffd8bbab732dd72e144d25759db7f7d5e337a4` |
+| app.js (yama SONRASI) | `fd1f3326165c6b95e0066d067fa72a8dc8850fc8dc5dfbebe0f836fcd93dfab8` |
+
+- Yama idempotansı: 2. koşu `exit 2` + "Zaten uygulanmış"; dosya değişmedi.
+- `node --check app.js` / `node --check ek-ders.js`: OK.
+- Değişen dosyalar: `app.js`, `test.mjs` (+1 süit), `CHECKPOINT.md`; YENİ dosyalar: `ks-kapali-gorunum.mjs`,
+  `ks-yama-kapali-gorunum.mjs`, `app.js.kapali-gorunum-oncesi.bak` (teshis: `ks-teshis-kapali.mjs`, `ks-teshis2-kapali.mjs`).
+
+## Preview Notu
+
+- Gerçek tarayıcıda eski app.js önbellekten gelebilir → **sert yenileme (Ctrl+Shift+R / Cmd+Shift+R)**.

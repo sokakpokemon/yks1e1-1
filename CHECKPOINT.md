@@ -897,3 +897,30 @@ Gerçek DOM semantiği (bilinmeyen id→null, innerHTML eski çocukları siler, 
 ## Sonuç ve Sonraki Adım
 - BASELINE 936/936 (19 süit) → FINAL **966/966 (20 süit)**; eski süitlerde düşüş 0, assertion değişikliği 0.
 - **Sonraki ayrı adım (D1):** ek-ders.js `renderYonetim` override'ının tam sahiplik refactor'u — öncesinde override öncesi/sonrası DOM davranışının semantic karşılaştırması zorunlu.
+
+# ✅ CHECKPOINT: Kadro CSV Dışa Aktarma Sırası — ogretmen → sinif → ogrenci (KADRO-SIRALAMA-YAMASI)
+
+**Tarih:** 16 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **1037/1037 OK** (1010 eski + 27 yeni)
+
+## Yapılan İş (app.js — baştan yazma YOK, hedefli yama: ks-yama-kadro-siralama.mjs)
+
+- `csvKadroSatirlari()` emission sırası değiştirildi: **ogrenci → ogretmen → sinif** yerine
+  **ogretmen → sinif → ogrenci** (yeni CSV'de ilk tip grubu öğretmenler, sonra sınıflar, sonra öğrenciler).
+- Satır içerikleri, alan değerleri, `csvHucre/csvSatir/csvDosya/csvParse` quote kuralları, BOM (`\uFEFF`), `;` ayırıcı ve CRLF satır sonları DEĞİŞMEDİ.
+- `CSV_BASLIK_KADRO` header satırı byte-identical korundu; kolon ekleme/silme/yeniden adlandırma YOK.
+- Import satır-sırasına bağlı DEĞİL (tip+ID ile upsert): yeni/eski/karışık sıra aynı DB sonucunu verir — bu, sıra değişikliğini güvenli kılar.
+- Dersler, istekler ve `sinifProg` CSV export/import akışına DOKUNULMADI; `index.html`, `ek-ders.js`, `vendor/*` değişmedi.
+
+## Doğrulama
+
+- Yedek: `app.js.kadro-siralama-oncesi.bak` (SHA-256 `bd456895c5dbc16753dc15041928e12bfd5113bf070fc09c6b70fa2becc09127` — yama öncesi birebir; üzerine yazılmadı).
+- app.js: `bd456895…` → `f4d05cf31e96a0ab35026f9995ffd8bbab732dd72e144d25759db7f7d5e337a4` (yalnızca csvKadroSatirlari gövdesi; bölge dışı byte-birebir assert'li).
+- Yama idempotent: 2. koşu dosyaya DOKUNMAZ, exit 2 + "Zaten uygulanmış".
+- `node --check app.js` ve `node --check ek-ders.js`: OK.
+- Yeni süit: `ks-kadro-siralama.mjs` — **27 test** (emission sırası, satır sayıları, içerik kümesi eşitliği, header byte-identical, BOM, yeni/eski/shuffled import deep-equal, round-trip kayıpsız + duplicate yok, dersler/istekler/sinifProg korunumu, tek-süit-kaydı). test.mjs'e tam 1 kez eklendi.
+- Baseline (yama öncesi): 1010/1010 OK (21 süit) → FINAL **1037/1037 OK (22 süit)**; eski süitlerde düşüş 0.
+
+## Kalan Risk / Not
+
+- Eski indirilmiş `yks-kadro-global.csv` dosyalarıyla yeni dosyalar karıştırılabilir; sorun değil — import ID bazlı ve sıra-bağımsız.
+- Gerçek tarayıcıda eski app.js önbellekten gelebilir → sert yenileme (Ctrl+Shift+R / Cmd+Shift+R).

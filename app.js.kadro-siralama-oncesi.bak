@@ -1760,17 +1760,15 @@ function csvDersAd(dersId) {
 
 /* ---- DIŞA AKTARMA ---- */
 function csvKadroSatirlari() {
-  /* KADRO-SIRALAMA-YAMASI: emission sırası → ogretmen → sinif → ogrenci.
-     Import satır sırasına bağlı DEĞİLDİR (tip+ID upsert); sıra yalnızca okunabilirlik içindir. */
   var satirlar = [];
+  DB.ogrenciler.forEach(function (o) {
+    satirlar.push([CSV_SCHEMA,"kadro","", "ogrenci", o.id || "", o.ad || "", "", sinifId(o.sinif) || "", o.sinif || "", csvEkAlanlar(o)]);
+  });
   DB.ogretmenler.forEach(function (t) {
     satirlar.push([CSV_SCHEMA,"kadro","", "ogretmen", t.id || "", t.ad || "", t.brans || "", "", "", csvEkAlanlar(t)]);
   });
   Object.keys(DB.sinifIds || {}).forEach(function (ad) {
     satirlar.push([CSV_SCHEMA,"kadro","", "sinif", DB.sinifIds[ad] || "", ad, "", "", ad, "{}"]);
-  });
-  DB.ogrenciler.forEach(function (o) {
-    satirlar.push([CSV_SCHEMA,"kadro","", "ogrenci", o.id || "", o.ad || "", "", sinifId(o.sinif) || "", o.sinif || "", csvEkAlanlar(o)]);
   });
   return satirlar;
 }

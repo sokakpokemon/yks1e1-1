@@ -1108,3 +1108,30 @@ yalnızca şu yollardan biri ile mümkündür (kullanıcı kararı gerekir):
 - `node test.mjs` → 1096/1206 OK; kırmızı: baseline'daki 2 bilinen suite (aynen korundu)
 - Değişen dosya: YOK (app.js geri alındı; `ks-yama-pazar-birebir.mjs` ve backup kayıt amaçlı duruyor)
 - Preview: eski app.js önbellekten gelmesin diye **Ctrl+Shift+R** (değişiklik olmadı, bilgi amaçlı).
+
+---
+
+# ✅ CHECKPOINT: Pazar Satırı Normal Gün + Birebir Kartta Tam Ad/Konu/Sınıf (PAZAR-BIREBIR-GORUNUM-YAMASI)
+
+**Tarih:** 16 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **1211/1211 OK (sıfır kırmızı süit)**
+
+## Salt-Okuma Envanteri (kod yazılmadan önce)
+
+- Baseline dinamik okundu: **1206 test / 26 süit**, kırmızı tam olarak `ks-ek-ders-donem.mjs` + `ks-ekders-gorunum.mjs`.
+- **Sınıf 1 — AŞIRI GENİŞ DONDURME (2 adet):** (1) `ks-ekders-ozet-csv.mjs` §7 `haftalikOgrtTablo` gövdesini backup'a karşı byte-hash ile kilitliyordu → Pazar/birebir UI yamasını engelliyordu. (2) `ks-ek-ders-donem.mjs` §10 + `ks-ekders-gorunum.mjs` §11 "renderOzet/renderAnaliz içinde ekDersler referansı yok" byte-regex'i — EKDERS-OZET-CSV-YAMASI'nın ayrı "Ek Ders" kartı ile ÇELİŞİYORDU (baseline kırmızılığının gerçek kökü; iki süit birbirinin tersini istiyordu).
+- **Sınıf 2 — GERÇEK GARANTI (dokunulmadı):** dosya-hash'leri (index.html/ek-ders.js/vendor), `gunlukTablo` byte-hash, grup badge/baş harf/+N/aç-kapa, Kapalı/Bos/Sinif Dersi stilleri, Ek Ders amber + aktifDonemKayitlari filtresi, CSV byte-identical, durumRenk, localStorage byte-birebir.
+
+## Uygulama
+
+1. **app.js** — mevcut `ks-yama-pazar-birebir.mjs` idempotent yaması koşuldu: Pazar satırı `isPazar` gri ızgarasından çıkarıldı → normal gün dalları (sinifVar → ekDers → ders → boş drop zone); `musaitDegil` (Kapalı) AYNEN. Birebir hücresi: `ogrenciAd.split(" ")[0]` yerine TAM AD (DB.ogrenciler fallback) + ders.konu satırı + ogrenci.sinif satırı; taşma için truncate/whitespace-nowrap/min-w-0 + orantılı font/padding/leading. Grup dalı, Ek Ders amber, Sınıf dersi rose, drop zone aynen. Yedek: `app.js.pazar-birebir-oncesi.bak` (SHA-256 `487fadb3ccf4fcc5…`), app.js `487fadb3… → d4221a96…` (+10 satır).
+2. **ks-yama-test-ozet-csv-hash.mjs** (yeni, idempotent — 2. koşu exit 2): byte-hash dondurması 6 kesin davranış assertion'ıyla değiştirildi (imza + aktifDonemKayitlari filtresi + amber etiket + durumRenk + grup satırı + diff yalnız PAZAR-BIREBIR bölgesinde). Yedek: `ks-ekders-ozet-csv.mjs.hash-daraltma-oncesi.bak` (12.185 B, `e11646995a7403ee…`); dosya `e1164699… → 16fb0551…`.
+3. **ks-yama-test-kapsam-daraltma.mjs** (yeni, idempotent — 2. koşu exit 2): çelişen regex daraltıldı — Ek Ders kartı EKDERS-OZET-CSV-YAMASI işareti + aktifDonemKayitlari + iptal filtresiyle şartlı serbest; penceredeDersler kapsam sınırı korundu. Yedekler: `ks-ek-ders-donem.mjs.kapsam-daraltma-oncesi.bak` (15.489 B, `411fc223aa2c29ef…`), `ks-ekders-gorunum.mjs.kapsam-daraltma-oncesi.bak` (14.257 B, `a81c22762f03ce37…`).
+
+## Doğrulama
+
+- `node --check` app.js / ek-ders.js / test.mjs / değişen tüm test dosyaları → OK.
+- `node test.mjs` → **1211/1211 OK**, kırmızı süit YOK (baseline 2 kırmızı dahil çözüldü).
+- Grup görünüm (28), Kapalı görünüm (19), günlük tablo (ks-test-render 14), Ek Ders görünüm (50), ozet-csv (45) dahil tümü yeşil.
+- Sınırlar: `ek-ders.js`, `index.html`, `vendor/*` değişmedi (süit hash'leri yeşil kanıt); özet/CSV/dönem/çakışma mantığı byte-korundu.
+- Preview: **Ctrl+Shift+R** (sert yenileme) ile eski app.js önbelleği temizlenmeli.
+

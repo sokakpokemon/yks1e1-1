@@ -195,15 +195,7 @@ for (const fn of ["function gunlukTablo() {", "function haftalikOgrtTablo() {"])
   t(fn + " EK-DERS etiket markup'ı taşıyor", /EK-DERS-GORUNUM/.test(bolge(fn)));
 }
 for (const fn of ["function renderOzet() {", "function renderAnaliz() {", "function csvAktifDonemKayitSatirlari"]) {
-  /* TEST-KAPSAM-DARALTMA: aşırı geniş regex dondurması kaldırıldı — renderOzet/renderAnaliz
-     EKDERS-OZET-CSV-YAMASI ile ayrı "Ek Ders" kategorisi TAŞIR (ks-ekders-ozet-csv.mjs sözleşmesi).
-     Kesin davranış garantileri: sayaç aktifDonemKayitlari + iptal filtresiyle; penceredeDersler
-     (ders listesi) ekDersler İÇERMEZ (birebir/grup kapsamı korunur). */
-  t(fn + " ekDersler referansı yok (kapsam dışı) [daraltıldı]", (() => {
-    const b = bolge(fn);
-    if (!/ekDersler/.test(b)) return true; /* referans yoksa kural doğal sağlanır */
-    return b.includes("EKDERS-OZET-CSV-YAMASI") && b.includes("aktifDonemKayitlari") && b.includes("iptal");
-  })());
+  t(fn + " ekDersler referansı yok (kapsam dışı)", !/ekDersler/.test(bolge(fn)));
 }
 
 /* ---- 11) Dosya bütünlüğü ---- */

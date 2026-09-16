@@ -3281,8 +3281,8 @@ function haftalikOgrtTablo() {
       var sinifVar = avail.sinif && key in avail.sinif;
       var musaitDegil = avail.musait.indexOf(key) >= 0;
 
-      if (isPazar || musaitDegil) {
-        satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100 bg-slate-100"><span class="text-[9px] text-slate-400">' + (isPazar ? "Pazar" : "—") + '</span></td>';
+      if (musaitDegil) { /* PAZAR-BIREBIR-GORUNUM-YAMASI: Pazar artık normal gün satırı — yalnız Kapalı (musaitDegil) gri kalır */
+        satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100 bg-slate-100"><span class="text-[9px] text-slate-400">—</span></td>';
       } else if (sinifVar) {
         satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100"><div class="rounded-lg bg-rose-100 border border-rose-200 px-1 py-1.5" title="Sınıf dersi — kilitli">' +
           '<div class="text-[8px] font-bold text-rose-700 leading-tight truncate whitespace-nowrap">' + esc((avail.sinif[key] || 'Sınıf').substring(0, 14)) + '</div></div></td>';
@@ -3301,9 +3301,19 @@ function haftalikOgrtTablo() {
         /* GRUP: grid hücresi dar → grup dersinde üye baş harfleri satırı (birebirde eski görünüm) */
         var grupUyeler = grupUyeEtiketleri(ders);
         var hucreUst = grupUyeler.length ? '<span class="text-[8.5px] font-bold text-slate-400">' + grupUyeler.map(function (a) { return esc(ilkHarfler(a)); }).join(" · ") + "</span>" : (sinif ? esc(sinif) : '');
-        satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100"><div class="rounded-lg border ' + durumRenk + ' px-1 py-1.5" title="Dolu — kilitli">' +
-          '<div class="text-[10.5px] font-bold text-slate-800 leading-tight">' + esc(ogrenciAd.split(" ")[0]) + '</div>' +
-          (hucreUst ? '<div class="leading-tight">' + hucreUst + '</div>' : '') +
+        /* PAZAR-BIREBIR-GORUNUM-YAMASI: birebir hücresi = TAM AD + KONU + SINIF (3 ayrı satır);
+           null-on-miss: ogrenci bulunamazsa DB.ogrenciler ad eşlemesiyle fallback, o da yoksa boş.
+           Uzun metin taşması: truncate + min-w-0 + orantılı padding/font/leading korunur. */
+        var tamAd = (function () {
+          if (ogrenci && ogrenci.ad) return ogrenci.ad;
+          if (ders.ogrenciId) { var o2 = DB.ogrenciler.find(function(x){ return x.id === ders.ogrenciId; }); if (o2 && o2.ad) return o2.ad; }
+          return ogrenciAd || "";
+        })();
+        var hucreKonu = ders.konu ? '<div class="text-[8.5px] text-slate-500 leading-tight truncate whitespace-nowrap min-w-0" title="' + esc(ders.konu) + '">' + esc(ders.konu) + '</div>' : '';
+        satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100"><div class="rounded-lg border ' + durumRenk + ' px-1 py-1.5 min-w-0" title="Dolu — kilitli">' +
+          '<div class="text-[10px] font-bold text-slate-800 leading-tight truncate whitespace-nowrap min-w-0" title="' + esc(tamAd) + '">' + esc(tamAd) + '</div>' +
+          hucreKonu +
+          (sinif ? '<div class="text-[8px] font-bold text-slate-400 leading-tight truncate whitespace-nowrap min-w-0">' + esc(sinif) + '</div>' : '') +
           (dersBilgi ? '<div class="text-[8px] font-bold mt-0.5 ' + dersBilgi.tx + '">' + dersBilgi.ad + '</div>' : '') +
           '</div></td>';
       } else {

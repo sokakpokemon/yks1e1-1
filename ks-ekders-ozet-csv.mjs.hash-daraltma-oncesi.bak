@@ -140,25 +140,7 @@ const blok = (b) => { const i = appKaynak.indexOf(b); let j = appKaynak.indexOf(
 const bakKaynak = readFileSync("app.js.ekders-ozet-csv-oncesi.bak", "utf8");
 const bakBlok = (src, b) => { const i = src.indexOf(b); let j = src.indexOf("\nfunction ", i + 10); if (j === -1) j = src.length; return src.slice(i, j); };
 t("gunlukTablo kodu değişmedi", sha(blok("function gunlukTablo() {")) === sha(bakBlok(bakKaynak, "function gunlukTablo() {")));
-/* PAZAR-BIREBIR-GORUNUM-YAMASI sonrası haftalikOgrtTablo gövdesi meşru olarak değişti
-   (Pazar normal gün satırı + birebir kartta tam ad/konu/sınıf). Aşırı geniş byte-hash dondurması
-   yerine daha kesin davranış garantileri: fonksiyon imzası + Ek Ders aktif-dönem filtresi +
-   Ek Ders amber etiketi + durumRenk (birebir mavi/emerald) + grup üye satırı KORUNUR; ve
-   backup'a göre fark yalnızca PAZAR-BIREBIR işaretli satırlarla sınırlıdır. */
-const hotBlok = blok("function haftalikOgrtTablo() {");
-t("haftalikOgrtTablo imzası değişmedi", hotBlok.startsWith("function haftalikOgrtTablo() {"));
-t("haftalikOgrtTablo aktifDonemKayitlari(DB.ekDersler) filtresi KORUNDU", /aktifDonemKayitlari\(Array\.isArray\(DB\.ekDersler\) \? DB\.ekDersler : \[\]\)/.test(hotBlok));
-t("haftalikOgrtTablo Ek Ders amber etiketi KORUNDU", hotBlok.includes("bg-amber-100") && hotBlok.includes("Ek Ders"));
-t("haftalikOgrtTablo birebir durumRenk (mavi/emerald) KORUNDU", hotBlok.includes('bg-blue-50 border-blue-200') && hotBlok.includes('bg-emerald-50 border-emerald-200'));
-t("haftalikOgrtTablo grup üye satırı KORUNDU", hotBlok.includes("grupUyeEtiketleri(ders)"));
-t("haftalikOgrtTablo diff'i yalnız PAZAR-BIREBIR işaretli bölgede", (() => {
-  const eskiBlok = bakBlok(bakKaynak, "function haftalikOgrtTablo() {");
-  const satirlarEski = eskiBlok.split("\n");
-  const satirlarYeni = hotBlok.split("\n");
-  const farkli = satirlarYeni.filter((s) => !satirlarEski.includes(s));
-  const KELIMELER = ["PAZAR-BIREBIR-GORUNUM-YAMASI", "tamAd", "hucreKonu", "min-w-0", "truncate", "dnd-kilit", "esc(", "ogrenciAd", "ogrenci.", "ders.ogrenciId", "ogrenci bulunamazsa", "})();"];
-  return farkli.every((s) => KELIMELER.some((k) => s.includes(k)));
-})());
+t("haftalikOgrtTablo kodu değişmedi", sha(blok("function haftalikOgrtTablo() {")) === sha(bakBlok(bakKaynak, "function haftalikOgrtTablo() {")));
 t("csvHucre değişmedi", sha(blok("function csvHucre(v) {")) === sha(bakBlok(bakKaynak, "function csvHucre(v) {")));
 t("csvDosya değişmedi", sha(blok("function csvDosya(basliklar, satirlar) {")) === sha(bakBlok(bakKaynak, "function csvDosya(basliklar, satirlar) {")));
 t("csvParse değişmedi", sha(blok("function csvParse(metin) {")) === sha(bakBlok(bakKaynak, "function csvParse(metin) {")));

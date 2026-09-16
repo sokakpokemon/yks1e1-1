@@ -11,8 +11,7 @@
     G) duzeltmeBul: aynı öğretmen+gun+kod'da çakan EK DERS uyarılır (sınıf + ders adı + tarih/saat);
        diğer dönemdeki ek ders uyarıya girmez; avail.musait (Kapalı) ve avail.sinif uyarıları bozulmaz
     H) ekDuzeltmeBul birebir derslere bakmaya devam eder (kaynak kanıtı; ek-ders.js değişmedi)
-    I) EK-DERS-GORUNUM sözleşmesi: gunlukTablo/haftalikOgrtTablo ekDersler referansı TAŞIR (render yamaları),
-       renderOzet/renderAnaliz/csvAktifDonemKayitSatirlari İÇERMEZ (ozet/CSV kapsam dışı — değişmedi)
+    I) Kapsam dışı: gunluk/haftalik/ozet/analiz render'ları ekDersler referansı İÇERMEZ
    Mevcut süit deseni: tek boot (app.js + inline bloklar) + stub DOM + localStorage. */
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -186,16 +185,12 @@ t("ekDuzeltmeBul avail.musait kontrolü var", /avail\.musait\.indexOf/.test(ekKa
 t("ekDuzeltmeBul avail.sinif kontrolü var", /tip === "sinif"/.test(ekKaynak));
 t("ek-ders.js kayıt push'u donemId yazmıyor (dokunulmadı)", !/donemId/.test(ekKaynak));
 
-/* ---- 10) Kapsam: render yamaları ekDersler referansı TAŞIR; ozet/analiz/CSV taşımaz ---- */
-console.log("10) Kapsam ekranları (EK-DERS-GORUNUM sözleşmesi):");
+/* ---- 10) Kapsam dışı render'lar ekDersler referansı içermiyor ---- */
+console.log("10) Kapsam dışı ekranlar değişmedi:");
 const appKaynak = readFileSync("app.js", "utf8");
 const bolge = (fn) => { const i = appKaynak.indexOf(fn); const j = appKaynak.indexOf("\nfunction ", i + 10); return appKaynak.slice(i, j); };
-for (const fn of ["function gunlukTablo() {", "function haftalikOgrtTablo() {"]) {
-  t(fn + " aktifDonemKayitlari(DB.ekDersler) kullanıyor", /aktifDonemKayitlari\(Array\.isArray\(DB\.ekDersler\) \? DB\.ekDersler : \[\]\)/.test(bolge(fn)));
-  t(fn + " EK-DERS etiket markup'ı taşıyor", /EK-DERS-GORUNUM/.test(bolge(fn)));
-}
-for (const fn of ["function renderOzet() {", "function renderAnaliz() {", "function csvAktifDonemKayitSatirlari"]) {
-  t(fn + " ekDersler referansı yok (kapsam dışı)", !/ekDersler/.test(bolge(fn)));
+for (const fn of ["function gunlukTablo() {", "function haftalikOgrtTablo() {", "function renderOzet() {", "function renderAnaliz() {", "function csvAktifDonemKayitSatirlari"]) {
+  t(fn + " ekDersler referansı yok", !/ekDersler/.test(bolge(fn)));
 }
 
 /* ---- 11) Dosya bütünlüğü ---- */

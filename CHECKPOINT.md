@@ -1028,3 +1028,40 @@ Gerçek DOM semantiği (bilinmeyen id→null, innerHTML eski çocukları siler, 
 - Gunluk tablo, haftalık öğretmen programı, özet/analiz, CSV export/import ek ders görünümleri
   BU dilimde değiştirilmedi (render fonksiyonlarında ekDersler referansı hâlâ yok — testle kanıtlı).
 - Preview: eski app.js önbellekten gelebilir → **Ctrl+Shift+R** sert yenileme.
+
+# ✅ CHECKPOINT: Ek Ders Görünürlüğü — Günlük Tablo + Öğretmen Haftalık Programı (EK-DERS-GORUNUM-YAMASI)
+
+**Tarih:** 16 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **1166/1166 OK** (1113 eski + 50 yeni + 3 sözleşme güncellemesi = 25 süit)
+
+## Yapılan İş (app.js — baştan yazma YOK, ks-yama-ekders-gorunum.mjs idempotent yama)
+
+1. **Günlük tablo (`gunlukTablo`, ~L3372):** aktif dönem `DB.ekDersler` kayıtları `aktifDonemKayitlari(...)`
+   ile `ogrtMap`'e eklenir (tarih + iptal filtresi; TEK kayıt — harita anahtarı duplicate yazmayı imkânsız kılar).
+   Hücre dalı: ek ders (sinif var, ogrenciAd/ogrenciId yok) → **amber** hücre (`bg-amber-50` + `text-amber-800`) + açık **"Ek Ders"** etiketi.
+2. **Öğretmen haftalık programı (`haftalikOgrtTablo`, ~L3192):** aynı filtreyle `ekMap` (öğretmen eşleşmesi + haftalık pencere);
+   hücre döngüsünde `ekDers` değişkeni + ders-öncesi dal → **amber** hücre (`bg-amber-100` + `border-amber-300` + `text-amber-800`) + **"Ek Ders"** etiketi + title.
+3. **Ayırt edicilik:** amber stili birebir (mavi/emerald), grup badge, Sınıf Dersi (rose), Boş (beyaz +) ve Kapalı (slate) stillerinden farklı.
+4. **Gizleme:** başka döneme ait (donemId ≠ aktifDonemId) ek dersler iki görünümde de yok; iptal edilenler de yok.
+5. **Kapsam dışı (dokunulmadı):** renderOzet, renderAnaliz, CSV/Excel, sinifProg, yedek, cakisma/planlama mantığı, ek-ders.js, index.html, vendor/*.
+
+## Testler
+
+- Yeni süit: `ks-ekders-gorunum.mjs` — **50 test** (günlük/haftalık görünürlük, etiket, stil ayrımı, gizleme, iptal,
+  duplicate yok, slot/öğretmen eşleşmesi, birebir/grup koruması, kapsam dışı, saveDB damga uyumu, kaynak kanıtı). test.mjs'e 1 kez eklendi.
+- `ks-ek-ders-donem.mjs` 10. bölüm EK-DERS-GORUNUM sözleşmesine güncellendi (birebir/grup render'ları ekDersler referansı TAŞIR; ozet/analiz/CSV taşımaz) — yedek: `ks-ek-ders-donem.onceci.bak`.
+- Yama idempotent: 2. koşu "Zaten uygulanmış" (exit 2), dosyaya dokunmaz.
+
+## Yedek ve Hashler
+
+| Dosya | SHA-256 |
+|---|---|
+| app.js (yama öncesi backup: `app.js.ekders-gorunum-oncesi.bak`) | `4efb45d675c4c1fe80aa909734af21e9f42b7193c8103d72e42669c5745b1cc8` |
+| app.js (yama sonrası) | `57867da0a7a7d8401ce71d54cf93b9fba52f5c730d5f48fe01cfaa035a938e52` |
+| index.html (değişmedi) | `5b691039…` (checkpoint'teki değer) |
+| ek-ders.js (değişmedi) | `662ec4f1cffc1bb0b7882f876bcf0de581925139f066589a6de0d35862b4aaf7` |
+| vendor/* (değişmedi) | tailwind `7afa0afd…` · fontawesome `f69efe0f…` · html2canvas `669b68b0…` · chart `19dfdc0c…` · fonts `b801b3a0…` |
+
+- `node --check app.js` + `node --check ek-ders.js`: OK.
+- Birebir/grup hücre blokları byte-identical (kaynak satır kanıtı + runtime "seed birebir dersi amber DEĞİL").
+- Geri dönüş: `app.js.ekders-gorunum-oncesi.bak` (üzerine yazılmadı).
+- Preview'da güncel görünüm için sert yenileme: **Ctrl+Shift+R** (Cmd+Shift+R).

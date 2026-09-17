@@ -1337,3 +1337,41 @@ Boş / Kapalı (musait→kapali gri) / Toplu ders / Sınıf Dersi / Ek Ders ambe
 | app.js | `debf5311af06e533bcafb27779b4f58d21c39ff22883f009fbd636412a7f8749` | `da87a8abbe61721b4bd166511d2076bc1da8203dbf869366e4056d864f6b07a5` |
 
 Geri dönüş: `index.html.kart-kolon-oncesi.bak`, `app.js.kart-kolon-oncesi.bak` (üzerine yazılmadı). `ek-ders.js` ve `vendor/*` dokunulmadı.
+
+---
+
+# ✅ CHECKPOINT: Branş–Ders Kuralı (BRANS-DERS-KURALI-YAMASI)
+
+**Tarih:** 17 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **1477/1477 OK** (1423 eski + 54 yeni)
+
+## Kural (TEK KAYNAK: app.js'teki BRANS_DERS_HARITA)
+- `mat` öğretmeni → MATEMATİK ve GEOMETRİ verebilir.
+- `tur` öğretmeni → TÜRKÇE ve EDEBİYAT verebilir.
+- Diğer tüm branşlar → yalnız kendi branş dersini verir.
+- Eşleşme `bransDersNorm()` ile aksan/büyük-küçük harf/boşluk duyarsız (`TÜRKÇE`→tur, `GEOMETRI`→geo, `FİZ`→fiz, ` mat `→mat; branş-ad varyantları `BRANS_AD_ES` ile kanonik koda çözülür).
+- **FAIL-CLOSED:** öğretmen yok, branşsız, branş hiçbir derse bağlanamıyor veya ders id bilinmiyorsa atama REDDEDİLİR (yazma YOK).
+
+## Değişen Fonksiyonlar (app.js — baştan yazma YOK, ks-yama-brans-ders.mjs hedefli yama)
+- **Yeni:** `BRANS_DERS_HARITA`, `bransDersNorm`, `BRANS_AD_ES`, `bransDersCoz`, `bransDersUygun(ogretmenId, dersId, konu)` (tek helper), `bransDersIzinliDersler`, `bransDersRedMesaji` (Türkçe mesaj: branş + seçilen ders + izinli dersler listesi).
+- **`planla()`:** öğretmen bulununca kaydetmeden ÖNCE zorunlu `bransDersUygun` kapısı → uygunsuz atama KAYDEDİLMEZ (birebir + grup dalı tek kapıdan kapanır).
+- **`renderFormDestek()`:** öğretmen seçiliyse ders listesi yalnız izinli derslerle doldurulur (asıl güvenlik kayıt öncesi kontroldür); `hizliSec` sonrası liste tazelenir.
+- **ek-ders.js (`ekPlanla`):** aynı helper ile kaydetme öncesi kontrol (BRANS-DERS-KURALI-EK-YAMASI); kural kopyalanmadı, tek kaynak app.js.
+
+## Korunan Davranışlar
+- Eski aykırı kayıtlar SİLİNMEDİ/BOZULMADI — kontrol yalnız yeni atama ve düzenleme sırasında.
+- Çakışma kontrolü, Kapalı/Sınıf Dersi kuralları, istek havuzu (istekEkle/istekGrupEkle) AYNEN.
+- DERSLER, DB.ogretmenler brans değerleri, öğretmen kayıtları değişmedi (fail-closed yalnız rapor + red).
+
+## Testler
+- Yeni süit: `ks-brans-ders-kurali.mjs` — **54 test** (harita tekliği, mat→mat/geo kabul + fiz red, tur→tur/edb kabul + mat red, diğer branşlar kendi dersi kabul / başkası red, normalize varyantları, fail-closed, birebir/grup/ek-ders kayıt engeli + kayıt OLUŞMAZ, eski aykırı kayıt korunumu, form filtresi, yama işaretleri). `test.mjs`'e tam 1 kez eklendi.
+- Eski süitlerde yalnızca `ek-ders.js` bilinen SHA-256'ları yeni yamalı hash'e güncellendi (davranış gevşetilmedi): ks-donem-ilk, ks-donem-olusturma, ks-ek-ders-donem, ks-birebir-gorunum, ks-ekders-ozet-csv, ks-sinif-ogretmen-uyum + ks-kart-sirasi süit sayacı 32→33.
+
+## Yedek + İdempotans (SHA-256)
+| Dosya | Yama öncesi backup |
+|---|---|
+| app.js.brans-ders-oncesi.bak | `da87a8abbe61721b4bd166511d2076bc1da8203dbf869366e4056d864f6b07a5` |
+| ek-ders.js.brans-ders-oncesi.bak | `662ec4f1cffc1bb0b7882f876bcf0de581925139f066589a6de0d35862b4aaf7` |
+| test.mjs.brans-ders-oncesi.bak | `596f9ef415c6b8a372e174b505eb99218a51f76a5a83164c62c9be6bc257f109` |
+
+- `ks-yama-brans-ders.mjs` 2. koşu: **exit 2, "Zaten uygulanmış"**, app.js/ek-ders.js/test.mjs hash'leri birebir aynı.
+- Yeni hash'ler: app.js `74d6147d75a97c578bb975fa4c65640869f0923732264770f77dd32e9e4965f3` · ek-ders.js `3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f` · index.html ve vendor/* DOKUNULMADI.

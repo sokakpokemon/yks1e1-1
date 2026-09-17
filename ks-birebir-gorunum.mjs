@@ -186,7 +186,7 @@ DB.dersler = DB.dersler.filter(l => l.id !== "ks-bgb-eski");
 console.log("7) Freeze korumaları:");
 const { createHash } = await import("node:crypto");
 const sha = (s) => createHash("sha256").update(s).digest("hex");
-t("ek-ders.js değişmedi (bilinen hash)", sha(readFileSync("ek-ders.js", "utf8")) === "662ec4f1cffc1bb0b7882f876bcf0de581925139f066589a6de0d35862b4aaf7");
+t("ek-ders.js değişmedi (bilinen hash)", sha(readFileSync("ek-ders.js", "utf8")) === "3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f");
 t("index.html değişmedi (bilinen hash)", sha(readFileSync("index.html", "utf8")) === "ab93857339628aec7db0842db217b8e614c0f0ede2de5cb93b9fe500fc2a5cb8");
 t("bu süit test.mjs'te tam 1 kez", (readFileSync("test.mjs", "utf8").match(/ks-birebir-gorunum\.mjs/g) || []).length === 1);
 

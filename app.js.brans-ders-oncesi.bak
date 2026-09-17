@@ -25,54 +25,6 @@ var DERSLER = [
 ];
 var DERS = {};
 DERSLER.forEach(function (d) { DERS[d.id] = d; });
-
-/* ===== BRANS-DERS-KURALI-YAMASI v1: öğretmen branşı ↔ verilebilir ders kuralı (TEK KAYNAK) =====
-   Kural: mat → [mat, geo] · tur → [tur, edb] · diğer branşlar yalnız kendi dersini verir.
-   Eşleşme aksan/büyük-küçük harf/boşluk duyarsızdır. Ders/branş haritada yoksa FAIL-CLOSED: uygun sayılmaz. */
-var BRANS_DERS_HARITA = { mat: ["mat", "geo"], tur: ["tur", "edb"] };
-function bransDersNorm(v) {
-  var m = { "ı": "i", "İ": "i", "ğ": "g", "Ğ": "g", "ü": "u", "Ü": "u", "ş": "s", "Ş": "s", "ö": "o", "Ö": "o", "ç": "c", "Ç": "c" };
-  return String(v || "").replace(/[ıİğĞüÜşŞöÖçÇ]/g, function (c) { return m[c]; }).replace(/[Iİ]/g, "i").toLocaleLowerCase("tr").replace(/\s+/g, "").trim();
-}
-var BRANS_DERS_TUM_DERSLER = DERSLER.map(function (d) { return d.id; });
-function bransDersUygun(ogretmenId, dersId, konu) {
-  /* konu parametresi sözleşmeyi tamamlar (şu an kuralda etkisiz); geriye dönük uyumlu imza */
-  var t = (typeof DB !== "undefined" && DB.ogretmenler || []).find(function (x) { return x.id === ogretmenId; });
-  if (!t) return false; /* FAIL-CLOSED: öğretmen yok */
-  var ders = DERS[dersId];
-  if (!ders || !BRANS_DERS_TUM_DERSLER.indexOf) return false;
-  if (BRANS_DERS_TUM_DERSLER.indexOf(dersId) < 0) return false; /* bilinmeyen ders */
-  var b = bransDersNorm(t.brans);
-  if (!b) return false; /* branşsız öğretmen — FAIL-CLOSED */
-  var izinli = bransDersCoz(b);
-  if (!izinli || !izinli.length) return false;
-  return izinli.some(function (d) { return bransDersNorm(d) === bransDersNorm(dersId); });
-}
-/* BRANS-DERS-KURALI: branş-ad varyantları da aynı derse bağlanır */
-var BRANS_AD_ES = { turkce: "tur", geometri: "geo", fizik: "fiz", kimya: "kim", biyoloji: "biy", edebiyat: "edb", tarih: "tar", ingilizce: "ing", cografya: "cgr", matematik: "mat" };
-function bransDersCoz(b) {
-  b = bransDersNorm(b);
-  if (BRANS_AD_ES[b]) b = BRANS_AD_ES[b]; /* branş-adı varyantı → kanonik ders kodu */
-  var haritaGirdi = Object.keys(BRANS_DERS_HARITA).filter(function (k) { return bransDersNorm(k) === b; })[0];
-  if (haritaGirdi) return BRANS_DERS_HARITA[haritaGirdi];
-  var eslesenDers = DERSLER.filter(function (d) { return bransDersNorm(d.id) === b; })[0];
-  if (eslesenDers) return [eslesenDers.id];
-  return null; /* FAIL-CLOSED: branş hiçbir derse bağlanamıyor */
-}
-function bransDersIzinliDersler(ogretmenId) {
-  var t = (typeof DB !== "undefined" && DB.ogretmenler || []).find(function (x) { return x.id === ogretmenId; });
-  if (!t) return DERSLER.map(function (d) { return d.id; });
-  var b = bransDersNorm(t.brans);
-  var izinli = bransDersCoz(b);
-  return izinli ? izinli.slice() : [];
-}
-function bransDersRedMesaji(t, dersId) {
-  var D = DERS[dersId] || { ad: String(dersId) };
-  var izinli = bransDersIzinliDersler(t.id).map(function (d) { return (DERS[d] || {}).ad || d; });
-  var bAd = (DERS[t.brans] || { ad: String(t.brans || "?") }).ad;
-  return "<b>" + esc(t.ad) + "</b> öğretmeninin branşı <b>" + esc(bAd) + "</b>; <b>" + esc(D.ad) +
-    "</b> dersi veremez. Bu öğretmene verilebilecek dersler: <b>" + esc(izinli.join(", ")) + "</b>.";
-}
 var AVATAR_RENK = [
   ["bg-teal-100","text-teal-700"],["bg-blue-100","text-blue-700"],["bg-amber-100","text-amber-700"],
   ["bg-violet-100","text-violet-700"],["bg-rose-100","text-rose-700"],["bg-indigo-100","text-indigo-700"]
@@ -2843,16 +2795,7 @@ function renderFormDestek() {
   $("dl-ogretmen").innerHTML = dlT;
 
   var dersSec = $("f-ders");
-  if (!dersSec.innerHTML.trim()) {
-    /* BRANS-DERS-KURALI: öğretmen seçiliyse ders listesi yalnız izin verilen derslerle doldurulur */
-    var _ogrtAd = $("f-ogretmen") ? $("f-ogretmen").value.trim() : "";
-    var _ogrt = _ogrtAd ? DB.ogretmenler.find(function (x) { return kucuk(x.ad) === kucuk(_ogrtAd); }) : null;
-    var _izinli = _ogrt ? bransDersIzinliDersler(_ogrt.id) : DERSLER.map(function (d) { return d.id; });
-    var _opts = "";
-    DERSLER.forEach(function (d) { if (_izinli.indexOf(d.id) >= 0) _opts += '<option value="' + d.id + '">' + d.ad + "</option>"; });
-    if (!_opts) _opts = dersOpsi(); /* filtre boşsa tüm liste (güvenlik kayıtta) */
-    dersSec.innerHTML = _opts;
-  }
+  if (!dersSec.innerHTML.trim()) dersSec.innerHTML = dersOpsi();
 
   var saatSec = $("f-saat");
   if (saatSec && !saatSec.options.length) saatSec.innerHTML = ksSeceneklerHTML(saatSec.value || "15:30");
@@ -3201,11 +3144,6 @@ function planla() {
     t = { id: uid(), ad: ogretmenAd, brans: dersId, avail: { sinif: {}, musait: [] } };
     DB.ogretmenler.push(t);
     toast("Yeni öğretmen kaydedildi: " + ogretmenAd);
-  }
-  /* BRANS-DERS-KURALI: kaydetmeden önce zorunlu uygunluk — uygunsuz atama KAYDEDİLMEZ */
-  if (typeof bransDersUygun === "function" && !bransDersUygun(t.id, dersId, konu)) {
-    hataKart([typeof bransDersRedMesaji === "function" ? bransDersRedMesaji(t, dersId) : "Branş-ders uyumsuzluğu."]);
-    return;
   }
 
   /* avail şema sapması (L1483 kuralı): kaydetmeden önce normalize() ile aynı şekle getir */

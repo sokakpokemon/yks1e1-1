@@ -172,7 +172,7 @@ t("csvIstekIndir değişmedi", sha(blok("function csvIstekIndir() {")) === sha(b
 t("csvKadroIndir değişmedi", sha(blok("function csvKadroIndir() {")) === sha(bakBlok(bakKaynak, "function csvKadroIndir() {")));
 t("dersOgrenciIds değişmedi", sha(blok("function dersOgrenciIds(ders) {")) === sha(bakBlok(bakKaynak, "function dersOgrenciIds(ders) {")));
 t("index.html değişmedi", sha(readFileSync("index.html", "utf8")) === "ab93857339628aec7db0842db217b8e614c0f0ede2de5cb93b9fe500fc2a5cb8");
-t("ek-ders.js değişmedi", sha(readFileSync("ek-ders.js", "utf8")) === "662ec4f1cffc1bb0b7882f876bcf0de581925139f066589a6de0d35862b4aaf7");
+t("ek-ders.js değişmedi", sha(readFileSync("ek-ders.js", "utf8")) === "3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f");
 
 /* ---- 8) Başka döneme geçiş: ek dersler orada görünür, A'da değil ---- */
 console.log("8) Dönem değişimi sızıntı testi:");

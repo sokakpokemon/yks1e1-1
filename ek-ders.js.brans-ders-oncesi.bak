@@ -150,11 +150,6 @@ if (
       DB.ogretmenler.push(t);
       toast("Yeni öğretmen kaydedildi: " + ogretmenAd);
     }
-    /* BRANS-DERS-KURALI-EK-YAMASI: ek ders kaydetmeden önce zorunlu uygunluk (tek kaynak app.js'te) */
-    if (typeof bransDersUygun === "function" && !bransDersUygun(t.id, dersId, konu)) {
-      ekHataKart([typeof bransDersRedMesaji === "function" ? bransDersRedMesaji(t, dersId) : "Branş-ders uyumsuzluğu."]);
-      return;
-    }
 
     var cakisma = ekDuzeltmeBul({ sinif: sinif, ogretmenId: t.id, tarih: tarih, saat: saat, id: ui.ekEditId || "" });
     if (cakisma.length && !yoksay) { ekHataKart(cakisma); return; }
@@ -262,11 +257,7 @@ if (
     sinifListe.forEach(function (s) { sinifOps += '<option value="' + esc(s) + '"' + (ui.ekForm.sinif === s ? " selected" : "") + ">" + esc(s) + "</option>"; });
 
     var dersOps = '<option value="" disabled>Ders seçin</option>';
-    /* BRANS-DERS-KURALI-EK-YAMASI: öğretmen seçiliyse yalnız izinli dersler listelenir; boşsa tümü */
-    var _ekOgrt = (ui.ekForm.ogretmen || "").trim() ? DB.ogretmenler.find(function (x) { return kucuk(x.ad) === kucuk(ui.ekForm.ogretmen); }) : null;
-    var _ekIzinli = _ekOgrt ? bransDersIzinliDersler(_ekOgrt.id) : DERSLER.map(function (d) { return d.id; });
-    if (!_ekIzinli.length) _ekIzinli = DERSLER.map(function (d) { return d.id; });
-    DERSLER.forEach(function (d) { if (_ekIzinli.indexOf(d.id) >= 0) dersOps += '<option value="' + d.id + '"' + (ui.ekForm.dersId === d.id ? " selected" : "") + ">" + d.ad + "</option>"; });
+    DERSLER.forEach(function (d) { dersOps += '<option value="' + d.id + '"' + (ui.ekForm.dersId === d.id ? " selected" : "") + ">" + d.ad + "</option>"; });
 
     var dlT = '<datalist id="dl-ek-ogretmen"><option value=""></option>';
     DB.ogretmenler.forEach(function (t) { dlT += '<option value="' + esc(t.ad) + '"></option>'; });

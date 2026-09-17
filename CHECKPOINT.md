@@ -1282,3 +1282,36 @@ Boş / Kapalı (musait→kapali gri) / Toplu ders / Sınıf Dersi / Ek Ders ambe
 - Doğrulama: `node --check app.js / ek-ders.js / test.mjs` OK · `node test.mjs` → **1338/1338 OK** (30 süit).
 - Yeni süit: `ks-sinif-prog-etiket.mjs` (21 test) — `test.mjs`'te tam 1 kez.
 - Kalan riskler: kaynaksız 17 slot hücrede isimsiz kalır (veri girilince otomatik dolar); çoklu eşleşmede metin tooltip'te tam okunur, hücrede kırpılır.
+
+---
+
+# ✅ CHECKPOINT: Planlama Ekranı Kart Sırası — planKart üstte, havuzBolum altta (KART-SIRASI-YAMASI)
+
+**Tarih:** 17 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **1372/1372 OK** (31 süit)
+
+## Teşhis (salt-okuma, patch öncesi)
+- `#planKart` (Birebir Ders Planla) index.html'de **statik** `section.kart` — tüm form alanları (`f-ogrenci/f-ders/f-konu/f-ogretmen/f-tarih/f-saat`), `#hizliOgr` anchor'ı ve `#btnPlan` içinde.
+- `#havuzBolum` (Öğrenci Birebir İstek Havuzu) index.html'de **boş section**; içeriği `renderHavuz()` (app.js) kendi section'ı içine yazar — komşulara dokunmaz, çapraz yazım riski yok.
+- Eski sıra: havuzBolum planKart'tan ÖNCEydi. Sıra yalnızca index.html'in statik düzeni belirliyordu.
+
+## Uygulanan Patch (yalnız index.html — app.js/ek-ders.js DOKUNULMADI)
+- `<section id="havuzBolum" class="no-print"></section>` + yorum satırı planKart kapanışından hemen sonraya taşındı.
+- Yeni sıra: `ozetBolum → analizBolum → yonetimBolum → planKart → havuzBolum → derslerBolum`.
+- Hiçbir id, name/value, onclick, render hedefi, veri modeli değişmedi; `renderHavuz` planKart'a yazmaz (id tabanlı lookup tekil kaldı).
+
+## Yedek
+- `index.html.kart-sirasi-oncesi.bak` — 21.153 B, SHA-256 `5b691039f85c612b02a19ce11635260b3a523ae2256196fb581a1ba9f9dd00dd` (yama öncesi birebir). Yamalı hash: `fcc4abc0c54a6c3e597f4c282592de924eefa5c6ffb31844b4791e22e93295bb` (20.982 B).
+
+## Testler
+- Yeni süit: `ks-kart-sirasi.mjs` (33 test, gerçek-DOM semantiği): boot sonrası plan < havuz sırası, iki kart tam 1'er kez, 5× yenile sonrası sıra korunumu, plan formu alanları + planlama butonu, havuz formu/filtre çipleri/istek satırları, grup paneli (#ek-ogrenciler) plan kartına inject, formaAktar+planla akışı hata vermeksizin isteği "planlandi" yapar, eski süit sayılarında düşüş yok.
+- `test.mjs`'e tam 1 kez eklendi → 31 süit.
+- Hash sabitleyen 6 süitteki `index.html` referansı yeni checkpoint hash'ine güncellendi (`fcc4abc0…`) — assertion gevşetilmedi, referans güncellemesi.
+
+## Doğrulama
+- `node --check app.js / ek-ders.js / test.mjs / ks-kart-sirasi.mjs` OK.
+- `node test.mjs` → **1372/1372 OK** (30 eski + 1 yeni süit).
+- Yama 2. koşu: "Zaten uygulanmış" → exit 2, dosyaya dokunmaz.
+
+## Kalan Riskler
+- Gerçek tarayıcıda eski index.html önbellekten gelebilir → sert yenileme (**Ctrl+Shift+R / Cmd+Shift+R**).
+- Atlama menüsündeki "İstekler" butonu (`data-hedef="havuzBolum"`) hâlâ doğru kartı hedefler (id değişmedi).

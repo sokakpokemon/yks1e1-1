@@ -174,6 +174,8 @@
   <!-- ============ 2) VERİ YÖNETİMİ ============ -->
   <section id="yonetimBolum" class="no-print"></section>
 
+  <!-- ============ 3) İSTEK HAVUZU ============ -->
+  <section id="havuzBolum" class="no-print"></section>
 
   <!-- ============ 4) BİREBİR DERS PLANLA ============ -->
   <div class="hidden" id="ks-kilavuz"><div class="no-print rounded-xl border border-teal-100 bg-teal-50/60 px-3.5 py-2.5 text-[11px] text-teal-800 leading-relaxed mb-3"><b class="font-extrabold"><i class="fa-solid fa-circle-info mr-1"></i>Ders Saati Kılavuzu:</b> Dersler 40 dakikadır ve kısa kod saatleriyle işler. 1 · 08:50-09:30 · 2 · 09:40-10:20 · 3 · 10:30-11:10 · 4 · 11:20-12:00 · 5 · 13:00-13:40 · 6 · 13:50-14:30 · 7 · 14:40-15:20 · 8 · 15:30-16:10 · 9 · 16:20-17:00 · 10 · 17:10-17:50 · 11 · 18:00-18:40. <span class="text-teal-600">Mola (12:00-13:00) ders için kullanılmaz.</span></div></div>
@@ -263,9 +265,6 @@
 
     <div id="cakismaUyari" class="hidden mt-4"></div>
   </section>
-
-  <!-- ============ 3) İSTEK HAVUZU ============ -->
-  <section id="havuzBolum" class="no-print"></section>
 
   <!-- ============ 5) DERSLER & RAPOR ============ -->
   <section id="derslerBolum"></section>

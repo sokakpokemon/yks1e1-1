@@ -677,7 +677,7 @@ function loadDB() {
 }
 var DB = loadDB() || seedDB();
 kimlikleriTamamla(DB); /* KİMLİK-YAMASI: seed/restore sonrası eksik kimlikler ilk açılışta kapanır ve kaydedilir */
-sinifOgrtUyumOnar(DB, true); /* SINIF-OGRT-UYUM-YAMASI + GENISLETME: boot'ta TAM onarım (tüm dönemler) */
+sinifOgrtUyumOnar(DB); sinifOgrtUyumOnar(DB, true); /* SINIF-OGRT-UYUM-YAMASI + GENISLETME: boot'ta TAM onarım (tüm dönemler) */
 
 /* SINIF-OGRT-UYUM-YAMASI: Sınıf programı ↔ öğretmen haftalık program uyumu (tek kaynaklı yazım, idempotent).
    Kural: öğretmenin avail.sinif["G-K"]=sınıfAd kaydı VARSA, aynı G-K o sınıfın aktif dönem

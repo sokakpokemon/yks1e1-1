@@ -1208,3 +1208,44 @@ d3a8941d…  test.mjs.birebir-gorunum-oncesi.bak
 ## Kalan Riskler
 - Gelecek dönemlerde yeni sınıf dersi işaretlemesi yalnız ilk dönemde otomatik onarılır; başka dönemde manuel hizalama gerekir (bilinçli sınır — dönem verisi normalize edilmeden değiştirilmez).
 - Gerçek tarayıcıda eski app.js önbellekten gelebilir → sert yenileme (Ctrl+Shift+R / Cmd+Shift+R).
+
+---
+
+# ✅ CHECKPOINT: 10.SINIF Sınıf Programı Grid — Canonical Dönem Onarımı (SINIF-PROG-UYUM-GENISLETME)
+
+**Tarih:** 17 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **1317/1317 OK** (baseline 1281 + 36 yeni)
+
+## Teşhis (salt-okuma, gerçek boot akışı ile kanıtlandı)
+
+- Canonical map: grid `DB.sinifProg[ad]` = `DB.sinifProgDonemler[sinifProgDonemId]` okur (identity-rebind ✓, `sinifProgDonemId === aktifDonemId` ✓).
+- 10.SINIF kaynak: `avail.sinif` içinde **SALİM URTİMUR → 1-1** ve **ŞAHİN DOĞANAY → 1-1** (isimle eşleşme; sinifIds yalnız ek kimlik katmanı).
+- Kök neden: `sinifOgrtUyumOnar` içindeki **"yalnız ilk dönem" erken dönüşü** (`hedef !== DONEM_ILK_ID → {e:0}`). İlk dönemde 10.SINIF zaten doluydu (`["1-1"]`); başka dönem aktifken canonical map'e avail.sinif kaynaklı slotlar hiç yazılmıyordu → grid boş görünüyordu. Persist/saveDB ve sınıf anahtarı sağlamdı → tek kök neden: **canonical map onarım kısıtı**.
+
+## Yama (yalnız app.js — ks-yama-sinif-prog-uyum-onar.mjs, assert'li, idempotent)
+
+- `sinifOgrtUyumOnar(db, tumDonemler)`: `tumDonemler=true` → her hedef dönemde onarım; `normalize/loadDB` yolu `tumDonemler=false` ile dönemli programlara DOKUNMAZ (ks-donem-olusturma sözleşmesi korunur).
+- **Boot'ta TAM onarım** (`sinifOgrtUyumOnar(DB); sinifOgrtUyumOnar(DB, true);`) — dönem geçişi/oluşturma yollarında çağrı YOK ("yeni dönem boş başlar" sözleşmesi korunur).
+- Kaynak hâlâ yalnızca `avail.sinif`; dolu hücreler silinmez, duplicate push yok, saveDB boot akışında zaten çağrılıyor (veri değişmezse LS hash aynı).
+- 2. koşu: "Zaten uygulanmış" + exit 2, dosya byte-birebir.
+
+## Testler
+
+- Yeni süit: `ks-sinif-prog-uyum-onar.mjs` — **36 test** (kaynak slotlar, canonical map, render, identity-rebind, LS deep-equal, reload, idempotans, dönem sızıntısı, kaynak korunumu, 0=Pzt/6=Paz, zorla-doldurma-yok, süit kaydı). `test.mjs`'e tam 1 kez eklendi.
+- Eski süitler gevşetilmeden 1281 baseline test aynen geçti.
+
+## Yedek ve Dosyalar
+
+| Dosya | SHA-256 | Boyut |
+|---|---|---|
+| app.js (önce/yedek) | `1a57daff72bc74a3c173d52582f471d412651ff6a28dd7f74b3ae4315e9009ef` | 255.722 B |
+| app.js (sonra) | `0d7861560b1ac90f3de21c7bf4659aa31b077057457f4e17c466e902ffb5fdcb` | 256.510 B |
+| test.mjs (önce/yedek) | `8b9da487d2971e16f61de9837cea356ba775d3f59efd9a27c61d5fd6860cbc86` | 2.057 B |
+| test.mjs (sonra) | `82b3deddac69304bedcec7e3a659ee14e9460137bc4b8eaf6e5da931d6d631f5` | 2.084 B |
+
+- Değişmeyen: `index.html` (`5b691039…`), `ek-ders.js` (`662ec4f1…`), `vendor/*`.
+- Syntax: `node --check` app.js / ek-ders.js / test.mjs / ks-sinif-prog-uyum-onar.mjs → OK.
+
+## Kalan Riskler
+
+- `normalize/loadDB` yolu bilinçli olarak dönemli programlara dokunmaz; yalnız boot ve dönem oluşturma/aksiyon yolları tam onarım kapsıyor (sözleşme gereği).
+- Gerçek tarayıcıda eski app.js önbellekten gelebilir → **sert yenileme (Ctrl+Shift+R / Cmd+Shift+R)**.

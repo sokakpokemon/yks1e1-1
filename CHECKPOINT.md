@@ -1174,3 +1174,37 @@ d3a8941d…  test.mjs.birebir-gorunum-oncesi.bak
 - `node --check app.js` · `node --check ek-ders.js` → OK
 - `node test.mjs` → **1246/1246 OK**, kırmızı süit YOK.
 - Preview: **Ctrl+Shift+R** (sert yenileme) sonrası aynı birebir dersi günlük ve haftalık tabloda kontrol edin — iki hücre tam ad + sınıf + varsa gerçek konu gösterir, ders adı hiçbirinde yoktur.
+
+---
+
+# ✅ CHECKPOINT: Sınıf Programı ↔ Öğretmen Haftalık Program Uyumu (SINIF-OGRT-UYUM-YAMASI)
+
+**Tarih:** 17 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **1281/1281 OK** (27 süit; baseline 1246 + 35 yeni)
+
+## Teşhis (salt-okuma, kanıtlı)
+- Sinif programı veri şeması: `DB.sinifProg[sinifAd] = ["G-K", …]` (0=Pzt…6=Paz, KS kod 1–11); öğretmen/ders bilgisi bu kayıtta YOK.
+- Öğretmen haftalık programı kaynağı: `haftalikOgrtTablo()` → `aktifDonemKayitlari(DB.dersler)` (birebir) + `avail.sinif` (Sınıf Dersi) + `avail.musait` (Kapalı) + `aktifDonemKayitlari(DB.ekDersler)` (Ek Ders).
+- "Toplu ders var" = `gridTablo(tip=sinif)` çizimi; öğretmen tarafındaki karşılığı `ogretmenler[].avail.sinif` kayıtları.
+- **Bulunan uyumsuzluk:** 43 hücrede öğretmen `avail.sinif[k]=sınıfAd` kaydı varken `sinifProg[sinifAd]`'da k eksikti (öğretmen "Sınıf Dersi" görünüyor, sınıfın toplu programında slot yok).
+- Pazar indeks/tarih ✓ · aktif dönem sızıntısı yok (identity-rebind) ✓ · Kapalı/birebir/grup/ek ders görünümleri ✓.
+
+## Onarım (app.js — baştan yazma YOK)
+- **Yeni:** `sinifOgrtUyumOnar(db)` — idempotent, tek kaynaklı, yalnız-EKLEME; yalnız ilk dönem (DONEM_ILK_ID) hedefli; Kapalı slot atlanır; "Sınıf Dersi" placeholder sınıf adı sayılmaz; öğretmen kayıtları/dersler/sinifIds değişmez.
+- Çağrı noktaları: boot + `normalize()` (loadDB/yedek yükleme tek kapıdan).
+- Seed `sinifProg["MEZUN SAY 1"]` önceden eksik olan `4-1` slotu ile hizalandı (SALİM URTİMUR `3-1` → MEZUN SAY 1 uyumu).
+- Yama: `ks-yama-sinif-uyum.mjs` (assert'li, idempotent — 2. koşu exit 2 "Zaten uygulanmış").
+- `ks-donem-olusturma.mjs` L169 beklenen dizi güncel gerçekle hizalandı (4-1 eklendi; gevşetme yok — tam eşlik assertion'ı korundu).
+
+## Test ve Doğrulama
+- Yeni süit: `ks-sinif-ogretmen-uyum.mjs` (**35 test**, test.mjs'e 1 kez eklendi).
+- `node --check app.js` / `ek-ders.js` / `test.mjs` → OK.
+- `node test.mjs` → **1281/1281 OK** (eski 1246 aynen korundu + 35 yeni).
+- `ek-ders.js`, `index.html`, `vendor/*`: dokunulmadı.
+
+## Yedek
+- `app.js.sinif-uyum-oncesi.bak` (253.593 B, SHA-256 `7eea1ea7652bdf8f4af0ca9cabaabe0132eb4956594c19f3cef2879d4cf56aae` — üzerine YAZILMADI).
+- Yeni app.js SHA-256: `1a57daff72bc74a3c173d52582f471d412651ff6a28dd7f74b3ae4315e9009ef`.
+
+## Kalan Riskler
+- Gelecek dönemlerde yeni sınıf dersi işaretlemesi yalnız ilk dönemde otomatik onarılır; başka dönemde manuel hizalama gerekir (bilinçli sınır — dönem verisi normalize edilmeden değiştirilmez).
+- Gerçek tarayıcıda eski app.js önbellekten gelebilir → sert yenileme (Ctrl+Shift+R / Cmd+Shift+R).

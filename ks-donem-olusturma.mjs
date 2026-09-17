@@ -166,7 +166,8 @@ console.log("6) 2026/2027 ders, istek ve program verilerinin korunması:");
   t("2026/2027'ye dönüşte ders listesi deep-equal geri geldi", aDersGeri.length === bootDersSay && aDersGeri.every(l => l.donemId === ID_A));
   t("2026/2027 programına dönüş: DB.sinifProg = kayıtlı 2026/2027 programı", DB.sinifProg === DB.sinifProgDonemler[ID_A] && Object.keys(DB.sinifProg).length > 0);
   t("2026/2027 programı seed anahtar kümesini içeriyor", ["MEZUN SAY 1", "12 SAY 1", "9.SINIF"].every(k => k in DB.sinifProg));
-  t("MEZUN SAY 1 hücreleri birebir", alanEsit(DB.sinifProg["MEZUN SAY 1"], ["0-1", "2-1", "3-1", "5-1", "0-2"]));
+  /* SINIF-OGRT-UYUM-YAMASI: seed MEZUN SAY 1 artık 4-1'i de içerir (öğretmen SALİM URTİMUR avail.sinif 3-1 → MEZUN SAY 1 uyumu) */
+  t("MEZUN SAY 1 hücreleri birebir", alanEsit(DB.sinifProg["MEZUN SAY 1"], ["0-1", "2-1", "3-1", "5-1", "0-2", "4-1"]));
 }
 
 /* ================= 7) Global veriler ve referanslar değişmemesi ================= */

@@ -688,13 +688,13 @@ sinifOgrtUyumOnar(DB); /* SINIF-OGRT-UYUM-YAMASI: sinifProg ↔ avail.sinif uyum
 function sinifOgrtUyumOnar(db) {
   if (!db || typeof db !== "object" || !db.sinifProg || typeof db.sinifProg !== "object") return { e: 0 };
   var hedef = (typeof db.sinifProgDonemId === "string" && db.sinifProgDonemId) || db.aktifDonemId || DONEM_ILK_ID;
-  if (hedef !== DONEM_ILK_ID) return { e: 0 }; /* SINIF-OGRT-UYUM-YAMASI: yalnız ilk dönem — başka döneme sınıf dersi uydurma YOK */
   if (!db.sinifProgDonemler || typeof db.sinifProgDonemler !== "object") db.sinifProgDonemler = {};
   if (!db.sinifProgDonemler[hedef] || typeof db.sinifProgDonemler[hedef] !== "object") db.sinifProgDonemler[hedef] = db.sinifProg;
   var prog = db.sinifProgDonemler[hedef];
   var eklenen = 0;
   (Array.isArray(db.ogretmenler) ? db.ogretmenler : []).forEach(function (t) {
     if (!t || !t.avail || !t.avail.sinif || typeof t.avail.sinif !== "object") return;
+    if (Array.isArray(t.avail.musait) && t.avail.musait.indexOf(k) >= 0) return; /* Kapalı slot atlanır (k dış tanımda) */
     Object.keys(t.avail.sinif).forEach(function (k) {
       var cls = t.avail.sinif[k];
       if (!cls || typeof cls !== "string" || cls === "Sınıf Dersi") return;
@@ -742,7 +742,7 @@ function seedDB() {
     { id: uid(), ad: "Yusuf Can", sinif: "MEZUN SAY 2", tel: "" }
   ];
   db.sinifProg = {
-    "MEZUN SAY 1": ["0-1","2-1","3-1","5-1","0-2","4-1"],
+    "MEZUN SAY 1": ["0-1","2-1","3-1","5-1","0-2"],
     "MEZUN SAY 2": ["0-1","1-1","2-1","3-1","4-1"],
     "MEZUN SAY 3": [],
     "MEZUN EA 1": ["0-1","1-1","3-1","4-1","5-1"],

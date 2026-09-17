@@ -269,7 +269,6 @@ function donemleriBaslat(db) {
   });
   /* DONEM-OLUSTURMA-YAMASI: dönemli sınıf programı migration'ı aynı kapıdan (idempotent) */
   if (typeof sinifProgDonemleriBaslat === "function") sinifProgDonemleriBaslat(db);
-  if (typeof sinifOgrtUyumOnar === "function") sinifOgrtUyumOnar(db); /* SINIF-OGRT-UYUM-YAMASI: loadDB/normalize yolu da kapatır */
   return say;
 }
 /* DONEM-SECICI-YAMASI: dönem seçici + aktif dönem filtre katmanı.
@@ -677,34 +676,6 @@ function loadDB() {
 }
 var DB = loadDB() || seedDB();
 kimlikleriTamamla(DB); /* KİMLİK-YAMASI: seed/restore sonrası eksik kimlikler ilk açılışta kapanır ve kaydedilir */
-sinifOgrtUyumOnar(DB); /* SINIF-OGRT-UYUM-YAMASI: sinifProg ↔ avail.sinif uyumu boot'ta kapanır (idempotent) */
-
-/* SINIF-OGRT-UYUM-YAMASI: Sınıf programı ↔ öğretmen haftalık program uyumu (tek kaynaklı yazım, idempotent).
-   Kural: öğretmenin avail.sinif["G-K"]=sınıfAd kaydı VARSA, aynı G-K o sınıfın aktif dönem
-   programında (sinifProgDonemler[sinifProgDonemId]) da OLMALI. Eksikse EKLENİR;
-   mevcut hücreler ASLA silinmez/taşınmaz; isimle tahmin yapılmaz (sınıf adı kayıttan gelir).
-   avail.musait (Kapalı) ile çakışan öğretmen kayıtları atlanır — ders sessizce kaybolmaz,
-   duzeltmeBul'un mevcut 'musait' uyarı davranışı korunur. Dönüş: { e: eklenen }. */
-function sinifOgrtUyumOnar(db) {
-  if (!db || typeof db !== "object" || !db.sinifProg || typeof db.sinifProg !== "object") return { e: 0 };
-  var hedef = (typeof db.sinifProgDonemId === "string" && db.sinifProgDonemId) || db.aktifDonemId || DONEM_ILK_ID;
-  if (hedef !== DONEM_ILK_ID) return { e: 0 }; /* SINIF-OGRT-UYUM-YAMASI: yalnız ilk dönem — başka döneme sınıf dersi uydurma YOK */
-  if (!db.sinifProgDonemler || typeof db.sinifProgDonemler !== "object") db.sinifProgDonemler = {};
-  if (!db.sinifProgDonemler[hedef] || typeof db.sinifProgDonemler[hedef] !== "object") db.sinifProgDonemler[hedef] = db.sinifProg;
-  var prog = db.sinifProgDonemler[hedef];
-  var eklenen = 0;
-  (Array.isArray(db.ogretmenler) ? db.ogretmenler : []).forEach(function (t) {
-    if (!t || !t.avail || !t.avail.sinif || typeof t.avail.sinif !== "object") return;
-    Object.keys(t.avail.sinif).forEach(function (k) {
-      var cls = t.avail.sinif[k];
-      if (!cls || typeof cls !== "string" || cls === "Sınıf Dersi") return;
-      if (Array.isArray(t.avail.musait) && t.avail.musait.indexOf(k) >= 0) return; /* Kapalı: atla */
-      if (!prog[cls]) prog[cls] = [];
-      if (prog[cls].indexOf(k) < 0) { prog[cls].push(k); eklenen++; }
-    });
-  });
-  return { e: eklenen };
-}
 if (typeof donemleriBaslat === "function") donemleriBaslat(DB); /* DONEM-ILK-YAMASI: boot sonrası eksik dönem alanları kapanır ve kaydedilir */
 saveDB();
 var __KS_RAPOR = ksGec(); saveDB();
@@ -742,7 +713,7 @@ function seedDB() {
     { id: uid(), ad: "Yusuf Can", sinif: "MEZUN SAY 2", tel: "" }
   ];
   db.sinifProg = {
-    "MEZUN SAY 1": ["0-1","2-1","3-1","5-1","0-2","4-1"],
+    "MEZUN SAY 1": ["0-1","2-1","3-1","5-1","0-2"],
     "MEZUN SAY 2": ["0-1","1-1","2-1","3-1","4-1"],
     "MEZUN SAY 3": [],
     "MEZUN EA 1": ["0-1","1-1","3-1","4-1","5-1"],

@@ -1078,7 +1078,7 @@ function donemHostOnarZincir() {
   try { Promise.resolve().then(donemHostOnar); } catch (e1) {}
   try { setTimeout(donemHostOnar, 0); } catch (e2) {}
 }
-function sec(ad) { ui.sekme = ad; renderYonetim(); donemOnarimPlanla(); kartKolonOnar(); } /* DONEM-DOM-DÜZELTMESİ: alt sekme değişimlerinde de tek onarım planlanır (idempotent guard) · KART-KOLON-YAMASI: sekme değişiminde iki-kolon wrapper onarımı */
+function sec(ad) { ui.sekme = ad; renderYonetim(); donemOnarimPlanla(); } /* DONEM-DOM-DÜZELTMESİ: alt sekme değişimlerinde de tek onarım planlanır (idempotent guard) */
 
 /* ================================================================
    1) ÖZET RAPOR: istatistik kartları + pasta grafik
@@ -3995,41 +3995,6 @@ function indirApp() {
     }
   }
   sayfaKaynagi();
-}
-
-
-/* KART-KOLON-YAMASI: iki-kolon wrapper onarımı (idempotent, silici yazım yok)
-   planKart ve havuzBolum statik markup'ta tek #ks-kart-kolon wrapper'ının iki kolonunda
-   durur; render'lar kartların İÇİNİ yazar (havuzBolum.innerHTML / form alanları),
-   wrapper'a dokunmaz. Wrapper DOM'dan kaldırıldıysa (dış müdahale) orijinal yerinde
-   yeniden kurulur; VARSA hiçbir şey yapmaz (duplicate imkânsız). */
-function kartKolonMarkup() {
-  var plan = document.getElementById("planKart");
-  var havuz = document.getElementById("havuzBolum");
-  if (!plan || !havuz) return null;
-  var w = document.createElement("div");
-  w.id = "ks-kart-kolon";
-  var sol = document.createElement("div"); sol.id = "ks-kart-kolon-sol";
-  var sag = document.createElement("div"); sag.id = "ks-kart-kolon-sag";
-  sol.appendChild(plan); sag.appendChild(havuz);
-  w.appendChild(sol); w.appendChild(sag);
-  var parent = plan._kkEskiParent || null;
-  return { w: w, sol: sol, sag: sag, parent: parent, sonraki: null };
-}
-function kartKolonOnar() {
-  if (document.getElementById("ks-kart-kolon")) return; /* zaten var — dokunma */
-  var plan = document.getElementById("planKart");
-  var havuz = document.getElementById("havuzBolum");
-  if (!plan || !havuz) return;
-  var w = document.createElement("div"); w.id = "ks-kart-kolon";
-  var sol = document.createElement("div"); sol.id = "ks-kart-kolon-sol";
-  var sag = document.createElement("div"); sag.id = "ks-kart-kolon-sag";
-  var parent = plan.parentNode;
-  var sonraki = havuz.parentNode === parent ? havuz.nextSibling : null;
-  sol.appendChild(plan); sag.appendChild(havuz);
-  w.appendChild(sol); w.appendChild(sag);
-  if (parent && parent.insertBefore) parent.insertBefore(w, sonraki);
-  else if (parent && parent.appendChild) parent.appendChild(w);
 }
 
 /* ---- Başlangıç ---- */

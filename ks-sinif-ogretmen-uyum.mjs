@@ -8,7 +8,7 @@ const sha = (s) => createHash("sha256").update(s).digest("hex");
 const app = readFileSync("app.js", "utf8");
 const ekders = readFileSync("ek-ders.js", "utf8");
 const html = readFileSync("index.html", "utf8");
-const KNOWN_HTML = "fcc4abc0c54a6c3e597f4c282592de924eefa5c6ffb31844b4791e22e93295bb"; /* referans; yalnız uyarı amaçlı değil — hash farklıysa başkası dokundu */
+const KNOWN_HTML = "ab93857339628aec7db0842db217b8e614c0f0ede2de5cb93b9fe500fc2a5cb8"; /* referans; yalnız uyarı amaçlı değil — hash farklıysa başkası dokundu */
 const KNOWN_EKDERS = "662ec4f1cffc1bb0b7882f876bcf0de581925139f066589a6de0d35862b4aaf7"; /* güncel checkout hash — bu dilim ek-ders.js'e dokunmaz */
 
 let pass = 0, fail = 0;

@@ -26,7 +26,7 @@ t("app.js renderYonetim markup'ı kart-içi donemSeciciKutu üretiyor", (appRend
 t("ek-ders.js override markup'ı donemSeciciKutu ÜRETMEZ (root cause)", !(ekKaynak.includes('id="donemSeciciKutu"')));
 t("ek-ders.js override yb.innerHTML'i bir kez yazıyor (silici atama)", (ekKaynak.match(/\$\("yonetimBolum"\)\.innerHTML =/g) || []).length === 1);
 t("app.js override karşıt kanıtı: donemHostOnar host'u yb KARDEŞİ olarak kurar", (appKaynak.match(/\(yb\.parentNode \|\| document\.body\)\.insertBefore\(yeni, yb\)/g) || []).length === 1);
-t("app.js sec() alt sekme değişiminde onarım planlıyor", appKaynak.includes("function sec(ad) { ui.sekme = ad; renderYonetim(); donemOnarimPlanla(); }"));
+t("app.js sec() alt sekme değişiminde onarım planlıyor", appKaynak.includes("function sec(ad) { ui.sekme = ad; renderYonetim(); donemOnarimPlanla(); kartKolonOnar(); }"));
 
 /* ---- B) Gerçek DOM mock (D0 semantiğiyle aynı) ---- */
 class MutationObserverSim {

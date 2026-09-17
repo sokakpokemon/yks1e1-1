@@ -182,13 +182,13 @@ const idxDersler = html.indexOf('id="derslerBolum"');
   /* 4) Eski süit sayıları — test.mjs'te düşüş yok */
   {
     const testKaynak = readFileSync("test.mjs", "utf8");
-    /* test.mjs güncellenmiş durumda: 30 eski + 1 yeni = 31 süit */
+    /* test.mjs güncellenmiş durumda: 31 eski + 1 yeni = 31 süit */
     const suits = testKaynak.match(/const suites = \[([^\]]*)\]/);
     t("test.mjs suites listesi bulunuyor", !!suits);
     const liste = suits ? suits[1].match(/"([^"]+)"/g).map((s) => s.replace(/"/g, "")) : [];
     t("ks-kart-sirasi.mjs test.mjs'te tam 1 kez", liste.filter((x) => x === "ks-kart-sirasi.mjs").length === 1);
     t("mevcut 30 süit listede korundu", ["ks-harness.mjs", "ks-grup-istegi.mjs", "ks-sinif-prog-etiket.mjs"].every((x) => liste.includes(x)));
-    t("süit toplam sayısı 31 (30 eski + 1 yeni)", liste.length === 31, liste.length);
+    t("süit toplam sayısı 32 (31 eski + 1 yeni)", liste.length === 32, liste.length);
   }
 
   console.log(fail === 0 ? "HEPSİ GEÇTİ" : "BAŞARISIZ");

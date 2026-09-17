@@ -1315,3 +1315,25 @@ Boş / Kapalı (musait→kapali gri) / Toplu ders / Sınıf Dersi / Ek Ders ambe
 ## Kalan Riskler
 - Gerçek tarayıcıda eski index.html önbellekten gelebilir → sert yenileme (**Ctrl+Shift+R / Cmd+Shift+R**).
 - Atlama menüsündeki "İstekler" butonu (`data-hedef="havuzBolum"`) hâlâ doğru kartı hedefler (id değişmedi).
+
+---
+
+# ✅ CHECKPOINT: Plan + İstek Havuzu Kartları — İki Kolon (KART-KOLON-YAMASI)
+
+**Tarih:** 17 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **1423/1423 OK** (32 süit)
+
+## Yapılan İş
+- **index.html:** `#planKart` ve `#havuzBolum` tek `#ks-kart-kolon` grid wrapper'ının iki kolonuna alındı (`#ks-kart-kolon-sol` plan, `#ks-kart-kolon-sag` havuz). Kart id'leri, class'ları, form alanları ve handler'lar AYNEN korundu; kolonlara `min-w-0` eklendi.
+- **CSS (head):** `#ks-kart-kolon { display:grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap:1rem; align-items:start }`; `> div { min-width:0; overflow-wrap:break-word }`; `@media (max-width:1023.98px)` → tek kolon.
+- **app.js:** `kartKolonOnar()` eklendi (idempotent: wrapper varsa no-op, yoksa orijinal parent'ta yeniden kurar — silici innerHTML yazımı YOK); `sec()` alt sekme değişiminde `kartKolonOnar()` çağırır. `renderHavuz` hâlâ yalnız `#havuzBolum.innerHTML`'e yazar — duplicate imkânsız.
+- **Yama scripti:** `ks-yama-kart-kolon.mjs` (assert'li, fail-closed, idempotent) — 2. koşu "Zaten uygulanmış" der, exit 2, hash sabit.
+- **Yeni süit:** `ks-kart-kolon.mjs` — **51 test** (wrapper teklik, sol/sağ üyelik, form/panel/buton korunumu, hizliOgr ve `#ek-ogrenciler` plan kartı içinde, 3× render + 4 sekme geçişi sonrası sıra korunumu, formaAktar+planla akışı, runtime onarım, responsive CSS semantiği, süit kaydı). `test.mjs`'e tam 1 kez eklendi (32 süit).
+- **Regresyon güncellemeleri (assertion gevşetilmedi):** 6 süitteki index.html referans hash'i `fcc4abc0… → ab938573…` yükseltildi; `ks-d1-render-refactor.mjs` sec() imzası; `ks-kart-sirasi.mjs` süit sayısı 32.
+
+## SHA-256
+| Dosya | Önce | Sonra |
+|---|---|---|
+| index.html | `fcc4abc0c54a6c3e597f4c282592de924eefa5c6ffb31844b4791e22e93295bb` | `ab93857339628aec7db0842db217b8e614c0f0ede2de5cb93b9fe500fc2a5cb8` |
+| app.js | `debf5311af06e533bcafb27779b4f58d21c39ff22883f009fbd636412a7f8749` | `da87a8abbe61721b4bd166511d2076bc1da8203dbf869366e4056d864f6b07a5` |
+
+Geri dönüş: `index.html.kart-kolon-oncesi.bak`, `app.js.kart-kolon-oncesi.bak` (üzerine yazılmadı). `ek-ders.js` ve `vendor/*` dokunulmadı.

@@ -677,7 +677,7 @@ function loadDB() {
 }
 var DB = loadDB() || seedDB();
 kimlikleriTamamla(DB); /* KİMLİK-YAMASI: seed/restore sonrası eksik kimlikler ilk açılışta kapanır ve kaydedilir */
-sinifOgrtUyumOnar(DB, true); /* SINIF-OGRT-UYUM-YAMASI + GENISLETME: boot'ta TAM onarım (tüm dönemler) */
+sinifOgrtUyumOnar(DB); /* SINIF-OGRT-UYUM-YAMASI: sinifProg ↔ avail.sinif uyumu boot'ta kapanır (idempotent) */
 
 /* SINIF-OGRT-UYUM-YAMASI: Sınıf programı ↔ öğretmen haftalık program uyumu (tek kaynaklı yazım, idempotent).
    Kural: öğretmenin avail.sinif["G-K"]=sınıfAd kaydı VARSA, aynı G-K o sınıfın aktif dönem
@@ -685,16 +685,10 @@ sinifOgrtUyumOnar(DB, true); /* SINIF-OGRT-UYUM-YAMASI + GENISLETME: boot'ta TAM
    mevcut hücreler ASLA silinmez/taşınmaz; isimle tahmin yapılmaz (sınıf adı kayıttan gelir).
    avail.musait (Kapalı) ile çakışan öğretmen kayıtları atlanır — ders sessizce kaybolmaz,
    duzeltmeBul'un mevcut 'musait' uyarı davranışı korunur. Dönüş: { e: eklenen }. */
-function sinifOgrtUyumOnar(db, tumDonemler) {
-  /* SINIF-PROG-UYUM-GENISLETME: tumDonemler=true → onarım HER hedef dönemde çalışır (grid DB.sinifProg[ad] =
-     sinifProgDonemler[hedef] okuduğu için avail.sinif kaynaklı slotlar her aktif dönemin
-     canonical haritasına yazılmalı). normalize/loadDB yolu tumDonemler=false geçer ve
-     dönemli programlara DOKUNMAZ (mevcut sözleşme korunur). boot + dönem geçişi/oluşturma
-     TAM onarım yapar. Kaynak hâlâ yalnızca ogretmen avail.sinif; mevcut dolu hücreler
-     silinmez/taşınmaz; duplicate push YOK. */
+function sinifOgrtUyumOnar(db) {
   if (!db || typeof db !== "object" || !db.sinifProg || typeof db.sinifProg !== "object") return { e: 0 };
   var hedef = (typeof db.sinifProgDonemId === "string" && db.sinifProgDonemId) || db.aktifDonemId || DONEM_ILK_ID;
-  if (!tumDonemler && hedef !== DONEM_ILK_ID) return { e: 0 }; /* normalize/loadDB yolu: dönemli programlara dokunmaz */
+  if (hedef !== DONEM_ILK_ID) return { e: 0 }; /* SINIF-OGRT-UYUM-YAMASI: yalnız ilk dönem — başka döneme sınıf dersi uydurma YOK */
   if (!db.sinifProgDonemler || typeof db.sinifProgDonemler !== "object") db.sinifProgDonemler = {};
   if (!db.sinifProgDonemler[hedef] || typeof db.sinifProgDonemler[hedef] !== "object") db.sinifProgDonemler[hedef] = db.sinifProg;
   var prog = db.sinifProgDonemler[hedef];

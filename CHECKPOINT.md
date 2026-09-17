@@ -1249,3 +1249,36 @@ d3a8941d…  test.mjs.birebir-gorunum-oncesi.bak
 
 - `normalize/loadDB` yolu bilinçli olarak dönemli programlara dokunmaz; yalnız boot ve dönem oluşturma/aksiyon yolları tam onarım kapsıyor (sözleşme gereği).
 - Gerçek tarayıcıda eski app.js önbellekten gelebilir → **sert yenileme (Ctrl+Shift+R / Cmd+Shift+R)**.
+
+---
+
+# ✅ CHECKPOINT: Sınıf Programı Grid — DV Etiketi Kaldırıldı, Ders+Öğretmen Adı Gösterimi
+
+**Tarih:** 17 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **1338/1338 OK** (1317 eski + 21 yeni)
+
+## Teşhis (salt-okuma, kanıtlı)
+- DV kaynağı: `app.js` `gridTablo()` içindeki `durum === "var"` dalında **sabit etiket** (KISA_KOD/ders alanı değil) — yalnız **Sınıf Toplu Ders Programı** gridinde (öğrenci sekmesi) görünür.
+- Reverse lookup (aktif dönem `donem-2026-2027`, seed): `aktifDonem + sinifAd + gun-kod` → `DB.ogretmenler[].avail.sinif[key] === sinifAd` → öğretmen `ad` + `brans` → `DERS[brans].ad`. 50 dolu slot: 33 çözümlenir (22'si ÇOKLU öğretmen), 17'si kaynaksız.
+- `DB.sinifProg` slot anahtarları yalnız `gun-kod` string — kayıtta ders/öğretmen alanı yok; isimler yalnız `avail.sinif` kaydından gelir.
+
+## Yama (app.js — baştan yazma YOK, ks-yama-dv-etiket.mjs idempotent)
+1. `gridTablo(onclickOnce, avail, tip, sinifAd)` — 4. parametre (yalnız sınıf çağrısı iletir; öğretmen grid'i etkilenmez).
+2. Sınıf grid çağrısı `ui.sinifAd` iletir.
+3. **Yeni `dvSlotEtiketleri(sinifAd, key)`** — authoritative eşleşmeleri döner; `sinifProgDonemler[aktifDonemId()]` aktif dönem filtresi; uydurma isim YOK.
+4. `DV` etiketi kaldırıldı → `Ders Adı - Öğretmen Adı` eşleşmeleri `truncate + min-w-0 + max-w-[72px] + leading-tight` span'da; kaynak yoksa hücre yeşil ama metinsiz (fallback uydurma YOK).
+5. Title'a tam eşleşmeler ("Toplu ders — MATEMATİK - X · FİZİK - Y"); `overflow-hidden` ile taşma engeli.
+- Çoklu eşleşme: HEPSİ " · " ile birleşik listelenir (keyfi tek seçim YOK).
+
+## Korunanlar
+Boş / Kapalı (musait→kapali gri) / Toplu ders / Sınıf Dersi / Ek Ders amber / birebir-grup hücre dalları; Pazar 6 indeksi ve 0=Pzt…6=Paz gün-kod kuralı; `sinifProgDonemler` identity-rebind; öğretmen müsaitlik grid'i; aktif olmayan dönem verisi gösterilmez. `index.html` (5b691039…), `ek-ders.js` (662ec4f1…), `vendor/*` dokunulmadı.
+
+## Yedek ve SHA-256
+| Dosya | SHA-256 |
+|---|---|
+| app.js.dv-etiket-oncesi.bak (256.275 B, yama öncesi birebir) | `0d7861560b1ac90f3de21c7bf4659aa31b077057457f4e17c466e902ffb5fdcb` |
+| app.js (sonra) | `debf5311af06e533bcafb27779b4f58d21c39ff22883f009fbd636412a7f8749` |
+
+- Yama idempotent: 2. koşu "Zaten uygulanmış" → exit 2, dosya değişmez.
+- Doğrulama: `node --check app.js / ek-ders.js / test.mjs` OK · `node test.mjs` → **1338/1338 OK** (30 süit).
+- Yeni süit: `ks-sinif-prog-etiket.mjs` (21 test) — `test.mjs`'te tam 1 kez.
+- Kalan riskler: kaynaksız 17 slot hücrede isimsiz kalır (veri girilince otomatik dolar); çoklu eşleşmede metin tooltip'te tam okunur, hücrede kırpılır.

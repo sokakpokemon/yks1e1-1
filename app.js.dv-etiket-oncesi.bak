@@ -1376,27 +1376,7 @@ function ogretmenTab() {
     "</div>" +
     '<div class="xl:col-span-8">' + grid + "</div></div>";
 }
-
-/* DV-ETIKET-YAMASI: dolu sınıf slotu için authoritative "Ders Adı - Öğretmen Adı" eşleşmeleri.
-   aktifDonem + sinifAd + gun + kod → avail.sinif → ogretmen → branş → ders adı.
-   Kaynak yoksa [] döner — hücrede uydurma isim YAZILMAZ. */
-function dvSlotEtiketleri(sinifAd, key) {
-  var sonuc = [];
-  try {
-    var prog = (DB.sinifProgDonemler && DB.sinifProgDonemler[aktifDonemId()] && DB.sinifProgDonemler[aktifDonemId()][sinifAd]) || DB.sinifProg[sinifAd] || [];
-    if (prog.indexOf(key) < 0) return sonuc; /* yalnız aktif dönemin dolu slotu */
-    (DB.ogretmenler || []).forEach(function (t) {
-      if (!t || !t.avail || !t.avail.sinif || t.avail.sinif[key] !== sinifAd) return;
-      var ad = String(t.ad || "").trim();
-      if (!ad) return; /* uydurma etiket yok */
-      var D = DERS[t.brans];
-      var dersAd = D && D.ad ? D.ad : "";
-      sonuc.push(dersAd ? dersAd + " - " + ad : ad);
-    });
-  } catch (e) { return []; }
-  return sonuc;
-}
-function gridTablo(onclickOnce, avail, tip, sinifAd) { /* DV-ETIKET-YAMASI */
+function gridTablo(onclickOnce, avail, tip) {
   var h = "<thead><tr><th class='sticky left-0 bg-slate-50/80'></th>";
   for (var g = 0; g < 7; g++) h += '<th class="py-1.5 text-[10.5px] font-bold text-slate-500 uppercase tracking-wide">' + GUN_KISA[g] + "</th>";
   h += "</tr></thead><tbody>";
@@ -1413,12 +1393,12 @@ function gridTablo(onclickOnce, avail, tip, sinifAd) { /* DV-ETIKET-YAMASI */
       var baslik = GUN_KISA[g2] + " " + saatYazi;
       if (durum === "sinif") { cls += "bg-amber-200 border-amber-300 hover:bg-amber-300"; baslik += " · Sınıf Dersi"; }
       else if (durum === "kapali") { cls += "bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-400 opacity-70"; baslik += " · Kapalı"; } /* KAPALI-GORUNUM-YAMASI: kapalı hücre soluk/gri — tıklanabilir kalır */
-      else if (durum === "var") { cls += "bg-blue-200 border-blue-300 hover:bg-blue-300 overflow-hidden"; var es5 = sinifAd ? dvSlotEtiketleri(sinifAd, key) : []; baslik += " · Toplu ders" + (es5.length ? " — " + es5.join(" · ") : ""); } /* DV-ETIKET-YAMASI */
+      else if (durum === "var") { cls += "bg-blue-200 border-blue-300 hover:bg-blue-300"; baslik += " · Toplu ders"; }
       else { cls += "bg-white border-slate-200 hover:border-teal-300 hover:bg-teal-50"; baslik += " · Boş"; }
       h += '<td class="p-0.5"><button class="' + cls + '" title="' + baslik + '" onclick="' + onclickOnce + "," + g2 + "," + ks.no + ')">' +
         (durum === "sinif" ? '<span class="text-[7.5px] font-extrabold text-amber-700/80 leading-tight whitespace-nowrap">' + esc((avail.sinif[key] || "SD").substring(0, 14)) + '</span>' :
          durum === "kapali" ? "" : /* KAPALI-GORUNUM-YAMASI: "K" kırmızı etiketi kaldırıldı — Kapalı bilgisi title'da */
-         durum === "var" ? (function () { var es = dvSlotEtiketleri(sinifAd, key); return es.length ? '<span class="block min-w-0 max-w-[72px] mx-auto px-0.5 text-[7.5px] font-extrabold text-blue-700/80 leading-tight truncate text-left">' + esc(es.join(" · ")) + '</span>' : ""; })() : "") + /* DV-ETIKET-YAMASI: DV kaldırıldı; kaynaklı eşleşme yoksa uydurma YOK */
+         durum === "var" ? '<span class="text-[8.5px] font-extrabold text-blue-600/60">DV</span>' : "") +
         "</button></td>";
     }
     h += "</tr>";
@@ -1581,7 +1561,7 @@ function ogrenciTab() {
         '<span class="flex items-center gap-3 text-[10.5px] font-semibold text-slate-500">' +
           '<span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded border border-slate-200 bg-white inline-block"></span> Boş</span>' +
           '<span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-200 border border-blue-300 inline-block"></span> Toplu ders var</span></span></div>' +
-      gridTablo("togSinif('" + esc(ui.sinifAd).replace(/'/g, "\'") + "'", program, "sinif", ui.sinifAd) + "</div>"; /* DV-ETIKET-YAMASI */
+      gridTablo("togSinif('" + esc(ui.sinifAd).replace(/'/g, "\'") + "'", program, "sinif") + "</div>";
   } else {
     prog = '<div class="rounded-2xl border border-dashed border-slate-200 flex items-center justify-center text-[12.5px] text-slate-400 py-16 text-center px-6">Henüz sınıf yok.<br>Yukarıdaki alandan yeni sınıf ekleyin.</div>';
   }

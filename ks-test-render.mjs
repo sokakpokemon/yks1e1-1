@@ -44,7 +44,7 @@ let api;
 try {
   api = new Function(scripts + `
     yenile();
-    return { DB, KISA_KOD, gridTablo, gunlukTablo, renderDersler, duzeltmeBul, GUN_KISA, ui, saatEtiket };
+    return { DB, KISA_KOD, gridTablo, gunlukTablo, renderDersler, duzeltmeBul, GUN_KISA, ui, saatEtiket, dvSlotEtiketleri };
   `)();
   console.log("1) index.html boot + yenile:");
   t("boot ve ilk render hatasız", true);
@@ -96,7 +96,7 @@ try {
     /* ek-ders.js IIFE gövdesini çalıştır: anahtar fonksiyonları global yap */
     ${readFileSync("ek-ders.js","utf8")}
     /* IIFE içindeki fonksiyonlar closure'da; renderYonetim override edildi. ekPlanla/ekDuzeltmeBul window'a bağlanmış olmalı */
-    return { DB, ekPlanla: typeof window.ekPlanla === "function" ? window.ekPlanla : null, renderYonetim };
+    return { DB, ekPlanla: typeof window.ekPlanla === "function" ? window.ekPlanla : null, renderYonetim, dvSlotEtiketleri: typeof dvSlotEtiketleri === "function" ? dvSlotEtiketleri : null };
   `)();
   t("ek-ders.js boot hatasız", true);
   /* ek-ders.js fonksiyonları IIFE'de local olabilir; boot hatasızlığı yeterli,

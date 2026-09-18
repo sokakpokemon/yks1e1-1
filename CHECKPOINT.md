@@ -1545,3 +1545,59 @@ identity-rebind · öğrenci/öğretmen/dönem korunumu.
 - `node test.mjs` → **1617/1617 OK** (37 süit: baseline 36 aynen + yeni 23).
 - Yama 2. koşu: **exit 2 "Zaten uygulanmış"**, dosyaya dokunmuyor.
 - Tarayıcıda görmek için **Ctrl+Shift+R** (hard refresh).
+
+---
+
+# ✅ CHECKPOINT: Stale avail.sinif Temizliği — Opsiyon B (46 Kayıt)
+
+**Tarih:** 18 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **1617/1617 OK**
+
+## Kapsam (kullanıcı onaylı, preflight raporuna dayalı)
+
+Kaynak: `program-guncel.xml` (SHA `73cf1ba8…`) → doğrulanmış parse `ks-excel-k-veri.json` (K=309, DERS=243) + DB `ks-excel-k-import-db.json` (EXCEL-K-IMPORT-YAMASI sonrası hâl).
+
+- **Silenen:** TAM 46 stale `avail.sinif` kaydı (Excel'de hücre BOŞ; Pzt–Cmt, yalnız Excel slot 1–4 = G-1..G-4 kodları).
+- **Kod eşleştirmesi (onaylı):** Excel slot 1–4 → G-1..G-4 · slot 5 = ÖĞLE ARASI (kod yok) · slot 6–12 → G-5..G-11. Bu nedenle **X-5 kayıtları Excel'in 6. slotudur ve GERÇEK DERSTİR** → 23 X-5 kaydına + ilgili sinifProg slotlarına DOKUNULMADI.
+
+## Korunanlar (assert'li)
+
+| Kural | Sonuç |
+|---|---|
+| X-5 (mola-slotu) değişiklik adayı | 0 — 23 kayıt birebir korundu |
+| Cuma (4-*) / Pazar (6-*) | 3 kayıt korundu, aday 0 |
+| SELİNA KUTLU (Excel bloğunda yok) | 4 kayıt korundu, aday 0 |
+| sinifProg | JSON birebir aynı (yazım öncesi/sonrası stringify eşitliği assert edildi) |
+| avail.musait | birebir aynı (34 G-K kaydı) |
+| 4 birleşik hücre (FİKRİYE 0-5/0-11, NİHAT 1-5/1-11) | sinifProg çoklu sınıf kayıtları değişmedi |
+| Excel'de bulunan ders eksigi (sinifProg, gün 4/6 hariç) | 0 |
+| Duplicate "12 SAY CAL" | 0 (sinifIds'te tek; 11 SAYCAL ayrı) |
+| Yeni ders / K kaydı | üretilmedi |
+
+## Atomiklik ve Dosyalar
+
+- Staging deep-copy üzerinde değişiklik; tüm savunma assertleri geçmeden yazım yok.
+- **Yedek (yeni dosya, üzerine yazma yok):** `ks-stale-temizlik-oncesi.yedek.json` — 37.103 bayt, SHA-256 `5db76c8eb4ec8868c13e0da53038c53d468482ced5140763a7bb551fc6aa67d6`
+- **Snapshot:** `ks-stale-temizlik-db.json` (yeni dosya; `ks-excel-k-import-db.json` yedek olarak bırakıldı).
+- **Kullanıcı aksiyonu:** `ks-stale-temizlik-db.json` içeriğini uygulamanın **Yedek Yükle** akışıyla (Ayarlar → Yedekten Yükle / `yksOto_arsiv_v1`) yüklemeli; aksi halde tarayıcı localStorage'ı eski hâlde kalır.
+- Yama scripti: `ks-yama-stale-temizlik.mjs` (idempotent — 2. koşum exit 2 "Zaten uygulanmış"; flag: `ks-stale-temizlik-uygulandi.flag`, marker: `DB.ayarlar["STALE-TEMIZLIK-YAMASI"]`).
+- `app.js`, `ek-ders.js`, `test.mjs`, mevcut test süitleri: **değiştirilmedi** (`node --check` OK).
+
+## Silinen 46 Kayıt
+
+| Öğretmen | Slotlar (sinif) |
+|---|---|
+| SONER AÇIKGÖZ | 0-1 (MEZUN SAY 1), 1-1 (MEZUN SAY 2) |
+| MEHMET ŞAŞAR | 1-1 (MEZUN EA 2), 2-1 (12 SAY 1), 3-1 (12 SAY 2) |
+| TAHSİN ASLAN | 2-1 (12 SAY CAL), 3-1 (12 EA 1) |
+| MİNE GÜRKAN | 0-1 (12 DİL), 1-1 (11 SAY 1), 2-1 (11 SAY 2), 3-1 (11 SAY 3) |
+| MERVE GEREK | 0-1 (11 SAY 3), 1-1 (11 SAYCAL), 3-1 (11 EA 1) |
+| SALİM URTİMUR | 0-1 (11 EA 1), 1-1 (10.SINIF), 2-1 (9.SINIF), 3-1 (MEZUN SAY 1) |
+| MUSTAFA GÜRKAN | 0-1 (MEZUN SAY 1), 1-1 (MEZUN SAY 2), 2-1 (MEZUN SAY 3), 3-1 (MEZUN EA 1) |
+| BELGİN ÇOLAK | 0-1 (12 SAY 2), 1-1 (12 SAY CAL), 3-1 (12 DİL) |
+| KARDELEN ASLAN | 0-1 (12 DİL), 1-1 (11 SAY 1), 2-1 (11 SAY 2), 3-1 (11 SAY 3) |
+| ŞAHİN DOĞANAY | 0-1 (11 EA 1), 3-1 (9.SINIF) |
+| EREN BİLGİLİ | 0-1 (MEZUN SAY 1), 1-1 (MEZUN SAY 2) |
+| FATMA KURT | 0-1 (MEZUN EA 1), 1-1 (MEZUN EA 2), 2-1 (12 SAY 1) |
+| FİKRİYE KIYAR | 1-1 (12 SAY CAL), 2-1 (12 EA 1), 3-1 (12 DİL) |
+| NİHAT KANARIĞ | 0-1 (12 DİL), 2-1 (11 SAY 2), 3-1 (11 SAY 3) |
+| MERT ASİL | 0-1 (11 SAY 3), 1-1 (11 SAYCAL), 2-1 (11 SAYISAL FEN), 3-1 (11 EA 1) |

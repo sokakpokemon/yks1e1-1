@@ -3929,44 +3929,15 @@ function waAc() {
         '<div class="flex-1 min-w-0"><b class="text-[13px] text-slate-800 block truncate">' + esc(s.ad) + "</b>" +
         '<span class="text-[11px] text-slate-400 font-semibold">' + s.n + " ders · " + pencereAdi() + "</span></div>" +
         '<button onclick="waGonder(\'' + s.id + '\')" class="rounded-full bg-green-500 hover:bg-green-600 text-white text-[11.5px] font-bold px-3.5 py-2 shadow-sm transition-colors"><i class="fa-brands fa-whatsapp mr-1"></i>Gönder</button>' +
-        '<button onclick="waOnizle(\'' + s.id + '\')" title="Mesaj önizlemesi" class="w-8 h-8 rounded-full border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-300 transition-colors"><i class="fa-regular fa-eye text-[12px]"></i></button>' +
         '<button onclick="waKopyalaMesaj(\'' + s.id + '\')" title="Mesaj metnini kopyala" class="w-8 h-8 rounded-full border border-slate-200 text-slate-400 hover:text-teal-600 hover:border-teal-300 transition-colors"><i class="fa-regular fa-copy text-[12px]"></i></button></div>';
     }).join("");
     var telVarMi = dizi.some(function(x){ var o = DB.ogrenciler.find(function(y){return y.id===x.id;}); return o && o.tel; });
     if (!telVarMi) icerik += '<p class="text-[10.5px] text-slate-300 mt-3 text-center">Öğrenciye telefon kaydedilmedi — WhatsApp’ta göndermek istediğiniz kişiyi seçersiniz. Telefon eklemek için Öğrenciler sekmesini kullanın.</p>';
   }
   $("waIcerik").innerHTML = icerik;
-  /* WA-ONIZLEME-YAMASI: modal her açılışta onizleme panelini placeholder'a sıfırla (duplicate yok, tek panel) */
-  waOnizlemeSifirla();
   $("waModal").classList.remove("hidden");
 }
 function waKapat() { $("waModal").classList.add("hidden"); }
-
-/* WA-ONIZLEME-YAMASI: Ortak tekil onizleme paneli (id sabit; mesaj metni ASLA burada yeniden üretilmez,
-   yalnızca ogrenciMesajMetni(ogrenciId) çağrısıyla alınır ve textContent ile basılır —
-   böylece emoji, satır sonları ve literal { } karakterleri birebir, HTML enjeksiyonu imkânsız). */
-function waOnizle(ogrenciId) {
-  var panel = document.getElementById("waOnizlemePanel");
-  var metinKutu = document.getElementById("waOnizlemeMetin");
-  var baslik = document.getElementById("waOnizlemeBaslik");
-  if (!panel || !metinKutu) return;
-  var o = DB.ogrenciler.find(function (x) { return x.id === ogrenciId; });
-  var metin = ogrenciMesajMetni(ogrenciId); /* waGonder/waKopyalaMesaj ile BİREBİR aynı kaynak */
-  if (baslik) baslik.textContent = o ? o.ad : "";
-  if (!metin) {
-    metinKutu.textContent = "Bu öğrencinin seçili dönemde dersi yok.";
-    return;
-  }
-  metinKutu.textContent = metin; /* innerHTML KULLANILMAZ */
-}
-function waOnizlemeSifirla() {
-  var panel = document.getElementById("waOnizlemePanel");
-  var metinKutu = document.getElementById("waOnizlemeMetin");
-  var baslik = document.getElementById("waOnizlemeBaslik");
-  if (!panel || !metinKutu) return;
-  if (baslik) baslik.textContent = "";
-  metinKutu.textContent = "Önizlemek için bir öğrenci seçin";
-}
 function waGonder(ogrenciId) {
   var metin = ogrenciMesajMetni(ogrenciId);
   if (!metin) { toast("Bu öğrencinin seçili dönemde dersi yok.", "uyari"); return; }

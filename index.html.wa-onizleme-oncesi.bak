@@ -322,14 +322,6 @@
       <button onclick="waKapat()" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div id="waIcerik" class="p-3 max-h-[60vh] overflow-y-auto"></div>
-      <!-- WA-ONIZLEME-YAMASI: ortak TEK onizleme paneli (id'ler sabit ve tekillik sırasında korunur) -->
-      <div id="waOnizlemePanel" class="mx-3 mb-3 rounded-xl border border-indigo-100 bg-indigo-50/60">
-        <div class="flex items-center justify-between px-3.5 pt-2.5 pb-1.5">
-          <span class="text-[10.5px] font-extrabold uppercase tracking-wide text-indigo-500"><i class="fa-regular fa-eye mr-1"></i>Mesaj Önizlemesi</span>
-          <span id="waOnizlemeBaslik" class="text-[11px] font-bold text-indigo-700 truncate max-w-[60%]"></span>
-        </div>
-        <pre id="waOnizlemeMetin" class="mx-3 mb-3 rounded-lg bg-white border border-indigo-100 px-3 py-2.5 text-[11.5px] leading-relaxed text-slate-700 whitespace-pre-wrap font-sans overflow-x-auto">Önizlemek için bir öğrenci seçin</pre>
-      </div>
   </div>
 </div>
 

@@ -1447,3 +1447,55 @@ yama A ile birlikte B de düzeltildi.
 - Yeni app.js SHA-256: `93b2207ff521609e328f85d480f2a0336e3318b335075c6965c3e7616572d8fa`.
 - `index.html` (`ab938573…`) ve `ek-ders.js` (`3d2dd38f…`) DEĞİŞMEDİ.
 - Tarayıcıda görmek için Ctrl+Shift+R (hard refresh).
+
+---
+
+# ✅ CHECKPOINT: WhatsApp Modal — Ortak Mesaj Önizleme Paneli (WA-ONIZLEME-YAMASI)
+
+**Tarih:** 18 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **1593/1593 OK** (1558 eski + 35 yeni)
+
+## Tasarım (değiştirilmedi, uygulandı)
+
+Per-öğrenci onizleme kutusu YOK. TEK ortak panel:
+
+- Her öğrenci satırında **"Önizle" (👁)** butonu — `waAc()` satır üretimine Gönder/Kopyala arasına eklendi (`waOnizle(id)` onclick; `s.id` kaynaklı, kendi satırına).
+- Panel modal içinde **tek yerde** (`#waIcerik`'in hemen altında, index.html statik markup): `#waOnizlemePanel` + `#waOnizlemeBaslik` (öğrenci adı) + `#waOnizlemeMetin` (`<pre class="whitespace-pre-wrap">`).
+- Öğrenci seçilmeden önce placeholder: **"Önizlemek için bir öğrenci seçin"** — `waAc()` her açılışta `waOnizlemeSifirla()` ile sıfırlar (modal kapanıp açılınca ikinci kopya/duplicate OLUŞMAZ; id sabit ve tek).
+
+## Onizleme kuralları (kanıtlandı, ks-wa-onizleme.mjs)
+
+- Mesaj metni `waOnizle()` içinde **yalnızca `ogrenciMesajMetni(ogrenciId)` çağrısıyla** alınır; şablon kodu kopyalanmaz, metin ikinci kez üretilmez → `waGonder()`'in göndereceği string ile **birebir aynı**.
+- `textContent` ile basılır, **innerHTML ATAMASI YOK** → emoji (👋/📚/📅), satır sonları ve literal `{ }` karakterleri birebir; HTML enjeksiyonu imkânsız (`<b>` literal görünür, markup yorumlanmaz).
+- **DEĞİŞMEDİ:** `waUrl/waAc/waGonder/waSatir/waKopyalaMesaj/geciciKopyala/kopyalaMetin` fonksiyonları, `encodeURIComponent` kullanımı, newline davranışı, grup 👥 satırı ve birebir mesaj kuralları.
+
+## Değişen Dosyalar (baştan yazma YOK; hedefli bölge yaması)
+
+| Dosya | Önce (SHA-256) | Sonra (SHA-256) | Boyut |
+|---|---|---|---|
+| app.js | `93b2207ff521…` | `6410bb0c58f0…` | 269.643 B (4.190 satır) |
+| index.html | `ab9385733962…` | `7ee493bae3d1…` | 22.612 B |
+| test.mjs | `f4787b9eda8d…` | `96c7dd0d7387…` | 2.256 B |
+
+app.js: Önizle butonu (L3932), `waAc` sıfırlama (L3939-3940), `waOnizle` + `waOnizlemeSifirla` (L3948-3969). index.html: panel markup (`waIcerik` altında). test.mjs: süit kaydı 1 kez (36 süit).
+
+## Hash freeze testleri yenilendi (assert gevşetilmedi)
+
+index.html hash'i değiştiği için bilinen-iyi referanslar güncellendi (eski hash → `7ee493ba…`):
+`ks-donem-ilk.mjs`, `ks-donem-olusturma.mjs`, `ks-ek-ders-donem.mjs`, `ks-ekders-ozet-csv.mjs`, `ks-birebir-gorunum.mjs`, `ks-sinif-ogretmen-uyum.mjs`.
+
+## Yedek (üzerine YAZILMADI)
+
+- `app.js.wa-onizleme-oncesi.bak` — 267.921 B, SHA-256 `93b2207ff521609e328f85d480f2a0336e3318b335075c6965c3e7616572d8fa`
+- `index.html.wa-onizleme-oncesi.bak` — 21.783 B, SHA-256 `ab93857339628aec7db0842db217b8e614c0f0ede2de5cb93b9fe500fc2a5cb8`
+- `test.mjs.wa-onizleme-oncesi.bak` — 2.234 B, SHA-256 `f4787b9eda8dbf23c8eb99f95d63b7953321e1c74dcbc76d96768c40d95ea7c6`
+
+## Yeni Süit: ks-wa-onizleme.mjs — 35 test
+
+Gerçek DOM semantiği (mini-DOM, textContent/innerHTML ayrımı korunarak): modal DOM'da · panel tam 1 · her satırda Önizle (waOnizle sayısı = waGonder sayısı) · 1. öğrenci → doğru mesaj · 2. öğrenci → AYNI panel, ikinci panel yok · `ogrenciMesajMetni(id)` birebir eşitlik · newline/emoji/literal `{ }` korunumu · textContent (HTML enjeksiyon yok) · `waOnizle` innerHTML ataması yok/şablon kopyalamıyor · `waGonder/waKopyalaMesaj` kaynak + `waUrl` + `encodeURIComponent` + `geciciKopyala` korunumu · tekrar açılışta duplicate yok · tek tanım/id · süit sayısı düşmüyor.
+
+## Doğrulama
+
+- `node --check app.js / ek-ders.js / test.mjs / ks-wa-onizleme.mjs` → OK.
+- `node test.mjs` → **1593/1593 OK** (36 süit: baseline 35 aynen + yeni 35).
+- Yama 2. koşu: **exit 2 "Zaten uygulanmış"**, dosya hash'leri AYNI kaldı.
+- Tarayıcıda görmek için **Ctrl+Shift+R** (hard refresh) — eski app.js önbellekten gelmesin.

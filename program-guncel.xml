@@ -1,0 +1,1298 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Created>2015-06-05T18:19:34Z</Created>
+  <LastSaved>2026-09-18T17:09:04Z</LastSaved>
+  <Version>16.00</Version>
+ </DocumentProperties>
+ <OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">
+  <AllowPNG/>
+  <RemovePersonalInformation/>
+ </OfficeDocumentSettings>
+ <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+  <WindowHeight>13440</WindowHeight>
+  <WindowWidth>23010</WindowWidth>
+  <WindowTopX>795</WindowTopX>
+  <WindowTopY>2040</WindowTopY>
+  <ProtectStructure>False</ProtectStructure>
+  <ProtectWindows>False</ProtectWindows>
+ </ExcelWorkbook>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Bottom"/>
+   <Borders/>
+   <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="11" ss:Color="#000000"/>
+   <Interior/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s16">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+   <Font ss:FontName="Calibri" x:CharSet="162" x:Family="Swiss" ss:Size="11" ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#FFF2CC" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s17">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+   <Font ss:FontName="Calibri" x:CharSet="162" x:Family="Swiss" ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#FFF2CC" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s18">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Font ss:FontName="Calibri" x:CharSet="162" x:Family="Swiss" ss:Size="11" ss:Color="#000000" ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s19">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+   <Font ss:FontName="Calibri" x:CharSet="162" x:Family="Swiss" ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#DDEBF7" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s20">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+   <Font ss:FontName="Calibri" x:CharSet="162" x:Family="Swiss" ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#FFFFFF" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s21">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+   <Font ss:FontName="Calibri" x:CharSet="162" x:Family="Swiss" ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#FF0000" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s22">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+   <Font ss:FontName="Calibri" x:CharSet="162" x:Family="Swiss" ss:Color="#FF0000" ss:Bold="1"/>
+   <Interior ss:Color="#BFBFBF" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s24">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+   <Font ss:FontName="Calibri" x:CharSet="162" x:Family="Swiss" ss:Size="11" ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#92D050" ss:Pattern="Solid"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="ÖĞRETMEN DERS PROGRAMI">
+  <Table ss:ExpandedColumnCount="13" ss:ExpandedRowCount="80" x:FullColumns="1"
+   x:FullRows="1" ss:StyleID="s18" ss:DefaultRowHeight="15">
+   <Column ss:StyleID="s18" ss:AutoFitWidth="0" ss:Width="80.25"/>
+   <Column ss:StyleID="s18" ss:AutoFitWidth="0" ss:Width="56.25" ss:Span="4"/>
+   <Column ss:Index="7" ss:StyleID="s18" ss:Width="66"/>
+   <Column ss:StyleID="s18" ss:AutoFitWidth="0" ss:Width="56.25" ss:Span="5"/>
+   <Row ss:Height="15.75">
+    <Cell ss:MergeAcross="12" ss:StyleID="s24"><Data ss:Type="String">PAZARTESİ</Data></Cell>
+   </Row>
+   <Row ss:Height="30.75">
+    <Cell ss:StyleID="s17"><Data ss:Type="String">DERS SAATLERİ</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">08.50 - 09.30</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">09.40 - 10.20</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">10.30 - 11.10</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">11.20 - 12.00</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">12.10 - 12.50</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">13.00 - 13.40</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">13:50- 14.30</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">14:40 - 15.20</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">15.30 - 16.10</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">16.20 - 17.00</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">17.10 - 17.50</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">18.00 - 18.40</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">SONER AÇIKGÖZ</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">MEHMET ŞAŞAR</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-2</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 DİL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 DİL</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">TAHSİN ASLAN</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">MİNE GÜRKAN</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">MERVE GEREK</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">RAVİDE DERYA</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-2</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">MUSTAFA GÜRKAN</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">ŞAHİN DOĞANAY</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">KARDELEN ASLAN</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">NİHAT KANARIĞ</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="62.25">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">FİKRİYE KIYAR</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 EA DİL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 EA DİL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-1 MEZUN SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:Index="11" ss:StyleID="s20"><Data ss:Type="String">12 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-1&#10;12 SAY-2&#10;SAYCAL</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">FATMA KURT</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">EREN BİLGİLİ</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">BELGİN ÇOLAK</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:Height="15.75">
+    <Cell ss:MergeAcross="12" ss:StyleID="s24"><Data ss:Type="String">SALI</Data></Cell>
+   </Row>
+   <Row ss:Height="30.75">
+    <Cell ss:StyleID="s17"><Data ss:Type="String">DERS SAATLERİ</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">08.50 - 09.30</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">09.40 - 10.20</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">10.30 - 11.10</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">11.20 - 12.00</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">12.10 - 12.50</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">13.00 - 13.40</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">13:50- 14.30</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">14:40 - 15.20</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">15.30 - 16.10</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">16.20 - 17.00</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">17.10 - 17.50</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">18.00 - 18.40</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">SONER AÇIKGÖZ</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">MEHMET ŞAŞAR</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">TAHSİN ASLAN</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-3</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">MİNE GÜRKAN</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-2</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">MERVE GEREK</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">RAVİDE DERYA</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-3</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">MUSTAFA GÜRKAN</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">ŞAHİN DOĞANAY</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">KARDELEN ASLAN</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="56.25">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">NİHAT KANARIĞ</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-1 MEZUN SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-1&#10;12 SAY-2&#10;SAYCAL</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">FİKRİYE KIYAR</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">FATMA KURT</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">EREN BİLGİLİ</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">BELGİN ÇOLAK</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:Height="15.75">
+    <Cell ss:MergeAcross="12" ss:StyleID="s24"><Data ss:Type="String">ÇARŞAMBA</Data></Cell>
+   </Row>
+   <Row ss:Height="30.75">
+    <Cell ss:StyleID="s17"><Data ss:Type="String">DERS SAATLERİ</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">08.50 - 09.30</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">09.40 - 10.20</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">10.30 - 11.10</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">11.20 - 12.00</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">12.10 - 12.50</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">13.00 - 13.40</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">13:50- 14.30</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">14:40 - 15.20</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">15.30 - 16.10</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">16.20 - 17.00</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">17.10 - 17.50</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">18.00 - 18.40</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">SONER AÇIKGÖZ</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">MEHMET ŞAŞAR</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">TAHSİN ASLAN</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">MİNE GÜRKAN</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 DİL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 DİL</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">MERVE GEREK</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 EA DİL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 EA DİL</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">RAVİDE DERYA</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">MUSTAFA GÜRKAN</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">ŞAHİN DOĞANAY</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">KARDELEN ASLAN</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">NİHAT KANARIĞ</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">FİKRİYE KIYAR</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">FATMA KURT</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">EREN BİLGİLİ</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 EA DİL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 EA DİL</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-1</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">BELGİN ÇOLAK</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-3</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:Height="15.75">
+    <Cell ss:MergeAcross="12" ss:StyleID="s24"><Data ss:Type="String">PERŞEMBE</Data></Cell>
+   </Row>
+   <Row ss:Height="30.75">
+    <Cell ss:StyleID="s17"><Data ss:Type="String">DERS SAATLERİ</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">08.50 - 09.30</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">09.40 - 10.20</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">10.30 - 11.10</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">11.20 - 12.00</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">12.10 - 12.50</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">13.00 - 13.40</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">13:50- 14.30</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">14:40 - 15.20</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">15.30 - 16.10</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">16.20 - 17.00</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">17.10 - 17.50</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">18.00 - 18.40</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">SONER AÇIKGÖZ</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">MEHMET ŞAŞAR</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">TAHSİN ASLAN</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">MİNE GÜRKAN</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">MERVE GEREK</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">RAVİDE DERYA</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-1</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">MUSTAFA GÜRKAN</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">ŞAHİN DOĞANAY</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">KARDELEN ASLAN</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">NİHAT KANARIĞ</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">FİKRİYE KIYAR</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">FATMA KURT</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN EA-1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 DİL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 DİL</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">EREN BİLGİLİ</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">MEZUN SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAYCAL</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-2</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">BELGİN ÇOLAK</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:Height="15.75">
+    <Cell ss:MergeAcross="12" ss:StyleID="s24"><Data ss:Type="String">CUMARTESİ</Data></Cell>
+   </Row>
+   <Row ss:Height="30.75">
+    <Cell ss:StyleID="s17"><Data ss:Type="String">DERS SAATLERİ</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">08.50 - 09.30</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">09.40 - 10.20</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">10.30 - 11.10</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">11.20 - 12.00</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">12.10 - 12.50</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">13.00 - 13.40</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">13:50- 14.30</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">14:40 - 15.20</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">15.30 - 16.10</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">16.20 - 17.00</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">17.10 - 17.50</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">18.00 - 18.40</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">SONER AÇIKGÖZ</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">MEHMET ŞAŞAR</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">10.SINIF</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">10.SINIF</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 EA-1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">TAHSİN ASLAN</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">MERVE GEREK</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">9.SINIF</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">9.SINIF</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">RAVİDE DERYA</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-3</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">MUSTAFA GÜRKAN</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">9.SINIF</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">9.SINIF</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAYISAL FEN</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAYISAL FEN</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">10.SINIF</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">10.SINIF</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">ŞAHİN DOĞANAY</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAYISAL FEN</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAYISAL FEN</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">10.SINIF</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">10.SINIF</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">9.SINIF</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">9.SINIF</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">KARDELEN ASLAN</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">10.SINIF</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">10.SINIF</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAYISAL FEN</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAYISAL FEN</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">9.SINIF</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">9.SINIF</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">NİHAT KANARIĞ</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 DİL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 DİL</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">9.SINIF</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">FİKRİYE KIYAR</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 DİL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 DİL</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">9.SINIF</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">FATMA KURT</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 EA-1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAY-3</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">EREN BİLGİLİ</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 EA-1</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">SALİM URTİMUR</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAYISAL FEN</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">11 SAYISAL FEN</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 SAY-1</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String"> K</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="30">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">MERT ASİL</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">ÖĞLE ARASI</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 DİL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 DİL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 DİL</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">12 DİL</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Header x:Margin="0"/>
+    <Footer x:Margin="0"/>
+    <PageMargins x:Bottom="0" x:Left="0.59055118110236227" x:Right="0" x:Top="0"/>
+   </PageSetup>
+   <Print>
+    <ValidPrinterInfo/>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <Scale>57</Scale>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <Zoom>85</Zoom>
+   <PageBreakZoom>100</PageBreakZoom>
+   <Selected/>
+   <TopRowVisible>6</TopRowVisible>
+   <Panes>
+    <Pane>
+     <Number>3</Number>
+     <ActiveRow>24</ActiveRow>
+     <ActiveCol>15</ActiveCol>
+    </Pane>
+   </Panes>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+  <PageBreaks xmlns="urn:schemas-microsoft-com:office:excel">
+   <RowBreaks>
+    <RowBreak>
+     <Row>48</Row>
+    </RowBreak>
+   </RowBreaks>
+  </PageBreaks>
+ </Worksheet>
+</Workbook>

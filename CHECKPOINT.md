@@ -1499,3 +1499,49 @@ Gerçek DOM semantiği (mini-DOM, textContent/innerHTML ayrımı korunarak): mod
 - `node test.mjs` → **1593/1593 OK** (36 süit: baseline 35 aynen + yeni 35).
 - Yama 2. koşu: **exit 2 "Zaten uygulanmış"**, dosya hash'leri AYNI kaldı.
 - Tarayıcıda görmek için **Ctrl+Shift+R** (hard refresh) — eski app.js önbellekten gelmesin.
+
+---
+
+# ✅ EXCEL-K IMPORT YAMASI — resmi kaynak: program-guncel.xml (kullanıcı seçimi B)
+
+## Kaynak karar süreci (salt-okuma diff → kullanıcı seçimi)
+
+- `ks-excel-k.xml` (A, 72.731 B, SHA-256 `7056a4908748d87386d7060f4dd336c3d087c4b7d113953709b7fb6d5e846299`) ile
+  `program-guncel.xml` (B, 72.751 B, SHA-256 `73cf1ba85e8815a38fcd6ed96f2da2de6b4158b996af5760ba81882ca835fbb0`)
+  hücre bazında karşılaştırıldı: fark yalnız PERŞEMBE/TAHSİN ASLAN'da 3 hücre (slot 4 ÖĞLE↔K yer değişimi + slot 12 fiziksel eksik) → A'da yerel aktarım hatası, satır kayması yok.
+- Kullanıcı **B** seçti; `ks-excel-validate.mjs` resmi kaynağı B'ye çevrildi ve B üzerinde
+  **XML SAYIM KAPISI GECTI: K=309 DERS=243 BOS=217 MOLA=70 BELIRSIZ=1** (16 öğretmen, 5 gün; CUMA/PAZAR XML'de yok).
+
+## Yazma (tek oturum, seçim B sonrası)
+
+- `ks-yama-excel-k-import.mjs`: staging deep-copy → tek `saveDB()` → atomik; hata halinde DB/localStorage dokunulmaz.
+- Kural uygulaması: K → yalnız `avail.musait["G-K"]="G-K"` (34 gün-bazlı benzersiz; 309 hücre buna katlanır),
+  `avail.sinif`'a K YAZILMADI; Excel slot 5 (ÖĞLE ARASI) hiç yazılmadı; Excel 1-4→0-1..0-4, 6-12→0-5..0-11;
+  CUMA (4-*) ve PAZAR (6-*) hiçbir kayda dokunulmadı (seed'in 4-1 slot kayıtları korundu); mevcut öğrenci/
+  öğretmen/ders/dönem verileri korundu; aktif dönem `donem-2026-2027`; `sinifProg === sinifProgDonemler[sinifProgDonemId]` identity-rebind korundu.
+- İsim düzeltmeleri: MEUN SAY-2→MEZUN SAY 2, MEZUNSAY-3→MEZUN SAY 3, SAYCAL→12 SAY CAL; **11 EA DİL** ve
+  **12 SAYCAL** mevcut-sınıf-ekle kuralıyla eklendi. Birleşik hücreler bölündü (4 bölünme: FİKRİYE 0-5/0-11,
+  NİHAT 1-5/1-11); aynı slotta çoklu sınıf sessizce ezilmedi — ilk sınıf yazıldı, kalanı raporlandı (6 kayıt).
+- Sonuç sayıları: **K=309 DERS=243 BOS=0(mevcut-bos dokunulmadı) MOLA=70 BELIRSIZ=0**; duplicate atlanan: 11.
+- İşaret: `DB.ayarlar["EXCEL-K-IMPORT-YAMASI"]` + dosya işareti `ks-excel-k-import-uygulandi.flag`
+  (SHA-256 `ceb5d97667338d926a035ffd947d46dcf795988fe8c9337ebc6d4449736836a4`).
+- DB anlık görüntüsü: `ks-excel-k-import-db.json` (süit doğrulaması için).
+
+## app.js DEĞİŞMEDİ
+
+Bu yama app.js'e dokunmadı ( Salt-okuma diff + seçim + ayrı yama dosyası yeterliydi; ksVerGec/ksVer=2 boot'ta zaten çalışıyor).
+`app.js` SHA-256: `6410bb0c58f0502dd231c79ae460c7ba78917e3a4aa6704a00b4f7d1e251f9d8` (WA-ONIZLEME sonrası hash ile AYNI).
+
+## Yeni Süit: ks-excel-k-import.mjs — 23 test (+ test.mjs'e 1 kez bağlandı, 37 süit)
+
+İşaret dosyası · yama 2. koşum no-op (exit 2 "Zaten uygulanmış") · kaynak+SHA eşleşmesi · K=309/DERS=243/BELIRSIZ=0 ·
+34 G-K musait kaydı XML dağılımıyla birebir · avail.sinif'ta K yok · mola değeri veri JSON'unda yok ·
+PAZAR (6-*) sıfır · seed 4-1 korunumu · FİKRİYE 0-5 = MEZUN SAY 1 (bölünme) · sinifProg'da birleşik metin yok ·
+identity-rebind · öğrenci/öğretmen/dönem korunumu.
+
+## Doğrulama
+
+- `node ks-excel-validate.mjs` → XML SAYIM KAPISI GECTI (B kaynağı).
+- `node test.mjs` → **1617/1617 OK** (37 süit: baseline 36 aynen + yeni 23).
+- Yama 2. koşu: **exit 2 "Zaten uygulanmış"**, dosyaya dokunmuyor.
+- Tarayıcıda görmek için **Ctrl+Shift+R** (hard refresh).

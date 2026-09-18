@@ -1,9 +1,10 @@
 // Salt-okuma XML doğrulama — yazma YOK
+// RESMI KAYNAK: program-guncel.xml (kullanıcı B seçimi; A'daki 3 hücrelik aktarım hatası için bkz. CHECKPOINT)
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 
-const raw = readFileSync("ks-excel-k.xml", "utf8");
-const buf = readFileSync("ks-excel-k.xml");
+const raw = readFileSync("program-guncel.xml", "utf8");
+const buf = readFileSync("program-guncel.xml");
 const sha = createHash("sha256").update(buf).digest("hex");
 console.log("XML bytes:", buf.length, "sha256:", sha);
 if (!raw.startsWith('<?xml') || !raw.includes("<Workbook") || !raw.trimEnd().endsWith("</Workbook>")) {

@@ -2271,45 +2271,6 @@ function csvYonetimKartHTML() {
     "</div>";
 }
 
-/* WA-SABLON-YAMASI: WhatsApp Mesaj Şablonu — TEK nesne DB.ayarlar.whatsappSablon; yeni localStorage anahtarı YOK. */
-var WA_SABLON_ALANLAR = [
-  ["baslik", "Pencere başlığı", "Ders listesinden önceki başlık satırı. Yer tutucular: {pencereAdi}, {dersSayisi}"],
-  ["giris", "Açılış", "Öğrenciye hitap. Yer tutucular: {ogrenciAdi}, {pencereAdi}, {dersSayisi}"],
-  ["kapanis", "Kapanış", "Ders listesinden sonraki kapanış cümlesi. Yer tutucular: {ogrenciAdi}, {pencereAdi}, {dersSayisi}"],
-  ["imza", "İmza", "Son satır. Yer tutucular: {ogrenciAdi}, {pencereAdi}, {dersSayisi}"]
-];
-function waSablonVarsayilan() { return { baslik: "", giris: "", kapanis: "", imza: "" }; }
-function waSablonKaydet() {
-  if (!DB.ayarlar || typeof DB.ayarlar !== "object") DB.ayarlar = {};
-  var sab = {};
-  WA_SABLON_ALANLAR.forEach(function (a) {
-    var el = document.getElementById("wa-sablon-" + a[0]);
-    sab[a[0]] = el && el.value != null ? el.value : "";
-  });
-  DB.ayarlar.whatsappSablon = sab;
-  saveDB();
-  toast("WhatsApp mesaj şablonu kaydedildi ✓");
-}
-function waSablonKartHTML() {
-  var sab = (DB.ayarlar && DB.ayarlar.whatsappSablon && typeof DB.ayarlar.whatsappSablon === "object") ? DB.ayarlar.whatsappSablon : {};
-  var deger = function (alan) {
-    var v = sab[alan];
-    return v == null ? "" : String(v).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
-  };
-  var kutular = WA_SABLON_ALANLAR.map(function (a) {
-    return '<div><label for="wa-sablon-' + a[0] + '" class="text-[11.5px] font-bold text-slate-600 block mb-1">' + a[1] + '</label>' +
-      '<textarea id="wa-sablon-' + a[0] + '" rows="2" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-[12.5px] text-slate-700 focus:border-teal-400 focus:outline-none">' + deger(a[0]) + '</textarea>' +
-      '<p class="text-[10px] text-slate-400 mt-1">' + a[2] + '</p></div>';
-  }).join("");
-  return '<div class="rounded-2xl border border-slate-100 p-5 mb-4">' +
-    '<div class="w-11 h-11 rounded-2xl bg-green-100 text-green-600 flex items-center justify-center text-lg mb-3"><i class="fa-brands fa-whatsapp"></i></div>' +
-    '<h4 class="text-[14px] font-bold text-slate-900">WhatsApp Mesaj Şablonu</h4>' +
-    '<p class="text-[12px] text-slate-500 mt-1.5 leading-relaxed">Öğrenci bilgilendirme mesajının metin parçalarını düzenleyebilirsiniz. Ders listesi ve grup üyeleri (&#128101;) koddan otomatik üretilir. <b>Yer tutucular:</b> {ogrenciAdi}, {pencereAdi}, {dersSayisi} — bilinmeyen yer tutucular olduğu gibi kalır. Bir alanı <b>boş bırakırsanız varsayılan metin</b> kullanılır.</p>' +
-    '<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">' + kutular + '</div>' +
-    '<button onclick="waSablonKaydet()" class="rounded-full bg-green-500 hover:bg-green-600 text-white text-[13px] font-bold px-5 py-2.5 shadow-sm transition-colors mt-4"><i class="fa-solid fa-floppy-disk mr-1.5"></i>Şablonu Kaydet</button>' +
-    '<span id="waSablonMesaj" class="text-[11.5px] text-slate-400 ml-3"></span>' +
-  '</div>';
-}
 /* ---- Ayarlar & Yedekleme ---- */
 function ayarTab() {
   var boyut = 0;
@@ -2345,7 +2306,7 @@ function ayarTab() {
         '<button onclick="tumunuSil()" class="rounded-full border-2 border-rose-200 text-rose-500 hover:bg-rose-50 text-[13px] font-bold px-5 py-2 transition-colors"><i class="fa-solid fa-trash-can mr-1.5"></i>Tüm Verileri Sıfırla</button>' +
       "</div>" +
       '<p class="text-[10.5px] text-slate-400 mt-3"><i class="fa-solid fa-shield-halved mr-1"></i>Sıfırlamadan önce mutlaka yedek alın.</p>' +
-    "</div>" + waSablonKartHTML() + csvYonetimKartHTML() + "</div>";
+    "</div>" + csvYonetimKartHTML() + "</div>";
 }
 
 /* ================================================================
@@ -3885,22 +3846,7 @@ function ogrenciMesajMetni(ogrenciId) {
     var uyeSatiri = uyeler.length > 1 ? "\n   👥 " + uyeler.join(", ") : "";
     return (i + 1) + ") " + D.ad + (l.konu ? " — " + l.konu : "") + uyeSatiri + "\n   📅 " + fmtTR(l.tarih) + " " + GUNLER[dowIdx(l.tarih)] + " • " + saatEtiket(l.saat) + " • " + l.ogretmenAd + durum;
   });
-  /* WA-SABLON-YAMASI: metin parçaları DB.ayarlar.whatsappSablon'dan; boşsa bugünkü varsayılan byte-birebir. */
-  var sab = (DB.ayarlar && DB.ayarlar.whatsappSablon && typeof DB.ayarlar.whatsappSablon === "object") ? DB.ayarlar.whatsappSablon : {};
-  function sabDeger(alan, varsayilan) { var v = sab[alan]; return (v == null ? "" : String(v)).trim() !== "" ? v : varsayilan; }
-  var giris = sabDeger("giris", "Merhaba " + o.ad + "! 👋");
-  var baslik = sabDeger("baslik", "📚 " + pencereAdi() + " birebir ders programın:");
-  var kapanis = sabDeger("kapanis", "Derslerimize zamanında katılmayı unutma. İyi çalışmalar! 🎓");
-  var imza = sabDeger("imza", "— YKS Birebir Takip");
-  var dersSayisi = satirlar.length;
-  function yerTutucu(metin) {
-    return String(metin).replace(/\{(ogrenciAdi|pencereAdi|dersSayisi)\}/g, function (_, ad) {
-      if (ad === "ogrenciAdi") return o.ad;
-      if (ad === "pencereAdi") return pencereAdi();
-      return String(dersSayisi);
-    });
-  }
-  return yerTutucu(giris) + "\n\n" + yerTutucu(baslik) + "\n\n" + satirlar.join("\n") + "\n\n" + yerTutucu(kapanis) + "\n" + yerTutucu(imza);
+  return "Merhaba " + o.ad + "! 👋\n\n📚 " + pencereAdi() + " birebir ders programın:\n\n" + satirlar.join("\n") + "\n\nDerslerimize zamanında katılmayı unutma. İyi çalışmalar! 🎓\n— YKS Birebir Takip";
 }
 function waUrl(metin, tel) {
   var no = String(tel || "").replace(/\D/g, "");

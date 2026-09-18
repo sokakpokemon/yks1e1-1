@@ -1419,3 +1419,31 @@ yama A ile birlikte B de düzeltildi.
 - ks-yama-excel-ui.mjs 2. koşu: exit 2, "Zaten uygulanmış", hash'ler sabit.
 - node --check app.js / ek-ders.js / test.mjs / ks-excel-ui-kontrol.mjs → OK.
 - Tarayıcıda görmek için Ctrl+Shift+R (hard refresh).
+
+---
+
+# ✅ CHECKPOINT: WhatsApp Mesaj Şablonu (WA-SABLON-YAMASI)
+
+**Tarih:** 18 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **1558/1558 OK** (1511 eski + 47 yeni)
+
+## Yapılan İş (app.js — baştan yazma YOK, ks-yama-wa-sablon.mjs idempotent yama)
+
+1. **Şema:** `DB.ayarlar.whatsappSablon = { baslik, giris, kapanis, imza }` — TEK şablon nesnesi. Yeni localStorage anahtarı YOK (`yksOto_arsiv_v1` tek anahtar kanıtlandı). `saveDB/loadDB/yedekAl/yedekOku/normalize` zaten tüm DB'yi JSON olarak taşıdığı için şablon otomatik kayıpsız round-trip.
+2. **Ayarlar & Yedekleme arayüzü:** `ayarTab()` içine "WhatsApp Mesaj Şablonu" kartı (`waSablonKartHTML`) — 4 textarea (`wa-sablon-baslik/giris/kapanis/imza`), yer tutucu dokümantasyonu ({ogrenciAdi}, {pencereAdi}, {dersSayisi}), "boş bırakılırsa varsayılan" uyarısı, `waSablonKaydet()` butonu (saveDB + toast). Tekrar render'da duplicate yok.
+3. **Mesaj üretimi (`ogrenciMesajMetni`):** ders listesi + 👥 satırı KODDAN üretilmeye devam eder; yalnızca giris/baslik/kapanis/imza ayarlardan gelir. Boş/null/undefined alan → bugünkü hardcoded metin byte-birebir varsayılan. Yer tutucu: bilinenler değişir, bilinmeyenler literal; `$` ve satır sonları bozulmaz (`replace` fonksiyon-dönüşüyle). `{dersSayisi}` ders satırı sayısı.
+4. **KORUNDU:** `waUrl/waAc/waGonder/waSatir/waKopyalaMesaj` akışı, `listeMetni/ekListeMetni` (ek-ders.js dahil), grup 👥 davranışı, birebirde 👥 yok, tüm dönem/grup/CSV kayıtları.
+
+## Testler
+
+- Yeni süit: `ks-wa-sablon.mjs` — **47 test** (boş ayar = default byte-birebir; custom alanlar; yer tutucular; bilinmeyen literal; saveDB/loadDB kalıcılık; yedek round-trip; birebir 👥 yok; grupta tüm üyeler + 👥; ders listesi koddan; arayüz duplicate yok; tek localStorage anahtarı; eski süit sayıları düşmüyor).
+- `test.mjs`'e tam 1 kez bağlandı (35 süit).
+
+## Doğrulama
+
+- `node --check app.js / ek-ders.js / test.mjs / ks-wa-sablon.mjs / ks-yama-wa-sablon.mjs` → OK.
+- `node test.mjs` → **1558/1558 OK**.
+- Yama 2. koşu: exit 2 "Zaten uygulanmış", hash'ler sabit.
+- Backup: `app.js.wa-sablon-oncesi.bak` — SHA-256 `f6fc16f2d0bc7cce1513bef311e9a2e265dcf38863e9175456d3599fe275be72` (yama öncesi birebir; üzerine YAZILMADI).
+- Yeni app.js SHA-256: `93b2207ff521609e328f85d480f2a0336e3318b335075c6965c3e7616572d8fa`.
+- `index.html` (`ab938573…`) ve `ek-ders.js` (`3d2dd38f…`) DEĞİŞMEDİ.
+- Tarayıcıda görmek için Ctrl+Shift+R (hard refresh).

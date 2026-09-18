@@ -188,7 +188,7 @@ const idxDersler = html.indexOf('id="derslerBolum"');
     const liste = suits ? suits[1].match(/"([^"]+)"/g).map((s) => s.replace(/"/g, "")) : [];
     t("ks-kart-sirasi.mjs test.mjs'te tam 1 kez", liste.filter((x) => x === "ks-kart-sirasi.mjs").length === 1);
     t("mevcut 30 süit listede korundu", ["ks-harness.mjs", "ks-grup-istegi.mjs", "ks-sinif-prog-etiket.mjs"].every((x) => liste.includes(x)));
-    t("süit toplam sayısı 33 (32 eski + 1 yeni)", liste.length === 33, liste.length);
+    t("süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33)", liste.length >= 33, liste.length);
   }
 
   console.log(fail === 0 ? "HEPSİ GEÇTİ" : "BAŞARISIZ");

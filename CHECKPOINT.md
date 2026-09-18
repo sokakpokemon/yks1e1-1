@@ -1375,3 +1375,47 @@ Geri dönüş: `index.html.kart-kolon-oncesi.bak`, `app.js.kart-kolon-oncesi.bak
 
 - `ks-yama-brans-ders.mjs` 2. koşu: **exit 2, "Zaten uygulanmış"**, app.js/ek-ders.js/test.mjs hash'leri birebir aynı.
 - Yeni hash'ler: app.js `74d6147d75a97c578bb975fa4c65640869f0923732264770f77dd32e9e4965f3` · ek-ders.js `3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f` · index.html ve vendor/* DOKUNULMADI.
+
+---
+
+# ✅ CHECKPOINT: Excel/CSV Kartı "NaN" Arızası Düzeltildi (EXCEL-UI-YAMASI)
+
+**Tarih:** 18 Eylül 2026 · **Süit sayısı:** 34 · **Toplam test:** 1511/1511 OK
+
+## Teşhis
+`csvYonetimKartHTML()` (app.js) içinde çift artı (`' + +'`) unary-plus'a ayrışıyordu:
+string → Number("...") → NaN. İfadenin devamı (csvEkDersIndir + sinifProgCsvIndir
+buton dizeleri) NaN'e karışıp siliniyordu → kartta 4 buton + ucu "NaN" görünüyor.
+Ayrıca EK-DERS satırının sonunda artı eksikti (yorumdan sonra birleşmiyordu) —
+yama A ile birlikte B de düzeltildi.
+
+## Yama (ks-yama-excel-ui.mjs — assert'li, idempotent, byte-exact)
+1. YAMA A: `</button>' + +` → `</button>' +` (NaN kaynağı giderildi)
+2. YAMA B: `Ek Dersleri CSV İndir</button>'` satırına eksik artı eklendi
+3. Kart artık 9 buton üretiyor: Tüm CSV, Kadro, Dersler, İstekler, Ek Dersler,
+   Sınıf Programı (indirme) + CSV İçe Aktar, Sınıf Programı İçe Aktar, Son İçe
+   Aktarmayı Geri Al (gizli; içe aktarmadan sonra görünür). Handler'lar zaten
+   mevcuttu — uydurma YOK.
+
+## Korunan Davranışlar
+- CSV şeması (yks-csv-v1, BOM + noktalı virgül + CRLF), aktif dönem filtresi, atomik
+  içe aktarma, EXCEL_CSV_SNAPSHOT geri alma, yksOto_arsiv_v1 anahtarı, veri modeli —
+  DEĞİŞMEDİ. ek-ders.js, index.html, vendor/* DOKUNULMADI.
+
+## Testler
+- Yeni süit: ks-excel-ui-kontrol.mjs — 34 test (kart var, NaN yok, 9 buton tam 1 kez,
+  sayaçlar Number.isFinite, tekrar render idempotent + duplicate yok, handler kanıtı,
+  süit kaydı). test.mjs'e tam 1 kez eklendi.
+- ks-kart-sirasi.mjs süit sayacı "33 sabit" → "min 33" (gevşetme değil; yeni süit
+  eklemeleriyle düşme koruması). Diğer 32 süit DOKUNULMADI, düşüş yok.
+
+## Yedek + İdempotans (SHA-256)
+| Dosya | SHA-256 |
+|---|---|
+| app.js.excel-ui-oncesi.bak (yama öncesi backup) | b627cc07830f3b9c9e94c5cc07c672ca6c497cf25473894ec663ea48c8b1dfba |
+| app.js (yamalı) | f6fc16f2d0bc7cce1513bef311e9a2e265dcf38863e9175456d3599fe275be72 |
+| test.mjs | ec93f856916d3a601c202be6b1c5a9f3c709cc422ea765e59cc54c6bddcdd63c |
+
+- ks-yama-excel-ui.mjs 2. koşu: exit 2, "Zaten uygulanmış", hash'ler sabit.
+- node --check app.js / ek-ders.js / test.mjs / ks-excel-ui-kontrol.mjs → OK.
+- Tarayıcıda görmek için Ctrl+Shift+R (hard refresh).

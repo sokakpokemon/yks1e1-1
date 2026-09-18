@@ -2256,8 +2256,8 @@ function csvYonetimKartHTML() {
         '<button onclick="csvTumunuIndir()" class="rounded-full bg-teal-500 hover:bg-teal-600 text-white text-[11.5px] font-bold px-3.5 py-2 shadow-sm transition-colors"><i class="fa-solid fa-download mr-1"></i>Tüm CSV\'leri İndir</button>' +
         '<button onclick="csvKadroIndir()" class="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-[11.5px] font-bold px-3.5 py-2 transition-colors"><i class="fa-solid fa-users mr-1"></i>Kadro CSV İndir</button>' +
         '<button onclick="csvDersIndir()" class="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-[11.5px] font-bold px-3.5 py-2 transition-colors"><i class="fa-solid fa-calendar-days mr-1"></i>Aktif Dersleri CSV İndir</button>' +
-        '<button onclick="csvIstekIndir()" class="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-[11.5px] font-bold px-3.5 py-2 transition-colors"><i class="fa-solid fa-inbox mr-1"></i>Aktif İstekleri CSV İndir</button>' +
-        '<button onclick="csvEkDersIndir()" class="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-[11.5px] font-bold px-3.5 py-2 transition-colors"><i class="fa-solid fa-clipboard-list mr-1"></i>Aktif Ek Dersleri CSV İndir</button>' + /* EKDERS-OZET-CSV-YAMASI */
+        '<button onclick="csvIstekIndir()" class="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-[11.5px] font-bold px-3.5 py-2 transition-colors"><i class="fa-solid fa-inbox mr-1"></i>Aktif İstekleri CSV İndir</button>' + +
+        '<button onclick="csvEkDersIndir()" class="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-[11.5px] font-bold px-3.5 py-2 transition-colors"><i class="fa-solid fa-clipboard-list mr-1"></i>Aktif Ek Dersleri CSV İndir</button>' /* EKDERS-OZET-CSV-YAMASI */
         '<button onclick="sinifProgCsvIndir()" class="rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-[11.5px] font-bold px-3.5 py-2 transition-colors"><i class="fa-solid fa-table-cells mr-1"></i>Aktif Sınıf Programı CSV İndir</button>' +
       "</div>" +
       '<div class="flex flex-wrap items-center gap-2 mt-3">' +
@@ -4103,5 +4103,3 @@ setTimeout(donemOzDenetim, 0);
 document.addEventListener("keydown", function (e) {
   if (e.key === "Escape") { onayKapat(); waKapat(); pngKapat(); }
 });
-
-/* EXCEL-UI-YAMASI: csvYonetimKartHTML içindeki çift artı (unary + → NaN) giderildi ve EK-DERS satırına eksik artı eklendi. Etiket/buton/CSV davranışı değişmedi. */

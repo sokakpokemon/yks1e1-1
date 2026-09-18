@@ -60,11 +60,6 @@ const ogr = DB.ogrenciler.find((o) => o.ad === "Ayşe Demir");
 const ogr2 = DB.ogrenciler.find((o) => o.ad === "Zeynep Kaya");
 t("seed öğrenci var", !!ogr);
 
-/* WA-DURUM-YAMASI sonrası yeni referans biçim:
-   1) {DERS} ({OGRETMEN}) — {KONU}   (konu boşsa bölüm gizlenir)
-      👥 {Ad1, Ad2}                  (yalnız grup)
-   📅 {tarih} {gün} • {saat}         (öğretmen adı YOK)
-   durum cümlesi (planliSatir/tamamlandiSatir opsiyonel; boşsa varsayılan) */
 const referansMetin = (ogrenciId) => {
   const o = DB.ogrenciler.find((s) => s.id === ogrenciId);
   const liste = P.penceredeDersler().filter((l) => (l.ogrenciId === o.id || l.ogrenciAd === o.ad) && l.durum !== "iptal");
@@ -75,20 +70,12 @@ const referansMetin = (ogrenciId) => {
   const dowIdx = P.dowIdxFn();
   const saatEtiket = P.saatEtiketfn();
   const grupOgrenciAdlari = P.grupOgrenciAdlarifn();
-  const sab = (DB.ayarlar && DB.ayarlar.whatsappSablon && typeof DB.ayarlar.whatsappSablon === "object") ? DB.ayarlar.whatsappSablon : {};
-  const satirDeger = (alan, varsayilan) => { const v = sab[alan]; return (v == null ? "" : String(v)).trim() !== "" ? v : varsayilan; };
   const satirlar = liste.map((l, i) => {
     const D = DERS[l.dersId] || DERS.tur;
-    let ogrAd = l.ogretmenAd;
-    if (!ogrAd && l.ogretmenId && DB.ogretmenler) { const og = DB.ogretmenler.find((x) => x.id === l.ogretmenId); if (og) ogrAd = og.ad; }
-    let satir = (i + 1) + ") " + D.ad + (ogrAd ? " (" + ogrAd + ")" : "") + (l.konu ? " — " + l.konu : "");
+    const durum = l.durum === "tamamlandi" ? " ✓ Tamamlandı" : "";
     const uyeler = grupOgrenciAdlari(l);
-    if (uyeler.length > 1) satir += "\n   👥 " + uyeler.join(", ");
-    satir += "\n   📅 " + fmtTR(l.tarih) + " " + GUNLER[dowIdx(l.tarih)] + " • " + saatEtiket(l.saat) + "\n";
-    satir += l.durum === "tamamlandi"
-      ? satirDeger("tamamlandiSatir", "Bu tarih ve saatte birebir dersiniz yapıldı.")
-      : satirDeger("planliSatir", "Bu tarih ve saatte birebir dersiniz olacaktır.");
-    return satir;
+    const uyeSatiri = uyeler.length > 1 ? "\n   👥 " + uyeler.join(", ") : "";
+    return (i + 1) + ") " + D.ad + (l.konu ? " — " + l.konu : "") + uyeSatiri + "\n   📅 " + fmtTR(l.tarih) + " " + GUNLER[dowIdx(l.tarih)] + " • " + saatEtiket(l.saat) + " • " + l.ogretmenAd + durum;
   });
   return "Merhaba " + o.ad + "! 👋\n\n📚 " + P.pencereAdi() + " birebir ders programın:\n\n" + satirlar.join("\n") + "\n\nDerslerimize zamanında katılmayı unutma. İyi çalışmalar! 🎓\n— YKS Birebir Takip";
 };

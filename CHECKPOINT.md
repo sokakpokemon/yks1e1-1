@@ -1601,3 +1601,77 @@ Kaynak: `program-guncel.xml` (SHA `73cf1ba8…`) → doğrulanmış parse `ks-ex
 | FİKRİYE KIYAR | 1-1 (12 SAY CAL), 2-1 (12 EA 1), 3-1 (12 DİL) |
 | NİHAT KANARIĞ | 0-1 (12 DİL), 2-1 (11 SAY 2), 3-1 (11 SAY 3) |
 | MERT ASİL | 0-1 (11 SAY 3), 1-1 (11 SAYCAL), 2-1 (11 SAYISAL FEN), 3-1 (11 EA 1) |
+
+---
+
+# ✅ CHECKPOINT: WhatsApp Öğrenci Mesajı — Yeni Satır Düzeni (WA-DURUM-YAMASI)
+
+**Tarih:** 18 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **1652/1652 OK** (1617 eski + 35 yeni)
+
+## Hedef Düzen (ogrenciMesajMetni — tek gerçek kaynak)
+
+```
+1) {DERS} ({OGRETMEN}) — {KONU}      ← konu boşsa "— {konu}" bölümü gizlenir
+   👥 {Ad1, Ad2}                     ← yalnız grup dersinde (birebirde YOK)
+   📅 {tarih} {gün} • {saat}         ← öğretmen adı KALDIRILDI (tekrar etmez)
+Bu tarih ve saatte birebir dersiniz olacaktır.   ← durum === "tamamlandi" değilse
+Bu tarih ve saatte birebir dersiniz yapıldı.     ← durum === "tamamlandi" ise
+```
+
+- Öğretmen adı: `ders.ogretmenAd`; boşsa `DB.ogretmenler` id-esleşmesi (fallback).
+- `durum === "iptal"` dersler zaten filtreli (mesajda listede yok).
+- Eski `" ✓ Tamamlandı"` işareti kaldırıldı.
+- 👥 grup satırı, grup mantığı, iptal filtresi, yer tutucular (baslik/giris/kapanis/imza) korundu.
+
+## Şablon Alanları (DB.ayarlar.whatsappSablon)
+
+- Yeni opsiyonel alanlar: `planliSatir`, `tamamlandiSatir` — boşsa varsayılan cümleler kullanılır.
+- Ayarlar ekranındaki 4 alan (baslik/giris/kapanis/imza) ve `waSablonKaydet` (tek `saveDB`) aynen; yeni alanlar da aynı nesnede taşınır.
+- Yer tutucular ({ogrenciAdi}…) durum cümlelerinde de çalışır (satirDeger yolu).
+- localStorage: yalnızca `yksOto_arsiv_v1` (yeni anahtar YOK).
+
+## Yama
+
+- `ks-yama-wa-durum.mjs` — assert'li, idempotent; 2. koşu "Zaten uygulanmış" (exit 2), dosyaya dokunmaz.
+- Yalnız `ogrenciMesajMetni` satır-üretim bloğu değişti (~L3880); dosyanın geri kalanı birebir.
+- `waGonder` / `waKopyalaMesaj` / `waOnizle` zaten tek kaynağı çağırıyordu → onizleme=gonderme birebir.
+
+## Değişen Dosyalar ve Yedekler (SHA-256)
+
+| Dosya | Önce | Sonra | Yedek |
+|---|---|---|---|
+| app.js | `6410bb0c…` | `c22536dc0ba1b0cde92b1491ac8b27b74f44e15e7655d04cbaf8a252c32bce8a` | `app.js.wa-durum-oncesi.bak` (`6410bb0c…`) + çalışma yedeği `app.js.wa-durum-calisma-oncesi.bak` |
+| ks-wa-sablon.mjs | `b95256c7…` | referans metin yeni düzene uyarlandı (gevşetme YOK) | `ks-wa-sablon.mjs.wa-durum-oncesi.bak` |
+| test.mjs | `a30aa8d3…` | `ks-wa-durum.mjs` TAM 1 KEZ eklendi (38 süit) | `test.mjs.wa-durum-oncesi.bak` |
+
+## Testler
+
+- Yeni süit: `ks-wa-durum.mjs` — **35 test**: parantezli öğretmen, tarih satırında öğretmen YOK,
+  grup 👥 / birebirde 👥 YOK, planlı cümle, tamamlandı cümle, karışık pencere (2 planlı + 1 tamamlandı),
+  iptal gizleme, önizleme=gonderme (waOnizle/waGonder/waKopyalaMesaj), boş ayar → varsayılan,
+  özel ayar metni, konu gizleme, tek localStorage anahtarı, süit kaydı tekliği.
+- `ks-wa-sablon.mjs` (47) ve `ks-grup-gorunum.mjs` (28) mesaj beklentileri yeni düzene göre güncellendi (gevşetme yok).
+- Doğrulama: `node --check app.js` · `node --check ek-ders.js` → OK · `node test.mjs` → **1652/1652 OK**.
+
+## Örnek Mesaj Çıktısı
+
+**Planlı:**
+```
+1) MATEMATİK (SONER AÇIKGÖZ) — Türev
+   📅 21.09.2026 Pazartesi • 8 · 15:30-16:10
+Bu tarih ve saatte birebir dersiniz olacaktır.
+```
+
+**Grup + tamamlandı:**
+```
+2) KİMYA (TAHSİN ASLAN) — Mol Kavramı
+   👥 Ayşe Demir, Zeynep Kaya
+   📅 21.09.2026 Pazartesi • 5 · 13:00-13:40
+Bu tarih ve saatte birebir dersiniz yapıldı.
+```
+
+## Kalan Riskler
+
+- Kullanıcı daha önce `whatsappSablon` alanlarını özelleştirdiyse `planliSatir`/`tamamlandiSatir` alanları yoktur → varsayılanlar devrede (istenen davranış).
+- Gerçek tarayıcıda eski `app.js` önbellekten gelebilir → sert yenileme (Ctrl+Shift+R / Cmd+Shift+R).
+- Grup derslerinde mesaj hâlâ yalnızca ana öğrenciye/katılımcıların satır sahibine göre üretilir (mevcut davranış korundu).

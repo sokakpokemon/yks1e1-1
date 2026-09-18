@@ -3879,28 +3879,11 @@ function ogrenciMesajMetni(ogrenciId) {
   if (!liste.length) return null;
   var satirlar = liste.map(function (l, i) {
     var D = DERS[l.dersId] || DERS.tur;
-    /* WA-DURUM-YAMASI: yeni hedef düzen —
-       1) {DERS} ({OGRETMEN}) — {KONU}   (konu boşsa bölüm gizlenir)
-       👥 {Ad1, Ad2}                     (yalnız grup dersinde)
-       📅 {tarih} {gün} • {saat}         (öğretmen adı YOK — tekrar etmez)
-       durum cümlesi: tamamlandi → "…yapıldı." ; diğerleri → "…olacaktır."
-       (planliSatir/tamamlandiSatir DB.ayarlar.whatsappSablon ile opsiyonel; boşsa varsayılan)
-       Eski " ✓ Tamamlandı" işareti kaldırıldı. */
-    var ogrAd = l.ogretmenAd;
-    if (!ogrAd && l.ogretmenId && DB.ogretmenler) {
-      var og = DB.ogretmenler.find(function (x) { return x.id === l.ogretmenId; });
-      if (og) ogrAd = og.ad;
-    }
-    var satir = (i + 1) + ") " + D.ad + (ogrAd ? " (" + ogrAd + ")" : "") + (l.konu ? " — " + l.konu : "");
-    /* GRUP: grup dersinde tüm üyeler mesajda listelenir (birebirde 👥 satırı yok) */
+    var durum = l.durum === "tamamlandi" ? " ✓ Tamamlandı" : "";
+    /* GRUP: grup dersinde tüm üyeler mesajda listelenir (birebirde satır aynı) */
     var uyeler = grupOgrenciAdlari(l);
     var uyeSatiri = uyeler.length > 1 ? "\n   👥 " + uyeler.join(", ") : "";
-    var sab = (DB.ayarlar && DB.ayarlar.whatsappSablon && typeof DB.ayarlar.whatsappSablon === "object") ? DB.ayarlar.whatsappSablon : {};
-    function satirDeger(alan, varsayilan) { var v = sab[alan]; return (v == null ? "" : String(v)).trim() !== "" ? v : varsayilan; }
-    var durumCumlesi = l.durum === "tamamlandi"
-      ? satirDeger("tamamlandiSatir", "Bu tarih ve saatte birebir dersiniz yapıldı.")
-      : satirDeger("planliSatir", "Bu tarih ve saatte birebir dersiniz olacaktır.");
-    return satir + uyeSatiri + "\n   📅 " + fmtTR(l.tarih) + " " + GUNLER[dowIdx(l.tarih)] + " • " + saatEtiket(l.saat) + "\n" + durumCumlesi;
+    return (i + 1) + ") " + D.ad + (l.konu ? " — " + l.konu : "") + uyeSatiri + "\n   📅 " + fmtTR(l.tarih) + " " + GUNLER[dowIdx(l.tarih)] + " • " + saatEtiket(l.saat) + " • " + l.ogretmenAd + durum;
   });
   /* WA-SABLON-YAMASI: metin parçaları DB.ayarlar.whatsappSablon'dan; boşsa bugünkü varsayılan byte-birebir. */
   var sab = (DB.ayarlar && DB.ayarlar.whatsappSablon && typeof DB.ayarlar.whatsappSablon === "object") ? DB.ayarlar.whatsappSablon : {};

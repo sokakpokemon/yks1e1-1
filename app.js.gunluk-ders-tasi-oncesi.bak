@@ -3768,12 +3768,10 @@ function gunlukTablo() {
 
   // Öğretmene göre grupla: ogrtAd -> { saat -> ders }
   var ogrtMap = {};
-  var ogrtIdMap = {}; /* GUNLUK-DERS-TASI-YAMASI: satır öğretmen kimliği (ad → ogretmenId); hedef satırın ogretmenId'si drop doğrulamasında kullanılır */
   gunDersler.forEach(function (l) {
     var k = l.ogretmenAd || "Bilinmiyor";
     if (!ogrtMap[k]) ogrtMap[k] = {};
     ogrtMap[k][l.saat] = l;
-    if (!ogrtIdMap[k] && l.ogretmenId) ogrtIdMap[k] = l.ogretmenId;
   });
 
   /* EK-DERS-GORUNUM: aktif dönemin o günkü ek dersleri — TEK kayıt: harita anahtarı duplicate yazmayı imkânsız kılar */
@@ -3782,16 +3780,10 @@ function gunlukTablo() {
       var k = l.ogretmenAd || "Bilinmiyor";
       if (!ogrtMap[k]) ogrtMap[k] = {};
       ogrtMap[k][l.saat] = l;
-      if (!ogrtIdMap[k] && l.ogretmenId) ogrtIdMap[k] = l.ogretmenId;
     }
   });
 
   var ogrtSirasi = Object.keys(ogrtMap).sort();
-  /* GUNLUK-DERS-TASI-YAMASI: satır kimliği eksikse ad üzerinden TEK eşleme ile tamamlanır;
-     çözülemezse "" kalır → o satırda drop-zone ÇİZİLMEZ (ölü hedef yok, mevcut görünüm korunur). */
-  ogrtSirasi.forEach(function (ad) {
-    if (!ogrtIdMap[ad]) { var ts = DB.ogretmenler.find(function (x) { return x.ad === ad; }); ogrtIdMap[ad] = ts ? ts.id : ""; }
-  });
   if (!ogrtSirasi.length) {
     return '<div class="rounded-2xl border border-slate-100 overflow-hidden mb-4 bg-white">' +
       '<div class="text-center py-3 border-b border-slate-100 bg-slate-50"><h3 class="text-[15px] font-black text-slate-800 uppercase tracking-wide">' + gunAdi + '</h3></div>' +
@@ -3826,7 +3818,6 @@ function gunlukTablo() {
   html += '<tbody>';
   ogrtSirasi.forEach(function (ogrtAd, oi) {
     var saatMap = ogrtMap[ogrtAd];
-    var ogrtId = ogrtIdMap[ogrtAd] || ""; /* GUNLUK-DERS-TASI-YAMASI: satırın öğretmen kimliği — hedef satır kontrolü bununla yapılır */
     var bg = oi % 2 === 0 ? 'bg-white' : 'bg-slate-50/60';
 
     html += '<tr class="border-b border-slate-200 ' + bg + '">';
@@ -3855,22 +3846,10 @@ function gunlukTablo() {
           var grupUyelerG = grupUyeEtiketleri(ders);
           var durumRenkG = ders.durum === "tamamlandi" ? "bg-emerald-50 border-emerald-200" : "bg-blue-50 border-blue-200";
           /* BIREBIR-GORUNUM-ORTAK-YAMASI: haftalik tablo ile AYNI hücre (tam ad + gerçek konu + sınıf; ders adı yok) */
-          /* GUNLUK-DERS-TASI-YAMASI: yalnız AKTİF TEK ÖĞRENCİLİ birebir ders draggable'dır;
-             grup / iptal / Sınıf Dersi (rose) / Ek Ders (amber) / Kapalı (gri) sürüklenemez.
-             Taşıma MEVCUT dersDrag/dersBurak yoluyla yapılır — paralel DnD sistemi kurulmaz. */
-          html += '<td class="px-1.5 py-2 border-r border-slate-200 hover:bg-blue-50 transition-colors"' +
-            (ders.durum !== "iptal" && dersOgrenciIds(ders).length === 1 ? ' draggable="true" style="cursor:grab" ondragstart="dersDrag(event, \'' + esc(ders.id) + '\'); this.style.opacity=\'0.45\'" ondragend="dersDropHedef=null; this.style.opacity=\'\'"' : '') + '>' +
+          html += '<td class="px-1.5 py-2 border-r border-slate-200 hover:bg-blue-50 transition-colors">' +
             birebirHucreHTML(ders, ogrenci, ders.ogrenciAd || "", sinif, durumRenkG);
           if (grupUyelerG.length) html += '<div class="text-[8.5px] text-slate-400 mt-0.5">' + grupUyelerG.map(function (a) { return ilkHarfler(a); }).join(" · ") + '</div>';
           html += '</td>';
-        } else if (ogrtId) {
-          /* GUNLUK-DERS-TASI-YAMASI: boş hücre = MEVCUT drop-zone yolu (aynı dnd-bos + istekDragOver/istekDragLeave +
-             istekBurak → dersBurak devri). Mola hücresi bu dala HİÇ girmez (slot.mola dalı üstte).
-             Hedef gün SABİTTİR (gunKey); gün değişikliği bu tabloda YOK. Saat MEVCUT SAAT_SLOTLARI yardımcısından (slot.b). */
-          html += '<td class="dnd-bos px-1.5 py-2 border-r border-slate-200 transition-colors"' +
-            ' data-drop-ogrt="' + esc(ogrtId) + '" data-drop-gun="' + dowIdx(gunKey) + '" data-drop-saat="' + slot.b + '"' +
-            ' ondragover="istekDragOver(event, this)" ondragleave="istekDragLeave(this)" ondrop="istekBurak(event, this, \'' + esc(ogrtId) + '\', \'' + gunKey + '\', \'' + slot.b + '\')" title="Boş saat — ders kartını ya da havuz isteğini bırakın">' +
-            '<span class="text-[9px] text-slate-300 select-none">+</span></td>';
         } else {
           html += '<td class="px-1.5 py-2 border-r border-slate-200"></td>';
         }

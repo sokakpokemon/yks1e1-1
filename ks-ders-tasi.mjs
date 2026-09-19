@@ -225,11 +225,11 @@ t("gri Kapalı hücresi draggable DEĞİL, o slotta drop-zone da DEĞİL",
   !h.includes('data-drop-gun="0" data-drop-saat="' + KISA_KOD[4].b + '"'));
 T.avail.musait = [];
 
-/* günlük tablo draggable DEĞİL (görünüm korundu) */
+/* günlük tablo artık YALNIZ aynı-satır birebir hücresinde draggable (GUNLUK-DERS-TASI-YAMASI) */
 ui.filtre = "gun"; ui.anchor = gelecekPzt; ui.gunSecim = gelecekPzt;
-t("günlük tablo hücreleri draggable DEĞİL (görünüm korundu)", !gunlukTablo().includes("draggable"));
-t("haftalık tabloda draggable yalnız birebir ders hücresinde (" + kez("draggable=\"true\"") + " kaynak satırı)",
-  kez('draggable="true" style="cursor:grab"') === 1);
+t("günlük tablo birebir hücresi draggable (GUNLUK-DERS-TASI-YAMASI)", tdBlok(gunlukTablo(), 'title="Dolu').includes('draggable="true" style="cursor:grab" ondragstart="dersDrag(event,'));
+t("draggable kaynak: 2 birebir hücre (haftalık + günlük) (" + kez("draggable=\"true\"") + " kaynak satırı)",
+  kez('draggable="true" style="cursor:grab"') === 2);
 temizle();
 
 /* ---- 3) Drop-zone + mevcut istek kartı akışı korundu ---- */

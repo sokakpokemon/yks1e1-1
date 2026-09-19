@@ -1675,3 +1675,82 @@ Bu tarih ve saatte birebir dersiniz yapıldı.
 - Kullanıcı daha önce `whatsappSablon` alanlarını özelleştirdiyse `planliSatir`/`tamamlandiSatir` alanları yoktur → varsayılanlar devrede (istenen davranış).
 - Gerçek tarayıcıda eski `app.js` önbellekten gelebilir → sert yenileme (Ctrl+Shift+R / Cmd+Shift+R).
 - Grup derslerinde mesaj hâlâ yalnızca ana öğrenciye/katılımcıların satır sahibine göre üretilir (mevcut davranış korundu).
+
+---
+
+# ✅ CHECKPOINT: Kadro CSV v2 — ad/soyad/telefon Üst Düzey Kolonlar (KADRO-KOLON-YAMASI)
+
+**Tarih:** 19 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **1702/1702 OK** (38 eski süit + 1 yeni; 1652→1702, düşüş YOK)
+
+## Yeni Header (birebir)
+
+```
+schema;dataset;donemId;tip;id;ad;soyad;telefon;brans;sinifId;sinifAd;ekAlanlarJson
+```
+
+- **Yalnızca `dataset=kadro` CSV'si `yks-csv-v2`** kullanır. Ders, istek, ek ders ve sınıf programı CSV şemaları **aynen** `yks-csv-v1` kaldı.
+- V1 header sabiti (`CSV_BASLIK_KADRO`) ve v1 satır üreticisi (`csvKadroSatirlari`) KORUNDU.
+
+## Telefon Alanı (kaynak koddan tespit)
+
+- DB'deki tek telefon alanı **`ogrenciler[].tel`** (app.js: öğrenci formu `#d-tel` L~1598, kayıt `mevcut.tel = tel` L~1701, WA `o.tel` L~3943). **`veliTel` / `tel2` YOK** → ayrı telefon kolonu eklenmedi.
+- Telefon değeri **string olarak korunur**: `+90`, baştaki 0, boşluk, tire **silinmez/biçimlenmez** (`kadroTelOf()` = `String(tel)`).
+
+## v2 Export (app.js)
+
+- `kadroAdSoyadAyir(tamAd)`: son boşlukla ayrılan kelime = soyad, önceki kısım = ad. `"MEHMET ALI YILMAZ"` → ad=`"MEHMET ALI"`, soyad=`"YILMAZ"`. Boş ad → ikisi de boş; tek kelimelik → ad dolu, soyad boş.
+- `kadroV2Satirlari()`: KADRO-SIRALAMA emission sırası aynen (öğretmen → sınıf → öğrenci). Sınıf satırlarında ad = sınıf adı; **soyad ve telefon boş**. `ekAlanlarJson` tüm ek alanlarıyla korunur.
+- `csvKadroIndir()` artık v2 header + `kadroV2Satirlari()` ile indirir.
+
+## v2 Import
+
+- `csvCozDosya`: `yks-csv-v2` şeması da kabul edilir; **yalnız `dataset=kadro` için** (ders/istek v2 dosyası RED).
+- Kişi adı `trim(ad + " " + soyad)` ile yeniden birleşir; **telefon kolonu DB `.tel` alanına yazılır ve `ekAlanlarJson.tel`'i EZER (authoritative)**.
+- **v1 import KORUNUR:** eski tam ad kolonu aynen okunur (ayrıştırma yok), telefon `ekAlanlarJson.tel` fallback.
+
+## Korunan Güvenlik Kuralları (değişmeden)
+
+Parse+validate → staging deep-copy → başarida TEK saveDB; hata halinde DB + localStorage byte-birebir kalır (testle kanıtlı). ID/donemId/farklı dönem RED, dosya-içi yinelenen ID RED, eksik ID üretimi, sınıf `kadroSnfId` bağlama, bilinmeyen referans RED, quote-aware parser, BOM, CRLF — tümü aynen. Tek localStorage anahtarı `yksOto_arsiv_v1`.
+
+## Değişen Fonksiyonlar (app.js — baştan yazma YOK, ks-yama-kadro-kolon.mjs exact-anchor yama)
+
+| Fonksiyon/bölge | Değişiklik |
+|---|---|
+| `CSV_SCHEMA_KADRO` (yeni, `CSV_SCHEMA` yanına) | `"yks-csv-v2"` sabiti |
+| `CSV_BASLIK_KADRO_V2`, `kadroAdSoyadAyir`, `kadroTelOf`, `kadroV2Satirlari` (yeni, v1 header sabiti arkasına) | v2 şema katmanı |
+| `csvCozDosya` (schema red satırı) | v2 kadro izni |
+| `csvImportUygula` dataset guard | v2 yalnız kadro |
+| kadro import dalı | v2 bayrağı + `kadroAdBirlesik` + telefon authoritative (öğrenci güncelle/ekle, öğretmen güncelle/ekle) |
+| `csvKadroIndir` | v2 export |
+
+Yama idempotent: 2. koşu exit 2 + "Zaten uygulanmış", dosyaya dokunmaz.
+
+## Backup + SHA-256
+
+| Dosya | Boyut | SHA-256 |
+|---|---|---|
+| `app.js.kadro-kolon-oncesi.bak` (yeni backup; üzerine yazılmadı) | 270.838 B | `c22536dc0ba1b0cde92b1491ac8b27b74f44e15e7655d04cbaf8a252c32bce8a` |
+| `app.js` (yama sonrası, 269.019 B) | — | `77122dc4d1e387a8197c55bf8d83786f3a54cbdfa9df1ba7c76c948c6c57d71b` |
+
+Değişmeyen: `index.html`, `ek-ders.js`, `vendor/*`.
+
+## Testler
+
+- Yeni süit: `ks-kadro-kolon.mjs` — **50 test** (v2 header birebir + kolon sırası, ad/soyad ayırma [çok kelimeli/Türkçe/tek kelimelik/boş/fazla boşluk], telefon ayrı kolon + string korunumu + `+90`/sıfır/bosluk/tire, sınıf satırlarında soyad/telefon boşluğu, v2 round-trip [duplicate yok, ad birleşir, tel geri gelir], v1 tam ad + `ekAlanlarJson.tel` fallback, v2 telefon authoritative [JSON'daki tel'i ezer], quote-aware/BOM/CRLF, yinelenen ID + atomiklik [DB+localStorage byte-birebir], farklı dönemId RED, v2 yalnız kadro, `ks-kadro-kolon.mjs` test.mjs'te tam 1 kez).
+- `ks-excel-csv.mjs` ve `ks-kadro-siralama.mjs` yeşil (v1 uyumluluk davranışıyla). `ks-ekders-ozet-csv.mjs`'teki 2 byte-hash dondurması (`csvParse`, `csvKadroIndir`) bilinçli davranış değişikliğine uygun davranış-garantisi assert'ine çevrildi — **diğer hiçbir assertion gevşetilmedi**; ders/istek/ek ders ve tüm güvenlik testleri KORUNDU.
+- `test.mjs`: süit kaydı tam 1 kez (39 süit).
+- Doğrulama: `node --check app.js ek-ders.js test.mjs ks-kadro-kolon.mjs ks-yama-kadro-kolon.mjs` → OK · `node test.mjs` → **1702/1702 OK**.
+
+## Örnek CSV Satırları
+
+```csv
+schema;dataset;donemId;tip;id;ad;soyad;telefon;brans;sinifId;sinifAd;ekAlanlarJson
+yks-csv-v2;kadro;;ogrenci;ogr-ayse-1;Ayşe;Demir;05551112233;;ks-snf-0006-…;12 SAY 1;{"tel":"05551112233"}
+yks-csv-v2;kadro;;ogretmen;ort-cok-1;MEHMET ALI;YILMAZ;;fiz;;;"{}"
+yks-csv-v2;kadro;;sinif;ks-snf-0006-…;12 SAY 1;;;;;12 SAY 1;{}
+```
+
+## Kalan Riskler
+
+- v2 satır üreticisi yalnız yeni indirmede kullanılır; kullanıcının elinde eski v1 dosyaları varsa **v1 import hâlâ çalışır** (fallback korunuyor).
+- `ekAlanlarJson`'daki `tel` alanı v2 export'ta hâlâ taşınır (kayıpsızlık için); v2 import'ta üst düzey kolon kazanır — iki kaynak tutarlı.

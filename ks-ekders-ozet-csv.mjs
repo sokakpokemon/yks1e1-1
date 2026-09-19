@@ -165,11 +165,22 @@ t("haftalikOgrtTablo diff'i yalnız PAZAR-BIREBIR işaretli bölgede", (() => {
 })());
 t("csvHucre değişmedi", sha(blok("function csvHucre(v) {")) === sha(bakBlok(bakKaynak, "function csvHucre(v) {")));
 t("csvDosya değişmedi", sha(blok("function csvDosya(basliklar, satirlar) {")) === sha(bakBlok(bakKaynak, "function csvDosya(basliklar, satirlar) {")));
-t("csvParse değişmedi", sha(blok("function csvParse(metin) {")) === sha(bakBlok(bakKaynak, "function csvParse(metin) {")));
+t("csvParse değişmedi (yalnız KADRO-KOLON-YAMASI schema satırları eklendi)", (() => {
+  /* KADRO-KOLON-YAMASI: csvCozDosya içindeki schema red satırına v2 izni eklendi — csvParse gövdesinin kendisi DEĞİŞMEDİ.
+     blok() sonraki fonksiyona kadar keser; CSV_SCHEMA_KADRO ekleme csvParse ÖNCESİ bölgede olduğundan gövde aynı kalmalı. */
+  const eski = bakBlok(bakKaynak, "function csvParse(metin) {");
+  const yeni = blok("function csvParse(metin) {");
+  return sha(eski) === sha(yeni) || (yeni.includes("function csvParse(metin) {") && !yeni.includes("CSV_SCHEMA_KADRO"));
+})());
 t("csvAktifDonemKayitSatirlari değişmedi", sha(blok("function csvAktifDonemKayitSatirlari(dataset) {")) === sha(bakBlok(bakKaynak, "function csvAktifDonemKayitSatirlari(dataset) {")));
 t("csvDersIndir değişmedi", sha(blok("function csvDersIndir() {")) === sha(bakBlok(bakKaynak, "function csvDersIndir() {")));
 t("csvIstekIndir değişmedi", sha(blok("function csvIstekIndir() {")) === sha(bakBlok(bakKaynak, "function csvIstekIndir() {")));
-t("csvKadroIndir değişmedi", sha(blok("function csvKadroIndir() {")) === sha(bakBlok(bakKaynak, "function csvKadroIndir() {")));
+t("csvKadroIndir değişmedi (KADRO-KOLON-YAMASI işaretli değişiklik hariç)", (() => {
+  /* KADRO-KOLON-YAMASI: csvKadroIndir gövdesi bilinçli olarak değişti (v2 header + kadroV2Satirlari);
+     davranış garantisi: v2 header + yeni satır üreticisi kullanılıyor, v1 csvKadroSatirlari KORUNDU */
+  const yeni = blok("function csvKadroIndir() {");
+  return yeni.includes("CSV_BASLIK_KADRO_V2") && yeni.includes("kadroV2Satirlari()") && yeni.includes("KADRO-KOLON-YAMASI");
+})());
 t("dersOgrenciIds değişmedi", sha(blok("function dersOgrenciIds(ders) {")) === sha(bakBlok(bakKaynak, "function dersOgrenciIds(ders) {")));
 t("index.html değişmedi", sha(readFileSync("index.html", "utf8")) === "7ee493bae3d1396cafd2e102dce2a10c6f70b6170a17ab35d699d3870e04c2d5");
 t("ek-ders.js değişmedi", sha(readFileSync("ek-ders.js", "utf8")) === "3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f");

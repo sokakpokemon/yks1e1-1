@@ -1811,7 +1811,6 @@ function togSinif(sinifAd, di, saat) {
      dönem seçici (DONEM-SECICI), yedek formatı ve mevcut analiz mantığına DOKUNMAZ.
    ================================================================ */
 var CSV_SCHEMA = "yks-csv-v1";
-var CSV_SCHEMA_KADRO = "yks-csv-v2"; /* KADRO-KOLON-YAMASI: yalnızca dataset=kadro v2; diğer dataset'ler v1 kalır */
 var CSV_SEP = ";";
 var CSV_EOL = "\r\n";
 var EXCEL_CSV_SNAPSHOT = null; /* son BAŞARILI içe aktarma öncesi DB snapshot (oturum içi) */
@@ -1878,39 +1877,6 @@ function csvParse(metin) {
 
 /* ---- CSV kolon şemaları (sabit ve tam) ---- */
 var CSV_BASLIK_KADRO = ["schema","dataset","donemId","tip","id","ad","brans","sinifId","sinifAd","ekAlanlarJson"];
-/* KADRO-KOLON-YAMASI: v2 kadro header — ad;soyad;telefon üst düzey kolonlar (sıra sabittir) */
-var CSV_BASLIK_KADRO_V2 = ["schema","dataset","donemId","tip","id","ad","soyad","telefon","brans","sinifId","sinifAd","ekAlanlarJson"];
-/* Tam adı ad+soyad'a ayırır: son boşlukla ayrılan kelime = soyad, önceki kısım = ad.
-   Boş ad → {ad:"", soyad:""}; tek kelimelik ad → ad dolu, soyad boş. Biçimlendirme YOK (örn. +90 korunur). */
-function kadroAdSoyadAyir(tamAd) {
-  var s = String(tamAd || "").replace(/\s+/g, " ").trim();
-  if (!s) return { ad: "", soyad: "" };
-  var i = s.lastIndexOf(" ");
-  if (i === -1) return { ad: s, soyad: "" };
-  return { ad: s.slice(0, i).trim(), soyad: s.slice(i + 1).trim() };
-}
-/* DB telefon alanı: ogrenciler[].tel — string olarak korunur (+90, baştaki 0, boşluk, tire silinmez) */
-function kadroTelOf(kayit) {
-  var t = kayit && kayit.tel;
-  return t == null ? "" : String(t);
-}
-/* v2 kadro satırları — KADRO-SIRALAMA-YAMASI emission sırası aynen korunur: ogretmen → sinif → ogrenci.
-   Sinif satırlarında ad = sınıf adı; soyad ve telefon BOŞ. ekAlanlarJson tüm ek alanlarıyla korunur. */
-function kadroV2Satirlari() {
-  var satirlar = [];
-  DB.ogretmenler.forEach(function (t) {
-    var a = kadroAdSoyadAyir(t.ad);
-    satirlar.push([CSV_SCHEMA_KADRO,"kadro","","ogretmen", t.id || "", a.ad, a.soyad, "", t.brans || "", "", "", csvEkAlanlar(t)]);
-  });
-  Object.keys(DB.sinifIds || {}).forEach(function (ad) {
-    satirlar.push([CSV_SCHEMA_KADRO,"kadro","","sinif", DB.sinifIds[ad] || "", ad, "", "", "", "", ad, "{}"]);
-  });
-  DB.ogrenciler.forEach(function (o) {
-    var a = kadroAdSoyadAyir(o.ad);
-    satirlar.push([CSV_SCHEMA_KADRO,"kadro","","ogrenci", o.id || "", a.ad, a.soyad, kadroTelOf(o), "", sinifId(o.sinif) || "", o.sinif || "", csvEkAlanlar(o)]);
-  });
-  return satirlar;
-}
 var CSV_BASLIK_DERS  = ["schema","dataset","donemId","tip","id","ogrenciId","ogrenciIds","ogrenciAd","ogretmenId","ogretmenAd","dersId","dersAd","konu","tarih","saat","kod","sinif","durum","ekAlanlarJson"];
 var CSV_BASLIK_ISTEK = ["schema","dataset","donemId","tip","id","ogrenciId","ogrenciIds","ogrenciAd","ogretmenId","ogretmenAd","dersId","dersAd","konu","tarih","saat","kod","sinif","durum","olusturma","ekAlanlarJson"];
 /* ekAlanlarJson içinde KORUNAMAYAN (korumalı) alanlar — geri yüklenmez */
@@ -1993,9 +1959,8 @@ function csvIndir(dosyaAd, basliklar, satirlar) {
   setTimeout(function () { URL.revokeObjectURL(a.href); }, 1500);
 }
 function csvKadroIndir() {
-  /* KADRO-KOLON-YAMASI: dışa aktarma v2 (ad;soyad;telefon üst düzey) — v1 içe aktarma KORUNUR */
-  csvIndir("yks-kadro-global.csv", CSV_BASLIK_KADRO_V2, kadroV2Satirlari());
-  toast("Kadro CSV indirildi ✓ (v2 — tüm öğrenci/öğretmen/sınıf — dönem filtresi yok)");
+  csvIndir("yks-kadro-global.csv", CSV_BASLIK_KADRO, csvKadroSatirlari());
+  toast("Kadro CSV indirildi ✓ (tüm öğrenci/öğretmen/sınıf — dönem filtresi yok)");
 }
 function csvDersIndir() {
   var id = aktifDonemId();
@@ -2035,8 +2000,7 @@ function csvCozDosya(metin, dosyaAdi) {
   } else {
     return { dataset: "", schema: "", baslik: [], veriler: [], hata: csvHata(dosyaAdi, 1, "başlık", "schema/dataset başlıkları yok") };
   }
-  /* KADRO-KOLON-YAMASI: yks-csv-v2 yalnızca kadro için; diğer schema reddedilir (aşağıda dataset kontrolü) */
-  if (schema !== CSV_SCHEMA && schema !== CSV_SCHEMA_KADRO) return { dataset: dataset, schema: schema, baslik: [], veriler: [], hata: csvHata(dataset, 1, "schema", "Bilinmeyen schema: " + (schema || "(boş)")) };
+  if (schema !== CSV_SCHEMA) return { dataset: dataset, schema: schema, baslik: [], veriler: [], hata: csvHata(dataset, 1, "schema", "Bilinmeyen schema: " + (schema || "(boş)")) };
   var veriler = satirlar.map(function (r) {
     var o = {};
     baslik.forEach(function (k, i) { o[k] = r[i] != null ? r[i] : ""; });
@@ -2058,8 +2022,6 @@ function csvImportUygula(dosyalar) {
     if (c.hata) { hatalar.push(c.hata); return; }
     if (c.dataset === "sinifProg") { hatalar.push(csvHata(d.ad, 1, "dataset", "sinifProg dataset'i genel içe aktarmada desteklenmez — Sınıf Programı CSV İçe Aktar butonunu kullanın")); return; }
     if (["kadro", "dersler", "istekler"].indexOf(c.dataset) === -1) { hatalar.push(csvHata(d.ad, 1, "dataset", "Bilinmeyen dataset: " + c.dataset)); return; }
-    /* KADRO-KOLON-YAMASI: v2 şema YALNIZ kadro CSV'sinde geçerli */
-    if (c.schema === CSV_SCHEMA_KADRO && c.dataset !== "kadro") { hatalar.push(csvHata(d.ad, 1, "schema", "yks-csv-v2 yalnızca dataset=kadro için kullanılabilir")); return; }
     cozulen.push(c);
   });
   if (hatalar.length) return { ok: false, hatalar: hatalar };
@@ -2083,9 +2045,6 @@ function csvImportUygula(dosyalar) {
 
   /* ---- 1) KADRO (önce) ---- */
   cozulen.filter(function (c) { return c.dataset === "kadro"; }).forEach(function (c) {
-    /* KADRO-KOLON-YAMASI: v2 → ad/soyad üst düzey + telefon authoritative; v1 → tam ad + ekAlanlarJson.tel fallback */
-    var v2 = c.schema === CSV_SCHEMA_KADRO;
-    var kadroAdBirlesik = function (vv) { return v2 ? (String(vv.ad || "") + " " + String(vv.soyad || "")).trim() : (vv.ad || ""); };
     var goren = {}; /* aynı dosya içinde yinelenen ID kontrolü */
     c.veriler.forEach(function (v, idx) {
       var sn = idx + 2; /* 1 = başlık */
@@ -2116,14 +2075,12 @@ function csvImportUygula(dosyalar) {
         var mevcut = kopya.ogrenciler.find(function (x) { return x.id === id; });
         if (mevcut) {
           var eskiO = Object.assign({}, mevcut);
-          mevcut.ad = kadroAdBirlesik(v); mevcut.sinif = v.sinifAd || mevcut.sinif;
+          mevcut.ad = v.ad; mevcut.sinif = v.sinifAd || mevcut.sinif;
           csvEkAlanUygula(mevcut, v.ekAlanlarJson);
-          if (v2) mevcut.tel = String(v.telefon == null ? "" : v.telefon); /* v2: üst düzey telefon AUTHORITATIVE */
           guncellenen++;
         } else {
-          kopya.ogrenciler.push({ id: id, ad: kadroAdBirlesik(v), sinif: v.sinifAd || "", tel: v2 ? String(v.telefon == null ? "" : v.telefon) : "" });
+          kopya.ogrenciler.push({ id: id, ad: v.ad, sinif: v.sinifAd || "", tel: "" });
           csvEkAlanUygula(kopya.ogrenciler[kopya.ogrenciler.length - 1], v.ekAlanlarJson);
-          if (v2) kopya.ogrenciler[kopya.ogrenciler.length - 1].tel = String(v.telefon == null ? "" : v.telefon); /* v2 authoritative */
           eklenen++;
         }
       } else if (tip === "ogretmen") {
@@ -2131,11 +2088,11 @@ function csvImportUygula(dosyalar) {
         goren[id] = 1;
         var mevcutT = kopya.ogretmenler.find(function (x) { return x.id === id; });
         if (mevcutT) {
-          mevcutT.ad = kadroAdBirlesik(v); mevcutT.brans = v.brans || mevcutT.brans;
+          mevcutT.ad = v.ad; mevcutT.brans = v.brans || mevcutT.brans;
           csvEkAlanUygula(mevcutT, v.ekAlanlarJson);
           guncellenen++;
         } else {
-          kopya.ogretmenler.push({ id: id, ad: kadroAdBirlesik(v), brans: v.brans || "", avail: { sinif: {}, musait: [] } });
+          kopya.ogretmenler.push({ id: id, ad: v.ad, brans: v.brans || "", avail: { sinif: {}, musait: [] } });
           csvEkAlanUygula(kopya.ogretmenler[kopya.ogretmenler.length - 1], v.ekAlanlarJson);
           eklenen++;
         }

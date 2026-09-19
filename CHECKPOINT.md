@@ -1845,3 +1845,30 @@ Toplam: **1820/1820 test OK** (`node test.mjs`).
 **Kalan Riskler:**
 - Eski davranışta boş öğrenci telefonu wa.me'ye telefondan açılıyordu; artık engellenir — kullanıcıya "telefonu kaydedin" uyarısı gösterilir.
 - Alıcı seçimi sayfa yenilenince sıfırlanır (tasarım gereği: yalnız bellek içi).
+
+## DERS-TASI-YAMASI (2026-09-19): Haftalık tabloda birebir ders kartını sürükle-bırakla taşıma
+
+**Uygulama:** `node ks-yama-ders-tasi.mjs` (assert'li, fail-closed, idempotent — 2. koşuda app.js'e DOKUNULMAZ).
+Yamalanan dosyalar: `app.js` (DERS-TASI-YAMASI blokları), `test.mjs` (`ks-ders-tasi.mjs` süiti TAM BİR KEZ bağlandı).
+Backup: `app.js.ders-tasi-oncesi.bak` — 284584 bayt, SHA-256 `0aa32d82c28a9c1355d98a7176a22e69f86c41a3a34fc8767943aaa14779b6cc` (statSync byte ölçümü; mevcut backup'ların üzerine YAZILMADI).
+
+**Not — neden script:** `app.js` 4.390 satır / 284 KB'dır; Freebuff dosya aracı bu dosyanın yalnız ilk ~600 satırını eşleştirebiliyor (derin bölgelerdeki düzenlemeler "not found" ile düşüyor). Aynı sınır `CHECKPOINT.md` (1.847 satır) için de geçerli. Yama bu yüzden repo'nun kendi `ks-yama-*.mjs` konvansiyonuyla uygulanır; her hedef dizge tam 1 kez geçmezse HİÇBİR ŞEY yazılmaz.
+
+**Davranış (MEVCUT altyapı yeniden kullanıldı — paralel DnD sistemi YOK):**
+- Kaynak: haftalık öğretmen tablosu hücresi YALNIZ aktif (iptal değil) TEK ÖĞRENCİLİ birebir derste `draggable="true"` + `ondragstart="dersDrag(event, '<dersId>')"`.
+- Hedef: MEVCUT boş `+` drop-zone'ları (`class="dnd-bos ..."`, `data-drop-ogrt/gun/saat`, `ondragover="istekDragOver(...)"`, `ondragleave="istekDragLeave(...)"`, `ondrop="istekBurak(...)"`). Drop-zone markup'ı ve mevcut istek-kartı akışı DEĞİŞMEDİ.
+- Yeni global `dersDropHedef` (istek kartının `istekDropHedef`'i aynen korundu). `istekDragOver` iki kaynağı da kabul eder (ders → `dropEffect = "move"`, istek → `"copy"`); tek inline `ondrop` yolu `istekBurak` içinde `dersDropHedef` doluysa `dersBurak`'a devreder.
+- Tarih/saat hesabı MEVCUT yardımcılarla: `dowIdx`, `ksKodOf`, `addDaysKey`. Manuel index varsayımı yok. Taşıma YALNIZ aynı gösterilen hafta içinde (kaynak haftası = hedef haftası).
+- RED: grup dersi, iptal ders, dolu slot (aynı öğretmen), amber Ek Ders, gri Kapalı (`avail.musait`), rose Sınıf Dersi (`avail.sinif`), Pazar, kısa kodda karşılığı olmayan saat (12:00 ÖĞLE ARASI/mola dahil), hafta dışı; ayrıca MEVCUT `duzeltmeBul` (kaynak ders `staged.id` ile hariç tutulur) → öğretmen çakışması, öğrenci çakışması + toplu ders (sınıf programı), aktif dönem ek dersi.
+- RED sonucu: toast + YAZMA YOK. Karar staging kopyası (`JSON.parse(JSON.stringify(l))`) üzerinde verilir; kontroller düşerse DB'ye tek alan bile yazılmaz ve `saveDB()` HİÇ çağrılmaz (localStorage byte-birebir korunur).
+- Başarı: yalnız ilgili dersin `tarih/saat/kod` alanları güncellenir → TEK `saveDB()` → `renderDersler/renderOzet/renderAnaliz`. `id/ogrenciId/ogrenciAd/ogretmenId/ogretmenAd/dersId/konu/durum/donemId` DEĞİŞMEZ; kopya kayıt üretilmez.
+- Kaynak = hedef → no-op (sessiz: ne toast ne yazma). Takas (swap) ve geri alma (undo) EKLENMEDİ.
+- Gün sekmesi ve Hafta görünümü AYNI DB kaydını okur; taşıma sonrası ikisi de tutarlıdır. Günlük tablo hücreleri draggable DEĞİL (mevcut görünüm korundu).
+
+**Test:** `ks-ders-tasi.mjs` (91/91 assert; test.mjs runner sayımı 92 test ✓) — kaynak sözleşmesi (paralel sistem yok, tek drop yolu), draggable kaynak kuralı (birebir ✓; grup / iptal / rose / amber / Kapalı / günlük tablo ✗), drop-zone + istek kartı markup'ının birebir korunumu, başarı (aynı gün 6→8 ve Pzt→Çar gün değişimi) + TEK saveDB, no-op, dokuz RED senaryosu (her birinde localStorage byte-birebir + saveDB 0 çağrı + toast), gün sekmesi ↔ Hafta uyumu, havuz isteği akışının runtime korunumu.
+Doğrulama: `node --check app.js ks-ders-tasi.mjs ks-yama-ders-tasi.mjs` → OK · `node test.mjs` → **1912/1912 OK** (önce 1820/1820, 41 süit → 42 süit; eski süitelerde DÜŞÜŞ YOK).
+
+**Kalan Riskler:**
+- Sürüklenen hücre `dnd-kilit` class'ını KORUR (`index.html` hash'i testlerle dondurulmuş) → yalnız `style="cursor:grab"` eklenir; `.dnd-kilit:hover` kırmızı zemini durur (hücre havuz isteği bırakma açısından hâlâ kilitli).
+- Haftalar arası taşıma bilinçli olarak YOK (yalnız görüntülenen hafta).
+- Pazar hücreleri boş `+` görünse de mevcut istek-kartı kuralıyla aynı şekilde RED edilir.

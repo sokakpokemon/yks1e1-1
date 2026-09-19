@@ -2982,6 +2982,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 var ev_dnd = null, istekDropHedef = null;
+var dersDropHedef = null; /* DERS-TASI-YAMASI: haftalık tablo birebir ders kartının kaynak ID'si — aynı drop yolu, paralel sistem yok */
 document.addEventListener("dragstart", function (e) { ev_dnd = e; });
 document.addEventListener("dragend", function () { ev_dnd = null; });
 
@@ -3582,7 +3583,9 @@ function haftalikOgrtTablo() {
            null-on-miss: ogrenci bulunamazsa DB.ogrenciler ad eşlemesiyle fallback, o da yoksa boş.
            Uzun metin taşması: truncate + min-w-0 + orantılı padding/font/leading korunur. */
         /* BIREBIR-GORUNUM-ORTAK-YAMASI: ortak yardımcıyla günlük tablo ile AYNI hücre (ders adı yok) */
-        satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100">' +
+        /* DERS-TASI-YAMASI: dnd-kilit hücresi — yalnız AKTİF TEK ÖĞRENCİLİ birebir ders sürüklenebilir; grup ve rose Sınıf Dersi / amber Ek Ders / gri Kapalı sürüklenemez. */
+        satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100"' +
+          (ders.durum !== "iptal" && dersOgrenciIds(ders).length === 1 ? ' draggable="true" style="cursor:grab" ondragstart="dersDrag(event, \'' + esc(ders.id) + '\'); this.style.opacity=\'0.45\'" ondragend="dersDropHedef=null; this.style.opacity=\'\'"' : '') + '>' +
           birebirHucreHTML(ders, ogrenci, ogrenciAd, sinif, durumRenk) + '</td>';
       } else {
         // BOŞ HÜCRE → DROP ZONE (havuzdaki istek kartı buraya bırakılabilir)
@@ -3615,15 +3618,18 @@ function haftalikOgrtTablo() {
 // HAVUZ KARTI → HAFTALIK TAKVİM SÜRÜKLE-BIRAK
 // ═══════════════════════════════════════════════════════════════
 function istekDragOver(ev, el) {
-  if (!istekDropHedef) return;               // havuzdan sürüklenen kart yoksa tepki verme
+  if (!istekDropHedef && !dersDropHedef) return; // havuz kartı ya da haftalık ders kartı sürüklenmiyorsa tepki verme
   ev.preventDefault();
-  if (ev.dataTransfer) ev.dataTransfer.dropEffect = "copy";
+  if (ev.dataTransfer) ev.dataTransfer.dropEffect = dersDropHedef ? "move" : "copy";
   el.classList.add("dnd-uygun");
 }
 function istekDragLeave(el) { el.classList.remove("dnd-uygun"); }
 function istekBurak(ev, el, ogrtId, tarih, saat) {
   ev.preventDefault();
   el.classList.remove("dnd-uygun");
+  /* DERS-TASI-YAMASI: AYNI drop yolu — haftalıktan sürüklenen birebir ders kartı taşınır.
+     Havuz isteği akışı aşağıda birebir korunur; dersDropHedef yoksa bu dal hiç çalışmaz. */
+  if (dersDropHedef) { dersBurak(ogrtId, tarih, saat); return; }
   var istekId = istekDropHedef; istekDropHedef = null;
   if (!istekId) return;
   var r = DB.istekler.find(function (x) { return x.id === istekId; });
@@ -3661,6 +3667,67 @@ function istekBurak(ev, el, ogrtId, tarih, saat) {
   saveDB();
   renderHavuz();
   renderFormDestek();
+  renderDersler();
+  renderOzet();
+  renderAnaliz();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DERS-TASI-YAMASI — HAFTALIK BİREBİR DERS KARTINI TAŞIMA
+   MEVCUT istek-kartı sürükle-bırak altyapısı yeniden kullanılır: aynı dnd-bos "+" drop-zone'ları,
+   aynı istekDragOver/istekDragLeave ve aynı ondrop="istekBurak(...)" yolu.
+   Paralel/ayrı bir drag&drop sistemi KURULMAZ. Yalnız AKTİF TEK ÖĞRENCİLİ birebir ders taşınır.
+   ═══════════════════════════════════════════════════════════════ */
+function dersDrag(ev, id) {
+  dersDropHedef = id;                       // kaynak ders ID'si drag boyunca taşınır
+  istekDropHedef = null;                    // havuz kartı akışıyla karışmaz
+  if (ev.dataTransfer) { ev.dataTransfer.effectAllowed = "move"; try { ev.dataTransfer.setData("text/plain", id); } catch (e) {} }
+}
+function dersBurak(ogrtId, tarih, saat) {
+  var dersId = dersDropHedef; dersDropHedef = null;
+  if (!dersId) return;
+  var l = DB.dersler.find(function (x) { return x.id === dersId; });
+  if (!l) return;
+
+  /* Yalnız AKTİF TEK ÖĞRENCİLİ birebir: grup / Sınıf Dersi (rose) / Ek Ders (amber) RED */
+  if (l.durum === "iptal") { toast("İptal edilmiş ders taşınamaz.", "hata"); renderDersler(); return; }
+  if (dersOgrenciIds(l).length !== 1) { toast("Yalnız tek öğrencili birebir ders taşınabilir.", "hata"); renderDersler(); return; }
+
+  var t = DB.ogretmenler.find(function (x) { return x.id === ogrtId; });
+  if (!t) { toast("Öğretmen bulunamadı.", "hata"); renderDersler(); return; }
+  if (l.ogretmenId !== t.id && (l.ogretmenAd || "") !== t.ad) { toast("Bu ders hedef öğretmene ait değil.", "hata"); renderDersler(); return; }
+
+  /* Hedef gün/saat MEVCUT tarih yardımcılarıyla hesaplanır (manuel index varsayımı YOK) */
+  var di = dowIdx(tarih), saatKod = ksKodOf(saat), key = di + "-" + saatKod;
+  /* Geçersiz hedef saat RED: 12:00 mola (ÖĞLE ARASI) gibi kısa kodda karşılığı olmayan saatler */
+  if (!saatKod) { toast("Geçersiz hedef saat — ders taşınamadı.", "hata"); renderDersler(); return; }
+
+  /* Kaynak = hedef → no-op: ne toast ne DB/localStorage yazımı */
+  if (l.tarih === tarih && ksKodOf(l.saat) === saatKod) return;
+  /* Yalnız aynı gösterilen hafta içinde (kaynak haftası = hedef haftası) */
+  if (addDaysKey(l.tarih, -dowIdx(l.tarih)) !== addDaysKey(tarih, -dowIdx(tarih))) { toast("Yalnız görüntülenen hafta içinde taşınabilir.", "hata"); renderDersler(); return; }
+
+  /* STAGING: karar CANLI kayıt üzerinde değil kopyası üzerinde verilir; kontroller düşerse
+     DB'ye tek alan yazılmaz ve saveDB() HİÇ çağrılmaz (localStorage byte-birebir korunur). */
+  var staged = JSON.parse(JSON.stringify(l));
+  staged.tarih = tarih; staged.saat = saat; staged.kod = saatKod;
+
+  /* Kilit kontrolü — istekBurak ile AYNI kurallar: dolu slot / Ek Ders / Kapalı / Sınıf Dersi / Pazar */
+  var dolu = DB.dersler.some(function (x) { return x.ogretmenId === ogrtId && x.tarih === tarih && ksKodOf(x.saat) === saatKod && x.durum !== "iptal" && x.id !== staged.id; });
+  var ekDolu = (Array.isArray(DB.ekDersler) ? DB.ekDersler : []).some(function (x) { return x.ogretmenId === ogrtId && x.tarih === tarih && ksKodOf(x.saat) === saatKod && x.durum !== "iptal"; });
+  var kilitli = dolu || ekDolu || di === 6 || (t.avail && ((t.avail.sinif && key in t.avail.sinif) || (Array.isArray(t.avail.musait) ? t.avail.musait.indexOf(key) >= 0 : false)));
+  if (kilitli) { toast("Hedef saat kilitli ya da dolu — ders taşınamadı.", "hata"); renderDersler(); return; }
+
+  /* Çakışma: MEVCUT duzeltmeBul — kaynak ders (staged.id) hariç tutulur. Öğretmen (Kapalı/Sınıf
+     Dersi/Ek Ders), öğrenci (toplu ders + aynı saatte başka ders) ve aktif dönem kuralları
+     mevcut kontrolün kendisiyle yeniden kullanılır. */
+  var cakisma = duzeltmeBul({ id: staged.id, ogrenciId: staged.ogrenciId, ogretmenId: t.id, tarih: staged.tarih, saat: staged.saat }, false, [staged.ogrenciId]);
+  if (cakisma.length) { toast("Çakışma tespit edildi — ders taşınamadı.", "hata"); renderDersler(); return; }
+
+  /* BAŞARI: yalnız ilgili dersin tarih/saat/kod alanları → TEK saveDB → yenile */
+  l.tarih = staged.tarih; l.saat = staged.saat; l.kod = staged.kod;
+  toast("Ders taşındı ✓ " + (l.ogrenciAd || "") + " · " + fmtTR(l.tarih) + " " + saatEtiket(l.saat));
+  saveDB();
   renderDersler();
   renderOzet();
   renderAnaliz();

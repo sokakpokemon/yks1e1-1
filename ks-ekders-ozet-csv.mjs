@@ -175,11 +175,11 @@ t("csvParse değişmedi (yalnız KADRO-KOLON-YAMASI schema satırları eklendi)"
 t("csvAktifDonemKayitSatirlari değişmedi", sha(blok("function csvAktifDonemKayitSatirlari(dataset) {")) === sha(bakBlok(bakKaynak, "function csvAktifDonemKayitSatirlari(dataset) {")));
 t("csvDersIndir değişmedi", sha(blok("function csvDersIndir() {")) === sha(bakBlok(bakKaynak, "function csvDersIndir() {")));
 t("csvIstekIndir değişmedi", sha(blok("function csvIstekIndir() {")) === sha(bakBlok(bakKaynak, "function csvIstekIndir() {")));
-t("csvKadroIndir değişmedi (KADRO-KOLON-YAMASI işaretli değişiklik hariç)", (() => {
+t("csvKadroIndir değişmedi (KADRO-KOLON-YAMASI/TELEFON3-YAMASI işaretli değişiklik hariç)", (() => {
   /* KADRO-KOLON-YAMASI: csvKadroIndir gövdesi bilinçli olarak değişti (v2 header + kadroV2Satirlari);
-     davranış garantisi: v2 header + yeni satır üreticisi kullanılıyor, v1 csvKadroSatirlari KORUNDU */
+     TELEFON3-YAMASI: v3 header + kadroV3Satirlari — v1 csvKadroSatirlari KORUNDU */
   const yeni = blok("function csvKadroIndir() {");
-  return yeni.includes("CSV_BASLIK_KADRO_V2") && yeni.includes("kadroV2Satirlari()") && yeni.includes("KADRO-KOLON-YAMASI");
+  return yeni.includes("CSV_BASLIK_KADRO_V3") && yeni.includes("kadroV3Satirlari()") && yeni.includes("TELEFON3-YAMASI");
 })());
 t("dersOgrenciIds değişmedi", sha(blok("function dersOgrenciIds(ders) {")) === sha(bakBlok(bakKaynak, "function dersOgrenciIds(ders) {")));
 t("index.html değişmedi", sha(readFileSync("index.html", "utf8")) === "7ee493bae3d1396cafd2e102dce2a10c6f70b6170a17ab35d699d3870e04c2d5");

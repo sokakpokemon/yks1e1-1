@@ -1754,3 +1754,72 @@ yks-csv-v2;kadro;;sinif;ks-snf-0006-…;12 SAY 1;;;;;12 SAY 1;{}
 
 - v2 satır üreticisi yalnız yeni indirmede kullanılır; kullanıcının elinde eski v1 dosyaları varsa **v1 import hâlâ çalışır** (fallback korunuyor).
 - `ekAlanlarJson`'daki `tel` alanı v2 export'ta hâlâ taşınır (kayıpsızlık için); v2 import'ta üst düzey kolon kazanır — iki kaynak tutarlı.
+
+---
+
+# ✅ CHECKPOINT: Öğrenci 3 Telefon Alanı + Kadro CSV v3 (TELEFON3-YAMASI)
+
+**Tarih:** 19 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **1771/1771 OK** (1702 eski + 57 yeni süit + 12 güncellenmiş eski test; süit sayısı 40)
+
+## DB Alanları (localStorage: `yksOto_arsiv_v1` — TEK anahtar değişmedi)
+
+- `ogrenciler[].tel` — mevcut değerler **aynen korundu**, normalize YOK (`+90`, baştaki `0`, boşluk, tire aynen).
+- `ogrenciler[].anneTel` / `ogrenciler[].babaTel` — YENİ; eksikse `""` olarak eklenir, mevcut değerler ASLA değiştirilmez.
+- Migration `normalize()` içinde (tek kapı: boot/loadDB/yedek yükleme) — idempotent, 2. koşuda byte-birebir fark 0.
+- Öğretmen ve sınıf kayıtlarına telefon alanı EKLENMEDİ.
+
+## CSV v3 (yalnız dataset=kadro; ders/istek/ek ders/sınıf programı şemaları değişmedi)
+
+Yeni header (TAM OLARAK):
+
+```csv
+schema;dataset;donemId;tip;id;ad;soyad;telefon;anneTelefon;babaTelefon;brans;sinifId;sinifAd;ekAlanlarJson
+```
+
+Örnek öğrenci satırı:
+
+```csv
+yks-csv-v3;kadro;;ogrenci;t3-ornek;Ayşe;Demir;05551112233;0533 444 55 66;+90 555-000-11 22;;ks-snf-0006-…;12 SAY 1;"{""ad"":""Ayşe Demir""}"
+```
+
+- Öğrenci: `telefon=tel`, `anneTelefon=anneTel`, `babaTelefon=babaTel` (string, kayıpsız). Öğretmen/sınıf satırlarında 3 telefon kolonu BOŞ.
+- `ekAlanlarJson`'dan v3 export'ta `tel, anneTel, babaTel, anneTelefon, babaTelefon` ÇIKARILDI; diğer ek alanlar korundu.
+- Import: **v3** = üç telefon kolonu AUTHORITATIVE (boş kolon → bilinçli `""`), `ad+soyad → ad` birleşimi. **v2** = telefon → `tel`; anne/baba **KORUNUR**. **v1** = tam ad + `ekAlanlarJson.tel` fallback aynen.
+- BOM, `;`, CRLF, quote-aware parser, UTF-8, atomik RED (yinelenen ID/bilinmeyen referans/yanlış dönem → DB + localStorage byte-birebir korunur) KORUNDU.
+
+## Form UI (ekleme + düzenleme ekranlarında çalışır; duplicate id YOK)
+
+- Düzenleme: `#d-tel` (korundu, "Öğrenci Telefonu") · `#d-anne-tel` ("Anne Telefonu") · `#d-baba-tel` ("Baba Telefonu") — `grid-cols-1 md:grid-cols-3` (mobilde alt alta, genişte 3 kolon).
+- Yeni kayıt: `#o-tel` (korundu) · `#o-anne-tel` · `#o-baba-tel` — aynı grid düzeni.
+- Tümü `type="tel" inputmode="tel"`; `ogrenciEkle()`/`ogrenciGuncelle()` akışı 3 alanı okur-yazar; kayıt sonrası temizlenir.
+
+## WhatsApp (değişmedi)
+
+`waGonder`, `waUrl`, `waSatir`, `waKopyalaMesaj`, `waOnizle` **yalnız `ogrenciler[].tel`** kullanmaya devam eder; `anneTel`/`babaTel` WhatsApp hedefi YAPILMADI. Mesaj metni/onizleme ve boş tel'de `wa.me/?text=` davranışı aynen.
+
+## Yama ve Dosyalar (boyut BAYT — statSync; SHA-256)
+
+| Dosya | Boyut (bayt) | SHA-256 |
+|---|---|---|
+| app.js (önce) | 274.005 | `77122dc4d1e387a8197c55bf8d83786f3a54cbdfa9df1ba7c76c948c6c57d71b` |
+| app.js (sonra) | 280.816 | `3874ce7258f63bfd169e7f62c6bf441ac59497d36396b5e6d690f2c3e2944a16` |
+| app.js.telefon3-oncesi.bak (yedek, üzerine yazılmadı) | 274.005 | `77122dc4…` (app.js-önce ile birebir) |
+| ek-ders.js (değişmedi) | 30.405 | `3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f` |
+| index.html (değişmedi) | 22.612 | `7ee493bae3d1396cafd2e102dce2a10c6f70b6170a17ab35d699d3870e04c2d5` |
+| test.mjs | 2.347 | `042b07f2b335a7cb462ac918063e1e075266789ad8bdde05dd24d56b05c6c72f` |
+
+- Yama: `ks-yama-telefon3.mjs` — assert'li, exact-anchor, idempotent: **1. koşu uyguladı; 2. koşu "Zaten uygulanmış" → exit 2, dosyaya dokunmaz (SHA birebir aynı kanıtlandı).**
+- app.js'te 15 hedefli bölge (normalize migration, v3 sabitleri, kadroV3Satirlari, csvKadroIndir, csvCozDosya/csvImportUygula v3 dalları, iki form + ekle/güncelle). Baştan yazma YOK; `waGonder/waUrl/waSatir/waKopyalaMesaj/waOnizle/csvDosya/csvParse` birebir korundu (assert'li).
+- Mevcut tüm backup dosyaları (`app.js.*.bak` vb.) DEĞİŞTİRİLMEDİ.
+
+## Testler
+
+- Yeni: `ks-kadro-telefon3.mjs` — **57 test**: 3 alanın formdan kaydı, mevcut tel korunumu, anne/baba migration, Türkçe ad (`Öğrenci İğdeçiçek`), numara biçimi kayıpsızlığı (`+90 555 666 77 88` / `0533-222-33-44`), v3 header+kolon sırası, anne/baba ayrı kolon, v3 round-trip, v1 import, v2 import, v1/v2'de anne-baba korunumu (boşaltılmaz), v3 boş kolon temizliği, atomik RED + localStorage byte korunumu, WhatsApp yalnız öğrenci tel'i (`waGonder` kaynağı `o.tel` assert + anne/baba yok), duplicate-id yok, tek localStorage anahtarı, süit kaydı 1 kez.
+- `ks-kadro-kolon.mjs` v3 beklentilerine güncellendi (v1/v2 import testleri KORUNDU; v2 üretici koruma testi eklendi). `ks-excel-csv.mjs` ve `ks-kadro-siralama.mjs`'teki ekAlanlarJson tel beklentileri bilinçli v3 davranışına göre güncellendi; ders/istek/ek-ders testlerine DOKUNULMADI. `ks-donem-ilk.mjs`'te ogrenciler deep-equal'ına `tel/anneTel/babaTel` skip-listesi eklendi (migration alanları bilinçli).
+- `test.mjs`: süit kaydı tam 1 kez (40 süit). Doğrulama: `node --check app.js ek-ders.js test.mjs ks-kadro-telefon3.mjs` → OK · `node test.mjs` → **1771/1771 OK** (düşüş YOK, duplicate kayıt YOK).
+
+## Kalan Riskler
+
+- Kullanıcının elinde eski v2 CSV'ler varsa: import çalışır (anne/baba korunur) ama export artık v3 üretir — eski v2 okuyan dış araçlar varsa header farkı bilinmeli.
+- v3 import boş telefon kolonlarını bilinçli `""` yapar (authoritative); "boş kolon = dokunma" bekleniyorsa v2 kullanılmalı.
+- `ks-excel-csv.mjs`/`ks-kadro-siralama.mjs`/`ks-donem-ilk.mjs` assertion güncellemeleri yalnızca TELEFON3 kapsamındaki alanlarla ilgili; başka gevşetme yok.

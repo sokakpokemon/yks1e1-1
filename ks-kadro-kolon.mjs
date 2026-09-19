@@ -34,7 +34,7 @@ let fail = 0;
 const t = (name, cond, extra) => { console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
 const derinKopya = (x) => JSON.parse(JSON.stringify(x));
 
-const EXPORTS = "{ DB, saveDB, csvDosya, csvParse, csvImportUygula, CSV_SCHEMA, CSV_SCHEMA_KADRO, CSV_BASLIK_KADRO, CSV_BASLIK_KADRO_V2, CSV_BASLIK_DERS, CSV_BASLIK_ISTEK, kadroAdSoyadAyir, kadroV2Satirlari, csvKadroSatirlari, kadroTelOf, kadroSnfId, sinifId, aktifDonemId, LS_KEY }";
+const EXPORTS = "{ DB, saveDB, csvDosya, csvParse, csvImportUygula, CSV_SCHEMA, CSV_SCHEMA_KADRO, CSV_SCHEMA_KADRO_V3, CSV_BASLIK_KADRO, CSV_BASLIK_KADRO_V2, CSV_BASLIK_KADRO_V3, CSV_BASLIK_DERS, CSV_BASLIK_ISTEK, kadroAdSoyadAyir, kadroV2Satirlari, kadroV3Satirlari, csvKadroSatirlari, kadroTelOf, kadroSnfId, sinifId, aktifDonemId, LS_KEY }";
 let api;
 try {
   api = new Function(scripts + "\n  return " + EXPORTS + ";\n")();
@@ -44,13 +44,15 @@ try {
   console.log(e.stack.split("\n").slice(0, 6).join("\n"));
   process.exit(1);
 }
-const { DB, saveDB, csvDosya, csvImportUygula, CSV_SCHEMA, CSV_SCHEMA_KADRO, CSV_BASLIK_KADRO, CSV_BASLIK_KADRO_V2, CSV_BASLIK_DERS, CSV_BASLIK_ISTEK, kadroAdSoyadAyir, kadroV2Satirlari, csvKadroSatirlari, kadroSnfId, aktifDonemId, LS_KEY } = api;
+const { DB, saveDB, csvDosya, csvImportUygula, CSV_SCHEMA, CSV_SCHEMA_KADRO, CSV_SCHEMA_KADRO_V3, CSV_BASLIK_KADRO, CSV_BASLIK_KADRO_V2, CSV_BASLIK_KADRO_V3, CSV_BASLIK_DERS, CSV_BASLIK_ISTEK, kadroAdSoyadAyir, kadroV2Satirlari, kadroV3Satirlari, csvKadroSatirlari, kadroSnfId, aktifDonemId, LS_KEY } = api;
 
 /* ================= 1) v2 header ================= */
-console.log("1) v2 header ve kolon sırası:");
-t("CSV_SCHEMA_KADRO = yks-csv-v2", CSV_SCHEMA_KADRO === "yks-csv-v2");
+console.log("1) v3 header ve kolon sırası:");
+t("CSV_SCHEMA_KADRO = yks-csv-v2 (sabit korunur)", CSV_SCHEMA_KADRO === "yks-csv-v2");
+t("CSV_SCHEMA_KADRO_V3 = yks-csv-v3", CSV_SCHEMA_KADRO_V3 === "yks-csv-v3");
 t("v1 header sabiti KORUNDU", JSON.stringify(CSV_BASLIK_KADRO) === JSON.stringify(["schema","dataset","donemId","tip","id","ad","brans","sinifId","sinifAd","ekAlanlarJson"]));
-t("v2 header birebir", JSON.stringify(CSV_BASLIK_KADRO_V2) === JSON.stringify(["schema","dataset","donemId","tip","id","ad","soyad","telefon","brans","sinifId","sinifAd","ekAlanlarJson"]), JSON.stringify(CSV_BASLIK_KADRO_V2));
+t("v2 header sabiti KORUNDU", JSON.stringify(CSV_BASLIK_KADRO_V2) === JSON.stringify(["schema","dataset","donemId","tip","id","ad","soyad","telefon","brans","sinifId","sinifAd","ekAlanlarJson"]), JSON.stringify(CSV_BASLIK_KADRO_V2));
+t("v3 header birebir", JSON.stringify(CSV_BASLIK_KADRO_V3) === JSON.stringify(["schema","dataset","donemId","tip","id","ad","soyad","telefon","anneTelefon","babaTelefon","brans","sinifId","sinifAd","ekAlanlarJson"]), JSON.stringify(CSV_BASLIK_KADRO_V3));
 t("ders/istek header şemaları DEĞİŞMEDİ", JSON.stringify(CSV_BASLIK_DERS) === JSON.stringify(["schema","dataset","donemId","tip","id","ogrenciId","ogrenciIds","ogrenciAd","ogretmenId","ogretmenAd","dersId","dersAd","konu","tarih","saat","kod","sinif","durum","ekAlanlarJson"]) && JSON.stringify(CSV_BASLIK_ISTEK) === JSON.stringify(["schema","dataset","donemId","tip","id","ogrenciId","ogrenciIds","ogrenciAd","ogretmenId","ogretmenAd","dersId","dersAd","konu","tarih","saat","kod","sinif","durum","olusturma","ekAlanlarJson"]));
 
 /* ================= 2) ad/soyad ayırma ================= */
@@ -69,7 +71,7 @@ const a6 = kadroAdSoyadAyir("MAHMUT ZİYA YILDIRIM ÇÖLAK");
 t("çok kelimeli soyad: ad='MAHMUT ZİYA YILDIRIM', soyad='ÇÖLAK'", a6.ad === "MAHMUT ZİYA YILDIRIM" && a6.soyad === "ÇÖLAK", JSON.stringify(a6));
 
 /* ================= 3) Test DB kurulumu ================= */
-console.log("3) Test DB + v2 dışa aktarma:");
+console.log("3) Test DB + v3 dışa aktarma:");
 DB.ogretmenler = [
   { id: "ort-mat-1", ad: "SONER AÇIKGÖZ", brans: "mat", avail: { sinif: {}, musait: [] } },
   { id: "ort-cok-1", ad: "MEHMET ALI YILMAZ", brans: "fiz", avail: { sinif: {}, musait: [] } }
@@ -83,7 +85,7 @@ DB.sinifProg = { "12 SAY 1": [], "12 SAY 2": [], "12 DİL": [] };
 DB.sinifIds = { "12 SAY 1": kadroSnfId("12 SAY 1"), "12 SAY 2": kadroSnfId("12 SAY 2"), "12 DİL": kadroSnfId("12 DİL") };
 saveDB();
 
-const v2Satirlar = kadroV2Satirlari();
+const v2Satirlar = kadroV3Satirlari(); /* TELEFON3-YAMASI: dışa aktarma artık v3; v2/v1 üreticileri KORUNDU */
 const v2Ogr = v2Satirlar.find((r) => r[3] === "ogrenci" && r[4] === "ogr-ayse-1");
 const v2OgrPlus = v2Satirlar.find((r) => r[3] === "ogrenci" && r[4] === "ogr-plus-1");
 const v2OgrSifir = v2Satirlar.find((r) => r[3] === "ogrenci" && r[4] === "ogr-sifir-1");
@@ -91,32 +93,34 @@ const v2Ogrt = v2Satirlar.find((r) => r[3] === "ogretmen" && r[4] === "ort-mat-1
 const v2OgrtCok = v2Satirlar.find((r) => r[3] === "ogretmen" && r[4] === "ort-cok-1");
 const v2Snf = v2Satirlar.find((r) => r[3] === "sinif" && r[4] === DB.sinifIds["12 SAY 1"]);
 
-t("v2 satır genişliği 12 kolon", v2Satirlar.every((r) => r.length === 12), v2Satirlar.map((r) => r.length).join(","));
+t("v3 satır genişliği 14 kolon", v2Satirlar.every((r) => r.length === 14), v2Satirlar.map((r) => r.length).join(","));
 t("öğrenci: ad='Ayşe', soyad='Demir'", v2Ogr[5] === "Ayşe" && v2Ogr[6] === "Demir", JSON.stringify([v2Ogr[5], v2Ogr[6]]));
 t("öğrenci: telefon AYRI kolonda, string korunur ('05551112233')", v2Ogr[7] === "05551112233", v2Ogr[7]);
+t("anne/baba telefon AYRI kolonlarda (anneTelefon/babaTelefon)", v2Ogr[8] === "" && v2Ogr[9] === "", JSON.stringify([v2Ogr[8], v2Ogr[9]]));
 t("+90 ve baştaki 0, boşluk, tire KORUNUR (biçimlendirme yok)", v2OgrPlus[7] === "+90 555-999-88 77", v2OgrPlus[7]);
 t("boş tel → boş hücre (string)", v2OgrSifir[7] === "", JSON.stringify(v2OgrSifir[7]));
 t("öğretmen çok kelimeli: ad='MEHMET ALI', soyad='YILMAZ'", v2OgrtCok[5] === "MEHMET ALI" && v2OgrtCok[6] === "YILMAZ", JSON.stringify([v2OgrtCok[5], v2OgrtCok[6]]));
-t("öğretmen branş kolonunda (index 8)", v2Ogrt[8] === "mat");
-t("sınıf satırı: ad = sınıf adı, soyad BOŞ, telefon BOŞ", v2Snf[5] === "12 SAY 1" && v2Snf[6] === "" && v2Snf[7] === "", JSON.stringify([v2Snf[5], v2Snf[6], v2Snf[7]]));
-t("sınıf satırında sinifAd = sınıf adı", v2Snf[10] === "12 SAY 1");
-t("v2 schema kolonu yks-csv-v2", v2Satirlar.every((r) => r[0] === CSV_SCHEMA_KADRO));
-t("ekAlanlarJson tel'i de taşımaya devam eder (kayıpsız)", JSON.parse(v2Ogr[11]).tel === "05551112233");
+t("öğretmen branş kolonunda (index 10)", v2Ogrt[10] === "mat");
+t("sınıf satırı: ad = sınıf adı, soyad/telefon/anne/baba BOŞ", v2Snf[5] === "12 SAY 1" && v2Snf[6] === "" && v2Snf[7] === "" && v2Snf[8] === "" && v2Snf[9] === "", JSON.stringify([v2Snf[5], v2Snf[6], v2Snf[7], v2Snf[8], v2Snf[9]]));
+t("sınıf satırında sinifAd = sınıf adı", v2Snf[12] === "12 SAY 1");
+t("v3 schema kolonu yks-csv-v3", v2Satirlar.every((r) => r[0] === CSV_SCHEMA_KADRO_V3));
+t("ekAlanlarJson tel/anneTel/babaTel İÇERMEZ (v3 temizliği)", !JSON.parse(v2Ogr[13]).tel && !JSON.parse(v2Ogr[13]).anneTel && !JSON.parse(v2Ogr[13]).babaTel, v2Ogr[13]);
+t("v2 kadro satır üretici (kadroV2Satirlari) KORUNDU", kadroV2Satirlari().every((r) => r.length === 12 && r[0] === CSV_SCHEMA_KADRO));
 t("v1 kadro satır üretici (csvKadroSatirlari) KORUNDU", csvKadroSatirlari().every((r) => r.length === 10 && r[0] === CSV_SCHEMA));
 
 /* ================= 4) Dosya bütünlüğü: BOM + CRLF + quote ================= */
 console.log("4) Dosya biçimi (BOM, CRLF, quote-aware):");
-const v2CSV = csvDosya(CSV_BASLIK_KADRO_V2, v2Satirlar);
-t("v2 dosya BOM ile başlıyor", v2CSV.charCodeAt(0) === 0xFEFF);
-t("v2 dosya CRLF satır sonu", v2CSV.includes("\r\n"));
-t("v2 header satırı noktalı virgüllü", v2CSV.replace(/^\uFEFF/, "").split("\r\n")[0] === CSV_BASLIK_KADRO_V2.join(";"));
+const v2CSV = csvDosya(CSV_BASLIK_KADRO_V3, v2Satirlar);
+t("v3 dosya BOM ile başlıyor", v2CSV.charCodeAt(0) === 0xFEFF);
+t("v3 dosya CRLF satır sonu", v2CSV.includes("\r\n"));
+t("v3 header satırı noktalı virgüllü", v2CSV.replace(/^\uFEFF/, "").split("\r\n")[0] === CSV_BASLIK_KADRO_V3.join(";"));
 t("telefon +90'lı değer quote'suz güvenli geçer", v2CSV.includes("+90 555-999-88 77"));
 
 /* ================= 5) v2 round-trip ================= */
-console.log("5) v2 export → import round-trip:");
+console.log("5) v3 export → import round-trip:");
 const onceDB5 = derinKopya(DB);
 const r5 = csvImportUygula([{ ad: "yks-kadro-global.csv", metin: v2CSV }]);
-t("v2 import kabul edildi", r5.ok, JSON.stringify((r5.hatalar || []).slice(0, 3)));
+t("v3 import kabul edildi", r5.ok, JSON.stringify((r5.hatalar || []).slice(0, 3)));
 if (r5.ok) {
   const k = r5.kopya;
   const g5 = k.ogrenciler.find((o) => o.id === "ogr-ayse-1");
@@ -131,8 +135,36 @@ if (r5.ok) {
   t("sınıflar kayıpsız", JSON.stringify(k.sinifIds) === JSON.stringify(onceDB5.sinifIds));
 }
 
+/* ================= 5b) v3 round-trip: anne/baba kolonlar + boş kolon temizliği ================= */
+console.log("5b) v3 round-trip (anne/baba ayri kolon + boş kolon temizliği):");
+saveDB();
+DB.ogrenciler.find((o) => o.id === "ogr-ayse-1").anneTel = "0533 444 55 66";
+DB.ogrenciler.find((o) => o.id === "ogr-ayse-1").babaTel = "+90 555-000-11 22";
+saveDB();
+const v3RT = csvDosya(CSV_BASLIK_KADRO_V3, kadroV3Satirlari());
+const r5b = csvImportUygula([{ ad: "yks-kadro-v3.csv", metin: v3RT }]);
+t("v3 round-trip import kabul edildi", r5b.ok, JSON.stringify((r5b.hatalar || []).slice(0, 3)));
+if (r5b.ok) {
+  const g = r5b.kopya.ogrenciler.find((o) => o.id === "ogr-ayse-1");
+  t("v3 round-trip: tel kayıpsız", g.tel === "05551112233", g.tel);
+  t("v3 round-trip: anneTelefon → anneTel kayıpsız", g.anneTel === "0533 444 55 66", g.anneTel);
+  t("v3 round-trip: babaTelefon → babaTel kayıpsız", g.babaTel === "+90 555-000-11 22", g.babaTel);
+  t("v3 round-trip: ad+soyad birleşti", g.ad === "Ayşe Demir", g.ad);
+}
+/* v3 boş kolon → bilinçli "" temizliği (authoritative) */
+const v3BosKolon = csvDosya(CSV_BASLIK_KADRO_V3, [
+  [CSV_SCHEMA_KADRO_V3, "kadro", "", "ogrenci", "ogr-ayse-1", "Ayşe", "Demir", "", "", "", "", kadroSnfId("12 SAY 1"), "12 SAY 1", JSON.stringify({ ozelNot: "x" })]
+]);
+const r5c = csvImportUygula([{ ad: "bos.csv", metin: v3BosKolon }]);
+t("v3 boş kolon import ok", r5c.ok, JSON.stringify((r5c.hatalar || []).slice(0, 3)));
+if (r5c.ok) {
+  const g = r5c.kopya.ogrenciler.find((o) => o.id === "ogr-ayse-1");
+  t("v3 boş kolon → tel/anneTel/babaTel bilinçli ''", g.tel === "" && g.anneTel === "" && g.babaTel === "", JSON.stringify({ tel: g.tel, anneTel: g.anneTel, babaTel: g.babaTel }));
+  t("v3 boş kolon: diğer ek alan korunur", g.ozelNot === "x");
+}
+
 /* ================= 6) v2 telefon AUTHORITATIVE ================= */
-console.log("6) v2 üst düzey telefon AUTHORITATIVE:");
+console.log("6) v2 üst düzey telefon AUTHORITATIVE (v1/v2: anne/baba KORUNUR):");
 const telSaldiriCSV = csvDosya(CSV_BASLIK_KADRO_V2, [
   [CSV_SCHEMA_KADRO, "kadro", "", "ogrenci", "ogr-ayse-1", "Ayşe", "Demir", "0555 000 11 22", "", kadroSnfId("12 SAY 1"), "12 SAY 1", JSON.stringify({ tel: "0999 KAYBEDILDI" })]
 ]);

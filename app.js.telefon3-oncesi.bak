@@ -523,15 +523,6 @@ function normalize(d) {
      kimlikleriTamamla idempotenttir; mevcut geçerli ID'lere (öğrenci/öğretmen id, sinifIds girdileri) dokunmaz. */
   kimlikleriTamamla(d);
   /* KADRO-YAMASI: her normalize (boot/loadDB/yedek yükleme) gerçek kadroyu DB'ye uygular — idempotent */
-  /* TELEFON3-YAMASI: ogrenciler[].tel/anneTel/babaTel migration — idempotent.
-     Mevcut tel AYNEN korunur; anneTel/babaTel eksikse "" olarak eklenir; mevcut değerler DEĞİŞTİRİLMEZ;
-     telefonlar normalize edilmez (+90, 0, boşluk, tire aynen kalır). Öğretmen/sınıf kayıtlarına dokunulmaz. */
-  if (Array.isArray(d.ogrenciler)) d.ogrenciler.forEach(function (o) {
-    if (!o || typeof o !== "object") return;
-    if (o.tel == null) o.tel = "";
-    if (o.anneTel == null) o.anneTel = "";
-    if (o.babaTel == null) o.babaTel = "";
-  });
   if (typeof kadroDuzelt === "function") kadroDuzelt(d);
   if (typeof donemleriBaslat === "function") donemleriBaslat(d); /* DONEM-ILK-YAMASI: dönem/donemId eksikleri tek kapıdan (idempotent) */
   return d;
@@ -1604,15 +1595,7 @@ function ogrenciTab() {
         '<input id="d-ad" value="' + esc(duzO.ad) + '" placeholder="Ad Soyad" class="w-full rounded-xl border border-amber-200 bg-white px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-amber-400/40" />' +
         '<input id="d-sinif" list="dl-sinif2" value="' + esc(duzO.sinif || "") + '" placeholder="Sınıf" class="w-full rounded-xl border border-amber-200 bg-white px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-amber-400/40" />' +
         '<datalist id="dl-sinif2">' + siniflar.map(function (s) { return '<option value="' + esc(s) + '"></option>'; }).join("") + '</datalist>' +
-        /* TELEFON3-YAMASI: 3 telefon alanı — mobilde alt alta, geniş ekranda 3 kolon */
-        '<div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">' +
-          '<div><label class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Öğrenci Telefonu</label>' +
-          '<input id="d-tel" type="tel" inputmode="tel" value="' + esc(duzO.tel || "") + '" placeholder="Öğrenci telefonu" class="w-full rounded-xl border border-amber-200 bg-white px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-amber-400/40" /></div>' +
-          '<div><label class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Anne Telefonu</label>' +
-          '<input id="d-anne-tel" type="tel" inputmode="tel" value="' + esc(duzO.anneTel || "") + '" placeholder="Anne telefonu" class="w-full rounded-xl border border-amber-200 bg-white px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-amber-400/40" /></div>' +
-          '<div><label class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Baba Telefonu</label>' +
-          '<input id="d-baba-tel" type="tel" inputmode="tel" value="' + esc(duzO.babaTel || "") + '" placeholder="Baba telefonu" class="w-full rounded-xl border border-amber-200 bg-white px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-amber-400/40" /></div>' +
-        '</div>' +
+        '<input id="d-tel" value="' + esc(duzO.tel || "") + '" placeholder="Telefon" inputmode="tel" class="w-full rounded-xl border border-amber-200 bg-white px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-amber-400/40" />' +
         '<div class="flex gap-2">' +
           '<button onclick="ogrenciGuncelle()" class="flex-1 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-[13px] font-bold py-2.5 shadow-sm transition-colors"><i class="fa-solid fa-check mr-1.5"></i>Güncelle</button>' +
           '<button onclick="ogrenciDuzenleIptal()" class="rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 text-[13px] font-bold px-4 py-2.5 shadow-sm transition-colors">İptal</button>' +
@@ -1658,15 +1641,7 @@ function ogrenciTab() {
       '<div class="space-y-2.5">' +
         '<input id="o-ad" placeholder="Ad Soyad (örn. Ayşe Demir)" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
         '<input id="o-sinif" list="dl-sinif" placeholder="Sınıf / Grup (örn. MEZUN SAY 1)" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' + dlSinif +
-        /* TELEFON3-YAMASI: aynı telefonlar bölümü — 3 alan */
-        '<div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">' +
-          '<div><label class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Öğrenci Telefonu</label>' +
-          '<input id="o-tel" type="tel" inputmode="tel" placeholder="Öğrenci telefonu" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" /></div>' +
-          '<div><label class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Anne Telefonu</label>' +
-          '<input id="o-anne-tel" type="tel" inputmode="tel" placeholder="Anne telefonu" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" /></div>' +
-          '<div><label class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Baba Telefonu</label>' +
-          '<input id="o-baba-tel" type="tel" inputmode="tel" placeholder="Baba telefonu" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" /></div>' +
-        '</div>' +
+        '<input id="o-tel" placeholder="Telefon (WhatsApp için, isteğe bağlı)" inputmode="tel" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
         '<button onclick="ogrenciEkle()" class="w-full rounded-full bg-blue-500 hover:bg-blue-600 text-white text-[13px] font-bold py-2.5 shadow-sm transition-colors"><i class="fa-solid fa-plus mr-1.5"></i>Öğrenciyi Kaydet</button>' +
       "</div>" +
       // ── Düzenleme formu (koşullu) ──
@@ -1685,13 +1660,10 @@ function ogrenciEkle() {
   var ad = $("o-ad").value.trim();
   var sinif = $("o-sinif").value.trim();
   var tel = $("o-tel").value.trim();
-  /* TELEFON3-YAMASI: anne/baba telefonları da kaydedilir (normalize YOK, aynen) */
-  var anneTel = $("o-anne-tel") ? $("o-anne-tel").value.trim() : "";
-  var babaTel = $("o-baba-tel") ? $("o-baba-tel").value.trim() : "";
   if (!ad) { toast("Öğrenci adı boş olamaz.", "hata"); return; }
   var varMi = DB.ogrenciler.some(function (o) { return kucuk(o.ad) === kucuk(ad); });
   if (varMi) { toast("Bu öğrenci zaten kayıtlı.", "uyari"); return; }
-  var yeni = { id: uid(), ad: ad, sinif: sinif, tel: tel, anneTel: anneTel, babaTel: babaTel };
+  var yeni = { id: uid(), ad: ad, sinif: sinif, tel: tel };
   DB.ogrenciler.push(yeni);
   if (sinif && !DB.sinifProg[sinif]) DB.sinifProg[sinif] = [];
   ui.sinifAd = sinif || ui.sinifAd;
@@ -1699,8 +1671,6 @@ function ogrenciEkle() {
   $("o-ad").value = "";
   $("o-sinif").value = "";
   $("o-tel").value = "";
-  if ($("o-anne-tel")) $("o-anne-tel").value = ""; /* TELEFON3-YAMASI */
-  if ($("o-baba-tel")) $("o-baba-tel").value = "";
   renderYonetim(); renderFormDestek();
 }
 // Öğrenci düzenleme
@@ -1722,9 +1692,6 @@ function ogrenciGuncelle() {
   var ad = $("d-ad").value.trim();
   var sinif = $("d-sinif").value.trim();
   var tel = $("d-tel").value.trim();
-  /* TELEFON3-YAMASI: anne/baba telefonları güncelleme akışında korunur/girilir */
-  var anneTel = $("d-anne-tel") ? $("d-anne-tel").value.trim() : (mevcut.anneTel || "");
-  var babaTel = $("d-baba-tel") ? $("d-baba-tel").value.trim() : (mevcut.babaTel || "");
   if (!ad) { toast("Öğrenci adı boş olamaz.", "hata"); return; }
   var cakisiyor = DB.ogrenciler.some(function(o){ return o.id !== id && kucuk(o.ad) === kucuk(ad); });
   if (cakisiyor) { toast("Bu isimde başka bir öğrenci zaten var.", "hata"); return; }
@@ -1732,8 +1699,6 @@ function ogrenciGuncelle() {
   mevcut.ad = ad;
   mevcut.sinif = sinif;
   mevcut.tel = tel;
-  mevcut.anneTel = anneTel;
-  mevcut.babaTel = babaTel;
   // Ders kayıtlarındaki öğrenci adını güncelle
   DB.dersler.forEach(function(l){
     if (l.ogrenciAd === eskiAd) l.ogrenciAd = ad;
@@ -1847,11 +1812,6 @@ function togSinif(sinifAd, di, saat) {
    ================================================================ */
 var CSV_SCHEMA = "yks-csv-v1";
 var CSV_SCHEMA_KADRO = "yks-csv-v2"; /* KADRO-KOLON-YAMASI: yalnızca dataset=kadro v2; diğer dataset'ler v1 kalır */
-/* TELEFON3-YAMASI: v3 kadro header — telefon;anneTelefon;babaTelefon üst düzey kolonlar (sıra sabittir). Yalnız dataset=kadro. */
-var CSV_SCHEMA_KADRO_V3 = "yks-csv-v3";
-var CSV_BASLIK_KADRO_V3 = ["schema","dataset","donemId","tip","id","ad","soyad","telefon","anneTelefon","babaTelefon","brans","sinifId","sinifAd","ekAlanlarJson"];
-/* v3 ekAlanlarJson'dan ÇIKARILAN anahtarlar — telefona üst düzey kolonlar authoritative; JSON'da tekrar etmez */
-var TELEFON3_JSON_CIKAR = ["tel","anneTel","babaTel","anneTelefon","babaTelefon"];
 var CSV_SEP = ";";
 var CSV_EOL = "\r\n";
 var EXCEL_CSV_SNAPSHOT = null; /* son BAŞARILI içe aktarma öncesi DB snapshot (oturum içi) */
@@ -1934,27 +1894,6 @@ function kadroTelOf(kayit) {
   var t = kayit && kayit.tel;
   return t == null ? "" : String(t);
 }
-/* TELEFON3-YAMASI: anne/baba telefon okuma yardımcıları — string, normalize YOK */
-function kadroAnneTelOf(kayit) { var t = kayit && kayit.anneTel; return t == null ? "" : String(t); }
-function kadroBabaTelOf(kayit) { var t = kayit && kayit.babaTel; return t == null ? "" : String(t); }
-/* v3 kadro satırları — emission sırası aynen: ogretmen → sinif → ogrenci.
-   Öğretmen ve sınıf satırlarında telefon;anneTelefon;babaTelefon BOŞ. Öğrenci satırında
-   telefon = o.tel, anneTelefon = o.anneTel, babaTelefon = o.babaTel (string, kayıpsız). */
-function kadroV3Satirlari() {
-  var satirlar = [];
-  DB.ogretmenler.forEach(function (t) {
-    var a = kadroAdSoyadAyir(t.ad);
-    satirlar.push([CSV_SCHEMA_KADRO_V3,"kadro","","ogretmen", t.id || "", a.ad, a.soyad, "", "", "", t.brans || "", "", "", csvEkAlanlar(t)]);
-  });
-  Object.keys(DB.sinifIds || {}).forEach(function (ad) {
-    satirlar.push([CSV_SCHEMA_KADRO_V3,"kadro","","sinif", DB.sinifIds[ad] || "", ad, "", "", "", "", "", "", ad, "{}"]);
-  });
-  DB.ogrenciler.forEach(function (o) {
-    var a = kadroAdSoyadAyir(o.ad);
-    satirlar.push([CSV_SCHEMA_KADRO_V3,"kadro","","ogrenci", o.id || "", a.ad, a.soyad, kadroTelOf(o), kadroAnneTelOf(o), kadroBabaTelOf(o), "", sinifId(o.sinif) || "", o.sinif || "", csvEkAlanlar(o)]);
-  });
-  return satirlar;
-}
 /* v2 kadro satırları — KADRO-SIRALAMA-YAMASI emission sırası aynen korunur: ogretmen → sinif → ogrenci.
    Sinif satırlarında ad = sınıf adı; soyad ve telefon BOŞ. ekAlanlarJson tüm ek alanlarıyla korunur. */
 function kadroV2Satirlari() {
@@ -1981,7 +1920,6 @@ function csvEkAlanlar(kayit) {
   var ek = {};
   Object.keys(kayit || {}).forEach(function (k) {
     if (CSV_KORUMALI_ALANLAR.indexOf(k) !== -1) return;
-    if (TELEFON3_JSON_CIKAR.indexOf(k) !== -1) return; /* TELEFON3-YAMASI: v3 export JSON'unda telefon alanları tekrar edilmez (diğer sürümlerde de zararsız — üst düzey kolonlar yoksa ekAlanJson tel v1 fallback'i çalışır) */
     ek[k] = kayit[k];
   });
   return JSON.stringify(ek);
@@ -2055,9 +1993,9 @@ function csvIndir(dosyaAd, basliklar, satirlar) {
   setTimeout(function () { URL.revokeObjectURL(a.href); }, 1500);
 }
 function csvKadroIndir() {
-  /* TELEFON3-YAMASI: dışa aktarma v3 (telefon;anneTelefon;babaTelefon) — v1/v2 içe aktarma KORUNUR */
-  csvIndir("yks-kadro-global.csv", CSV_BASLIK_KADRO_V3, kadroV3Satirlari());
-  toast("Kadro CSV indirildi ✓ (v3 — tüm öğrenci/öğretmen/sınıf — dönem filtresi yok)");
+  /* KADRO-KOLON-YAMASI: dışa aktarma v2 (ad;soyad;telefon üst düzey) — v1 içe aktarma KORUNUR */
+  csvIndir("yks-kadro-global.csv", CSV_BASLIK_KADRO_V2, kadroV2Satirlari());
+  toast("Kadro CSV indirildi ✓ (v2 — tüm öğrenci/öğretmen/sınıf — dönem filtresi yok)");
 }
 function csvDersIndir() {
   var id = aktifDonemId();
@@ -2098,7 +2036,7 @@ function csvCozDosya(metin, dosyaAdi) {
     return { dataset: "", schema: "", baslik: [], veriler: [], hata: csvHata(dosyaAdi, 1, "başlık", "schema/dataset başlıkları yok") };
   }
   /* KADRO-KOLON-YAMASI: yks-csv-v2 yalnızca kadro için; diğer schema reddedilir (aşağıda dataset kontrolü) */
-  if (schema !== CSV_SCHEMA && schema !== CSV_SCHEMA_KADRO && schema !== CSV_SCHEMA_KADRO_V3) return { dataset: dataset, schema: schema, baslik: [], veriler: [], hata: csvHata(dosyaAdi, 1, "schema", "Bilinmeyen schema: " + (schema || "(boş)")) }; /* TELEFON3-YAMASI: v3 kabul */
+  if (schema !== CSV_SCHEMA && schema !== CSV_SCHEMA_KADRO) return { dataset: dataset, schema: schema, baslik: [], veriler: [], hata: csvHata(dataset, 1, "schema", "Bilinmeyen schema: " + (schema || "(boş)")) };
   var veriler = satirlar.map(function (r) {
     var o = {};
     baslik.forEach(function (k, i) { o[k] = r[i] != null ? r[i] : ""; });
@@ -2121,7 +2059,7 @@ function csvImportUygula(dosyalar) {
     if (c.dataset === "sinifProg") { hatalar.push(csvHata(d.ad, 1, "dataset", "sinifProg dataset'i genel içe aktarmada desteklenmez — Sınıf Programı CSV İçe Aktar butonunu kullanın")); return; }
     if (["kadro", "dersler", "istekler"].indexOf(c.dataset) === -1) { hatalar.push(csvHata(d.ad, 1, "dataset", "Bilinmeyen dataset: " + c.dataset)); return; }
     /* KADRO-KOLON-YAMASI: v2 şema YALNIZ kadro CSV'sinde geçerli */
-    if ((c.schema === CSV_SCHEMA_KADRO || c.schema === CSV_SCHEMA_KADRO_V3) && c.dataset !== "kadro") { hatalar.push(csvHata(d.ad, 1, "schema", "yks-csv-v2/v3 yalnızca dataset=kadro için kullanılabilir")); return; } /* TELEFON3-YAMASI */
+    if (c.schema === CSV_SCHEMA_KADRO && c.dataset !== "kadro") { hatalar.push(csvHata(d.ad, 1, "schema", "yks-csv-v2 yalnızca dataset=kadro için kullanılabilir")); return; }
     cozulen.push(c);
   });
   if (hatalar.length) return { ok: false, hatalar: hatalar };
@@ -2147,7 +2085,6 @@ function csvImportUygula(dosyalar) {
   cozulen.filter(function (c) { return c.dataset === "kadro"; }).forEach(function (c) {
     /* KADRO-KOLON-YAMASI: v2 → ad/soyad üst düzey + telefon authoritative; v1 → tam ad + ekAlanlarJson.tel fallback */
     var v2 = c.schema === CSV_SCHEMA_KADRO;
-    var v3 = c.schema === CSV_SCHEMA_KADRO_V3; /* TELEFON3-YAMASI */
     var kadroAdBirlesik = function (vv) { return v2 ? (String(vv.ad || "") + " " + String(vv.soyad || "")).trim() : (vv.ad || ""); };
     var goren = {}; /* aynı dosya içinde yinelenen ID kontrolü */
     c.veriler.forEach(function (v, idx) {
@@ -2182,26 +2119,11 @@ function csvImportUygula(dosyalar) {
           mevcut.ad = kadroAdBirlesik(v); mevcut.sinif = v.sinifAd || mevcut.sinif;
           csvEkAlanUygula(mevcut, v.ekAlanlarJson);
           if (v2) mevcut.tel = String(v.telefon == null ? "" : v.telefon); /* v2: üst düzey telefon AUTHORITATIVE */
-          /* TELEFON3-YAMASI: v3 — telefon;anneTelefon;babaTelefon AUTHORITATIVE (boş kolon → bilinçli ""); v1/v2 anne/baba KORUNUR */
-          if (v3) {
-            mevcut.tel = String(v.telefon == null ? "" : v.telefon);
-            mevcut.anneTel = String(v.anneTelefon == null ? "" : v.anneTelefon);
-            mevcut.babaTel = String(v.babaTelefon == null ? "" : v.babaTelefon);
-          }
           guncellenen++;
         } else {
           kopya.ogrenciler.push({ id: id, ad: kadroAdBirlesik(v), sinif: v.sinifAd || "", tel: v2 ? String(v.telefon == null ? "" : v.telefon) : "" });
           csvEkAlanUygula(kopya.ogrenciler[kopya.ogrenciler.length - 1], v.ekAlanlarJson);
           if (v2) kopya.ogrenciler[kopya.ogrenciler.length - 1].tel = String(v.telefon == null ? "" : v.telefon); /* v2 authoritative */
-          /* TELEFON3-YAMASI: v3 — üç telefon alanı üst düzey kolonlardan; v1/v2'de anne/baba "" başlar */
-          if (v3) {
-            kopya.ogrenciler[kopya.ogrenciler.length - 1].tel = String(v.telefon == null ? "" : v.telefon);
-            kopya.ogrenciler[kopya.ogrenciler.length - 1].anneTel = String(v.anneTelefon == null ? "" : v.anneTelefon);
-            kopya.ogrenciler[kopya.ogrenciler.length - 1].babaTel = String(v.babaTelefon == null ? "" : v.babaTelefon);
-          } else {
-            kopya.ogrenciler[kopya.ogrenciler.length - 1].anneTel = "";
-            kopya.ogrenciler[kopya.ogrenciler.length - 1].babaTel = "";
-          }
           eklenen++;
         }
       } else if (tip === "ogretmen") {

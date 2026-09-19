@@ -45,7 +45,7 @@ const derinKopya = (x) => JSON.parse(JSON.stringify(x));
 /* donemId'yi atlayıp anahtarları sıralı serileştirir → donemId dışı alan deep-equal karşılaştırması */
 function sirali(v, skip) {
   if (Array.isArray(v)) return v.map((x) => sirali(x, skip));
-  if (v && typeof v === "object") { const o = {}; Object.keys(v).sort().forEach((k) => { if (k !== skip) o[k] = sirali(v[k], skip); }); return o; }
+  if (v && typeof v === "object") { const o = {}; Object.keys(v).sort().forEach((k) => { if (k !== skip && !(Array.isArray(skip) && skip.indexOf(k) !== -1)) o[k] = sirali(v[k], skip); }); return o; }
   return v;
 }
 const alanEsit = (a, b, skip) => JSON.stringify(sirali(a, skip)) === JSON.stringify(sirali(b, skip));
@@ -110,7 +110,7 @@ t("sinifProgDonemId yalnız EK alan (sinifProg nesnesi içinde değil", !("donem
 
 /* ---- 8) Öğrenci/öğretmen kayıtları ---- */
 console.log("8) Öğrenci ve öğretmen kayıtları değişmiyor:");
-t("ogrenciler birebir aynı", alanEsit(n1.ogrenciler, eski.ogrenciler));
+t("ogrenciler birebir aynı", alanEsit(n1.ogrenciler, eski.ogrenciler, ["anneTel","babaTel","tel"])); /* TELEFON3-YAMASI: migration alanları (tel/anneTel/babaTel "" backfill) bilinçli */
 t("ogretmenler birebir aynı", alanEsit(n1.ogretmenler, eski.ogretmenler));
 t("öğrenci kayıtlarına donemId EKLENMEDİ", n1.ogrenciler.every((o) => !("donemId" in o)));
 t("öğretmen kayıtlarına donemId EKLENMEDİ", n1.ogretmenler.every((o) => !("donemId" in o)));

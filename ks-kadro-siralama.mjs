@@ -62,7 +62,19 @@ t("sınıf satır sayısı değişmedi", yeniSatirlar.filter(r => r[3] === "sini
 t("öğrenci satır sayısı değişmedi", yeniSatirlar.filter(r => r[3] === "ogrenci").length === eskiSatirlar.filter(r => r[3] === "ogrenci").length);
 t("toplam satır sayısı eşit", yeniSatirlar.length === eskiSatirlar.length);
 const key = (r) => JSON.stringify(r);
-t("satır içerik kümesi birebir aynı (tek fark sıra)", JSON.stringify([...yeniSatirlar].map(key).sort()) === JSON.stringify(eskiSatirlar.map(key).sort()));
+t("satır içerik kümesi aynı (tek fark sıra; TELEFON3-YAMASI: ekAlanlarJson'da tel alanları bilinçli olarak çıkarıldı)", (() => {
+  const eskiKume = new Set(eskiSatirlar.map(key));
+  const yeniKume = new Set(yeniSatirlar.map(key));
+  /* yalnızca tel-farkı kaynaklı satırlara izin ver: aynı satır, ekAlanlarJson'da tel/anneTel/babaTel anahtarları farkı */
+  const normalize = (r) => JSON.stringify(r.map((v) => {
+    if (typeof v !== "string") return v;
+    try { const o = JSON.parse(v); if (o && typeof o === "object") { delete o.tel; delete o.anneTel; delete o.babaTel; return o; } } catch (e) {}
+    return v;
+  }));
+  const eskiN = eskiSatirlar.map(normalize).sort();
+  const yeniN = yeniSatirlar.map(normalize).sort();
+  return JSON.stringify(eskiN) === JSON.stringify(yeniN);
+})());
 
 /* 3) Header byte-identical */
 console.log("3) Header:");

@@ -114,7 +114,7 @@ const ayseSatirlar = kadroSatirlar.filter((r) => r[3] === "ogrenci" && r[5] === 
 t("aynı isimli 2 öğrenci 2 satır + farklı ID", ayseSatirlar.length === 2 && ayseSatirlar[0][4] !== ayseSatirlar[1][4]);
 const ogrSatir = kadroSatirlar.find((r) => r[4] === "ogr-ayse-1");
 t("öğrenci sinifId helper ile dolu", ogrSatir[7] === kadroSnfId("12 SAY 1") && ogrSatir[8] === "12 SAY 1");
-t("öğrenci ekAlanlarJson tel'i kayıpsız taşır", JSON.parse(ogrSatir[9]).tel === "05551112233");
+t("öğrenci ekAlanlarJson tel'i taşımaz (TELEFON3-YAMASI: üst düzey kolonlar)", !("tel" in JSON.parse(ogrSatir[9])));
 t("öğrenci ekAlanlarJson korumalı alan içermez", ["id", "donemId", "tip"].every((k) => !(k in JSON.parse(ogrSatir[9]))));
 const ortSatir = kadroSatirlar.find((r) => r[4] === "ort-mat-1");
 t("öğretmen branş sütunu dolu", ortSatir[6] === "mat");

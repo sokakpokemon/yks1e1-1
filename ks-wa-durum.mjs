@@ -126,9 +126,14 @@ reg["waOnizlemeMetin"] = elStub("waOnizlemeMetin");
 reg["waOnizlemePanel"] = elStub("waOnizlemePanel");
 waOnizle(ayse.id);
 t("önizleme metni = ogrenciMesajMetni çıktısı (birebir)", reg["waOnizlemeMetin"].textContent === mTek);
+/* WA-ALICI-YAMASI: alici varsayılan ogrenci → o.tel kullanılır. Seed'de Ayşe tel'i boş;
+   gönderim ENGELLENİR (window.open yok, fallback yok — bilinçli yeni davranış). URL testi için tel doldurulur. */
 const yakalanan = [];
 const eskiOpen = global.window.open;
 global.window.open = (u) => { yakalanan.push(u); return null; };
+waGonder(ayse.id);
+t("boş telefonda waGonder engellenir (window.open yok)", yakalanan.length === 0);
+ayse.tel = "05559998877";
 waGonder(ayse.id);
 global.window.open = eskiOpen;
 t("waGonder waUrl metni = ogrenciMesajMetni", yakalanan.length === 1 && yakalanan[0].includes(encodeURIComponent(mTek).slice(0, 80)));

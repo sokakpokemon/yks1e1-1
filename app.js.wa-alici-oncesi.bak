@@ -4040,51 +4040,6 @@ function ogrenciMesajMetni(ogrenciId) {
   }
   return yerTutucu(giris) + "\n\n" + yerTutucu(baslik) + "\n\n" + satirlar.join("\n") + "\n\n" + yerTutucu(kapanis) + "\n" + yerTutucu(imza);
 }
-/* WA-ALICI-YAMASI: modal-genel alici secici (bellek içi state — localStorage'a YAZILMAZ).
-   Tek çözücü waAliciBilgisi: ogrenci → o.tel | anne → o.anneTel | baba → o.babaTel.
-   Telefon kayıtlı string AYNEN kullanılır (trim/normalize YOK); yoksa varMi=false (fallback YOK). */
-var waAktifOgrenciId = null;
-var waAliciTipi = "ogrenci";
-function waAliciBilgisi(ogrenciId, aliciTipi) {
-  var o = DB.ogrenciler.find(function (x) { return x.id === ogrenciId; });
-  var tip = aliciTipi === "anne" || aliciTipi === "baba" ? aliciTipi : "ogrenci";
-  var etiket = tip === "anne" ? "Anne" : tip === "baba" ? "Baba" : "Öğrenci";
-  var telefon = o ? (tip === "anne" ? o.anneTel : tip === "baba" ? o.babaTel : o.tel) : "";
-  return { ogrenci: o || null, tip: tip, etiket: etiket, telefon: telefon == null ? "" : String(telefon), varMi: !!(o && telefon) };
-}
-function waAliciDegistir(tip) {
-  waAliciTipi = (tip === "anne" || tip === "baba") ? tip : "ogrenci";
-  waAliciPanelGuncelle();
-  if (waAktifOgrenciId) waOnizle(waAktifOgrenciId);
-}
-function waAliciPanelGuncelle() {
-  var sel = document.getElementById("waAlici");
-  if (sel) sel.value = waAliciTipi;
-  var bilgiKutu = document.getElementById("waAliciBilgi");
-  var uyariKutu = document.getElementById("waAliciUyari");
-  if (!bilgiKutu || !uyariKutu) return;
-  var a = waAktifOgrenciId ? waAliciBilgisi(waAktifOgrenciId, waAliciTipi) : null;
-  if (a && a.ogrenci) {
-    bilgiKutu.innerHTML = '<span class="font-bold text-indigo-700">' + a.etiket + "</span>" +
-      '<span class="text-slate-400">·</span>' +
-      '<span class="' + (a.varMi ? "text-slate-600" : "text-rose-500 font-semibold") + '">' +
-      (a.varMi ? esc(a.telefon) : "telefon kayıtlı değil") + "</span>";
-    uyariKutu.textContent = a.varMi ? "" : a.etiket + " telefonu kayitli degil";
-  } else {
-    bilgiKutu.innerHTML = '<span class="text-slate-400">Öğrenci seçilmedi</span>';
-    uyariKutu.textContent = "";
-  }
-}
-function waAliciSeciciHTML() {
-  return '<div class="flex flex-wrap items-center gap-2 px-3 pt-3" id="waAliciBar">' +
-    '<label class="text-[10.5px] font-extrabold uppercase tracking-wide text-slate-400 whitespace-nowrap"><i class="fa-solid fa-address-book mr-1"></i>Alıcı</label>' +
-    '<select id="waAlici" onchange="waAliciDegistir(this.value)" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[12px] font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-green-400/40">' +
-    '<option value="ogrenci">Öğrenci</option><option value="anne">Anne</option><option value="baba">Baba</option></select>' +
-    '<span id="waAliciBilgi" class="text-[11.5px] inline-flex items-center gap-1.5"></span>' +
-    '<span id="waAliciUyari" class="text-[11px] font-semibold text-rose-500"></span>' +
-    "</div>";
-}
-
 function waUrl(metin, tel) {
   var no = String(tel || "").replace(/\D/g, "");
   if (no) return "https://wa.me/" + no + "?text=" + encodeURIComponent(metin);
@@ -4118,26 +4073,12 @@ function waAc() {
     var telVarMi = dizi.some(function(x){ var o = DB.ogrenciler.find(function(y){return y.id===x.id;}); return o && o.tel; });
     if (!telVarMi) icerik += '<p class="text-[10.5px] text-slate-300 mt-3 text-center">Öğrenciye telefon kaydedilmedi — WhatsApp’ta göndermek istediğiniz kişiyi seçersiniz. Telefon eklemek için Öğrenciler sekmesini kullanın.</p>';
   }
-  /* WA-ALICI-YAMASI: her açılışta alıcı varsayılan "ogrenci" (state yalnız bellek içi) */
-  waAliciTipi = "ogrenci";
-  waAktifOgrenciId = null;
   $("waIcerik").innerHTML = icerik;
-  /* seçici bar: innerHTML yazımı her açılışta eskiyi temizlediği için yalnız burada TEK kez kurulur
-     (duplicate imkânsız); gerçek DOM'da yoksa afterbegin eklenir, mini-DOM stub'larda noop. */
-  if (document.getElementById("waIcerik") && document.getElementById("waIcerik").insertAdjacentHTML) {
-    $("waIcerik").insertAdjacentHTML("afterbegin", waAliciSeciciHTML());
-  }
-  waAliciPanelGuncelle();
   /* WA-ONIZLEME-YAMASI: modal her açılışta onizleme panelini placeholder'a sıfırla (duplicate yok, tek panel) */
   waOnizlemeSifirla();
   $("waModal").classList.remove("hidden");
 }
-function waKapat() {
-  $("waModal").classList.add("hidden");
-  /* WA-ALICI-YAMASI: state temizle — alici seçimi yalnız bellek içi, kalıcı kayıt YOK */
-  waAktifOgrenciId = null;
-  waAliciTipi = "ogrenci";
-}
+function waKapat() { $("waModal").classList.add("hidden"); }
 
 /* WA-ONIZLEME-YAMASI: Ortak tekil onizleme paneli (id sabit; mesaj metni ASLA burada yeniden üretilmez,
    yalnızca ogrenciMesajMetni(ogrenciId) çağrısıyla alınır ve textContent ile basılır —
@@ -4148,8 +4089,6 @@ function waOnizle(ogrenciId) {
   var baslik = document.getElementById("waOnizlemeBaslik");
   if (!panel || !metinKutu) return;
   var o = DB.ogrenciler.find(function (x) { return x.id === ogrenciId; });
-  waAktifOgrenciId = ogrenciId; /* WA-ALICI-YAMASI: aktif öğrenci takibi (alıcı seçimi korunur) */
-  waAliciPanelGuncelle();
   var metin = ogrenciMesajMetni(ogrenciId); /* waGonder/waKopyalaMesaj ile BİREBİR aynı kaynak */
   if (baslik) baslik.textContent = o ? o.ad : "";
   if (!metin) {
@@ -4169,9 +4108,8 @@ function waOnizlemeSifirla() {
 function waGonder(ogrenciId) {
   var metin = ogrenciMesajMetni(ogrenciId);
   if (!metin) { toast("Bu öğrencinin seçili dönemde dersi yok.", "uyari"); return; }
-  var a = waAliciBilgisi(ogrenciId, waAliciTipi); /* WA-ALICI-YAMASI: seçili alıcı — fallback YOK */
-  if (!a.varMi) { toast(a.etiket + " telefonu kayitli degil", "uyari"); return; }
-  window.open(waUrl(metin, a.telefon), "_blank");
+  var o = DB.ogrenciler.find(function (x) { return x.id === ogrenciId; });
+  window.open(waUrl(metin, o ? o.tel : ""), "_blank");
   waKapat();
 }
 function waSatir(lid) {

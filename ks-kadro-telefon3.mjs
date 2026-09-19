@@ -202,7 +202,9 @@ t("bozuk CSV sonrası da localStorage birebir", store[LS_KEY] === lsOnce9);
 console.log("10) WhatsApp yalnız öğrenci tel kullanır:");
 const telKaynak = readFileSync("app.js", "utf8");
 const waGonderG = telKaynak.split("function waGonder(ogrenciId) {")[1].split("\nfunction ")[0];
-t("waGonder o.tel kullanıyor", waGonderG.includes("o.tel"));
+/* WA-ALICI-YAMASI: waGonder artık waAliciBilgisi çözücüsünü kullanır. Varsayılan alici="ogrenci" →
+   çözücü o.tel döndürür (aynı davranış); kaynak testi çözücü üzerinden güncellendi (bilinçli). */
+t("waGonder waAliciBilgisi çözücüsünü kullanıyor (ogrenci → tel)", waGonderG.includes("waAliciBilgisi(ogrenciId, waAliciTipi)"));
 t("waGonder anneTel/babaTel KULLANMIYOR", !waGonderG.includes("anneTel") && !waGonderG.includes("babaTel"));
 const waUrlG = telKaynak.split("function waUrl(metin, tel) {")[1].split("\nfunction ")[0];
 t("waUrl imzası değişmedi (metin, tel)", !!waUrlG && !waUrlG.includes("anneTel"));
@@ -214,7 +216,8 @@ const onceURL = globalThis._waSonURL;
 globalThis._waSonURL = null;
 waGonder("t3-ogr-2"); /* pencere pencereDersler'e bakar; boş dönemde toast çıkar — URL hedefi yine o.tel kaynaklı */
 globalThis._waSonURL = onceURL;
-t("waGonder kaynağında yalnızca o.tel referansı var (assert)", waGonderG.includes("waUrl(metin, o ? o.tel : \"\")"));
+/* WA-ALICI-YAMASI: URL hedefi artık çözücünün telefonu (varsayılan ogrenci → o.tel) */
+t("waGonder URL hedefi çözücünün telefonu (waUrl(metin, a.telefon))", waGonderG.includes("waUrl(metin, a.telefon)"));
 
 /* ================= 11) Süit kaydı ================= */
 console.log("11) Süit kaydı:");

@@ -1823,3 +1823,25 @@ yks-csv-v3;kadro;;ogrenci;t3-ornek;Ayşe;Demir;05551112233;0533 444 55 66;+90 55
 - Kullanıcının elinde eski v2 CSV'ler varsa: import çalışır (anne/baba korunur) ama export artık v3 üretir — eski v2 okuyan dış araçlar varsa header farkı bilinmeli.
 - v3 import boş telefon kolonlarını bilinçli `""` yapar (authoritative); "boş kolon = dokunma" bekleniyorsa v2 kullanılmalı.
 - `ks-excel-csv.mjs`/`ks-kadro-siralama.mjs`/`ks-donem-ilk.mjs` assertion güncellemeleri yalnızca TELEFON3 kapsamındaki alanlarla ilgili; başka gevşetme yok.
+
+## WA-ALICI-YAMASI (2026-09-19): WhatsApp modalına modal-genel alıcı seçici (Öğrenci / Anne / Baba)
+
+**Uygulama:** `node ks-yama-wa-alici.mjs` (assert'li, idempotent; 2. koşu exit 2 "Zaten uygulanmış").
+Yamalanan dosyalar: `app.js` (WA-ALICI-YAMASI blokları), `test.mjs` (ks-wa-alici.mjs süiti TAM BİR KEZ bağlandı).
+Backup: `app.js.wa-alici-oncesi.bak` — 280816 bayt, SHA-256 `3874ce7258f63bfd169e7f62c6bf441ac59497d36396b5e6d690f2c3e2944a16` (statSync byte ölçümü).
+
+**Davranış:**
+- `#waAlici` select modal genelinde TEK (waAc innerHTML yazımı her açılışta eskiyi temizlediğinden duplicate imkânsız; app.js'te `id="waAlici"` tam 1 kez, index.html'de YOK).
+- Bellek içi state: `waAktifOgrenciId`, `waAliciTipi`. Yeni localStorage key YOK; tek key `yksOto_arsiv_v1` aynen. `waKapat()` state'i sıfırlar; `waAc()` her açılışta alıcı = "ogrenci".
+- Tek çözücü `waAliciBilgisi(ogrenciId, aliciTipi)` → `{ ogrenci, tip, etiket, telefon, varMi }`; ogrenci→`o.tel`, anne→`o.anneTel`, baba→`o.babaTel`. Telefon trim/normalize YOK (kayıtlı string aynen).
+- Eksik telefonda: gönderim ENGELLENİR (`waGonder` toast + return; `window.open` çağrılmaz), öğrenci telefonuna fallback YOK. Uyarı metni: "Anne telefonu kayitli degil" / "Baba telefonu kayitli degil".
+- `waUrl(metin, tel)` ve `encodeURIComponent` davranışı değişmedi. Önizleme metni = gönderilecek metin (birebir, tek kaynak `ogrenciMesajMetni`); alıcı etiketi/telefonu mesaja eklenmez, yalnız `#waAliciBilgi` üst bilgisinde.
+- `waSatir` + Öğrenciler sekmesi ikonu ogrenci-tel yolu (`waGonder`) aynen; `waKopyalaMesaj` yalnız metin kopyalar. planli/tamamlandi cümleleri, parantezli öğretmen, grup 👥, iptal filtresi değişmedi.
+
+**Test:** `ks-wa-alici.mjs` (47 test) — alici tekliği, varsayılan, eşleşme (ogrenci/anne/baba), boş telefon engeli, no-open/no-fallback, doğru numara, encodeURIComponent, önizleme birebirliği, seçim korunumu (öğrenci değişse) + yeni açılış ogrenci, hızlı butonlar, kopyala, localStorage key değişmedi, anneTel/babaTel değişmedi, duplicate yok.
+Contract güncellemeleri (yalnızca bilinçli davranış; gevşetme yok): `ks-wa-onizleme.mjs` (waGonder kaynak regex → `waUrl(metin, a.telefon)`), `ks-wa-durum.mjs` (boş tel'de engel doğrulaması + URL testi için tel doldurma), `ks-kadro-telefon3.mjs` (waGonder kaynak assert → çözücü).
+Toplam: **1820/1820 test OK** (`node test.mjs`).
+
+**Kalan Riskler:**
+- Eski davranışta boş öğrenci telefonu wa.me'ye telefondan açılıyordu; artık engellenir — kullanıcıya "telefonu kaydedin" uyarısı gösterilir.
+- Alıcı seçimi sayfa yenilenince sıfırlanır (tasarım gereği: yalnız bellek içi).

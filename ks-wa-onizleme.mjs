@@ -67,6 +67,7 @@ try {
   t("boot hatasız → " + e.message, false); console.log(e.stack.split("\n").slice(0, 6).join("\n")); process.exit(1);
 }
 const { DB, waAc, waOnizle, waOnizlemeSifirla, waGonder, waKopyalaMesaj, waUrl, ogrenciMesajMetni, geciciKopyalafn, kopyalaMetinfn } = P;
+const waGonderGof = () => (appKaynak.split("function waGonder(ogrenciId) {")[1] || "").split("\nfunction ")[0];
 
 /* 1) Modal gerçek DOM'da (waAc $() erişimiyle kaydeder) */
 waAc();
@@ -130,7 +131,10 @@ t("encodeURIComponent aynı davranış", url.includes(encodeURIComponent(m)));
 t("waGonder ogrenciMesajMetni'ni çağırıyor (kaynak)", /function waGonder\(ogrenciId\)\s*\{\s*var metin = ogrenciMesajMetni\(ogrenciId\);/.test(appKaynak));
 t("waKopyalaMesaj ogrenciMesajMetni'ni çağırıyor (kaynak)", /function waKopyalaMesaj\(ogrenciId\)\s*\{\s*var metin = ogrenciMesajMetni\(ogrenciId\);/.test(appKaynak));
 t("geciciKopyala değişmedi (kaynak)", /function geciciKopyala\(metin, cb\)\s*\{\s*var ta = document\.createElement\("textarea"\);/.test(appKaynak));
-t("waGonder window.open(waUrl(...)) davranışı", /window\.open\(waUrl\(metin, o \? o\.tel : ""\), "_blank"\)/.test(appKaynak));
+/* WA-ALICI-YAMASI: waGonder artık waAliciBilgisi çözücüsünü kullanır; varsayılan alici="ogrenci" → davranış o.tel ile aynı.
+   Eksik telefonda window.open ÇAĞRILMAZ (fallback yok) — bilinçli yeni davranış. */
+t("waGonder window.open(waUrl(...)) davranışı (waAliciBilgisi çözücüsüyle)", /window\.open\(waUrl\(metin, a\.telefon\), "_blank"\)/.test(appKaynak));
+t("waGonder o ? o.tel fallback'i KALDIRILDI (bilinçli)", !waGonderGof().includes("o ? o.tel"));
 
 /* 8) Grup üye satırı ve 👥 kuralı korunur (kaynak kanıtı — ks-grup-gorunum kapsamlı test eder) */
 t("👥 satır üretimi kaynaktan (uyeSatiri)", appKaynak.includes('uyeSatiri = uyeler.length > 1 ? "\\n   👥 "'));

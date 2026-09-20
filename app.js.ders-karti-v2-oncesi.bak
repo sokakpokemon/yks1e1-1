@@ -4301,14 +4301,8 @@ function dersKartiEtiket(d) {
   /* WA-DURUM mantığıyla hizalı: planlandi → "... olacaktır", tamamlandi → "yapıldı" */
   return d.durum === "tamamlandi" ? "Yapıldı" : "Planlandı / ... olacaktır";
 }
-/* DERS-KARTI-YAMASI-V2: buton td drag'ini TETİKLEMEZ —
-   draggable="false" (drag kaynağı olamaz) + onmousedown stopPropagation (drag başlatmaz)
-   + onclick stopPropagation (td üstündeki handler'ları tetiklemez).
-   Birebir td draggable kalır; ikisi aynı hücrede bir arada çalışır. */
 function dersKartiBtnHTML(d) {
-  return '<button draggable="false" title="Ders Kartı görseli (PNG) üret" ' +
-    'onmousedown="event.stopPropagation()" onclick="event.stopPropagation();event.preventDefault();dersKartiAc(\'' + esc(d.id) + '\')" ' +
-    'class="w-6 h-6 rounded-full text-violet-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"><i class="fa-solid fa-image text-[10px]"></i></button>';
+  return '<button title="Ders Kartı görseli (PNG) üret" onclick="dersKartiAc(\'' + esc(d.id) + '\')" class="w-6 h-6 rounded-full text-violet-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"><i class="fa-solid fa-image text-[10px]"></i></button>';
 }
 function dersKartiVeri(d) {
   var o = DB.ogrenciler.find(function (x) { return x.id === (dersOgrenciIds(d)[0] || d.ogrenciId); }) || null;
@@ -4336,12 +4330,6 @@ function dersKartiHTML(d) {
     '<div style="font-size:9.5px;color:#94a3b8">Bu kart YKS Birebir Takip tarafından oluşturuldu · ' + esc(pencereAdi()) + "</div>" +
   "</div>";
 }
-/* DERS-KARTI-YAMASI-V2: güvenli bağlam + tek indirme.
-   - window.isSecureContext === false (file://): canShare/pano denenmez, DOĞRUDAN iner.
-   - localhost/https: canShare true → share(); share() REJECT olursa zaten indirme tamamlanmıştır (tekrar inmez).
-   - pano izni reddedilirse: catch → indir yolu sürer. "Her durumda PNG iner" garantisi: toBlob null olursa
-     tek hata yolu dışında indirme bitmeden akış kapanmaz. */
-var dersKartiIndirildi = false;
 function dersKartiAc(dersId) {
   var d = DB.dersler.find(function (x) { return x.id === dersId; });
   if (!d) { toast("Ders bulunamadı.", "hata"); return; }
@@ -4351,8 +4339,6 @@ function dersKartiAc(dersId) {
   var a = waAliciBilgisi(d.ogrenciId || "", waAliciTipi);
   if (!a.varMi) { toast(a.etiket + " telefonu kayitli degil", "uyari"); return; }
   if (!window.html2canvas) { toast("Görsel motoru (html2canvas) yüklenemedi. İnternet bağlantısını kontrol edip sayfayı yenileyin.", "hata"); return; }
-  /* DERS-KARTI-YAMASI-V2: file:// (isSecureContext=false) → canShare/ClipboardItem güvenilir DEĞİL; yalnız indir. */
-  var guvendemi = !(typeof window.isSecureContext === "boolean" && window.isSecureContext === false);
   var el = document.getElementById("dersKartiRapor");
   if (!el) {
     el = document.createElement("div");
@@ -4364,13 +4350,7 @@ function dersKartiAc(dersId) {
   function dosyaAdi() {
     /* GIZLILIK: dosya adında TELEFON YOK — yalnız öğrenci adı + tarih */
     var v = dersKartiVeri(d);
-    /* DERS-KARTI-YAMASI-V2: Türkçe transliterasyon + "/" ":" gibi yol/istek zararlılarını kaldır */
-    return "ders-karti-" + String(v.ad)
-      .replace(/ğ/g, "g").replace(/Ğ/g, "g").replace(/ü/g, "u").replace(/Ü/g, "u")
-      .replace(/ş/g, "s").replace(/Ş/g, "s").replace(/ı/g, "i").replace(/İ/g, "i")
-      .replace(/ö/g, "o").replace(/Ö/g, "o").replace(/ç/g, "c").replace(/Ç/g, "c")
-      .replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "")
-      .toLowerCase() + "-" + d.tarih + ".png";
+    return "ders-karti-" + v.ad.toLowerCase().replace(/[^a-z0-9ğüşıöç]+/gi, "-").replace(/^-+|-+$/g, "") + "-" + d.tarih + ".png";
   }
   html2canvas(el, { scale: 2, backgroundColor: "#ffffff", useCORS: true, logging: false })
     .then(function (canvas) {
@@ -4378,18 +4358,14 @@ function dersKartiAc(dersId) {
         if (!blob) { toast("Görsel oluşturulamadı.", "hata"); return; }
         var ad = dosyaAdi();
         var adim = { pano: false };
-        /* DERS-KARTI-YAMASI-V2: tek indirme koruması — share reject / pano retry indir'i TEKRARLAMAZ */
         var bitir = function () {
-          if (dersKartiIndirildi) { return; }
-          dersKartiIndirildi = true;
           /* Her durumda PNG indir: masaüstünde en güvenilir yol — dosyayı WhatsApp'a sürükleyin */
           var a = document.createElement("a");
           a.download = ad; a.href = URL.createObjectURL(blob);
           document.body.appendChild(a); a.click(); a.remove();
           setTimeout(function () { URL.revokeObjectURL(a.href); }, 500);
           var dosya = new File([blob], ad, { type: "image/png" });
-          /* DERS-KARTI-YAMASI-V2: share reject → sessizce iner (indirme zaten tamam) */
-          if (guvendemi && navigator.canShare && navigator.canShare({ files: [dosya] })) {
+          if (navigator.canShare && navigator.canShare({ files: [dosya] })) {
             navigator.share({ files: [dosya], title: "Ders Kartı" }).catch(function () {});
             adim.paylas = true;
           }
@@ -4399,8 +4375,7 @@ function dersKartiAc(dersId) {
             toast("Kart hazır: panoya kopyalandı + indirildi. WhatsApp'ta Ctrl+V ile yapıştır veya dosyayı sürükle.", "basarili");
           }
         };
-        /* DERS-KARTI-YAMASI-V2: file:// → pano denenmez; izin reddi → catch indir yoluyla biter */
-        if (guvendemi && navigator.clipboard && window.ClipboardItem) {
+        if (navigator.clipboard && window.ClipboardItem) {
           try {
             navigator.clipboard.write([new ClipboardItem({ "image/png": blob })])
               .then(function () { adim.pano = true; bitir(); })

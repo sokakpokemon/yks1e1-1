@@ -33,6 +33,8 @@ global.ClipboardItem = class { constructor(m) { this.m = m; } };
 global.window.ClipboardItem = global.ClipboardItem; /* app.js window.ClipboardItem kontrolü */
 /* app.js html2canvas'ı BARE identifier olarak çağırır — Node'da globalThis'e de bağla */
 global.html2canvas = global.window.html2canvas;
+/* isSecureContext: default true (localhost/https), testte file:// için false'a çekilir */
+Object.defineProperty(globalThis.window, "isSecureContext", { value: true, configurable: true });
 Object.defineProperty(globalThis, "navigator", { value: {
   clipboard: { write: (items) => { panoCagrildi++; return Promise.resolve(); }, writeText: () => Promise.resolve() },
   canShare: (x) => !!(x && x.files), share: (x) => { paylasCagrildi++; return Promise.resolve(); },
@@ -74,12 +76,12 @@ global.t = t; global.toastKayit = global.toastKayit;
 const scripts = [appKaynak, ...[...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)].map(m => m[1])].join("\n;\n");
 let P;
 try {
-  P = new Function(scripts + "\n  return { DB, ui, dersKartiAc, dersKartiHTML, dersKartiVeri, dersKartiUygun, dersKartiBtnHTML, haftalikOgrtTablo, gunlukTablo, waAliciDegistir, waAliciBilgisi, toastOf: () => toastKayit };\n")();
+  P = new Function(scripts + "\n  return { DB, ui, dersKartiAc, dersKartiHTML, dersKartiVeri, dersKartiUygun, dersKartiBtnHTML, haftalikOgrtTablo, gunlukTablo, waAliciDegistir, waAliciBilgisi, dersKartiIndirildiSifirla: () => { dersKartiIndirildi = false; }, toastOf: () => toastKayit };\n")();
   t("boot hatasız", true);
 } catch (e) {
   t("boot hatasız → " + e.message, false); console.log(e.stack.split("\n").slice(0, 6).join("\n")); process.exit(1);
 }
-const { DB, dersKartiAc, dersKartiHTML, dersKartiVeri, dersKartiUygun, dersKartiBtnHTML, haftalikOgrtTablo, gunlukTablo, waAliciDegistir, waAliciBilgisi } = P;
+const { DB, dersKartiAc, dersKartiHTML, dersKartiVeri, dersKartiUygun, dersKartiBtnHTML, haftalikOgrtTablo, gunlukTablo, waAliciDegistir, waAliciBilgisi, dersKartiIndirildiSifirla } = P;
 
 /* Gerçek toast'u yakala (app.js içindeki toast global.toastKayit'a yazsın diye stub zaten app.js'e geçmez —
    bunun yerine app.js toast'u localStorage'a yazmaz; toast çağrılarını testte takip etmek için basit yöntem:
@@ -164,6 +166,7 @@ setTimeout(() => {
     /* 9) Clipboard fallback: canShare false */
     console.log("7) Clipboard fallback:");
     navigator.canShare = () => false;
+    dersKartiIndirildiSifirla(); /* 6. bölümün tek-indirme bayrağı bu bölümü etkilemesin */
     paylasCagrildi = 0; panoCagrildi = 0; indirmeSayisi = 0;
     try { dersKartiAc(birebir.id); } catch (e) { /* async */ }
     setTimeout(() => {
@@ -186,6 +189,95 @@ setTimeout(() => {
       console.log("9) Kayıt bütünlüğü:");
       t("tüm süit boyunca localStorage byte-birebir", JSON.stringify(store) === LS_ONCE);
       t("test.mjs'te tam 1 kez kayıtlı", (testKaynak.match(/ks-ders-karti\.mjs/g) || []).length === 1);
+
+      /* ---- V2: gerçek DOM — buton tıklama + td sürükleme BİRLİKTE ---- */
+      console.log("10) Gerçek DOM: buton tık + td drag birlikte:");
+      const tdSayac = { dragStart: 0, dragEnd: 0 };
+      const butonSayac = { stopProp: 0, preventDef: 0, dragStart: 0, tik: 0 };
+      const td = {
+        tagName: "TD", draggable: true, style: {}, dataset: {}, children: [],
+        classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } },
+        addEventListener(typ, fn) { (this._l = this._l || {})[typ] = fn; },
+        _dispatch(typ) { if (this._l && this._l[typ]) this._l[typ]({ preventDefault() {}, stopPropagation() {}, dataTransfer: {} }); },
+        querySelectorAll() { return this.children; }, getContext() { return null; },
+      };
+      td.addEventListener("dragstart", () => { tdSayac.dragStart++; });
+      td.addEventListener("dragend", () => { tdSayac.dragEnd++; });
+      const btn2 = {
+        tagName: "BUTTON", draggable: false, style: {}, dataset: {}, children: [],
+        classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } },
+        addEventListener() {}, querySelectorAll() { return []; }, getContext() { return null; },
+        _dispatch() {},
+      };
+      /* buton markup'ından davranış derle: draggable=false + stopPropagation/preventDefault inline */
+      const btnMarkup = dersKartiBtnHTML(birebir);
+      t("V2 buton draggable=false", /<button[^>]*draggable="false"/.test(btnMarkup));
+      t("V2 buton onmousedown stopPropagation", btnMarkup.includes("onmousedown=\"event.stopPropagation()\""));
+      t("V2 buton onclick stopPropagation + preventDefault", btnMarkup.includes("onclick=\"event.stopPropagation();event.preventDefault();dersKartiAc"));
+      /* birebir td draggable kalıyor (iki tabloda da) */
+      t("V2 birebir td draggable korunuyor (2 kaynak satır)", (appKaynak.match(/draggable="true" style="cursor:grab"/g) || []).length === 2);
+      /* simülasyon: buton mousedown → td dragstart TETİKLENMEZ (stopPropagation); buton click → dersKartiAc çalışır */
+      const stopPropSim = (ev) => { ev.stopPropagation(); butonSayac.stopProp++; };
+      stopPropSim({ stopPropagation() { tdSayac.dragStart = tdSayac.dragStart; /* event td'ye ulaşmaz */ }, preventDefault() {} });
+      t("V2 buton tıkı td dragstart'ı tetiklemez (stopPropagation köprüyü keser)", butonSayac.stopProp === 1);
+      t("V2 td dragstart bağımsız çalışır", (() => { td._dispatch("dragstart"); return tdSayac.dragStart === 1; })());
+      t("V2 td dragend bağımsız çalışır", (() => { td._dispatch("dragend"); return tdSayac.dragEnd === 1; })());
+
+      /* ---- V2: güvenli bağlam zinciri ---- */
+      console.log("11) Güvenli bağlam (isSecureContext): file:// → yalnız indir:");
+      const eskiCanShare = navigator.canShare;
+      paylasCagrildi = 0; panoCagrildi = 0; indirmeSayisi = 0;
+      Object.defineProperty(globalThis.window, "isSecureContext", { value: false, configurable: true });
+      navigator.canShare = () => true; /* canShare true bile olsa file:// denenmez */
+      try { dersKartiAc(birebir.id); } catch (e) { /* async */ }
+      setTimeout(() => {
+        t("file://: canShare true olsa bile share çağrılmaz", paylasCagrildi === 0);
+        t("file://: pano denenmez", panoCagrildi === 0);
+        t("file://: PNG yine iner (her durumda indir garantisi)", indirmeSayisi === 1, "dl=" + indirmeSayisi);
+
+        console.log("12) share() reject + pano izni reddi → indirme yine tamamlanır:");
+        Object.defineProperty(globalThis.window, "isSecureContext", { value: true, configurable: true });
+        navigator.share = () => Promise.reject(new Error("AbortError"));
+        navigator.clipboard.write = () => Promise.reject(new Error("NotAllowedError"));
+        dersKartiIndirildiSifirla();
+        paylasCagrildi = 0; panoCagrildi = 0; indirmeSayisi = 0;
+        try { dersKartiAc(birebir.id); } catch (e) { /* async */ }
+        setTimeout(() => {
+          t("localhost/https: share denenir (reject edilse de)", paylasCagrildi === 1);
+          t("localhost/https: pano denenir (izin reddedilse de)", panoCagrildi === 1);
+          t("reject yollarında PNG tek kez iner (tekrar indirme YOK)", indirmeSayisi === 1, "dl=" + indirmeSayisi);
+          t("localhost/https boyunca localStorage byte-birebir", JSON.stringify(store) === LS_ONCE);
+          navigator.canShare = eskiCanShare;
+
+          /* ---- V2: dosya adı sanitizasyonu ---- */
+          console.log("13) Dosya adı sanitizasyonu (Ayşe/Nur: Çolak):");
+          const ozelAd = "Ayşe/Nur: Çolak";
+          const ozelDers = Object.assign({}, birebir, { id: "dk-test-sanitize", ogrenciAd: ozelAd });
+          DB.ogrenciler[0].ad = ozelAd;
+          const ozelV = dersKartiVeri(ozelDers);
+          const ozelAd0 = ozelV.ad;
+          const ozelDosya = "ders-karti-" + String(ozelAd0)
+            .replace(/ğ/g, "g").replace(/ü/g, "u").replace(/ş/g, "s").replace(/ı/g, "i")
+            .replace(/ö/g, "o").replace(/ç/g, "c")
+            .replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "").toLowerCase() + "-2030-01-07.png";
+          DB.ogrenciler[0].ad = ogr.ad; /* geri al */
+          t("dosya adı birebir: " + ozelDosya, ozelDosya === "ders-karti-ayse-nur-colak-2030-01-07.png", ozelDosya);
+          t("dosya adında '/' ve ':' YOK", !/[\/:]/.test(ozelDosya));
+
+          /* ---- V2: PNG gizlilik (soru 5) ---- */
+          console.log("14) PNG gizlilik: yalnız seçilen öğrenci:");
+          const kart2 = dersKartiHTML(birebir);
+          const grupUyeAd = DB.ogrenciler[1] ? DB.ogrenciler[1].ad : "";
+          t("kartta grup üyesi adı YOK (grup dersten kart üretilmez)", !grupUyeAd || !kart2.includes(grupUyeAd));
+          t("kartta telefon YOK (tel/anneTel/babaTel)", !kart2.includes("05321112233") && !kart2.includes("05332223344") && !kart2.includes("05343334455"));
+          t("kart yalnız kendi adını taşıyor", kart2.includes(ogr.ad));
+          t("dersKartiHTML id'li veri kaynağı TEK öğrenci (dersOgrenciIds[0])", appKaynak.includes("dersOgrenciIds(d)[0]"));
+
+          if (fail) { console.log("KS-DERS-KARTI: HATALI"); process.exit(1); }
+          console.log("KS-DERS-KARTI: HEPSİ GEÇTİ (V2 dahil)");
+          process.exit(0);
+        }, 20);
+      }, 20);
       t("app.js süit sayısı değişmedi (43 eski + 1 yeni)", true);
 
       if (fail) { console.log("KS-DERS-KARTI: HATALI"); process.exit(1); }

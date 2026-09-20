@@ -1983,3 +1983,10 @@ düzeltmesini tekrar uygulamaz (exit 0, hash birebir aynı). Yedek oluşturma ya
 - Tarayıcıda gerçek platform testi **DENENMEDİ** (Node süiti yalnız mantık/dal doğrulaması yapar):
   hangi platformda canShare/pano/indirme hangisinin çalıştığı gerçek cihazda doğrulanmalı.
 - Gerçek tarayıcıda eski app.js önbellekten gelebilir → sert yenileme (Ctrl+Shift+R / Cmd+Shift+R).
+
+## Düzeltme turu (soru-cevap denetimi, 2026-09-20)
+- Süit 7. bölüm hatası: canShare-fallback testi, 6. bölümün tek-indirme bayrağı yüzünden düşüyordu (app.js hatası DEĞİL). Teste dersKartiIndirildiSifirla() eklendi; düşüş giderildi.
+- Korumalı alan zinciri test edildi: file:// → share/pano denenmez, PNG iner; localhost/https → share reject ve pano izin reddi senaryolarında PNG tek kez iner (tekrar indirme yok).
+- Soru-5 gizlilik testi zaten V2 içinde: kartta grup üyesi adı/telefonlar YOK, yalnız kendi adı; dosya adında telefon YOK.
+- test.mjs: 2080/2080 OK (44 süit). app.js değişmedi: cbc97e7d… (302.129 B). ks-ders-karti.mjs: 8a5b1c05… (19.892 B).
+- Tarayıcı gerçek cihaz testi: hâlâ DENENMEDİ; Ctrl+Shift+R sert yenileme notu geçerli.

@@ -180,7 +180,8 @@ setTimeout(() => {
 
       /* 7) Buton çıkmaması: grup/iptal/Sınıf Dersi/Ek Ders/Kapalı */
       console.log("8) Buton çıkmaması:");
-      t("grup derste buton markup'ı üretilmez (btn ISLEM alanında koşulla sarılı — DERS-KARTI-TASIMA-YAMASI)", appKaynak.includes("(dersKartiUygun(l) ?"));
+      /* Başlık ↔ davranış birebir: bu statik satır YALNIZ kaynak imzasını kontrol eder; "grup derste üretilmez" davranışı altındaki grup-fixture koşulsuz assert'lerinde test edilir */
+      t("ISLEM satır şablonunda kart butonu koşulla sarılı (dersKartiUygun(l) guard'ı — DERS-KARTI-TASIMA-YAMASI)", appKaynak.includes("(dersKartiUygun(l) ?"));
       /* Assert A güçlendirme: grup fixture + GERÇEK render — grup dersi satırında kart butonu/dersKartiAc/dersKartiBtnHTML ÜRETİLMEZ (koşulsuz) */
       {
         const kayitli = DB.dersler; DB.dersler = [];

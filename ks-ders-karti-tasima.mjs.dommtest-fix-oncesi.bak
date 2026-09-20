@@ -41,8 +41,7 @@ globalThis.__fn = { dersKartiUygun, dersKartiBtnHTML, dersKartiHTML, dersKartiVe
   waSatir, haftalikOgrtTablo, gunlukTablo, renderDersler, dersDrag, dersBurak, dersDropHedef, dersOgrenciIds, penceredeDersler };
 `;
 try { (0, eval)(app + sondaj); } catch (e) { console.error("BOOT HATASI:", e.message); process.exit(1); }
-/* RESMİ SAYAÇ: yalnız t() assertion satırları satır-başı '✓ ' basar; boot satırı bilinçli işaretsizdir. */
-console.log("boot hatasız");
+console.log("  ✓ boot hatasız");
 const DB = global.__DB, fn = global.__fn;
 
 /* 1) Yama varlığı + idempotans hedefleri */
@@ -63,8 +62,6 @@ const gunluuDersGunu = (DB.dersler.find((l) => l.durum !== "iptal") || {}).tarih
 const gunluuOnceki = ui.gunSecim;
 ui.gunSecim = gunluuDersGunu || ui.anchor;
 const gunluk = fn.gunlukTablo();
-/* SAYAÇ/DURUM HİJYENİ: gunSecim hemen restore edilir — sonraki renderDersler(3) tekGun çıktısı üretmesin */
-if (gunluuOnceki === undefined) delete ui.gunSecim; else ui.gunSecim = gunluuOnceki;
 t("haftalik tablo üretildi (haftalikOgrtId seçiliyken)", typeof haftalik === "string" && haftalik.length > 100);
 t("gunluk tablo üretildi", typeof gunluk === "string" && gunluk.length > 100);
 t("haftalik hücrelerinde fa-image kart butonu YOK", !haftalik.includes("fa-image"));
@@ -144,12 +141,9 @@ if (birebir) {
   {
     const hedefDers = birebir;
     /* alıcı için telefon garanti et (alıcı seçici akışı gerçek koşulsun) */
-    const ogrOf = DB.ogrenciler.find((x) => x.id === hedefDers.ogrenciId);
-    if (!ogrOf) { const o = DB.ogrenciler.find((x) => x.ad === hedefDers.ogrenciAd); if (o) hedefDers.ogrenciId = o.id; }
-    const ogrOf2 = DB.ogrenciler.find((x) => x.id === hedefDers.ogrenciId);
-    const eskiTel = ogrOf2 ? ogrOf2.tel : undefined;
-    if (ogrOf2 && !ogrOf2.tel) ogrOf2.tel = "05551112233";
-    const aliciVarMi = !!(ogrOf2 && ogrOf2.tel); /* dersKartiAc bu şartı geçmeli; değilse pngCagri=0 kalır (tanısal) */
+    const ogrOf = DB.ogrenciler.find((x) => x.id === hedefDers.ogrenciId) || DB.ogrenciler.find((x) => x.ad === hedefDers.ogrenciAd);
+    const eskiTel = ogrOf ? ogrOf.tel : undefined;
+    if (ogrOf && !ogrOf.tel) ogrOf.tel = "05551112233";
     let pngCagri = 0;
     const eskiH2C = global.html2canvas;
     global.html2canvas = () => { pngCagri++; const cv = mockEl(); cv.toBlob = (cb) => cb({ arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)) }); return Promise.resolve(cv); };
@@ -159,14 +153,13 @@ if (birebir) {
     const eskiDurumTik = global.durumTik, eskiDuzenle = global.duzenle, eskiSilOnay = global.silOnay;
     global.durumTik = () => durumSayac.durum++; global.duzenle = () => durumSayac.duzenle++; global.silOnay = () => durumSayac.sil++;
     const lsOnce = JSON.stringify(global.localStorage._d);
-    /* inline onclick'i gerçek tarayıcı gibi koştur: tarayıcıda inline handler GLOBAL 'event' görür (indirect eval global scope'tur) */
-    const eskiEvent = global.event;
-    global.event = { stopPropagation() {}, preventDefault() {} };
+    /* inline onclick'i gerçek tarayıcı gibi event nesnesiyle koştur */
+    const event = { stopPropagation() {}, preventDefault() {} };
     const onclickGovde = "event.preventDefault();dersKartiAc('" + hedefDers.id + "')";
     let tikHatasi = null;
     try { (0, eval)(onclickGovde); } catch (e) { tikHatasi = e; }
     domTikSonucu = () => {
-      t("tık → dersKartiAc çalıştı (html2canvas tam 1 çağrı)", tikHatasi === null && pngCagri === 1, tikHatasi ? tikHatasi.message : "pngCagri=" + pngCagri + " aliciVarMi=" + aliciVarMi);
+      t("tık → dersKartiAc çalıştı (html2canvas tam 1 çağrı)", tikHatasi === null && pngCagri === 1, tikHatasi ? tikHatasi.message : "pngCagri=" + pngCagri);
       t("tık → durumTik 0 kez", durumSayac.durum === 0);
       t("tık → duzenle 0 kez", durumSayac.duzenle === 0);
       t("tık → silOnay 0 kez", durumSayac.sil === 0);
@@ -176,8 +169,7 @@ if (birebir) {
       global.html2canvas = eskiH2C;
       if (eskiCreateURL) global.URL.createObjectURL = eskiCreateURL;
       global.durumTik = eskiDurumTik; global.duzenle = eskiDuzenle; global.silOnay = eskiSilOnay;
-      global.event = eskiEvent;
-      if (ogrOf2) ogrOf2.tel = eskiTel;
+      if (ogrOf) ogrOf.tel = eskiTel;
     };
   }
 }
@@ -209,6 +201,7 @@ t("dersBurak TEK tanım", (app.match(/function dersBurak\(/g) || []).length === 
 t("dersDropHedef globali korunur", "dersDropHedef" in fn);
 t("boş '+' drop-zone (istekBurak) korunur (haftalik)", haftalik.includes("istekBurak"));
 t("boş '+' drop-zone (istekBurak) korunur (gunluk)", gunluk.includes("istekBurak"));
+if (gunluuOnceki === undefined) delete ui.gunSecim; else ui.gunSecim = gunluuOnceki;
 t("kart buton markup'ı draggable=false (td drag'ini tetiklemez)", /draggable="false"[^>]*onmousedown="event\.stopPropagation\(\)"[^>]*onclick="event\.preventDefault\(\);dersKartiAc/.test(app));
 t("ISLEM butonunda stopPropagation — satır onclick'i tetiklenmez", app.includes("onclick=\"event.preventDefault();dersKartiAc"));
 /* runtime: taşma yolu hâlâ çalışıyor (dersBurak aynı gün 6→8) */

@@ -46,8 +46,7 @@ const sondaj = `
 globalThis.__fn = { sinifOgrtUyumOnar, sinifProgAktif, aktifDonemId, dowIdx, ksKodOf, haftalikOgrtTablo, togOgrSecili, gridTablo };
 `;
 try { (0, eval)(app + sondaj); } catch (e) { console.error("BOOT HATASI:", e.message); process.exit(1); }
-/* RESMİ SAYAÇ: yalnız t() assertion satırları satır-başı '✓ ' basar; boot satırı bilinçli işaretsizdir. */
-console.log("boot hatasız");
+console.log("  ✓ boot hatasız");
 const DB = global.__DB, fn = global.__fn;
 
 /* 1) SINIF-OGRT-UYUM-YAMASI mevcut ve kaynakta */

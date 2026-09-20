@@ -48,8 +48,7 @@ const { DB, saveDB, yenile, aktifDonemId, aktifDonemKayitlari, renderOzet, rende
 const DONEM_A = "donem-2026-2027";
 const DONEM_B = "donem-2025-2026";
 
-/* RESMİ SAYAÇ: yalnız t() assertion satırları satır-başı '✓ ' basar; boot satırı bilinçli işaretsizdir. */
-console.log("boot hatasız (EKDERS-OZET-CSV süiti)");
+console.log("  ✓ boot hatasız (EKDERS-OZET-CSV süiti)");
 
 /* ---- Test DB kurulumu ---- */
 function kurDB() {

@@ -1990,3 +1990,13 @@ düzeltmesini tekrar uygulamaz (exit 0, hash birebir aynı). Yedek oluşturma ya
 - Soru-5 gizlilik testi zaten V2 içinde: kartta grup üyesi adı/telefonlar YOK, yalnız kendi adı; dosya adında telefon YOK.
 - test.mjs: 2080/2080 OK (44 süit). app.js değişmedi: cbc97e7d… (302.129 B). ks-ders-karti.mjs: 8a5b1c05… (19.892 B).
 - Tarayıcı gerçek cihaz testi: hâlâ DENENMEDİ; Ctrl+Shift+R sert yenileme notu geçerli.
+
+## Sayım düzeltme turu 2 (2026-09-20)
+- ks-ders-karti.mjs: ÖLÜ TEST giderildi — satır 283-285teki eski erken exit(0), 11-14 bölümlerinin 20ms timeout zinciri çalışmadan süreci öldürüyordu; 15 test sessizce hiç koşmuyordu (runner 52 gösteriyordu). Erken exit kaldırıldı.
+- 11. bölüme eksik dersKartiIndirildiSifirla() eklendi (file:// dl=0 düzeltildi).
+- 12. bölümde share/pano stubları sayaçsızdı → sayaçlı stublara çevrildi.
+- 13. bölüm replika translit zincirine ç/Ç eklendi (app.js birebir).
+- Sonuç: süitte 67 t( satırı, 65i normal yolda koşar (2si sadece catch dallarında); runner: 65 ✓ 0 ✗. test.mjs TOPLAM: 2093/2093 OK (44 süit).
+- app.js DEĞİŞMEDİ: SHA-256 cbc97e7d3d1ad7f0bc0be919aa8898cfe16954d6341d8b35cd9a09136f3c2950, 302129 B.
+- ks-ders-karti.mjs: SHA-256 7e5de302e1d31052522b1b493fd87d7660b07bb479f0522c0f2072038655115b, 20322 B.
+- Touch (madde 5): HTML5 drag API dokunmatikte tetiklenmez (iOS Safari hiç, Android Chrome en azından uzun vadede kısıtlı); app.jste pointer/touch taşıma handleri YOK, touch-action ile mobil sürükleme kasıtlı kapalı. PNG butonu tap ile çalışır (draggable=false + stopPropagation).

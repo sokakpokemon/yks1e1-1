@@ -229,6 +229,7 @@ setTimeout(() => {
       paylasCagrildi = 0; panoCagrildi = 0; indirmeSayisi = 0;
       Object.defineProperty(globalThis.window, "isSecureContext", { value: false, configurable: true });
       navigator.canShare = () => true; /* canShare true bile olsa file:// denenmez */
+      dersKartiIndirildiSifirla(); /* 7. bölümün tek-indirme bayrağı file:// senaryosunu etkilemesin */
       try { dersKartiAc(birebir.id); } catch (e) { /* async */ }
       setTimeout(() => {
         t("file://: canShare true olsa bile share çağrılmaz", paylasCagrildi === 0);
@@ -237,8 +238,8 @@ setTimeout(() => {
 
         console.log("12) share() reject + pano izni reddi → indirme yine tamamlanır:");
         Object.defineProperty(globalThis.window, "isSecureContext", { value: true, configurable: true });
-        navigator.share = () => Promise.reject(new Error("AbortError"));
-        navigator.clipboard.write = () => Promise.reject(new Error("NotAllowedError"));
+        const eskiShareStub = navigator.share; navigator.share = (x) => { paylasCagrildi++; return Promise.reject(new Error("AbortError")); };
+        const eskiPanoStub = navigator.clipboard.write; navigator.clipboard.write = (items) => { panoCagrildi++; return Promise.reject(new Error("NotAllowedError")); };
         dersKartiIndirildiSifirla();
         paylasCagrildi = 0; panoCagrildi = 0; indirmeSayisi = 0;
         try { dersKartiAc(birebir.id); } catch (e) { /* async */ }
@@ -247,7 +248,7 @@ setTimeout(() => {
           t("localhost/https: pano denenir (izin reddedilse de)", panoCagrildi === 1);
           t("reject yollarında PNG tek kez iner (tekrar indirme YOK)", indirmeSayisi === 1, "dl=" + indirmeSayisi);
           t("localhost/https boyunca localStorage byte-birebir", JSON.stringify(store) === LS_ONCE);
-          navigator.canShare = eskiCanShare;
+          navigator.canShare = eskiCanShare; navigator.share = eskiShareStub; navigator.clipboard.write = eskiPanoStub;
 
           /* ---- V2: dosya adı sanitizasyonu ---- */
           console.log("13) Dosya adı sanitizasyonu (Ayşe/Nur: Çolak):");
@@ -258,7 +259,7 @@ setTimeout(() => {
           const ozelAd0 = ozelV.ad;
           const ozelDosya = "ders-karti-" + String(ozelAd0)
             .replace(/ğ/g, "g").replace(/ü/g, "u").replace(/ş/g, "s").replace(/ı/g, "i")
-            .replace(/ö/g, "o").replace(/ç/g, "c")
+            .replace(/ö/g, "o").replace(/Ö/g, "o").replace(/ç/g, "c").replace(/Ç/g, "c")
             .replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "").toLowerCase() + "-2030-01-07.png";
           DB.ogrenciler[0].ad = ogr.ad; /* geri al */
           t("dosya adı birebir: " + ozelDosya, ozelDosya === "ders-karti-ayse-nur-colak-2030-01-07.png", ozelDosya);
@@ -280,9 +281,8 @@ setTimeout(() => {
       }, 20);
       t("app.js süit sayısı değişmedi (43 eski + 1 yeni)", true);
 
-      if (fail) { console.log("KS-DERS-KARTI: HATALI"); process.exit(1); }
-      console.log("KS-DERS-KARTI: HEPSİ GEÇTİ");
-      process.exit(0);
+      /* V2 zinciri (11-14) yukarıdaki iç timeout'larda çalışır; erken exit KALDIRILDI —
+         eski erken exit(0) süreci V2 timer'ları çalışmadan öldürüyor, ölü test bırakıyordu. */
     }, 20);
   }, 20);
 }, 20);

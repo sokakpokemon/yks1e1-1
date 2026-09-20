@@ -76,13 +76,13 @@ global.t = t; global.toastKayit = global.toastKayit;
 const scripts = [appKaynak, ...[...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)].map(m => m[1])].join("\n;\n");
 let P;
 try {
-  P = new Function(scripts + "\n  return { DB, ui, renderDersler, dersKartiAc, dersKartiHTML, dersKartiVeri, dersKartiUygun, dersKartiBtnHTML, haftalikOgrtTablo, gunlukTablo, waAliciDegistir, waAliciBilgisi, dersKartiIndirildiSifirla: () => { dersKartiIndirildi = false; }, toastOf: () => toastKayit };\n")();
+  P = new Function(scripts + "\n  return { DB, ui, dersKartiAc, dersKartiHTML, dersKartiVeri, dersKartiUygun, dersKartiBtnHTML, haftalikOgrtTablo, gunlukTablo, waAliciDegistir, waAliciBilgisi, dersKartiIndirildiSifirla: () => { dersKartiIndirildi = false; }, toastOf: () => toastKayit };\n")();
   t("boot hatasız", true);
 } catch (e) {
   /* beklenmeyen catch: açıkça KIRMIZI ve koşulsuz (ölü/koşullu test yok) */
   t("boot hatasız (beklenmeyen catch: " + e.message + ")", false); console.log(e.stack.split("\n").slice(0, 6).join("\n")); process.exit(1);
 }
-const { DB, ui, renderDersler, dersKartiAc, dersKartiHTML, dersKartiVeri, dersKartiUygun, dersKartiBtnHTML, haftalikOgrtTablo, gunlukTablo, waAliciDegistir, waAliciBilgisi, dersKartiIndirildiSifirla } = P;
+const { DB, dersKartiAc, dersKartiHTML, dersKartiVeri, dersKartiUygun, dersKartiBtnHTML, haftalikOgrtTablo, gunlukTablo, waAliciDegistir, waAliciBilgisi, dersKartiIndirildiSifirla } = P;
 
 /* Gerçek toast'u yakala (app.js içindeki toast global.toastKayit'a yazsın diye stub zaten app.js'e geçmez —
    bunun yerine app.js toast'u localStorage'a yazmaz; toast çağrılarını testte takip etmek için basit yöntem:
@@ -181,23 +181,6 @@ setTimeout(() => {
       /* 7) Buton çıkmaması: grup/iptal/Sınıf Dersi/Ek Ders/Kapalı */
       console.log("8) Buton çıkmaması:");
       t("grup derste buton markup'ı üretilmez (btn ISLEM alanında koşulla sarılı — DERS-KARTI-TASIMA-YAMASI)", appKaynak.includes("(dersKartiUygun(l) ?"));
-      /* Assert A güçlendirme: grup fixture + GERÇEK render — grup dersi satırında kart butonu/dersKartiAc/dersKartiBtnHTML ÜRETİLMEZ (koşulsuz) */
-      {
-        const kayitli = DB.dersler; DB.dersler = [];
-        const ayse = DB.ogrenciler.find(o => o.ad === "Ayşe Demir") || DB.ogrenciler[0];
-        const zey = DB.ogrenciler.find(o => o.ad === "Zeynep Kaya") || DB.ogrenciler[1] || ayse;
-        const ogrt = DB.ogretmenler[0];
-        const gpzt = (() => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + 7); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); })();
-        DB.dersler.push({ id: "dk-grup-fix", donemId: DB.aktifDonemId, ogrenciId: ayse.id, ogrenciAd: ayse.ad, ogrenciIds: [zey.id], dersId: "mat", konu: "Grup fixture", ogretmenId: ogrt.id, ogretmenAd: ogrt.ad, tarih: gpzt, saat: "15:30", kod: "8", durum: "planlandi", olusturma: "" });
-        ui.filtre = "gun"; ui.gunSecim = gpzt; ui.anchor = gpzt;
-        renderDersler();
-        const cikti = (reg.get("derslerBolum") || { innerHTML: "" }).innerHTML;
-        const grupSatiri = (String(cikti).split("<tr").find(p => p.includes("dk-grup-fix") || p.includes("Grup fixture")) || "");
-        t("grup dersi ISLEM satırında dersKartiAc ÜRETİLMEZ (grup fixture, koşulsuz)", grupSatiri !== "" && !grupSatiri.includes("dersKartiAc"), grupSatiri.slice(0, 120));
-        t("grup dersi ISLEM satırında dersKartiBtnHTML/fa-image ÜRETİLMEZ", !grupSatiri.includes("dersKartiBtnHTML") && !grupSatiri.includes("fa-image"));
-        t("grup dersi dersKartiUygun false (fixture)", dersKartiUygun(DB.dersler[0]) === false);
-        DB.dersler = kayitli;
-      }
       t("btnHTML TEK tanım", (appKaynak.match(/function dersKartiBtnHTML\(/g) || []).length === 1);
       t("btnHTML artık tablolarda DEĞİL, ISLEM alanında koşulla çağrılıyor", (appKaynak.match(/dersKartiUygun\(ders\) \? '<div class="mt-0\.5">' \+ dersKartiBtnHTML|dersKartiUygun\(ders\)\) html \+= '<div class="mt-0\.5">' \+ dersKartiBtnHTML/g) || []).length === 0 && (appKaynak.match(/dersKartiUygun\(l\) \? '<button title="Ders Kartı/g) || []).length === 1);
       t("iptal derste dersKartiUygun false", dersKartiUygun(iptalDers) === false);

@@ -16,12 +16,7 @@ for (const name of suites) {
   if (r.stderr) process.stderr.write(r.stderr);
 
   const cikti = (r.stdout || "") + (r.stderr || "");
-  /* RESMİ SAYAÇ (makine-okunur, tek): satır-başı '✓ ' assertion satırları sayılır.
-     ESKİ ham /✓/g sayımı, bazı süitlerin kendi özetinde bastığı 'X/X test ✓' satırlarını da
-     sayıyordu (4 süitte +4 fazladan) — bunun tek çözümü: yalnız assertion satırlarını saymak.
-     '→' ile başlayan self-summary satırları satır-başı sayımın DIŞINDA kalır (indent yok, ✓ sonradan).
-     Test silme/gevşetme YOK — yalnız sayım kuralı düzeltildi. */
-  const ok = (cikti.match(/^\s*✓ /gm) || []).length;
+  const ok = (cikti.match(/✓/g) || []).length;
   const kotu = (cikti.match(/✗/g) || []).length;
   const gecti = r.status === 0 && kotu === 0;
   toplamTest += ok + kotu;

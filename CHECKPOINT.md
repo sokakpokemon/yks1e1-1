@@ -2000,3 +2000,9 @@ düzeltmesini tekrar uygulamaz (exit 0, hash birebir aynı). Yedek oluşturma ya
 - app.js DEĞİŞMEDİ: SHA-256 cbc97e7d3d1ad7f0bc0be919aa8898cfe16954d6341d8b35cd9a09136f3c2950, 302129 B.
 - ks-ders-karti.mjs: SHA-256 7e5de302e1d31052522b1b493fd87d7660b07bb479f0522c0f2072038655115b, 20322 B.
 - Touch (madde 5): HTML5 drag API dokunmatikte tetiklenmez (iOS Safari hiç, Android Chrome en azından uzun vadede kısıtlı); app.jste pointer/touch taşıma handleri YOK, touch-action ile mobil sürükleme kasıtlı kapalı. PNG butonu tap ile çalışır (draggable=false + stopPropagation).
+
+## Ölü/koşullu test denetimi (tüm süitler, 2026-09-20)
+- 44 süitte erken process.exit taraması: tüm erken exitler ya boot-catch (fail yolu) ya dosya sonu; ks-ders-karti dışında ÖLÜ TEST üreten erken exit YOK.
+- Süit bazlı runner✓ vs kaynak t( karşılaştırması: negatif farklar (runner>kaynak) döngü/dinamik t( üretiminden; pozitif farklar catch-only/dallı t(.
+- ks-ders-karti catch-only 2 test koşulsuz assertle çevrildi (akisHata===null; boot catch açıkça kırmızı). Süit artık TEK SAYI: 66 ✓, 0 ✗. "65 koşan + 2 koşullu" ifadesi kaldırıldı.
+- test.mjs TOPLAM: 2094/2094 OK. ks-ders-karti.mjs SHA-256 ve byte aşağıda; app.js DEĞİŞMEDİ (cbc97e7d…, 302129 B).

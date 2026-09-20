@@ -79,7 +79,8 @@ try {
   P = new Function(scripts + "\n  return { DB, ui, dersKartiAc, dersKartiHTML, dersKartiVeri, dersKartiUygun, dersKartiBtnHTML, haftalikOgrtTablo, gunlukTablo, waAliciDegistir, waAliciBilgisi, dersKartiIndirildiSifirla: () => { dersKartiIndirildi = false; }, toastOf: () => toastKayit };\n")();
   t("boot hatasız", true);
 } catch (e) {
-  t("boot hatasız → " + e.message, false); console.log(e.stack.split("\n").slice(0, 6).join("\n")); process.exit(1);
+  /* beklenmeyen catch: açıkça KIRMIZI ve koşulsuz (ölü/koşullu test yok) */
+  t("boot hatasız (beklenmeyen catch: " + e.message + ")", false); console.log(e.stack.split("\n").slice(0, 6).join("\n")); process.exit(1);
 }
 const { DB, dersKartiAc, dersKartiHTML, dersKartiVeri, dersKartiUygun, dersKartiBtnHTML, haftalikOgrtTablo, gunlukTablo, waAliciDegistir, waAliciBilgisi, dersKartiIndirildiSifirla } = P;
 
@@ -146,7 +147,9 @@ DB.dersler.push(birebir, birebirTamam, grupDers, iptalDers);
 ogr.tel = ""; ogr.anneTel = ""; ogr.babaTel = "";
 h2cCagrildi = 0;
 const LS_ONCE = JSON.stringify(store);
-try { dersKartiAc(birebir.id); } catch (e) { t("telefon yoksa akış çökmez", false); }
+let akisHata=null;
+try { dersKartiAc(birebir.id); } catch (e) { akisHata = e; }
+t("telefon yoksa akış çökmez", akisHata === null, akisHata && akisHata.message);
 setTimeout(() => {
   t("telefon yoksa html2canvas ÇAĞRILMAZ", h2cCagrildi === 0, "h2c=" + h2cCagrildi);
   t("telefon yoksa localStorage değişmedi", JSON.stringify(store) === LS_ONCE);

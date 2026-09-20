@@ -3586,7 +3586,7 @@ function haftalikOgrtTablo() {
         /* DERS-TASI-YAMASI: dnd-kilit hücresi — yalnız AKTİF TEK ÖĞRENCİLİ birebir ders sürüklenebilir; grup ve rose Sınıf Dersi / amber Ek Ders / gri Kapalı sürüklenemez. */
         satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100"' +
           (ders.durum !== "iptal" && dersOgrenciIds(ders).length === 1 ? ' draggable="true" style="cursor:grab" ondragstart="dersDrag(event, \'' + esc(ders.id) + '\'); this.style.opacity=\'0.45\'" ondragend="dersDropHedef=null; this.style.opacity=\'\'"' : '') + '>' +
-          birebirHucreHTML(ders, ogrenci, ogrenciAd, sinif, durumRenk) + '</td>'; /* DERS-KARTI-TASIMA-YAMASI: haftalik hücreden kart butonu kaldırıldı — ders listesi ISLEM alanına taşındı */
+          birebirHucreHTML(ders, ogrenci, ogrenciAd, sinif, durumRenk) + (dersKartiUygun(ders) ? '<div class="mt-0.5">' + dersKartiBtnHTML(ders) + '</div>' : '') + '</td>';
       } else {
         // BOŞ HÜCRE → DROP ZONE (havuzdaki istek kartı buraya bırakılabilir)
         var hk = KISA_KOD[hi].b;
@@ -3860,7 +3860,8 @@ function gunlukTablo() {
              Taşıma MEVCUT dersDrag/dersBurak yoluyla yapılır — paralel DnD sistemi kurulmaz. */
           html += '<td class="px-1.5 py-2 border-r border-slate-200 hover:bg-blue-50 transition-colors"' +
             (ders.durum !== "iptal" && dersOgrenciIds(ders).length === 1 ? ' draggable="true" style="cursor:grab" ondragstart="dersDrag(event, \'' + esc(ders.id) + '\'); this.style.opacity=\'0.45\'" ondragend="dersDropHedef=null; this.style.opacity=\'\'"' : '') + '>' +
-            birebirHucreHTML(ders, ogrenci, ders.ogrenciAd || "", sinif, durumRenkG); /* DERS-KARTI-TASIMA-YAMASI: gunluk hücreden kart butonu kaldırıldı */
+            birebirHucreHTML(ders, ogrenci, ders.ogrenciAd || "", sinif, durumRenkG);
+            if (dersKartiUygun(ders)) html += '<div class="mt-0.5">' + dersKartiBtnHTML(ders) + '</div>';
           if (grupUyelerG.length) html += '<div class="text-[8.5px] text-slate-400 mt-0.5">' + grupUyelerG.map(function (a) { return ilkHarfler(a); }).join(" · ") + '</div>';
           html += '</td>';
         } else if (ogrtId) {
@@ -3939,7 +3940,6 @@ function renderDersler() {
         '<span class="ml-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-bold whitespace-nowrap ' + durumEtiket[1] + '">' + durumEtiket[0] + "</span></div></td>" +
       '<td class="px-4 py-3"><div class="flex items-center gap-1">' +
         '<button title="Öğrenciye WhatsApp bilgilendirmesi" onclick="waSatir(\'' + l.id + '\')" class="w-8 h-8 rounded-full text-green-400 hover:bg-green-50 transition-colors"><i class="fa-brands fa-whatsapp text-[14px]"></i></button>' +
-        (dersKartiUygun(l) ? '<button title="Ders Kartı görseli (PNG) üret" draggable="false" onmousedown="event.stopPropagation()" onclick="event.preventDefault();dersKartiAc(\'' + l.id + '\')" class="w-8 h-8 rounded-full text-violet-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"><i class="fa-solid fa-image text-[12px]"></i></button>' : '') + /* DERS-KARTI-TASIMA-YAMASI: kart butonu ISLEM alanına taşındı (waSatir yanına) */
         '<button title="Dersi düzenle" onclick="duzenle(\'' + l.id + '\')" class="w-8 h-8 rounded-full text-slate-300 hover:text-blue-500 hover:bg-blue-50 transition-colors"><i class="fa-solid fa-pen text-[12px]"></i></button>' +
         '<button title="Dersi sil" onclick="silOnay(\'' + l.id + '\')" class="w-8 h-8 rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-colors"><i class="fa-solid fa-trash-can text-[12px]"></i></button>' +
         "</div></td></tr>";

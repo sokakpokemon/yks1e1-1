@@ -180,9 +180,9 @@ setTimeout(() => {
 
       /* 7) Buton çıkmaması: grup/iptal/Sınıf Dersi/Ek Ders/Kapalı */
       console.log("8) Buton çıkmaması:");
-      t("grup derste buton markup'ı üretilmez (btn fonksiyonu koşulla sarılı)", appKaynak.includes("dersKartiUygun(ders) ? '<div class=\"mt-0.5\">' + dersKartiBtnHTML(ders) + '</div>' : ''"));
+      t("grup derste buton markup'ı üretilmez (btn ISLEM alanında koşulla sarılı — DERS-KARTI-TASIMA-YAMASI)", appKaynak.includes("(dersKartiUygun(l) ?"));
       t("btnHTML TEK tanım", (appKaynak.match(/function dersKartiBtnHTML\(/g) || []).length === 1);
-      t("btnHTML iki tabloda da (haftalik+gunluk) koşulla çağrılıyor", (appKaynak.match(/dersKartiUygun\(ders\) \? '<div class="mt-0\.5">' \+ dersKartiBtnHTML|dersKartiUygun\(ders\)\) html \+= '<div class="mt-0\.5">' \+ dersKartiBtnHTML/g) || []).length === 2);
+      t("btnHTML artık tablolarda DEĞİL, ISLEM alanında koşulla çağrılıyor", (appKaynak.match(/dersKartiUygun\(ders\) \? '<div class="mt-0\.5">' \+ dersKartiBtnHTML|dersKartiUygun\(ders\)\) html \+= '<div class="mt-0\.5">' \+ dersKartiBtnHTML/g) || []).length === 0 && (appKaynak.match(/dersKartiUygun\(l\) \? '<button title="Ders Kartı/g) || []).length === 1);
       t("iptal derste dersKartiUygun false", dersKartiUygun(iptalDers) === false);
       t("Sınıf Dersi (rose) hücresi btn çağrısı İÇERMİYOR (rose dalı ayrı)", appKaynak.indexOf('title="Sınıf dersi — kilitli"') < appKaynak.indexOf("dersKartiBtnHTML"));
       t("Ek Ders (amber) hücresi btn çağrısı İÇERMİYOR", appKaynak.indexOf('title="Ek Ders — kilitli"') < appKaynak.indexOf("dersKartiBtnHTML"));

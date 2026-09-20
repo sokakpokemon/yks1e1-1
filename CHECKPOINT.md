@@ -2006,3 +2006,18 @@ düzeltmesini tekrar uygulamaz (exit 0, hash birebir aynı). Yedek oluşturma ya
 - Süit bazlı runner✓ vs kaynak t( karşılaştırması: negatif farklar (runner>kaynak) döngü/dinamik t( üretiminden; pozitif farklar catch-only/dallı t(.
 - ks-ders-karti catch-only 2 test koşulsuz assertle çevrildi (akisHata===null; boot catch açıkça kırmızı). Süit artık TEK SAYI: 66 ✓, 0 ✗. "65 koşan + 2 koşullu" ifadesi kaldırıldı.
 - test.mjs TOPLAM: 2094/2094 OK. ks-ders-karti.mjs SHA-256 ve byte aşağıda; app.js DEĞİŞMEDİ (cbc97e7d…, 302129 B).
+
+## DERS-KARTI-TASIMA-YAMASI (2026-09-20)
+- İstek: "Ders Kartı PNG" butonu haftalikOgrtTablo + gunlukTablo hücrelerinden TAMAMEN kaldırıldı; ders listesi satırının İŞLEM alanına (waSatir/WhatsApp ikonunun yanına, satır başına) taşındı.
+- app.js — 3 hedefli değişiklik (app.js baştan yazılmadı, exact-anchor tek nokta yamalar):
+  1) haftalikOgrtTablo birebir hücresi: `(dersKartiUygun(ders) ? '<div class="mt-0.5">' + dersKartiBtnHTML(ders) + '</div>' : '')` çağrısı/markup'ı SİLİNDİ → hücre birebirHucreHTML çıktısıyla buton-öncesi haline döndü (ad + konu + sınıf).
+  2) gunlukTablo birebir hücresi: `if (dersKartiUygun(ders)) html += '<div class="mt-0.5">' + dersKartiBtnHTML(ders) + '</div>';` satırı SİLİNDİ.
+  3) renderDersler İŞLEM hücresi: WhatsApp butonunun hemen ardına koşullu kart butonu eklendi — `(dersKartiUygun(l) ? '<button title="Ders Kartı görseli (PNG) üret" draggable="false" onmousedown="event.stopPropagation()" onclick="event.preventDefault();dersKartiAc(\'' + l.id + '\')" …fa-image…</button>' : '')`. KOD KOPYALAMA YOK: dersKartiBtnHTML yardımcısının gövdesi birebir korundu; buton yalnız liste satırında çağrılıyor.
+- KORUMA (süitle kanıtlandı): dersDrag/dersBurak/dersDropHedef TEK tanım; boş "+" drop-zone (istekBurak) haftalik+gunluk birebir; grup/iptal/Sınıf Dersi (rose)/Ek Ders (amber)/Kapalı (gri) satır ve hücrelerde buton YOK; WhatsApp ikonu + düzenle/sil butonları aynen; saveDB/localStorage yolu değişmedi (dersKartiAc gövdesinde setItem/saveDB yok).
+- Yeni süit: ks-ders-karti-tasima.mjs (49 assert): (a) haftalik+gunluk hücrelerinde fa-image/dersKartiAc YOK, (b) İŞLEM satırında dersKartiAc VAR (waSatir'den sonra, düzenle'den önce; dersKartiUygun(l) guard'lı), (c) dersKartiVeri/dersKartiHTML + waAliciBilgisi alıcı akışı + html2canvas PNG yolu + saveDB yazmama, (d) draggable kaynaklar + drop-zone + no-op dersBurak, (e) istisna hücreler butonsuz, (f) idempotans (işaret TEK, İŞLEM üretimi TEK nokta).
+- ks-ders-karti.mjs: 2 stale assert (hücre-içi konum varsayımı) DERS-KARTI-TASIMA-YAMASI'na göre güncellendi — test davranışı değişmedi, konum sözleşmesi güncellendi.
+- Backup (üzerine yazma YOK, YENİ dosya): app.js.ders-karti-tasima-oncesi.bak — 302129 B, SHA-256 cbc97e7d3d1ad7f0bc0be919aa8898cfe16954d6341d8b35cd9a09136f3c2950.
+- Baseline (yama ÖNCESİ): 2094/2094 OK, 0 kırmızı (44 süit). Yama SONRASI (test.mjs: 45 süit): 2143/2143 OK — düşüş SIFIR. Yeni süit: ks-ders-karti-tasima.mjs 49 ✓.
+- Dosya hash/byte: app.js 302581 B / b787f93f55ceea4fad7744f6b45509b48601b619e1aa454a50d51f505500c288; ks-ders-karti-tasima.mjs 11428 B / ac714834aa35a200ea82bdb8bc9dab32c54d06d29eea71fd24a39bd35dfa55af; ks-ders-karti.mjs 20574 B / a0a4abd86f92f9260ed01a5a9f2e6ecc3da2618dfcbfc69b5056fca00682a4f8. index.html ve ek-ders.js DOKUNULMADI.
+- İdempotans: DERS-KARTI-TASIMA-YAMASI işareti TEK kaynakta; İŞLEM alanındaki buton üretimi TEK nokta; çift render duplicate ÜRETMEZ.
+- Tarayıcıda görmek için: Ctrl+Shift+R (Cmd+Shift+R) sert yenileme — eski app.js önbellekten gelebilir.

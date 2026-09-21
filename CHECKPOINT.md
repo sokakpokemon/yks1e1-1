@@ -2137,3 +2137,64 @@ yama öncesi gerçek koşan=2147 (2091✓ + 51✓ kırmızı süit + 5✗) → s
 app.js DOKUNULMADI: 302.581 B, SHA-256 b787f93f55ceea4f….
 Bu turda süit dosyalarına DOKUNULMADI (yalnız statik-eksiksizlik.mjs eklendi — kanıt aracı,
 test kapsamına dahil değil; CHECKPOINT ve suit-manifest'e dokunulmadı).
+
+## DÖNGÜ-7: 51 KANITININ KOD SATIRLARI + KOŞULLU SİTE ZORLAMA (6/6) + BAĞIMSIZLIK PARAGRAFI
+
+### 1) 51 kanıtı — kod satırlarıyla
+Eski runner kaynağı: test.mjs.sayac-dogrulama-oncesi.bak
+- L24: const ok = (cikti.match(/^\s*✓ /gm) || []).length;
+- L25: const kotu = (cikti.match(/✗/g) || []).length;
+- L26: const gecti = r.status === 0 && kotu === 0;
+- L29-30: if (gecti) { toplamGecen += ok; }   ← KIRMIZI süitin ✓'leri toplamGecen'e GİRMEZ
+- L42-43: ÖZET `toplamGecen/toplamTest` basar → "2091/2147"
+Gerçek çıktı (/tmp/test-oncesi.txt) üzerinden ölçüm:
+- 44 yeşil süit ✓ Σ = 2091 (= runner'ın "2091")
+- tasima: ok=51, kotu=5
+- 2091 + 51 + 5 = 2147 ✓ (runner'ın 2147'si)
+- 2091 + 51 = 2142 ✓ (tüm ✓ Σ; per-suite ölçüm)
+ÜÇ kanal birbirini doğruluyor; "51 atlanan test" iddiası YOK — 51 = kırmızı süitin
+geçtiği ama eski runner'ın "geçen" toplamına eklemediği testler.
+
+### 2) Koşullu site zorlama — 6/6 site kanıtlandı (isim isim)
+Her site için dal KASTEN ateşlendi; üretilen assertion ve sonucu:
+1. ks-ders-karti-tasima.mjs · site #56 (L234, else dalı) →
+   zorlama: domTikSonucu=null → "✓ 4b kalıcı DOM tık testi kuruldu" (GEÇTİ)
+2. ks-kart-kolon.mjs · site #45 (L198, catch dalı) →
+   zorlama: api.kartKolonOnar çökertildi → catch'e girildi →
+   "✓ Runtime onarım yolu hatasız" (GEÇTİ; normal koşumda catch'e girilmez, ✗=0)
+3. ks-birebir-gorunum.mjs · site #16 (L134, konu-sızdı dalı) →
+   zorlama: koşulsuz-true → "✓ gizli olmalı: boş konu" (GEÇTİ)
+4. ks-d1-render-refactor.mjs · site #14 (L189, tek-dönem else dalı) →
+   zorlama: if(false) → else → "✓ şablon selectleri tek dönemde varsayılan/boş (beklenen)" (GEÇTİ)
+5. ks-ekders-gorunum.mjs · site #41 (L194, seed-yok else dalı) →
+   zorlama: if(false) → else → "✓ seed birebir dersi yok → boş tablo çökmez" (GEÇTİ)
+6. ks-sinif-prog-etiket.mjs · site #6 (L69, kaynak-yok else dalı) →
+   zorlama: if(false) → else → "✓ 10.SINIF 1-1 için kaynak yok → etiket [] (uydurma YOK)" (GEÇTİ)
+   (+ site #10 çoklu-slot-yok dalı ve #12 kaynaksız-slot-yok dalı: else dalları → ✓ GEÇTİ)
+Sonuç: 6/6 süitte koşullu siteler gerçek assertion üretti; hiçbiri zorlanamadı gerekçesiyle
+DUR durumu YOK. Normal koşumlarda bu dallar davranışsal olarak girilmedi (girilmemesi DOĞRU);
+"hit=0" bunların ölü test olduğu değil, koşullu yol olduğu anlamına gelir.
+
+### 3) Kapının bağımsızlığı — tek paragraf
+suit-vakalar/*.txt, 45 süitin bir kez koşturulup assertion adlarının sırayla yakalanmasıyla
+üretildi ve sonra donduruldu; yani liste koddan değil, KOŞUMDAN türetildi. statik-eksiksizlik.mjs
+bu listeye EK olarak üç bağımsız kanıt verir: (i) kaynak koddaki TÜM t( çağrı noktalarını AST ile
+sayar ve koşumda üretilen her assertion'ın kaynağındaki bir siteye denk geldiğini (hit id'lerinin
+geçerliliği) doğrular; (ii) koşumun doğal özetle bitip exit=0 olduğunu kanıtlar (erken exit/timeout
+ile kırpılmış sayım olamaz); (iii) koşumdaki assertion satır sayısının vaka listesi uzunluğuna
+birebir eşitliğini yeniden üretir. "Listeye hiç girmemiş bir test" şu üç mekanizmanın bileşkesiyle
+yakalanır: (1) kaynakta olup koşumda üretilen her assertion vaka listesinde YOKSA kapı
+(vaka-adı birebir karşılaştırması) FAIL verir — döngü-5 negatif testi bunun kanıtı;
+(2) kaynakta var ama asla üretilmeyen (ölü) t( varsa statik AST sayımı koşum sayısından BÜYÜK
+çıkar ve tamlık aracı eksiği raporlar (koşullu dallar "üretilmedi" olarak etiketlenir, atlanmış değil);
+(3) listede olup kaynakta olmayan assert imkânsızdır çünkü liste koşum çıktısından üretildi
+(kaynakla birebir). Kalan teorik açık: yalnız belirli bir gelecek koşulda üretilen ve bugünkü
+koşumlarda hiç üretilmeyen yeni bir t( eklenirse — bu, (ii)+(iii) ile "koşullu site" olarak
+görünür ve site sayısı koşum sayısından büyük olduğu için tamlık aracında UYUMSUZ olarak işaretlenir;
+tam sessiz açık yoktur.
+
+### Kapanış — beşli
+node test.mjs → 2144/2144 OK (bu turda app.js ve süit dosyalarına dokunulmadı; tüm zorlamalar
+/tmp geçici kopyalarda yapıldı). yama öncesi gerçek koşan=2147, sonrası koşan=per-suite Σ=
+SUITE_DONE Σ=vaka Σ=runner=2144. BİREBİR EŞİT.
+app.js: 302.581 B, SHA-256 b787f93f55ceea4f… (değişmedi).

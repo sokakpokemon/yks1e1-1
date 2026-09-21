@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 47) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-donem-ilk.mjs kosan=" + __kosan + " beklenen=47"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-donem-ilk.mjs:" + __kosan + ":47"); } });
 /* ks-donem-ilk.mjs — 2026/2027 DÖNEM MODELİ, İLK (VERİ-UYUMLULUK) DİLİM süiti (DONEM-ILK-YAMASI)
    Doğruladıkları:
     1) 2026/2027 dönem kaydı tek kez var · 2) aktifDonemId doğru ·
@@ -161,5 +162,3 @@ t("index.html yama içermiyor (donemleriBaslat yok)", !html.includes("donemleriB
 
 console.log(fail === 0 ? "HEPSİ GEÇTİ" : "BAŞARISIZ");
 process.exit(fail);
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 47) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-donem-ilk.mjs kosan=" + __kosan + " beklenen=47"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-donem-ilk.mjs:" + __kosan + ":47"); } });

@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 72) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-sablon-kopya.mjs kosan=" + __kosan + " beklenen=72"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-sablon-kopya.mjs:" + __kosan + ":72"); } });
 /* ks-sablon-kopya.mjs — SABLON-KOPYA-YAMASI regresyon süiti
    Kapsam:
     1) boot; dolu kaynak programla kurulum
@@ -405,5 +406,3 @@ const skOzet = (o) => "(host=" + o.host + " secici=" + o.secici + " btn=" + o.bt
   console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
   process.exit(fail ? 1 : 0);
 })();
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 72) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-sablon-kopya.mjs kosan=" + __kosan + " beklenen=72"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-sablon-kopya.mjs:" + __kosan + ":72"); } });

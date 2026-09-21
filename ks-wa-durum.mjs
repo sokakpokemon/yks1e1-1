@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 35) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-wa-durum.mjs kosan=" + __kosan + " beklenen=35"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-wa-durum.mjs:" + __kosan + ":35"); } });
 /* ks-wa-durum.mjs — WA-DURUM-YAMASI süiti: öğrenci WhatsApp mesajı yeni hedef düzen.
    Assert listesi (talimat gereği):
      - parantezli öğretmen adı (1) MATEMATİK (…))
@@ -181,5 +182,3 @@ t("süit sayısı düşmüyor (≥38)", (suites.match(/,/g) || []).length >= 37)
 console.log(fail ? "\nHATALAR VAR" : "\nHEPSİ GEÇTİ");
 console.log("→ ks-wa-durum.mjs: " + (fail ? "BAŞARISIZ" : "TAMAM"));
 process.exit(fail);
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 35) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-wa-durum.mjs kosan=" + __kosan + " beklenen=35"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-wa-durum.mjs:" + __kosan + ":35"); } });

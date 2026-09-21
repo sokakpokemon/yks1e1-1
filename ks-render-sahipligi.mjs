@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 30) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-render-sahipligi.mjs kosan=" + __kosan + " beklenen=30"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-render-sahipligi.mjs:" + __kosan + ":30"); } });
 /* ks-render-sahipligi.mjs — D0 RENDER SAHİPLİĞİ regresyon süiti (GERÇEK DOM semantiği)
    Sahiplik sınırını gerçek DOM ile kanıtlar: yb.innerHTML yeniden yazımı eski çocukları SİLER;
    #donem-ui-host yb'nin KARDEŞİ olduğu için override'a rağmen kalır; insertAdjacentHTML
@@ -298,5 +299,3 @@ const secimDegeri = (REGISTRY, id) => {
   console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
   process.exit(fail ? 1 : 0);
 })();
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 30) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-render-sahipligi.mjs kosan=" + __kosan + " beklenen=30"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-render-sahipligi.mjs:" + __kosan + ":30"); } });

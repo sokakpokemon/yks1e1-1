@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 59) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ek-ders-donem.mjs kosan=" + __kosan + " beklenen=59"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ek-ders-donem.mjs:" + __kosan + ":59"); } });
 /* ks-ek-ders-donem.mjs — EK-DERS-DONEM süiti: ek ders kayıtları dönem modeline bağlandı
    ve birebir planlamada iki yönlü çakışma kontrolü etkin.
    Kapsam (talimat gereği):
@@ -224,5 +225,3 @@ t("ks-ek-ders-donem.mjs test.mjs'te tam 1 kez", (tsrc.match(/"ks-ek-ders-donem\.
 
 console.log(fail ? "\nBAŞARISIZ" : "\nHEPSİ GEÇTİ");
 process.exit(fail);
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 59) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ek-ders-donem.mjs kosan=" + __kosan + " beklenen=59"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ek-ders-donem.mjs:" + __kosan + ":59"); } });

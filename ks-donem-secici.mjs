@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 77) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-donem-secici.mjs kosan=" + __kosan + " beklenen=77"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-donem-secici.mjs:" + __kosan + ":77"); } });
 /* ks-donem-secici.mjs — DÖNEM SEÇİCİ + AKTİF DÖNEM FİLTRESİ süiti (DONEM-SECICI-YAMASI)
    Doğruladıkları:
     1) dönem seçicinin DB.donemler seçeneklerinden oluşması (value = dönem id, metin = dönem ad)
@@ -374,5 +375,3 @@ console.log("14) Dönem seçicinin mevcut planlama formunu bozmaması:");
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail);
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 77) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-donem-secici.mjs kosan=" + __kosan + " beklenen=77"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-donem-secici.mjs:" + __kosan + ":77"); } });

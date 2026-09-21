@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 36) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-wa-onizleme.mjs kosan=" + __kosan + " beklenen=36"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-wa-onizleme.mjs:" + __kosan + ":36"); } });
 /* ks-wa-onizleme.mjs — WhatsApp ortak onizleme paneli süiti (WA-ONIZLEME-YAMASI)
    Gerçek DOM semantiğiyle (Node 18+ happy-dom YOK — kendi mini-DOM ile) doğrular:
     1) Modal gerçek DOM'da kurulur, panel tam 1 kez.
@@ -160,5 +161,3 @@ t("süit sayısı düşmedi (≥36)", suits >= 36, "suits=" + suits);
 
 console.log(fail ? "\nKIRMIZI VAR" : "\nHEPSİ GEÇTİ");
 process.exit(fail);
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 36) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-wa-onizleme.mjs kosan=" + __kosan + " beklenen=36"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-wa-onizleme.mjs:" + __kosan + ":36"); } });

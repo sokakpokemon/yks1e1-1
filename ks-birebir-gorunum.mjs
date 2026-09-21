@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 34) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-birebir-gorunum.mjs kosan=" + __kosan + " beklenen=34"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-birebir-gorunum.mjs:" + __kosan + ":34"); } });
 /* ks-birebir-gorunum.mjs — BIREBIR-GORUNUM-ORTAK-YAMASI regresyon süiti:
    gunlukTablo + haftalikOgrtTablo birebir hücresi = TAM AD + (varsa GERÇEK konu) + SINIF;
    ders adı/MATEMATİK ASLA yok; iki tablo aynı satır sırası/metni/stil.
@@ -193,5 +194,3 @@ t("bu süit test.mjs'te tam 1 kez", (readFileSync("test.mjs", "utf8").match(/ks-
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail ? 1 : 0);
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 34) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-birebir-gorunum.mjs kosan=" + __kosan + " beklenen=34"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-birebir-gorunum.mjs:" + __kosan + ":34"); } });

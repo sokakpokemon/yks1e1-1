@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 34) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-sinif-ogretmen-uyum.mjs kosan=" + __kosan + " beklenen=34"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-sinif-ogretmen-uyum.mjs:" + __kosan + ":34"); } });
 /* ks-sinif-ogretmen-uyum.mjs — SINIF-OGRT-UYUM süiti
    Sınıf programı (DB.sinifProg) ↔ öğretmen haftalık program uyumu.
    Salt-okuma mantık testleri; mevcut davranışları bozmaz. */
@@ -137,5 +138,3 @@ t("boot + 3 onarım sonrası hücre sayısı sabit", (() => { const n1 = JSON.st
 
 console.log(fail === 0 ? "\nHEPSİ GEÇTİ" : "\n" + fail + " TEST KIRMIZI");
 process.exit(fail ? 1 : 0);
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 34) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-sinif-ogretmen-uyum.mjs kosan=" + __kosan + " beklenen=34"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-sinif-ogretmen-uyum.mjs:" + __kosan + ":34"); } });

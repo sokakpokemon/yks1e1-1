@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 55) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ders-karti-tasima.mjs kosan=" + __kosan + " beklenen=55"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ders-karti-tasima.mjs:" + __kosan + ":55"); } });
 /* ks-ders-karti-tasima.mjs — DERS-KARTI-TASIMA-YAMASI süiti
    (a) haftalik + gunluk hücrelerinde kart butonu YOK (markup dahil)
    (b) ders listesi satırında (ISLEM alanı, waSatir yanında) kart butonu VAR
@@ -234,5 +235,3 @@ setTimeout(() => {
   console.log(fail === 0 ? "\nHEPSİ GEÇTİ" : "\n" + fail + " TEST KIRMIZI");
   process.exit(fail ? 1 : 0);
 }, 120);
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 55) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ders-karti-tasima.mjs kosan=" + __kosan + " beklenen=55"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ders-karti-tasima.mjs:" + __kosan + ":55"); } });

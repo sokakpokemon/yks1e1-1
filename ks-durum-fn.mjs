@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 20) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-durum-fn.mjs kosan=" + __kosan + " beklenen=20"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-durum-fn.mjs:" + __kosan + ":20"); } });
 /* ks-durum-fn.mjs — durum seçici çubuğu davranış testleri (boot + işlevsel) */
 import { readFileSync } from "node:fs";
 const html = readFileSync("index.html", "utf8");
@@ -127,5 +128,3 @@ t("duzeltmeBul kapalıyı 'musait' dalından Kapalı etiketiyle uyarıyor", kayn
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail);
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 20) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-durum-fn.mjs kosan=" + __kosan + " beklenen=20"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-durum-fn.mjs:" + __kosan + ":20"); } });

@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 22) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-donem-secici-dom.mjs kosan=" + __kosan + " beklenen=22"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-donem-secici-dom.mjs:" + __kosan + ":22"); } });
 /* ks-donem-secici-dom.mjs — DONEM-DOM-DÜZELTMESİ regresyon süiti (GERÇEK DOM semantiği)
    Kapsam: bilinmeyen getElementById → null; innerHTML eski çocukları gerçekten siler;
    insertAdjacentHTML markup'taki id'leri DOM'a kaydeder; ilk boot sonrası host/selector/buton
@@ -238,5 +239,3 @@ const uc1 = (o) => o.host === 1 && o.secici === 1 && o.buton === 1;
   console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
   process.exit(fail ? 1 : 0);
 })();
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 22) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-donem-secici-dom.mjs kosan=" + __kosan + " beklenen=22"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-donem-secici-dom.mjs:" + __kosan + ":22"); } });

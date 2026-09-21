@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 41) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-grup-uyum.mjs kosan=" + __kosan + " beklenen=41"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-grup-uyum.mjs:" + __kosan + ":41"); } });
 /* ks-grup-uyum.mjs — grup dersi veri uyumluluk katmanı testleri (dersOgrenciIds) */
 import { readFileSync } from "node:fs";
 const html = readFileSync("index.html", "utf8");
@@ -185,5 +186,3 @@ console.log("7) Senaryolar: grup kayıt, isimli çakışma, birebir akış:");
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail);
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 41) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-grup-uyum.mjs kosan=" + __kosan + " beklenen=41"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-grup-uyum.mjs:" + __kosan + ":41"); } });

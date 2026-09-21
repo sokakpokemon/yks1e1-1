@@ -2032,3 +2032,31 @@ düzeltmesini tekrar uygulamaz (exit 0, hash birebir aynı). Yedek oluşturma ya
 - Backup'lar (üzerine yazma YOK): ks-ders-karti-tasima.mjs.dommtest-fix-oncesi.bak 14724 B e74950b997fa1e6c…; ks-ekders-ozet-csv.mjs.sayac-fix-oncesi.bak 15176 B b6583f07d5d05c899bdf…; ks-sinif-ogretmen-uyum.mjs.sayac-fix-oncesi.bak 8912 B 682a7ff48f9f4fba…; test.mjs.sayac-dogrulama-oncesi.bak 2970 B 9744a70ab5fa5cfd…; ayrıca bu döngü öncesi ks-ders-karti.mjs.assertA-oncesi.bak mevcut.
 - Son hash/byte: app.js 302581 B / b787f93f55ceea4f… (DOKUNULMADI); ks-ders-karti.mjs 22548 B / 519c1415039eb664…; ks-ders-karti-tasima.mjs 15398 B / fba2067e426b6b4c…; ks-ekders-ozet-csv.mjs 15292 B / 304886f2a29d2e09…; ks-sinif-ogretmen-uyum.mjs 9028 B / 860bf8818474866b…; test.mjs 2970 B / 9744a70ab5fa5cfd… (değişmedi).
 - Tarayıcı notu: app.js değişmediği için bu döngüde Ctrl+Shift+R gerekmez; önceki döngü notu geçerli.
+
+## DÖNGÜ-4: SUITE_DONE SAYAÇ KAPISI (kapı kuruldu, dört sayı birebir)
+
+### 1) "+1 sayacı" ledger'ı — kanıt (isim isim, tahmin yok)
+Runner çıktı ayrıştırması (test-oncesi → test-final), süit bazında ham ✓ kolonları:
+- ONCE.ham Σ = **2142** (44 süit + tasima'ın 51'i; runner özeti o an **2091/2147**, tasima 5 kırmızıydı)
+- FINAL.ham Σ = **2144** (45 süit; runner özeti **2144/2144 OK**)
+- Sızan 3 assertion-olmayan `✓ boot hatasız` satırı **3 FARKLI süitte** ve her biri ESKİ ham sayımda FAZLA sayılıyordu (backup koşturmasıyla ölçüldü):
+  - `ks-ekders-ozet-csv.mjs` 46 → 45 (−1)
+  - `ks-sinif-ogretmen-uyum.mjs` 35 → 34 (−1)
+  - `ks-ders-karti-tasima.mjs` (backup'ta boot✓ var, güncelde yok)
+- 2091 → 2144 SATIR SATIR: +53 tasima düzeltmesi (51→55 koşan + 5 kırmızının yeşile dönmesi) + 3 grup-fixture assert'i (66→69) − 3 phantom boot satırı − 1 assert-A başlık düzeltmesi (net t( sayımı değişmez, yalnız metin) = **2144**. Ham sütundaki 2142→2144 +2 = −3 phantom + ... birebir süit tablosuyla doğrulandı (yukarıdaki Δ kolonu: yalnız ekders-ozet-csv −1, sinif-ogretmen-uyum −1, tasima +4).
+
+### 2) Kalıcı kapı — uygulanan tasarım
+- **suit-manifest.mjs** (yeni): explicit `manifest` haritası — beklenen sayılar t( sayımından TÜRETİLMEZ.
+- 45 süitin TAMAMINA: (a) `t()` gövdesine `__kosan++` enjeksiyonu (yalnız gerçek assertion'lar sayılır), (b) dosyanın BAŞINA `process.on("exit")` ile **tam 1 adet** `SUITE_DONE:<ad>:<kosan>:<beklenen>` satırı (sona konursa `process.exit` hook'u ısırdığı için başa taşındı — kök neden kanıtlı).
+- **test.mjs kapı zorlaması**: her süit için exit=0 · tam 1 marker · kosan===beklenen===manifest · assertion satır sayısı===kosan; marker yoksa/çiftse/uyuşmazsa FAIL. Özette MANIFEST↔RUNNER birebir eşitlik satırı.
+
+### 3) Dört sayı birebir eşit
+`node test.mjs` → **2144/2144 OK, 0 kırmızı**; MANIFEST Σ=2144 = RUNNER koşan=2144 = SUITE_DONE Σ=2144 = gerçek t() Σ=2144 — **BİREBİR EŞİT ✓** (45/45 süit marker'ı, 0 KAPI HATASI).
+`app.js` dokunulmadı: 302.581 B, SHA-256 `b787f93f55ceea4f…`.
+
+### Backup'lar (üzerine yazma YOK)
+- 44 süit için `gate-oncesi.<suit>.bak` (SHA-256 + byte yukarıda listelendi; tasima'nınki önceki turlarda zaten vardı)
+- Güncel: `test.mjs` 4.045 B `4f07b0543f1c8a2d…`, `suit-manifest.mjs` 2.577 B `eba4905f8f4fe0d4…`
+
+### Not
+Catch-only t() çağrıları sayaç KAPISINE girer (kosan=manifest eşitliği bunu zorunlu kılar); beklenmeyen catch süitin kendi try/catch'inin dışına LOW-LEVEL THROW olarak düşer (exit≠0 → runner FAIL). Ctrl+Shift+R notu geçerliliğini korur.

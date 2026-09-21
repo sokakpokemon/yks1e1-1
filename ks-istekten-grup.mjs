@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 32) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-istekten-grup.mjs kosan=" + __kosan + " beklenen=32"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-istekten-grup.mjs:" + __kosan + ":32"); } });
 /* ks-istekten-grup.mjs — İSTEK HAVUZUNDAN PLANLAMA → GRUP SEÇİMİ testleri
    (1) panel istekten planda DOM'da, (2) sahip + 2 ek → tek kayıt, (3) ogrenciId sahip + ogrenciIds ekler,
    (4) istek kaydı değişmedi (yalnız durum), (5) çakışan üyede isimli uyarı, (6) tekli eski akış bozulmadı,
@@ -185,5 +186,3 @@ DB.istekler = []; formTemizle();
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail);
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 32) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-istekten-grup.mjs kosan=" + __kosan + " beklenen=32"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-istekten-grup.mjs:" + __kosan + ":32"); } });

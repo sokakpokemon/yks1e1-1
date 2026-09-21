@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 23) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-excel-k-import.mjs kosan=" + __kosan + " beklenen=23"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-excel-k-import.mjs:" + __kosan + ":23"); } });
 /* ks-excel-k-import.mjs — EXCEL-K import süiti (resmi kaynak: program-guncel.xml, seçim B).
    Yamayı no-op koşumla test eder (idempotent) + yazılan DB anlık görüntüsünü doğrular. Yazma YOK. */
 import { spawnSync } from "node:child_process";
@@ -92,5 +93,3 @@ t("dönem yapısı korunmuş", Array.isArray(DB.donemler) && DB.donemler.length 
 
 console.log(kotu === 0 ? `EXCEL-K IMPORT SÜİTİ: ${ok}/${ok + kotu} ✓` : `EXCEL-K IMPORT SÜİTİ: ${kotu} KIRMIZI`);
 process.exit(kotu === 0 ? 0 : 1);
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 23) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-excel-k-import.mjs kosan=" + __kosan + " beklenen=23"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-excel-k-import.mjs:" + __kosan + ":23"); } });

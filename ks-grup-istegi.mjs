@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 68) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-grup-istegi.mjs kosan=" + __kosan + " beklenen=68"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-grup-istegi.mjs:" + __kosan + ":68"); } });
 /* ks-grup-istegi.mjs — ORTAK GRUP İSTEK süiti (13 senaryo)
    Eski tekli istek bozulmaz · yedek/geri yükleme sağlam · ≥2 öğrenci zorunlu · ilk seçilen ana
    ekler benzersiz ogrenciIds'te · 10+ engellenmez · havuzda tek kayıt + tüm üyeler ·
@@ -286,5 +287,3 @@ formTemizle();
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail);
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 68) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-grup-istegi.mjs kosan=" + __kosan + " beklenen=68"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-grup-istegi.mjs:" + __kosan + ":68"); } });

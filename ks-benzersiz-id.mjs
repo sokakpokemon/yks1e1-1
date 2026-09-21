@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 46) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-benzersiz-id.mjs kosan=" + __kosan + " beklenen=46"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-benzersiz-id.mjs:" + __kosan + ":46"); } });
 /* ks-benzersiz-id.mjs — KALICI BENZERSİZ ID ALTYAPISI süiti (KİMLİK-YAMASI)
    Senaryolar:
     1) mevcut geçerli ID'ler değişmez · 2) eksik ID üretimi (öğrenci/öğretmen/sınıf) ·
@@ -185,5 +186,3 @@ t("seed DB zaten kimlikli — 0 yeni ID gerekmedi", n9.ogrenciler.every(o => o.i
 
 console.log(fail === 0 ? "HEPSİ GEÇTİ" : "BAŞARISIZ");
 process.exit(fail);
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 46) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-benzersiz-id.mjs kosan=" + __kosan + " beklenen=46"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-benzersiz-id.mjs:" + __kosan + ":46"); } });

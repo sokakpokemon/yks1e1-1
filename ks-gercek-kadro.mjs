@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 80) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-gercek-kadro.mjs kosan=" + __kosan + " beklenen=80"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-gercek-kadro.mjs:" + __kosan + ":80"); } });
 /* ks-gercek-kadro.mjs — GERÇEK ÖĞRETMEN VE SINIF KADROSU süiti (KADRO-YAMASI)
    Doğruladıkları:
     1) 17 öğretmenin tamamı mevcut (normalize-ad eşlemesiyle)
@@ -152,5 +153,3 @@ function kadroAdKey(ad) {
 
 console.log(fail === 0 ? "HEPSİ GEÇTİ" : "BAŞARISIZ");
 process.exit(fail);
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 80) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-gercek-kadro.mjs kosan=" + __kosan + " beklenen=80"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-gercek-kadro.mjs:" + __kosan + ":80"); } });

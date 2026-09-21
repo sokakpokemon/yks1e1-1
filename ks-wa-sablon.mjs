@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 47) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-wa-sablon.mjs kosan=" + __kosan + " beklenen=47"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-wa-sablon.mjs:" + __kosan + ":47"); } });
 /* ks-wa-sablon.mjs — WhatsApp Mesaj Şablonu süiti
    Doğruladıkları:
     1) Boş ayarla mesaj bugünkü varsayılanla byte-birebir aynı.
@@ -224,5 +225,3 @@ t("mevcut 34 süit listede korundu", ["ks-harness.mjs", "ks-excel-ui-kontrol.mjs
 console.log(fail ? "\nHATALAR VAR" : "\nHEPSİ GEÇTİ");
 console.log("→ ks-wa-sablon.mjs: " + (fail ? "BAŞARISIZ" : "TAMAM"));
 process.exit(fail);
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 47) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-wa-sablon.mjs kosan=" + __kosan + " beklenen=47"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-wa-sablon.mjs:" + __kosan + ":47"); } });

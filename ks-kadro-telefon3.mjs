@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 57) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-kadro-telefon3.mjs kosan=" + __kosan + " beklenen=57"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-kadro-telefon3.mjs:" + __kosan + ":57"); } });
 /* ks-kadro-telefon3.mjs — TELEFON3-YAMASI süiti
    Kapsam: 3 telefon alanı (tel/anneTel/babaTel) migration, form akışı (ekle/güncelle/sil),
    v3 CSV header/kolon sırası, round-trip, v1/v2 import + anne/baba korunumu, v3 boş kolon temizliği,
@@ -229,5 +230,3 @@ t("d-tel/d-anne-tel/d-baba-tel duplicate id yok", ["d-tel", "d-anne-tel", "d-bab
 
 console.log(fail ? "\nKIRMIZI TEST VAR" : "\nHEPSİ GEÇTİ");
 process.exit(fail ? 1 : 0);
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 57) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-kadro-telefon3.mjs kosan=" + __kosan + " beklenen=57"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-kadro-telefon3.mjs:" + __kosan + ":57"); } });

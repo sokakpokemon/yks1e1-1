@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 27) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-kadro-siralama.mjs kosan=" + __kosan + " beklenen=27"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-kadro-siralama.mjs:" + __kosan + ":27"); } });
 /* ks-kadro-siralama.mjs — KADRO-SIRALAMA-YAMASI testleri
    csvKadroSatirlari emission sırası: ogretmen → sinif → ogrenci.
    Header byte-identical; satır içerikleri eskiyle aynı (sadece sıra farkı);
@@ -131,5 +132,3 @@ t("ks-kadro-siralama.mjs test.mjs'te tam 1 kez", (tm.match(/ks-kadro-siralama\.m
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail);
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 27) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-kadro-siralama.mjs kosan=" + __kosan + " beklenen=27"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-kadro-siralama.mjs:" + __kosan + ":27"); } });

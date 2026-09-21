@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 44) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-d1-render-refactor.mjs kosan=" + __kosan + " beklenen=44"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-d1-render-refactor.mjs:" + __kosan + ":44"); } });
 /* ks-d1-render-refactor.mjs — D1 RENDER SAHİPLİĞİ ÇATIŞMASI KAPANIŞ SÜİTİ (GERÇEK DOM semantiği)
    TEK İŞ: ek-ders.js renderYonetim override'ı + yonetimBolum.innerHTML sahiplik çatışmasının
    D0 kalıcı-host sınırıyla çözüldüğünü KOD DOKUNUŞU OLMADAN kanıtlar (madde F).
@@ -258,5 +259,3 @@ async function akis(b) {
   console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error("SÜİT HATASI:", e); process.exit(1); });
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 44) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-d1-render-refactor.mjs kosan=" + __kosan + " beklenen=44"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-d1-render-refactor.mjs:" + __kosan + ":44"); } });

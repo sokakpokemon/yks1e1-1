@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 62) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-kadro-kolon.mjs kosan=" + __kosan + " beklenen=62"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-kadro-kolon.mjs:" + __kosan + ":62"); } });
 /* ks-kadro-kolon.mjs — KADRO-KOLON-YAMASI süiti: kadro CSV'si v2 (ad;soyad;telefon üst düzey kolonlar)
    Doğruladıkları:
     1) v2 header birebir: schema;dataset;donemId;tip;id;ad;soyad;telefon;brans;sinifId;sinifAd;ekAlanlarJson
@@ -236,5 +237,3 @@ t("ks-kadro-kolon.mjs test.mjs'te tam 1 kez", (tm.match(/ks-kadro-kolon\.mjs/g) 
 
 console.log(fail ? "\nKIRMIZI TEST VAR" : "\nHEPSİ GEÇTİ");
 process.exit(fail ? 1 : 0);
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 62) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-kadro-kolon.mjs kosan=" + __kosan + " beklenen=62"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-kadro-kolon.mjs:" + __kosan + ":62"); } });

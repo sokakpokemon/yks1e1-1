@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 33) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-kart-sirasi.mjs kosan=" + __kosan + " beklenen=33"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-kart-sirasi.mjs:" + __kosan + ":33"); } });
 /* ks-kart-sirasi.mjs — KART-SIRASI-YAMASI süiti: planlama ekranındaki iki kartın görünen sırası
    Kapsam:
     1) Boot sonrası plan kartı (#planKart) havuz kartından (#havuzBolum) ÖNCE geliyor
@@ -196,5 +197,3 @@ const idxDersler = html.indexOf('id="derslerBolum"');
   console.log("→ ks-kart-sirasi.mjs: " + n + " test" + (fail === 0 ? " ✓ GEÇTİ" : " — " + fail + " kırmızı"));
   process.exit(fail ? 1 : 0);
 })();
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 33) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-kart-sirasi.mjs kosan=" + __kosan + " beklenen=33"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-kart-sirasi.mjs:" + __kosan + ":33"); } });

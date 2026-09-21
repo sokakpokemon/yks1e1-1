@@ -1,4 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 50) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ekders-gorunum.mjs kosan=" + __kosan + " beklenen=50"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ekders-gorunum.mjs:" + __kosan + ":50"); } });
 /* ks-ekders-gorunum.mjs — EK-DERS-GORUNUM süiti: DB.ekDersler aktif dönem kayıtları
    gunlukTablo() ve haftalikOgrtTablo()'da ayırt edici "Ek Ders" etiketiyle görünür.
    Kapsam:
@@ -229,5 +230,3 @@ console.log("");
 console.log(fail ? "BAZI TESTLER BAŞARISIZ" : "HEPSİ GEÇTİ");
 console.log("→ ks-ekders-gorunum.mjs: " + (n - fail) + "/" + n + (fail ? " ✗ BAŞARISIZ" : " test ✓ GEÇTİ"));
 process.exit(fail ? 1 : 0);
-
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 50) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ekders-gorunum.mjs kosan=" + __kosan + " beklenen=50"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ekders-gorunum.mjs:" + __kosan + ":50"); } });

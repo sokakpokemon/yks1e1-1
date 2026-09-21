@@ -2252,3 +2252,81 @@ test.mjs 4.845 B 96061a64383a4eed…
 test.mjs 5.533 B d79ea838bcd9e1ab… · statik-eksiksizlik.mjs 8.821 B f8a85aec767b5da3… ·
 suit-manifest.mjs 2.577 B 9ea811afacd70dca… (6 sayı +8 toplam güncellendi) · elle-vaka-manifesti.mjs 1.928 B 0c1a03ffe006c9ae… (YENİ)
 app.js DOKUNULMADI: 302.581 B, SHA-256 b787f93f55ceea4f….
+
+## DÖNGÜ-9: GERÇEK-DAL FIXTURE'LAR + AD BAZLI ELLE MANIFEST + TAKAS NEGATİF TESTİ
+
+### 1) Sabit-TRUE fixture'lar gerçek-dal hale getirildi (eski/yeni metin)
+1. tasima site #56:
+   ESKI: t("4b fixture: tık bloğu kuruldu (koşulsuz — koşullu site #56 kalıcı kapsama)", true);
+   YENI: const passOnce = pass; if (domTikSonucu) domTikSonucu();
+         t("4b fixture: gerçek tık dalı koştu (domTikSonucu çağrıldı → 6 tık assertion'ı bu koşumda üretildi)", typeof domTikSonucu === "function" && pass > passOnce);
+   → gerçek tık dalı (6 assertion) koşumda koşuyor ve sayaç farkıyla kanıtlanıyor ✓
+2. kart-kolon site #45:
+   ESKI: t("kart-kolon fixture: onarım yolunun catch dalı kapsam altında (koşulsuz — site #45)", true);
+   YENI: İKİNCİ onarım çağrısı GERÇEKTEN çökertilir (api.kartKolonOnar = () => { throw new Error("GERÇEK-DAL-ZORLAMA-2"); })
+         → catch dalı fiilen çalışır → t("kart-kolon fixture: onarım catch dalı GERÇEKTEN ateşlendi (2. onarım çökertilip yakalandı)",
+           String(e2 && e2.message).includes("GERÇEK-DAL-ZORLAMA-2")) ✓
+   catch-içi t de dal-spesifik oldu: ESKI t("Runtime onarım yolu hatasız", false, …)
+   YENI t("onarım catch dalı çalıştı ve beklenen çökme yakalandı", String(e.message).includes("GERÇEK-DAL-ZORLAMA")) — İLK onarım normal koşumda hatasız olduğu için bu dal 0-hit (meşru), İKİNCİ çökertmede koşuyor ✓
+3. birebir site #16:
+   ESKI: t("birebir fixture: gizleme dalları kapsam altında (koşulsuz — site #16)", konuTestOk);
+   YENI: döngü sayacı eklendi (konuDonguSayisi) →
+         t("birebir fixture: 6 gizleme dalının TAMAMI gerçekten koştu ve konu HİÇBİRİNDE sızmamış (site #16)", konuTestOk && konuDonguSayisi === 6); ✓
+4. d1 site #14:
+   ESKI: t("d1 fixture: şablon dal kapsaması (koşulsuz — site #14)", Array.isArray(sablonNoktalari));
+   YENI: else dalı koşunca bayrak: globalThis.__d1TekDonemDali = true →
+         t("d1 fixture: tek-dönem else dalı GERÇEKTEN koştu (donemler.length=1 → else t'si üretildi)", __d1TekDonemDali === true && b.api.DB.donemler.length === 1); ✓
+5. ekders site #41:
+   ESKI: t("ekders fixture: seed dal kapsaması (koşulsuz — site #41)", typeof gunlukTablo() === "string");
+   YENI: if dalı koşunca bayrak: __ekdersSeedDali = true →
+         t("ekders fixture: seed-ders if dalı GERÇEKTEN koştu (seedDers dolu → if t'leri üretildi)", __ekdersSeedDali === true && !!seedDers); ✓
+6-8. etiket siteler #6/#10/#12:
+   ESKI: t("etiket fixture: kaynak-yok/çoklu-slot/kaynaksız-slot dal kapsaması (koşulsuz — site #N)", true);
+   YENI: her if dalına bayrak (__etiketKaynakVarDali / __etiketCokluDali / __etiketKaynaksizDali) →
+         t("etiket fixture: kaynak-var dalı GERÇEKTEN koştu …", __etiketKaynakVarDali === true && ogrt10.length > 0); vb. ✓✓✓
+Kalan "true" sabiti YOK — 8/8 fixture dal-ı̇çi gözlemlenebilir sonucu assert ediyor.
+
+### 2) İstisna listesi ↔ fixture eşleme tablosu (eşleşmeyen istisna yok)
+suite | siteNo | istisna gerekcesi | onu kapatan kalıcı fixture assert
+- ks-d1-render-refactor | 14 | tek-dönem else dalı | "d1 fixture: tek-dönem else dalı GERÇEKTEN koştu…"
+- ks-ekders-gorunum | 41 | seed-yok else dalı | "ekders fixture: seed-ders if dalı GERÇEKTEN koştu…"
+- ks-birebir-gorunum | 16 | konu-sızdı alarm dalı | "birebir fixture: 6 gizleme dalının TAMAMI gerçekten koştu…"
+- ks-sinif-prog-etiket | 6 | kaynak-yok else dalı | "etiket fixture: kaynak-var dalı GERÇEKTEN koştu…"
+- ks-sinif-prog-etiket | 11 | çoklu-slot-yok else dalı | "etiket fixture: çoklu-slot dalı GERÇEKTEN koştu…"
+- ks-sinif-prog-etiket | 14 | kaynaksız-slot-yok else dalı | "etiket fixture: kaynaksız-slot dalı GERÇEKTEN koştu…"
+- ks-kart-kolon | 45 | İLK onarım catch dalı (ilk onarım hatasız → 0 hit meşru) | "kart-kolon fixture: onarım catch dalı GERÇEKTEN ateşlendi (2. onarım çökertilip yakalandı)"
+- ks-kart-kolon | 46 | İKİNCİ onarım çökertilmedi dalı | aynı fixture bloğu
+- ks-kart-kolon | 48 | dış-çökme dalı | aynı fixture bloğu
+statik-eksiksizlik → TAMLIK 45/45, exit=0; SIFIR-HIT/GEREKSİZ-İSTİSNA yok.
+
+### 3) ELLE manifest AD BAZINA geçti (elle-vaka-adlari.mjs, 112.792 B 1ff45f8369074f82…)
+- elleVakaAdlari: 45 süit × beklenen assertion ADLARI (sıralı dizi). runner:
+  (i) donmuş suit-vakalar ↔ ELLE ad listesi AD BAZINDA, sıralı, trim-only karşılaştırma (Set YOK — takas açığı yok);
+  (ii) duplicate vaka adı kontrolü (donmuş/koşum/ELLE üçünde de) — aynı ad iki kez → FAIL;
+  (iii) koşum ↔ donmuş liste de ad-bazında birebir.
+- Normalizasyon: YALNIZ trim; iç boşluk çöktürme YAPILMAZ; dosyalara yazma yok; fark FAIL (otomatik düzeltme yok).
+- Provenans (dürüstlük): elle-vaka-adlari.mjs'IN İÇERİĞİ tek seferlik bir aktarımla güncel koşum
+  çıktısından üretildi ve SONRASINDA elle saklanan bağımsız kopya olarak muhafaza ediliyor —
+  yani "saf elle yazım" DEĞİL; doğrusu: "koşumdan tek-seferlik derlenmiş, sonrasında elle
+  muhafaza edilen ad manifesti". Bağımsızlık değeri koşumla HER koşumda yeniden üretilmemesinden
+  (donmuş olması) gelir; gelecekte bir assertion adı değişirse kapı FAIL verir ve elle güncelleme gerekir.
+- NEGATİF TAKAS TESTİ (isim bazlı): elle-vaka-adlari'da ks-kapali-gorunum ilk iki adın yeri değiştirildi
+  → runner: [KAPI HATASI] AD farkı vaka #1: donmuş="kapalı hücre DOM'da mevcut ve title'lı" ≠
+  ELLE="kapalı hücre gri/soluk stil taşıyor (bg-slate-100 + opacity)" → exit=1, 45 süit 44 OK.
+  Restore → 2152/2152 OK, exit=0. Sayı aynı kaldığı hâlde yakalandı → takas açığı kapandı.
+
+### 4) Kapanış — altılı birebir
+runner → satırları: 45 (yalnız SUITE_DONE içeren runner satırları; süit kendi "91/91 test ✓"
+satırları da çıktıda var ama runner'ın resmî satırı değildir) · Σ=2152 · SUITE_DONE marker: 45/45 (her süitte tam 1)
+koşan=2152 = beklenen=2152 = per-suite Σ=2152 = SUITE_DONE Σ=2152 = donmuş vaka Σ=2152 =
+ELLE sayı Σ=2152 = ELLE ad Σ=2152 = runner=2152 → BİREBİR EŞİT.
+statik-eksiksizlik → TAMLIK KANITI 45/45, exit=0.
+
+### Yedekler (gercek-dal-oncesi.*.bak, üzerine yazma YOK)
+test.mjs 5.533 B d79ea838… · elle-vaka-manifesti 1.928 B 0c1a03ff… · statik-eksiksizlik 8.821 B f8a85aec… ·
+ks-kart-kolon 16.423 B 2bed1dbd… · ks-ders-karti-tasima 15.980 B ad5e3874… · ks-birebir-gorunum 13.383 B 1d00146e… ·
+ks-d1-render-refactor 15.712 B 550b0c09… · ks-ekders-gorunum 15.780 B 6060375b… · ks-sinif-prog-etiket 7.959 B 95033e8c…
+
+### Güncel
+test.mjs 7.620 B 5b868b4c935e7e6e… · elle-vaka-adlari.mjs 112.792 B 1ff45f8369074f82…
+app.js DOKUNULMADI: 302.581 B, SHA-256 b787f93f55ceea4f….

@@ -2093,3 +2093,47 @@ Yama öncesi koşan=2147 (2091✓+5✗) → sonrası koşan=2144 = per-suite ham
 - Değişen assertion örnek metni (tümü aynı kalıp):
   ESKI: t("boot hatasız → " + e.message, false); console.log(e.stack...); process.exit(1);
   YENI: console.error(e.stack ? e.stack.split("\n").slice(0,6/8).join("\n") : e); throw e; (+ /* beklenmeyen catch: THROW — SAYAÇ KAPISI kuralları */)
+
+## DÖNGÜ-6: 51 SORUSUNUN ÇÖZÜMÜ + TAMLIK KANITI (statik-eksiksizlik.mjs)
+
+### 1) 51 farkının kesin çözümü (ham satır kanıtı)
+Eski runner çıktısı (/tmp/test-oncesi.txt): "2091/2147 OK" + "5 kırmızı test (tasima)".
+- 2091 = yalnız 44 YEŞİL süitün ✓ Σ (eski runner kırmızı süitin ✓'lerini geçen'e eklemezdi).
+- 2142 = TÜM 45 süitün ✓ Σ (2091 + tasima'nın 51 ✓'i).
+- 2147 = koşan toplam = 2142 ✓ + 5 ✗. Tasima süiti ok=51, kotu=5 (ölçüm: blok ayrıştırma).
+- BİREBİR: 2091 + 51 + 5 = 2147. 51 "atlanan test" değil — kırmızı süitin geçtiği ama
+  geçen sayılmayan testleri. "2142 ≠ 2091" de aynı nedenle: iki farklı ✓ toplamı tanımı.
+- AYRICA fiilen koşummayan assertion da yok: pre-gate tasima (dommtest-fix-oncesi.bak)
+  TEK BAŞINA koşturuldu → exit=1, ok=51, kotu=5, kendi "5 TEST KIRMIZI" özet satırıyla bitti
+  (erken process.exit YOK; exit(1) süitin SONUNDAKİ özet çıkışı). Atlanan vaka id: YOK.
+
+### 2) Tek başına koşum (pre-gate tasima)
+kosan=56 (51✓+5✗), gecen=51, kalan=5, atlanan=0. Erken-exit kanıtı: son satır "5 TEST KIRMIZI"
+(süitin kendi final özeti; process.exit(fail) satır 227'de, özet satır 226'dan SONRA).
+
+### 3) Kapının bağımsızlığı — suit-vakalar nasıl üretildi + tamlık kanıtı
+- suit-vakalar/*.txt: 45 süitin BİR KEZ koşturulup assertion adlarının sırayla yakalanmasıyla
+  üretildi (vaka-uret.mjs); sonrasında DONMUŞ, elle düzenlenmedi.
+- AÇIK kapatıldı: "listenin tamliği" artık koşumdan bağımsız statik kanıtla destekli:
+  statik-eksiksizlik.mjs (5.501 B, 2c277c957bcf52bc…) — acorn AST ile her süitteki TÜM
+  t( çağrı noktalarını (site) bulur, her siteyi globalThis.__sites.add(N) ile enstrümante
+  eder, kopyayı koşturur ve üçlü kanıt üretir:
+  a) koşumda üretilen her assertion'ın kaynakta geçerli bir site karşılığı var (hit id'leri
+     geçerli; koşullu dal siteleri koşumda 0 kez ateşlenebilir — "üretilmedi" ≠ "atlandı";
+     catch-içi t( zaten THROW'a çevrildiği için gizli catch-only test YOK),
+  b) koşum doğal özet satırıyla bitti + exit=0 (erken exit yok),
+  c) vaka sayısı === koşumdaki assertion satır sayısı (tam sayım).
+  SONUÇ: 45/45 süitte TAMLIK KANITI OK (exit=0). İzole deney notu: enstrümante kopyada
+  SITELER hook'u EN ÜSTE kaydedilmeli; sonda bırakılırsa process.exit(fail) hook kaydından
+  önce gelip kaydı hiç yapmıyor (kanıtlandı, düzeltildi).
+- Bu sayede manifest beklenen sayıları = donmuş vaka listesi uzunluğu = koşum tam sayımı =
+  statik site kapsama kanıtı. Negatif test (vaka adı bozma → FAIL) döngü-5'te kanıtlandı.
+
+### 4) Kapanış — beşli birebir
+node test.mjs → 2144/2144 OK, 0 kırmızı, exit=0.
+yama öncesi gerçek koşan=2147 (2091✓ + 51✓ kırmızı süit + 5✗) → sonrası koşan=2144
+= per-suite Σ=2144 = SUITE_DONE Σ=2144 = vaka Σ=2144 = runner=2144. BİREBİR EŞİT.
+
+app.js DOKUNULMADI: 302.581 B, SHA-256 b787f93f55ceea4f….
+Bu turda süit dosyalarına DOKUNULMADI (yalnız statik-eksiksizlik.mjs eklendi — kanıt aracı,
+test kapsamına dahil değil; CHECKPOINT ve suit-manifest'e dokunulmadı).

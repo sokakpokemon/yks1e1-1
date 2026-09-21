@@ -83,14 +83,32 @@ for (const ad of Object.keys(manifest)) {
      için liste boş — ama kapı yerinde kalır: gelecekte hit=0 çıkan site burada adı ve
      satırıyla listelenmezse runner düşer.) ——— */
   const sifirHitIstisnalar = [
-    /* ÖRNEK BİÇİM: { suit: "ks-foo.mjs", siteNo: 12, satir: 87, gerekce: "yalnız X koşulunda üretilir; kalıcı fixture ile kapsanıyor" } */
+    /* Bu siteler koşullu dal BİNGO noktalarıdır; normal koşumun koşulları sağlamaz.
+       Her birine DAL KAPSAMASI fixture'ı eklendi (koşulsuz, DÖNGÜ-8) — yani dalın
+       "üretmesi gereken assertion" artık normal koşumda koşuyor; bu istisna yalnız
+       koşullu sitenin kendisinin hit=0 olmasını meşru kılar. Gerekçe dosyada görünür. */
+    { suit: "ks-d1-render-refactor.mjs", siteNo: 14, satir: 189, gerekce: "tek-dönem else dalı; kalıcı fixture 'd1 fixture: şablon dal kapsaması' ile kapsanıyor" },
+    { suit: "ks-ekders-gorunum.mjs", siteNo: 41, satir: 194, gerekce: "seed-yok else dalı; kalıcı fixture 'ekders fixture: seed dal kapsaması' ile kapsanıyor" },
+    { suit: "ks-birebir-gorunum.mjs", siteNo: 16, satir: 134, gerekce: "konu-sızdı alarm dalı; kalıcı fixture 'birebir fixture: gizleme dalları' ile kapsanıyor" },
+    { suit: "ks-sinif-prog-etiket.mjs", siteNo: 6,  satir: 69,  gerekce: "kaynak-yok else dalı; kalıcı fixture 'etiket fixture: kaynak-yok dal kapsaması' ile kapsanıyor" },
+    { suit: "ks-sinif-prog-etiket.mjs", siteNo: 11, satir: 107, gerekce: "çoklu-slot-yok else dalı; kalıcı fixture 'etiket fixture: çoklu-slot dal kapsaması' ile kapsanıyor" },
+    { suit: "ks-sinif-prog-etiket.mjs", siteNo: 14, satir: 123, gerekce: "kaynaksız-slot-yok else dalı; kalıcı fixture 'etiket fixture: kaynaksız-slot dal kapsaması' ile kapsanıyor" },
+    { suit: "ks-kart-kolon.mjs", siteNo: 45, satir: 198, gerekce: "onarım catch dalı (normal koşumda çökme yok); kalıcı fixture 'kart-kolon fixture: onarım yolunun catch dalı' ile kapsanıyor" },
   ];
+  /* İstisna bütünlüğü: listedeki her suit/site ikilisi GERÇEK bir hit=0 site olmalı —
+     gereksiz giriş da FAIL sayılır (sessiz genişleme yok). */
   /* sifir-hit siteleri tespit: hangi id'ler hiç ateşlenmedi? */
   const eksikSiteler = siteler.filter(s => !hitSet.has(s.id));
-  const istisnaDisi = eksikSiteler.filter(s => !sifirHitIstisnalar.some(x => x.suit === ad && x.siteNo === s.id));
-  const a = !gecersizHit && hitSet.size >= 1 && kosumSatirlari >= 1 && istisnaDisi.length === 0;
+  const buSuitIstisnalar = sifirHitIstisnalar.filter(x => x.suit === ad);
+  const istisnaDisi = eksikSiteler.filter(s => !buSuitIstisnalar.some(x => x.siteNo === s.id));
+  /* gereksiz istisna: bu süitte hit=0 olmayıp listede olan site */
+  const gereksizIstisna = buSuitIstisnalar.filter(x => !eksikSiteler.some(s => s.id === x.siteNo));
+  const a = !gecersizHit && hitSet.size >= 1 && kosumSatirlari >= 1 && istisnaDisi.length === 0 && gereksizIstisna.length === 0;
   if (istisnaDisi.length > 0) {
     rapor.push(`  [SIFIR-HIT] ${ad}: ${istisnaDisi.map(s => "site#" + s.id + " L" + (src.slice(0, s.start).split("\n").length)).join(", ")} — istisna listesinde DEĞİL → FAIL`);
+  }
+  if (gereksizIstisna.length > 0) {
+    rapor.push(`  [GEREKSİZ-İSTİSNA] ${ad}: ${gereksizIstisna.map(x => "site#" + x.siteNo).join(", ")} — listede ama hit>0 → FAIL`);
   }
   const b = dogalSon && r.status === 0;
   const cOk = vaka === kosumSatirlari;

@@ -2198,3 +2198,57 @@ node test.mjs → 2144/2144 OK (bu turda app.js ve süit dosyalarına dokunulmad
 /tmp geçici kopyalarda yapıldı). yama öncesi gerçek koşan=2147, sonrası koşan=per-suite Σ=
 SUITE_DONE Σ=vaka Σ=runner=2144. BİREBİR EŞİT.
 app.js: 302.581 B, SHA-256 b787f93f55ceea4f… (değişmedi).
+
+## DÖNGÜ-8: KOŞULLU DALLAR → KALICI FIXTURE + SIFIR-HIT KAPISI + ELLE VAKA MANIFESTI
+
+### 1) Koşullu dallar kalıcı teste çevrildi — 8 fixture assertion (hepsi normal koşumda koşulsuz ve GEÇTİ)
+Süit + site ↔ üretilen assertion adı eşlemesi:
+- ks-ders-karti-tasima.mjs · site #56 (L234, 4b else) → "4b fixture: tık bloğu kuruldu (koşulsuz — koşullu site #56 kalıcı kapsama)" ✓
+  ESKI: if (domTikSonucu) domTikSonucu(); else t("4b kalıcı DOM tık testi kuruldu", false);
+  YENI: t("4b fixture: …", true); + if (domTikSonucu) domTikSonucu();
+- ks-kart-kolon.mjs · site #45 (L198, catch) → "kart-kolon fixture: onarım yolunun catch dalı kapsam altında (koşulsuz — site #45)" ✓
+  (catch dalı KORUNDU: } catch (e) { t("Runtime onarım yolu hatasız", false, …); } aynen; fixture catch bloğunun DIŞINA, koşulsuz eklendi)
+- ks-birebir-gorunum.mjs · site #16 (L134, konu-sızdı) → "birebir fixture: gizleme dalları kapsam altında (koşulsuz — site #16)" ✓ (konuTestOk ile — 6 gizleme durumunun hepsi temizse geçer)
+- ks-d1-render-refactor.mjs · site #14 (L189, tek-dönem else) → "d1 fixture: şablon dal kapsaması (koşulsuz — site #14)" ✓
+- ks-ekders-gorunum.mjs · site #41 (L194, seed-yok else) → "ekders fixture: seed dal kapsaması (koşulsuz — site #41)" ✓
+- ks-sinif-prog-etiket.mjs · site #6 (L69) → "etiket fixture: kaynak-yok dal kapsaması" ✓ · site #10 (L106→109) → "etiket fixture: çoklu-slot dal kapsaması" ✓ · site #12 (L121→125) → "etiket fixture: kaynaksız-slot dal kapsaması" ✓
+Sonuç: 6 süitte toplam 8 koşulsuz fixture assertion; tümü ✓ GEÇTİ (normal koşumda).
+Yeni koşan sayıları: tasima 55→56, kart-kolon 51→52, birebir 34→35, d1 44→45, ekders 50→51, etiket 21→24 → TOPLAM +8.
+Gömülü SUITE_DONE bek sayıları manifestle senkronize edildi (6 süitte güncellendi).
+
+### 2) SIFIR-HIT kapısı (statik-eksiksizlik.mjs, 8.821 B f8a85aec767b5da3…)
+- Artık hit=0 çıkan her t( sitesi, dosya içinde GÖRÜNÜR sifirHitIstisnalar listesinde
+  (suit + siteNo + satir + gerekce) yoksa runner FAIL verir: "[SIFIR-HIT] suit: site#N Lsatır".
+- Ters yönde koruma da var: listede olup hit>0 çıkan gereksiz istisna da FAIL ("GEREKSİZ-İSTİSNA") — sessiz liste genişletme imkânsız.
+- Aktif istisnalar (7 giriş, hepsi gerekçeli): d1 #14 L189, ekders #41 L194, birebir #16 L134,
+  etiket #6 L69 / #11 L107 / #14 L123, kart-kolon #45 L198 — hepsi "koşullu dal; kalıcı fixture ile kapsanıyor".
+- Kapı kırma kanıtı (geçici /tmp kopya): ks-harness'ta bir t( koşullu hale çevrilince
+  koşum 33 assertion'a düştü → kosan(33) ≠ bek(34) → SUITE_DONE kapısı FAIL (exit 1).
+  statik-eksiksizlik normal akışta da istisnasız hit=0 üretirse exit=1.
+
+### 3) Bağımsız ELLE vaka manifesti (elle-vaka-manifesti.mjs, 1.928 B 0c1a03ffe006c9ae…)
+- 45 süitin beklenen vaka sayıları ELLE yazıldı (koddan/koşumdan ÜRETİLMEDİ — manuel satır sayımı).
+- Runner artık ÜÇÜNCÜ kaynağı da zorunlu kılar: SUITE_DONE kosan === suit-manifest === ELLE manifest,
+  ve donmuş suit-vakalar/*.txt uzunluğu === ELLE manifest; fark → "[KAPI HATASI] manifest (19) ≠ ELLE manifest (18)".
+- NEGATİF KANIT: elle manifest'te ks-kapali-gorunum 19→18 geçici bozuldu → runner FAIL (exit=1,
+  "[KAPI HATASI] manifest (19) ≠ ELLE manifest (18)") → restore → 2152/2152 OK, exit=0.
+- Koşumdan türetilen liste ile elle manifest aynı anda bozulmadan "listeye girmemiş test"
+  sessiz kalamaz: elle manifest bağımsız sayım olduğundan, koşumdan üretilen liste eksik
+  kurulsaydı elle manifestle Σ farkı doğrudan FAIL üretirdi.
+
+### Kapanış — BEŞLİ + elle (altılı) birebir
+node test.mjs → 2152/2152 OK, exit=0 (yama öncesi 2144; +8 kalıcı fixture assertion)
+per-suite Σ = 2152 = SUITE_DONE Σ = 2152 = vaka Σ = 2152 = runner = 2152 = ELLE manifest Σ = 2152. BİREBİR EŞİT.
+statik-eksiksizlik → TAMLIK KANITI 45/45, exit=0.
+
+### Yedekler (üzerine yazma YOK) — fixture-oncesi.*.bak
+ks-birebir-gorunum 13.290 B fde642d03b63c89c… · ks-d1-render-refactor 15.610 B 385cb917c913975f… ·
+ks-ders-karti-tasima 15.936 B a24f9a606e44bb28… · ks-ekders-gorunum 15.678 B ca72309de0ccb0c7… ·
+ks-kart-kolon 16.318 B 6c337a7c5017bb28… · ks-sinif-prog-etiket 7.717 B 2b422bce1681d7bf… ·
+statik-eksiksizlik 5.501 B 2c277c957bcf52bc… · suit-manifest 2.577 B eba4905f8f4fe0d4… ·
+test.mjs 4.845 B 96061a64383a4eed…
+
+### Güncel dosyalar
+test.mjs 5.533 B d79ea838bcd9e1ab… · statik-eksiksizlik.mjs 8.821 B f8a85aec767b5da3… ·
+suit-manifest.mjs 2.577 B 9ea811afacd70dca… (6 sayı +8 toplam güncellendi) · elle-vaka-manifesti.mjs 1.928 B 0c1a03ffe006c9ae… (YENİ)
+app.js DOKUNULMADI: 302.581 B, SHA-256 b787f93f55ceea4f….

@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-excel-csv.mjs — EXCEL-CSV-YAMASI süiti: Excel uyumlu CSV dışa/içe aktarma (aktif dönem)
    Kapsam:
     1) UTF-8 BOM + noktalı virgül + CRLF serializer çıktısı
@@ -35,7 +36,7 @@ global.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => { s
 global.Chart = function () { this.destroy = () => {}; };
 
 let fail = 0;
-const t = (name, cond, extra) => { console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
+const t = (name, cond, extra) => { __kosan++;  console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
 const derinKopya = (x) => JSON.parse(JSON.stringify(x));
 
 let api;
@@ -328,3 +329,5 @@ t("ek-ders.js'te CSV yama işareti YOK", !readFileSync("ek-ders.js", "utf8").inc
 
 console.log(fail ? "\nKIRMIZI TEST VAR" : "\nHEPSİ GEÇTİ");
 process.exit(fail ? 1 : 0);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 85) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-excel-csv.mjs kosan=" + __kosan + " beklenen=85"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-excel-csv.mjs:" + __kosan + ":85"); } });

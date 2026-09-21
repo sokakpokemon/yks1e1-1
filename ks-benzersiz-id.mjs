@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-benzersiz-id.mjs — KALICI BENZERSİZ ID ALTYAPISI süiti (KİMLİK-YAMASI)
    Senaryolar:
     1) mevcut geçerli ID'ler değişmez · 2) eksik ID üretimi (öğrenci/öğretmen/sınıf) ·
@@ -36,7 +37,7 @@ P = new Function(scripts + "\n  return " + EXPORTS + ";\n")();
 const { DB, ui, normalize, kimlikleriTamamla, saveDB, loadDB, sinifId, dersOgrenciIds, istekOgrenciIds } = P;
 
 let fail = 0;
-const t = (name, cond, extra) => { console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
+const t = (name, cond, extra) => { __kosan++;  console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
 
 /* Zayıf şema: eski/ID'siz kayıtlar — gerçek verinin ESAS DURUMUNU temsil eder (seed + elle eklenmiş kayıtlar).
    (Ders kayıtlarında grup dersi: ogrenciIds DİZİSİ ile temsil edilir — mevcut grup dersi şeması.) */
@@ -184,3 +185,5 @@ t("seed DB zaten kimlikli — 0 yeni ID gerekmedi", n9.ogrenciler.every(o => o.i
 
 console.log(fail === 0 ? "HEPSİ GEÇTİ" : "BAŞARISIZ");
 process.exit(fail);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 46) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-benzersiz-id.mjs kosan=" + __kosan + " beklenen=46"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-benzersiz-id.mjs:" + __kosan + ":46"); } });

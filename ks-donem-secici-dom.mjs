@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-donem-secici-dom.mjs — DONEM-DOM-DÜZELTMESİ regresyon süiti (GERÇEK DOM semantiği)
    Kapsam: bilinmeyen getElementById → null; innerHTML eski çocukları gerçekten siler;
    insertAdjacentHTML markup'taki id'leri DOM'a kaydeder; ilk boot sonrası host/selector/buton
@@ -13,7 +14,7 @@ const ekKaynak = readFileSync("ek-ders.js", "utf8");
 const html = readFileSync("index.html", "utf8");
 const inlineBloklar = [...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]).join("\n;\n");
 let n = 0, fail = 0;
-const t = (ad, kosul, extra) => { n++; if (!kosul) fail++; console.log((kosul ? "✓ " : "✗ ") + ad + (extra !== undefined ? " → " + extra : "")); };
+const t = (ad, kosul, extra) => { __kosan++;  n++; if (!kosul) fail++; console.log((kosul ? "✓ " : "✗ ") + ad + (extra !== undefined ? " → " + extra : "")); };
 
 /* ---- MutationObserver simülasyonu: innerHTML yazımı observer callback'ini setTimeout 0 ile
         tetikler (gerçek tarayıcıdaki mikro-görev kuyruğu davranışının eşleniği) ---- */
@@ -237,3 +238,5 @@ const uc1 = (o) => o.host === 1 && o.secici === 1 && o.buton === 1;
   console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
   process.exit(fail ? 1 : 0);
 })();
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 22) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-donem-secici-dom.mjs kosan=" + __kosan + " beklenen=22"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-donem-secici-dom.mjs:" + __kosan + ":22"); } });

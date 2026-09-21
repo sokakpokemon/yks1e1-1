@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-panel-secim.mjs — GRUP PANEL v2 testleri:
    arama, sınıf filtresi (Tüm sınıflar dahil), düzenlemede yükleme, 10+ uyarı, tek seçimde birebir akış
    ÖNEMLİ: tek boot — gerçek DOM kayıt defteriyle; tüm erişimler P.* üzerinden (çift-boot tuzakları yok) */
@@ -20,7 +21,7 @@ global.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => { s
 global.Chart = function () { this.destroy = () => {}; };
 
 let fail = 0;
-const t = (name, cond, extra) => { console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
+const t = (name, cond, extra) => { __kosan++;  console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
 
 let P;
 try {
@@ -174,3 +175,5 @@ console.log("7) Tek öğrenci birebir akış:");
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 32) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-panel-secim.mjs kosan=" + __kosan + " beklenen=32"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-panel-secim.mjs:" + __kosan + ":32"); } });

@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-durum-fn.mjs — durum seçici çubuğu davranış testleri (boot + işlevsel) */
 import { readFileSync } from "node:fs";
 const html = readFileSync("index.html", "utf8");
@@ -33,7 +34,7 @@ global.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => { s
 global.Chart = function () { this.destroy = () => {}; };
 
 let fail = 0;
-const t = (name, cond) => { console.log((cond ? "  ✓ " : "  ✗ ") + name); if (!cond) fail = 1; };
+const t = (name, cond) => { __kosan++;  console.log((cond ? "  ✓ " : "  ✗ ") + name); if (!cond) fail = 1; };
 
 let api;
 try {
@@ -126,3 +127,5 @@ t("duzeltmeBul kapalıyı 'musait' dalından Kapalı etiketiyle uyarıyor", kayn
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 20) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-durum-fn.mjs kosan=" + __kosan + " beklenen=20"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-durum-fn.mjs:" + __kosan + ":20"); } });

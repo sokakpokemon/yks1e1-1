@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-ekders-ozet-csv.mjs — EKDERS-OZET-CSV-YAMASI süiti: Özet/Analiz "Ek Ders" kategorisi + Ek Ders CSV dışa aktarma
    Kapsam:
     1) renderOzet: "Ek Ders" kartı ayrı kategori; birebir toplamı değişmez (ek ders eklenmez)
@@ -31,7 +32,7 @@ global.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => { s
 global.Chart = function () { this.destroy = () => {}; };
 
 let fail = 0;
-const t = (name, cond, extra) => { console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
+const t = (name, cond, extra) => { __kosan++;  console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
 const derinKopya = (x) => JSON.parse(JSON.stringify(x));
 
 let api;
@@ -202,3 +203,5 @@ t("ks-ekders-ozet-csv.mjs test.mjs'te tam 1 kez", readFileSync("test.mjs", "utf8
 
 console.log(fail === 0 ? "HEPSİ GEÇTİ\n→ ks-ekders-ozet-csv.mjs: " + (fail === 0 ? "TAMAM" : "") : "BAŞARISIZ");
 process.exit(fail);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 45) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ekders-ozet-csv.mjs kosan=" + __kosan + " beklenen=45"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ekders-ozet-csv.mjs:" + __kosan + ":45"); } });

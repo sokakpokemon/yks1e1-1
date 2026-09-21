@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-gunluk-ders-tasi.mjs — GUNLUK-DERS-TASI-YAMASI regresyon süiti.
 
    TEK İŞ: GÜNLÜK tabloda (gunlukTablo; satır=öğretmen, kolon=saat) MEVCUT birebir ders kartını
@@ -72,7 +73,7 @@ global.Chart = function () { this.destroy = () => {}; };
 if (!globalThis.navigator) globalThis.navigator = {};
 
 let n = 0, fail = 0;
-const t = (name, cond, extra) => { n++; console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra !== undefined) console.log("     ↳ " + extra); } };
+const t = (name, cond, extra) => { __kosan++;  n++; console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra !== undefined) console.log("     ↳ " + extra); } };
 
 /* ---------- Boot ---------- */
 let P;
@@ -405,3 +406,5 @@ console.log("");
 console.log(fail ? "BAZI TESTLER BAŞARISIZ" : "HEPSİ GEÇTİ");
 console.log("→ ks-gunluk-ders-tasi.mjs: " + (n - fail) + "/" + n + (fail ? " ✗ BAŞARISIZ" : " test ✓ GEÇTİ"));
 process.exit(fail ? 1 : 0);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 115) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-gunluk-ders-tasi.mjs kosan=" + __kosan + " beklenen=115"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-gunluk-ders-tasi.mjs:" + __kosan + ":115"); } });

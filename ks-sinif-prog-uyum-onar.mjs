@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-sinif-prog-uyum-onar.mjs — SINIF-PROG-UYUM-ONAR süiti
    Doğruladıkları:
     1) 10.SINIF kaynak avail.sinif slotları okunuyor (SALİM URTİMUR 1-1, ŞAHİN DOĞANAY 1-1)
@@ -28,7 +29,7 @@ global.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => { s
 global.Chart = function () { this.destroy = () => {}; };
 
 let fail = 0;
-const t = (name, cond, extra) => { console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
+const t = (name, cond, extra) => { __kosan++;  console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
 
 let api;
 try {
@@ -160,3 +161,5 @@ t("ks-sinif-prog-uyum-onar.mjs test.mjs'te tam 1 kez", (testRunner.match(/ks-sin
 if (fail) { console.log("BAŞARISIZ"); process.exit(1); }
 console.log("HEPSİ GEÇTİ");
 console.log("→ ks-sinif-prog-uyum-onar.mjs: " + ((fail === 0) ? "TAMAM" : ""));
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 36) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-sinif-prog-uyum-onar.mjs kosan=" + __kosan + " beklenen=36"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-sinif-prog-uyum-onar.mjs:" + __kosan + ":36"); } });

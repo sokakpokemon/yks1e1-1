@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-grup-istegi.mjs — ORTAK GRUP İSTEK süiti (13 senaryo)
    Eski tekli istek bozulmaz · yedek/geri yükleme sağlam · ≥2 öğrenci zorunlu · ilk seçilen ana
    ekler benzersiz ogrenciIds'te · 10+ engellenmez · havuzda tek kayıt + tüm üyeler ·
@@ -23,7 +24,7 @@ global.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => { s
 global.Chart = function () { this.destroy = () => {}; };
 
 let fail = 0;
-const t = (name, cond, extra) => { console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
+const t = (name, cond, extra) => { __kosan++;  console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
 
 const EXPORTS = "{ DB, ui, planla, formaAktar, normalize, duzeltmeBul, dersOgrenciIds, istekOgrenciIds, istekGrupPanelAc, istekGrupEkle, istekGrupIptal, istekGrupUyeleri, istekGrupOzetHTML, renderHavuz, renderFormDestek, grupPanelCiz, grupPanelSec, grupPanelSecimler, grupPanelOzetCiz, grupPanelListeCiz, grupPanelToggle, grupPanelTumSiniflar, saveDB, loadDB }";
 let P;
@@ -285,3 +286,5 @@ formTemizle();
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 68) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-grup-istegi.mjs kosan=" + __kosan + " beklenen=68"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-grup-istegi.mjs:" + __kosan + ":68"); } });

@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-kart-sirasi.mjs — KART-SIRASI-YAMASI süiti: planlama ekranındaki iki kartın görünen sırası
    Kapsam:
     1) Boot sonrası plan kartı (#planKart) havuz kartından (#havuzBolum) ÖNCE geliyor
@@ -17,7 +18,7 @@ const ekKaynak = readFileSync("ek-ders.js", "utf8");
 const html = readFileSync("index.html", "utf8");
 const inlineBloklar = [...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]).join("\n;\n");
 let n = 0, fail = 0;
-const t = (ad, kosul, extra) => { n++; if (!kosul) fail++; console.log((kosul ? "✓ " : "✗ ") + ad + (extra !== undefined ? " → " + extra : "")); };
+const t = (ad, kosul, extra) => { __kosan++;  n++; if (!kosul) fail++; console.log((kosul ? "✓ " : "✗ ") + ad + (extra !== undefined ? " → " + extra : "")); };
 
 class MutationObserverSim {
   constructor(cb) { this._cb = cb; this._hedef = null; }
@@ -195,3 +196,5 @@ const idxDersler = html.indexOf('id="derslerBolum"');
   console.log("→ ks-kart-sirasi.mjs: " + n + " test" + (fail === 0 ? " ✓ GEÇTİ" : " — " + fail + " kırmızı"));
   process.exit(fail ? 1 : 0);
 })();
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 33) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-kart-sirasi.mjs kosan=" + __kosan + " beklenen=33"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-kart-sirasi.mjs:" + __kosan + ":33"); } });

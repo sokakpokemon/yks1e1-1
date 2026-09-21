@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-kadro-kolon.mjs — KADRO-KOLON-YAMASI süiti: kadro CSV'si v2 (ad;soyad;telefon üst düzey kolonlar)
    Doğruladıkları:
     1) v2 header birebir: schema;dataset;donemId;tip;id;ad;soyad;telefon;brans;sinifId;sinifAd;ekAlanlarJson
@@ -31,7 +32,7 @@ global.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => { s
 global.Chart = function () { this.destroy = () => {}; };
 
 let fail = 0;
-const t = (name, cond, extra) => { console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
+const t = (name, cond, extra) => { __kosan++;  console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
 const derinKopya = (x) => JSON.parse(JSON.stringify(x));
 
 const EXPORTS = "{ DB, saveDB, csvDosya, csvParse, csvImportUygula, CSV_SCHEMA, CSV_SCHEMA_KADRO, CSV_SCHEMA_KADRO_V3, CSV_BASLIK_KADRO, CSV_BASLIK_KADRO_V2, CSV_BASLIK_KADRO_V3, CSV_BASLIK_DERS, CSV_BASLIK_ISTEK, kadroAdSoyadAyir, kadroV2Satirlari, kadroV3Satirlari, csvKadroSatirlari, kadroTelOf, kadroSnfId, sinifId, aktifDonemId, LS_KEY }";
@@ -235,3 +236,5 @@ t("ks-kadro-kolon.mjs test.mjs'te tam 1 kez", (tm.match(/ks-kadro-kolon\.mjs/g) 
 
 console.log(fail ? "\nKIRMIZI TEST VAR" : "\nHEPSİ GEÇTİ");
 process.exit(fail ? 1 : 0);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 62) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-kadro-kolon.mjs kosan=" + __kosan + " beklenen=62"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-kadro-kolon.mjs:" + __kosan + ":62"); } });

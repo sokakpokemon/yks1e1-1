@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-excel-ui-kontrol.mjs — EXCEL-UI-KONTROL: Excel/CSV kartı DOM semantiği süiti
    Doğruladıkları:
     1) csvYonetimKartHTML gerçek fonksiyondan üretilen kart HTML'i DOM'da/produksiyonda var.
@@ -23,7 +24,7 @@ global.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => { s
 global.Chart = function () { this.destroy = () => {}; };
 
 let fail = 0;
-const t = (name, cond, extra) => { console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
+const t = (name, cond, extra) => { __kosan++;  console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
 
 let P;
 try {
@@ -100,3 +101,5 @@ t("ks-excel-ui-kontrol.mjs test.mjs'te tam 1 kez", testRunner.split("ks-excel-ui
 
 console.log(fail === 0 ? "HEPSİ GEÇTİ" : "BAŞARISIZ");
 process.exit(fail);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 34) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-excel-ui-kontrol.mjs kosan=" + __kosan + " beklenen=34"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-excel-ui-kontrol.mjs:" + __kosan + ":34"); } });

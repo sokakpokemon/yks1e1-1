@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-sinifprog-csv.mjs — SINIFPROG-CSV-YAMASI süiti: aktif dönem sınıf programı CSV + eski yedek uyumluluk
    Kapsam:
     1) Export başlığı/BOM/ayraç/CRLF/Türkçe; dosya adında aktifDonemId
@@ -31,7 +32,7 @@ global.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => { s
 global.Chart = function () { this.destroy = () => {}; };
 
 let fail = 0;
-const t = (name, cond, extra) => { console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
+const t = (name, cond, extra) => { __kosan++;  console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
 const derinKopya = (x) => JSON.parse(JSON.stringify(x));
 const alanEsit = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
@@ -266,3 +267,5 @@ console.log("8) Eski yedek: precedence kuralı (normalize kapısı):");
 
 console.log(fail ? "\nBAŞARISIZ" : "\nHEPSİ GEÇTİ");
 process.exit(fail);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 57) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-sinifprog-csv.mjs kosan=" + __kosan + " beklenen=57"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-sinifprog-csv.mjs:" + __kosan + ":57"); } });

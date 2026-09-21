@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-sinif-prog-etiket.mjs — DV etiketi kaldırma + ders/öğretmen adı görünürlük testleri */
 import { readFileSync } from "node:fs";
 const html = readFileSync("index.html", "utf8");
@@ -30,7 +31,7 @@ global.localStorage = { getItem:(k)=>store[k]??null, setItem:(k,v)=>{store[k]=v;
 global.Chart = function(){ this.destroy=()=>{}; };
 
 let fail = 0;
-const t = (name, cond) => { console.log((cond?"  ✓":"  ✗")+" "+name); if(!cond) fail=1; };
+const t = (name, cond) => { __kosan++;  console.log((cond?"  ✓":"  ✗")+" "+name); if(!cond) fail=1; };
 
 console.log("=== ks-sinif-prog-etiket — DV etiketi → ders+öğretmen adı ===");
 
@@ -144,3 +145,5 @@ t("ks-sinif-prog-etiket.mjs test.mjs'te tam 1 kez", (tm.match(/ks-sinif-prog-eti
 
 console.log(fail === 0 ? "HEPSİ GEÇTİ" : "BAZI TESTLER KIRMIZI");
 process.exit(fail);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 21) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-sinif-prog-etiket.mjs kosan=" + __kosan + " beklenen=21"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-sinif-prog-etiket.mjs:" + __kosan + ":21"); } });

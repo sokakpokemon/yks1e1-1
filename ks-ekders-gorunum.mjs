@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-ekders-gorunum.mjs — EK-DERS-GORUNUM süiti: DB.ekDersler aktif dönem kayıtları
    gunlukTablo() ve haftalikOgrtTablo()'da ayırt edici "Ek Ders" etiketiyle görünür.
    Kapsam:
@@ -33,7 +34,7 @@ global.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => { s
 global.Chart = function () { this.destroy = () => {}; };
 
 let n = 0, fail = 0;
-const t = (name, cond, extra) => { n++; console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
+const t = (name, cond, extra) => { __kosan++;  n++; console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
 
 let api;
 try {
@@ -228,3 +229,5 @@ console.log("");
 console.log(fail ? "BAZI TESTLER BAŞARISIZ" : "HEPSİ GEÇTİ");
 console.log("→ ks-ekders-gorunum.mjs: " + (n - fail) + "/" + n + (fail ? " ✗ BAŞARISIZ" : " test ✓ GEÇTİ"));
 process.exit(fail ? 1 : 0);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 50) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ekders-gorunum.mjs kosan=" + __kosan + " beklenen=50"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ekders-gorunum.mjs:" + __kosan + ":50"); } });

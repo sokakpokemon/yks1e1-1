@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-ek-ders-donem.mjs — EK-DERS-DONEM süiti: ek ders kayıtları dönem modeline bağlandı
    ve birebir planlamada iki yönlü çakışma kontrolü etkin.
    Kapsam (talimat gereği):
@@ -36,7 +37,7 @@ global.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => { s
 global.Chart = function () { this.destroy = () => {}; };
 
 let n = 0, fail = 0;
-const t = (name, cond, extra) => { n++; console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
+const t = (name, cond, extra) => { __kosan++;  n++; console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
 
 let api;
 try {
@@ -223,3 +224,5 @@ t("ks-ek-ders-donem.mjs test.mjs'te tam 1 kez", (tsrc.match(/"ks-ek-ders-donem\.
 
 console.log(fail ? "\nBAŞARISIZ" : "\nHEPSİ GEÇTİ");
 process.exit(fail);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 59) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ek-ders-donem.mjs kosan=" + __kosan + " beklenen=59"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ek-ders-donem.mjs:" + __kosan + ":59"); } });

@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-donem-olusturma.mjs — DONEM-OLUSTURMA-YAMASI süiti: 2027/2028 dönemi + dönemli sınıf programı (sinifProgDonemler)
    Doğruladıkları:
     1) Eski tek dönemlik DB.sinifProg'un "donem-2026-2027"ye KAYIPSIZ migration'ı (normalize yolu)
@@ -35,7 +36,7 @@ global.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => { s
 global.Chart = function () { this.destroy = () => {}; };
 
 let fail = 0;
-const t = (name, cond, extra) => { console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
+const t = (name, cond, extra) => { __kosan++;  console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
 
 const EXPORTS = "{ DB, normalize, loadDB, saveDB, yenile, donemleriBaslat, bosDB, seedDB, aktifDonemId, aktifDonemKayitlari, donemSecKutusuHTML, donemSec, yeniDonemOlustur, sinifProgDonemleriBaslat, sinifProgAktif, sinifProguDonemeBagla, donemSeciliSinifProg, penceredeDersler, renderHavuz, renderYonetim, renderDersler, renderOzet, renderAnaliz, renderFormDestek, ui, LS_KEY, DONEM_ILK_ID, DONEM_YENI_ID, DONEM_YENI_AD }";
 let api;
@@ -299,3 +300,5 @@ console.log("13) index.html, ek-ders.js ve vendor hash'leri:");
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 87) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-donem-olusturma.mjs kosan=" + __kosan + " beklenen=87"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-donem-olusturma.mjs:" + __kosan + ":87"); } });

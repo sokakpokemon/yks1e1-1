@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-donem-damga.mjs — DONEM-DAMGA süiti: yeni ders/istek kayıtları aktif dönem ID'siyle doğar
    Doğruladıkları:
     1) aktifDonemId() = donem-2026-2027 iken yeni dersin donemId'si doğru
@@ -30,7 +31,7 @@ global.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => { s
 global.Chart = function () { this.destroy = () => {}; };
 
 let fail = 0;
-const t = (name, cond, extra) => { console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
+const t = (name, cond, extra) => { __kosan++;  console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
 
 let api;
 try {
@@ -327,3 +328,5 @@ console.log("11) Taze DB (bosDB yolu) akışında damga sürüyor:");
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 50) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-donem-damga.mjs kosan=" + __kosan + " beklenen=50"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-donem-damga.mjs:" + __kosan + ":50"); } });

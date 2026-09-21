@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-istekten-grup.mjs — İSTEK HAVUZUNDAN PLANLAMA → GRUP SEÇİMİ testleri
    (1) panel istekten planda DOM'da, (2) sahip + 2 ek → tek kayıt, (3) ogrenciId sahip + ogrenciIds ekler,
    (4) istek kaydı değişmedi (yalnız durum), (5) çakışan üyede isimli uyarı, (6) tekli eski akış bozulmadı,
@@ -21,7 +22,7 @@ global.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => { s
 global.Chart = function () { this.destroy = () => {}; };
 
 let fail = 0;
-const t = (name, cond, extra) => { console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
+const t = (name, cond, extra) => { __kosan++;  console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
 
 const EXPORTS = "{ DB, ui, planla, formaAktar, duzeltmeBul, dersOgrenciIds, renderFormDestek, grupPanelCiz, grupPanelListe, grupPanelSecimler, grupPanelTumSiniflar, grupPanelSec, grupPanelOzetCiz, grupPanelToggle }";
 let P;
@@ -184,3 +185,5 @@ DB.istekler = []; formTemizle();
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 32) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-istekten-grup.mjs kosan=" + __kosan + " beklenen=32"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-istekten-grup.mjs:" + __kosan + ":32"); } });

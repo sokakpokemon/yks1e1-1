@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* Logic harness: kısa kod v2 kuralları (index.html'den koparılmış sahte DOM ile) */
 import { readFileSync } from "node:fs";
 const html = readFileSync("index.html", "utf8");
@@ -29,7 +30,7 @@ const api = fn();
 const { KISA_KOD, ksKodOf, saatEtiket, normalize, ksSeceneklerHTML } = api;
 
 let fail = 0;
-const t = (name, cond) => { console.log((cond?"  ✓":"  ✗")+" "+name); if(!cond) fail=1; };
+const t = (name, cond) => { __kosan++;  console.log((cond?"  ✓":"  ✗")+" "+name); if(!cond) fail=1; };
 
 console.log("1) ksKodOf aralık kuralı:");
 t("08:50 → 1", ksKodOf("08:50")==="1");
@@ -124,3 +125,5 @@ t("çift ksGec idempotent (kod sabit kalır)", g2.ilk.saat==="15:30" && g2.ilk.k
 
 console.log(fail? "BAŞARISIZ":"HEPSİ GEÇTİ");
 process.exit(fail);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 34) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-harness.mjs kosan=" + __kosan + " beklenen=34"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-harness.mjs:" + __kosan + ":34"); } });

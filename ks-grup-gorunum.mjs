@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-grup-gorunum.mjs — GRUP GÖRÜNÜM testleri:
    badge markup (+N özeti, aç/kapa), tablo hücreleri, WhatsApp/PNG metinleri, analiz dağıtımı,
    birebir derslerde eski görünüm. Tek boot + gerçek id kayıt defteri (stub DOM). */
@@ -43,7 +44,7 @@ global.Chart = function () { this.destroy = () => {}; };
 if (!globalThis.navigator) globalThis.navigator = {};
 
 let fail = 0;
-const t = (name, cond, extra) => { console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
+const t = (name, cond, extra) => { __kosan++;  console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
 
 let P;
 try {
@@ -174,3 +175,5 @@ ui.filtre = "hafta";
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 28) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-grup-gorunum.mjs kosan=" + __kosan + " beklenen=28"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-grup-gorunum.mjs:" + __kosan + ":28"); } });

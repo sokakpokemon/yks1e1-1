@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-brans-ders-kurali.mjs — BRANS-DERS-KURALI-YAMASI regresyon süiti:
    Öğretmen branşı ↔ verilebilir ders kuralı (mat→mat,geo · tur→tur,edb · diğerleri yalnız kendi dersi).
    Fail-closed eşleşme (aksan/harf/boşluk normalize). Kayıt öncesi zorunlu kontrol: birebir, grup, ek ders.
@@ -44,7 +45,7 @@ global.Chart = function () { this.destroy = () => {}; };
 if (!globalThis.navigator) globalThis.navigator = {};
 
 let fail = 0;
-const t = (name, cond, extra) => { console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
+const t = (name, cond, extra) => { __kosan++;  console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
 
 let P;
 try {
@@ -250,3 +251,5 @@ t("eski süit listesi korundu (ks-harness hâlâ 1. süit)", tm.includes('"ks-ha
 
 if (fail) { console.log("BAŞARISIZ"); process.exit(1); }
 console.log("HEPSİ GEÇTİ");
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 54) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-brans-ders-kurali.mjs kosan=" + __kosan + " beklenen=54"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-brans-ders-kurali.mjs:" + __kosan + ":54"); } });

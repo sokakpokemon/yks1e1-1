@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-kadro-siralama.mjs — KADRO-SIRALAMA-YAMASI testleri
    csvKadroSatirlari emission sırası: ogretmen → sinif → ogrenci.
    Header byte-identical; satır içerikleri eskiyle aynı (sadece sıra farkı);
@@ -22,7 +23,7 @@ global.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => { s
 global.Chart = function () { this.destroy = () => {}; };
 
 let fail = 0;
-const t = (name, cond, extra) => { console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
+const t = (name, cond, extra) => { __kosan++;  console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
 
 const EXPORTS = "{ DB, csvKadroSatirlari, csvDosya, CSV_BASLIK_KADRO, csvParse, csvImportUygula }";
 let P;
@@ -130,3 +131,5 @@ t("ks-kadro-siralama.mjs test.mjs'te tam 1 kez", (tm.match(/ks-kadro-siralama\.m
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 27) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-kadro-siralama.mjs kosan=" + __kosan + " beklenen=27"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-kadro-siralama.mjs:" + __kosan + ":27"); } });

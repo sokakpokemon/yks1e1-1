@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-test-render.mjs — render + ek-ders.js hedefli testleri */
 import { readFileSync } from "node:fs";
 const html = readFileSync("index.html", "utf8");
@@ -37,7 +38,7 @@ global.localStorage = { getItem:(k)=>store[k]??null, setItem:(k,v)=>{store[k]=v;
 global.Chart = function(){ this.destroy=()=>{}; };
 
 let fail = 0;
-const t = (name, cond) => { console.log((cond?"  ✓":"  ✗")+" "+name); if(!cond) fail=1; };
+const t = (name, cond) => { __kosan++;  console.log((cond?"  ✓":"  ✗")+" "+name); if(!cond) fail=1; };
 
 /* 1) Ana uygulama boot + API al */
 let api;
@@ -107,3 +108,5 @@ try {
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 14) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-test-render.mjs kosan=" + __kosan + " beklenen=14"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-test-render.mjs:" + __kosan + ":14"); } });

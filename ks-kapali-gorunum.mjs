@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-kapali-gorunum.mjs — Kapalı hücre görünümü + tıklanabilirlik regresyon süiti (16 test) */
 import { readFileSync } from "node:fs";
 const html = readFileSync("index.html", "utf8");
@@ -16,7 +17,7 @@ global.localStorage = { getItem: k => store[k] ?? null, setItem: (k, v) => { sto
 global.Chart = function () { this.destroy = () => {}; };
 
 let fail = 0;
-const t = (name, cond) => { console.log("  " + (cond ? "✓" : "✗") + " " + name); if (!cond) fail = 1; };
+const t = (name, cond) => { __kosan++;  console.log("  " + (cond ? "✓" : "✗") + " " + name); if (!cond) fail = 1; };
 
 const api = new Function(scripts + "\n;return { gridTablo, durumSec, togOgrSecili, togOgr, DB, ui, saveDB, yenile: () => {} };")();
 
@@ -80,3 +81,5 @@ t("durumSeciciHTML Kapalı butonu hâlâ rose vurgulu (seçici çubuk değişmed
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail ? 1 : 0);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 19) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-kapali-gorunum.mjs kosan=" + __kosan + " beklenen=19"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-kapali-gorunum.mjs:" + __kosan + ":19"); } });

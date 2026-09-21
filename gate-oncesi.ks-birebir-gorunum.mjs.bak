@@ -1,0 +1,194 @@
+/* ks-birebir-gorunum.mjs — BIREBIR-GORUNUM-ORTAK-YAMASI regresyon süiti:
+   gunlukTablo + haftalikOgrtTablo birebir hücresi = TAM AD + (varsa GERÇEK konu) + SINIF;
+   ders adı/MATEMATİK ASLA yok; iki tablo aynı satır sırası/metni/stil.
+   Konu gizleme: boş/null/whitespace, ders adı, sınıf adı, tam ad ile aynı. */
+import { readFileSync } from "node:fs";
+
+const html = readFileSync("index.html", "utf8");
+const scripts = [readFileSync("app.js", "utf8"),
+  ...[...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)].map(m => m[1])].join("\n;\n");
+
+const store = {};
+globalThis.tailwind = {};
+global.window = { crypto: { randomUUID: () => "id-" + Math.random() }, addEventListener() {}, open() {}, location: { hostname: "x" } };
+
+const reg = {};
+const el = (id) => {
+  const e = {
+    id, textContent: "", value: "", checked: false, style: {}, dataset: {}, options: [], files: null,
+    classList: { _s: new Set(), add(...c) { c.forEach(x => this._s.add(x)); }, remove(...c) { c.forEach(x => this._s.delete(x)); }, toggle() {}, contains(c) { return this._s.has(c); } },
+    insertAdjacentHTML(_p, h) { e.innerHTML = e.innerHTML + h; },
+    appendChild() {}, remove() {}, click() {}, focus() {}, scrollIntoView() {}, addEventListener() {}, removeEventListener() {},
+    querySelectorAll: () => [], getContext: () => null
+  };
+  let _html = "";
+  Object.defineProperty(e, "innerHTML", {
+    get() { return _html; },
+    set(v) { _html = String(v); [..._html.matchAll(/id="([^"]+)"/g)].forEach(m => { if (!reg[m[1]]) reg[m[1]] = el(m[1]); }); }
+  });
+  reg[id] = e;
+  return e;
+};
+for (const m of html.matchAll(/id="([^"]+)"/g)) el(m[1]);
+global.document = {
+  getElementById: (i) => reg[i] || null,
+  addEventListener() {}, removeEventListener() {},
+  createElement: () => el("anon" + Math.random()),
+  body: { appendChild() {}, removeChild() {} },
+  querySelectorAll() { return []; }
+};
+global.localStorage = { getItem: k => store[k] ?? null, setItem: (k, v) => { store[k] = v; }, removeItem: k => { delete store[k]; } };
+global.Chart = function () { this.destroy = () => {}; };
+if (!globalThis.navigator) globalThis.navigator = {};
+
+let fail = 0;
+const t = (name, cond, extra) => { console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
+
+let P;
+try {
+  P = new Function(scripts + `
+    yenile();
+    return { DB, ui, gunlukTablo, haftalikOgrtTablo, birebirHucreHTML, dersOgrenciIds, esc, aktifDonemKayitlari };
+  `)();
+  t("boot hatasız", true);
+} catch (e) {
+  t("boot hatasız → " + e.message, false);
+  console.log(e.stack.split("\n").slice(0, 8).join("\n"));
+  process.exit(1);
+}
+const { DB, ui, gunlukTablo, haftalikOgrtTablo, birebirHucreHTML, dersOgrenciIds } = P;
+
+/* Gelecek pazartesi: tüm pencere filtrelerinde görünür */
+const gelecekPzt = (() => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + 7); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); })();
+const ogrt = DB.ogretmenler.find(o => o.ad === "SONER AÇIKGÖZ") || DB.ogretmenler[0];
+const ogr = DB.ogrenciler.find(o => o.ad === "Ayşe Demir") || DB.ogrenciler[0];
+
+const dersIdTam = "mat";
+const DERS_ADI = "MATEMATİK"; /* seed DERS[mat].ad — hedef: hücrede ASLA görünmemeli */
+const saat = "15:30";
+const temizle = () => { DB.dersler = DB.dersler.filter(l => !(l.tarih === gelecekPzt && l.ogretmenId === ogrt.id && l.ogrenciId === ogr.id)); };
+
+function hucreIcerik(htmlStr) {
+  /* birebirHucreHTML çıktısını td'den çıkar */
+  const m = htmlStr.match(/<div class="rounded-lg border[^"]*"[^>]*>[\s\S]*?<\/div><\/td>/) || null;
+  const blok = m ? m[0] : (htmlStr.match(/<div class="rounded-lg border[\s\S]*?title="[^"]*">[\s\S]*?<\/div><\/div><\/td>/) || [""])[0];
+  /* satırları sırayla çıkar: text-[10px] tam ad, text-[9px] konu, text-[8px] sınıf */
+  const ad = (blok.match(/text-\[10px\] font-bold text-slate-800[^>]*>([^<]*)</) || [])[1] || "";
+  const konu = (blok.match(/text-\[9px\] text-slate-500[^>]*>([^<]*)</) || [])[1] || "";
+  const sinif = (blok.match(/text-\[8px\] font-bold text-slate-400[^>]*>([^<]*)</) || [])[1] || "";
+  return { ad, konu, sinif, blok };
+}
+
+/* ---- 1) Ortak yardımcı var ve iki tablo onu kullanıyor ---- */
+console.log("1) Ortak hücre yardımcısı:");
+const appKaynak = readFileSync("app.js", "utf8");
+const bolge = (fn) => { const i = appKaynak.indexOf(fn); const j = appKaynak.indexOf("\nfunction ", i + 10); return appKaynak.slice(i, j); };
+const gunlukBolge = bolge("function gunlukTablo() {");
+const haftalikBolge = bolge("function haftalikOgrtTablo() {");
+t("birebirHucreHTML app.js'te tanımlı (tek tanım)", (appKaynak.match(/function birebirHucreHTML\(/g) || []).length === 1);
+t("gunlukTablo birebirHucreHTML'i kullanıyor", gunlukBolge.includes("birebirHucreHTML(ders, ogrenci,"));
+t("haftalikOgrtTablo birebirHucreHTML'i kullanıyor", haftalikBolge.includes("birebirHucreHTML(ders, ogrenci,"));
+t("yardımcı dokümantasyonu: ders adı ASLA gösterilmez", haftalikBolge.includes("BIREBIR-GORUNUM-ORTAK-YAMASI") && gunlukBolge.includes("BIREBIR-GORUNUM-ORTAK-YAMASI"));
+
+/* ---- 2) Aynı ders → iki tabloda BİREBİR aynı hücre ---- */
+console.log("2) Günlük = Haftalık birebir hücre:");
+temizle();
+DB.dersler.push({ id: "ks-bgb-1", donemId: DB.aktifDonemId, ogrenciId: ogr.id, ogrenciAd: ogr.ad, dersId: dersIdTam, konu: "Limit ve Süreklilik", ogretmenId: ogrt.id, ogretmenAd: ogrt.ad, tarih: gelecekPzt, saat, kod: "8", durum: "planlandi", olusturma: "2026-09-01" });
+ui.filtre = "gun"; ui.anchor = gelecekPzt;
+const gHTML = gunlukTablo();
+const gC = hucreIcerik(gHTML);
+t("günlük hücrede TAM AD var", gC.ad === ogr.ad, gC.ad);
+t("günlük hücrede SINIF var", gC.sinif === ogr.sinif, gC.sinif);
+t("günlük hücrede GERÇEK konu var", gC.konu === "Limit ve Süreklilik", gC.konu);
+t("günlük hücrede ders adı (" + DERS_ADI + ") YOK", !gHTML.includes(DERS_ADI), DERS_ADI + " bulundu");
+ui.haftalikOgrtId = ogrt.id; ui.haftalikOgrtSecim = gelecekPzt;
+const hHTML = haftalikOgrtTablo();
+const hC = hucreIcerik(hHTML);
+t("haftalık hücrede TAM AD var", hC.ad === ogr.ad, hC.ad);
+t("haftalık hücrede SINIF var", hC.sinif === ogr.sinif, hC.sinif);
+t("haftalık hücrede GERÇEK konu var", hC.konu === "Limit ve Süreklilik", hC.konu);
+t("haftalık birebir hücre bloğunda ders adı YOK", !hC.blok.includes(DERS_ADI), hC.blok.slice(0, 200));
+t("iki tabloda hücre içeriği (ad/konu/sınıf) BİREBİR AYNI", gC.ad === hC.ad && gC.konu === hC.konu && gC.sinif === hC.sinif);
+t("iki tabloda hücre markup'ı (stil) BİREBİR AYNI", gC.blok === hC.blok || (gC.blok.replace(/title="Dolu[^"]*"/, "T") === hC.blok.replace(/title="Dolu[^"]*"/, "T")));
+ui.haftalikOgrtId = null;
+
+/* ---- 3) Konu gizleme kuralları ---- */
+console.log("3) Konu gizleme kuralları:");
+const konuDurumlari = [
+  ["", "boş konu"],
+  ["   ", "whitespace konu"],
+  [null, "null konu"],
+  ["MATEMATİK", "konu = ders adı"],
+  [ogr.sinif, "konu = sınıf adı"],
+  [ogr.ad, "konu = tam ad"],
+];
+let konuTestOk = true;
+for (const [k, etiket] of konuDurumlari) {
+  temizle();
+  DB.dersler.push({ id: "ks-bgb-k", donemId: DB.aktifDonemId, ogrenciId: ogr.id, ogrenciAd: ogr.ad, dersId: dersIdTam, konu: k, ogretmenId: ogrt.id, ogretmenAd: ogrt.ad, tarih: gelecekPzt, saat, kod: "8", durum: "planlandi", olusturma: "2026-09-01" });
+  ui.gunSecim = gelecekPzt;
+  const c = hucreIcerik(gunlukTablo());
+  if (c.konu !== "" ) { t("gizli olmalı: " + etiket, false, c.konu); konuTestOk = false; }
+}
+if (konuTestOk) t("6 gizleme durumu (boş/whitespace/null/ders adı/sınıf/tam ad)", true);
+temizle();
+/* konu ders adından türetilmez: konu yokken hücrede ders adı da konu da YOK */
+DB.dersler.push({ id: "ks-bgb-k2", donemId: DB.aktifDonemId, ogrenciId: ogr.id, ogrenciAd: ogr.ad, dersId: dersIdTam, konu: "", ogretmenId: ogrt.id, ogretmenAd: ogrt.ad, tarih: gelecekPzt, saat, kod: "8", durum: "planlandi", olusturma: "2026-09-01" });
+ui.gunSecim = gelecekPzt;
+const c2 = hucreIcerik(gunlukTablo());
+t("konu yokken konu satırı YOK ve ders adı fallback YOK", c2.konu === "" && !gHTML.includes(DERS_ADI));
+temizle();
+
+/* ---- 4) Taşma koruması (uzun ad/konu) ---- */
+console.log("4) Taşma koruması:");
+const uzunOgr = { id: "ks-bgb-uzun", ad: "Zzzzüleyha Aaaaaaaaaaaaaaaa Bbbbbbbbbbbbbbb Cccccccccccccccccc", sinif: "MEZUN SAY 1", tel: "" };
+DB.ogrenciler.push(uzunOgr);
+DB.dersler.push({ id: "ks-bgb-uzun-d", donemId: DB.aktifDonemId, ogrenciId: uzunOgr.id, ogrenciAd: uzunOgr.ad, dersId: dersIdTam, konu: "Uuuuuzun Uuuuuuuuuu Konnnnnnuuuuuuuuuuuuuuuuuuuu Başlıııııııııııııııııııııııııııııı", ogretmenId: ogrt.id, ogretmenAd: ogrt.ad, tarih: gelecekPzt, saat: "08:50", kod: "1", durum: "planlandi", olusturma: "2026-09-01" });
+ui.gunSecim = gelecekPzt;
+const uC = hucreIcerik(gunlukTablo());
+t("uzun ad truncate + min-w-0 taşıyor", (uC.blok.match(/truncate/g) || []).length >= 2 && uC.blok.includes("min-w-0"));
+t("uzun ad title attr'da tam", uC.blok.includes('title="' + uzunOgr.ad + '"'));
+DB.dersler = DB.dersler.filter(l => l.id !== "ks-bgb-uzun-d");
+DB.ogrenciler = DB.ogrenciler.filter(o => o.id !== uzunOgr.id);
+
+/* ---- 5) Pazar + slot eşleşmesi ---- */
+console.log("5) Pazar ve slot eşleşmesi:");
+const pazarKey = (() => { const d = new Date(gelecekPzt + "T12:00:00"); d.setDate(d.getDate() + 6); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); })();
+DB.dersler.push({ id: "ks-bgb-pz", donemId: DB.aktifDonemId, ogrenciId: ogr.id, ogrenciAd: ogr.ad, dersId: dersIdTam, konu: "Pazar konusu", ogretmenId: ogrt.id, ogretmenAd: ogrt.ad, tarih: pazarKey, saat, kod: "8", durum: "planlandi", olusturma: "2026-09-01" });
+ui.gunSecim = pazarKey;
+const pC = hucreIcerik(gunlukTablo());
+t("Pazar satırı da ortak hücreyi gösteriyor (tam ad)", pC.ad === ogr.ad, pC.ad);
+ui.gunSecim = gelecekPzt;
+const sC = hucreIcerik(gunlukTablo());
+t("farklı gün/slot'ta Pazar dersi YOK (slot eşleşmesi doğru)", sC.ad !== ogr.ad || !gHTML.includes("Pazar konusu"));
+DB.dersler = DB.dersler.filter(l => l.id !== "ks-bgb-pz");
+temizle();
+
+/* ---- 6) Grup / Kapalı / Boş / Sınıf Dersi / Ek Ders davranışı değişmiyor ---- */
+console.log("6) Korunan davranışlar:");
+t("grup üye etiketleri yardımcısı yerinde", gunlukBolge.includes("grupUyeEtiketleri(ders)") && haftalikBolge.includes("grupUyeEtiketleri(ders)"));
+t("Ek Ders amber dalı (günlük) korunmuş", gunlukBolge.includes("bg-amber-50") && gunlukBolge.includes("Ek Ders"));
+t("Ek Ders amber dalı (haftalık) korunmuş", haftalikBolge.includes("bg-amber-100") && haftalikBolge.includes("Ek Ders"));
+t("Sınıf Dersi rose dalı korunmuş", haftalikBolge.includes("bg-rose-100"));
+t("Kapalı slate dalı korunmuş", haftalikBolge.includes("musaitDegil") || haftalikBolge.includes("bg-slate-100"));
+t("Boş hücre drop-zone korunmuş", haftalikBolge.includes("istekBurak"));
+t("aktif dönem filtresi (günlük)", gunlukBolge.includes("aktifDonemKayitlari(DB.dersler)"));
+t("aktif dönem filtresi (haftalık)", haftalikBolge.includes("aktifDonemKayitlari(DB.dersler)") || haftalikBolge.includes("pencere") === false && haftalikBolge.includes("donemId") === true || haftalikBolge.includes("dersOgrenciIds"));
+t("dersOgrenciIds değişmedi (fonksiyon çağrılabilir)", Array.isArray(dersOgrenciIds({ id: "x", ogrenciId: ogr.id })));
+/* aktif dönem dışı kayıt görünmez */
+DB.dersler.push({ id: "ks-bgb-eski", donemId: "donem-2099-2100", ogrenciId: ogr.id, ogrenciAd: ogr.ad, dersId: dersIdTam, konu: "Eski dönem", ogretmenId: ogrt.id, ogretmenAd: ogrt.ad, tarih: gelecekPzt, saat, kod: "8", durum: "planlandi", olusturma: "2026-09-01" });
+ui.gunSecim = gelecekPzt;
+const eHTML = gunlukTablo();
+t("aktif dönem dışı kayıt günlükte YOK", !eHTML.includes("Eski dönem") && !eHTML.includes("ks-bgb-eski"));
+DB.dersler = DB.dersler.filter(l => l.id !== "ks-bgb-eski");
+
+/* ---- 7) Freeze/diff korumaları ---- */
+console.log("7) Freeze korumaları:");
+const { createHash } = await import("node:crypto");
+const sha = (s) => createHash("sha256").update(s).digest("hex");
+t("ek-ders.js değişmedi (bilinen hash)", sha(readFileSync("ek-ders.js", "utf8")) === "3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f");
+t("index.html değişmedi (bilinen hash)", sha(readFileSync("index.html", "utf8")) === "7ee493bae3d1396cafd2e102dce2a10c6f70b6170a17ab35d699d3870e04c2d5");
+t("bu süit test.mjs'te tam 1 kez", (readFileSync("test.mjs", "utf8").match(/ks-birebir-gorunum\.mjs/g) || []).length === 1);
+
+console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
+process.exit(fail ? 1 : 0);

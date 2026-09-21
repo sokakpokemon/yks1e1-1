@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-render-sahipligi.mjs — D0 RENDER SAHİPLİĞİ regresyon süiti (GERÇEK DOM semantiği)
    Sahiplik sınırını gerçek DOM ile kanıtlar: yb.innerHTML yeniden yazımı eski çocukları SİLER;
    #donem-ui-host yb'nin KARDEŞİ olduğu için override'a rağmen kalır; insertAdjacentHTML
@@ -11,7 +12,7 @@ const ekKaynak = readFileSync("ek-ders.js", "utf8");
 const html = readFileSync("index.html", "utf8");
 const inlineBloklar = [...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]).join("\n;\n");
 let n = 0, fail = 0;
-const t = (ad, kosul, extra) => { n++; if (!kosul) fail++; console.log((kosul ? "✓ " : "✗ ") + ad + (extra !== undefined ? " → " + extra : "")); };
+const t = (ad, kosul, extra) => { __kosan++;  n++; if (!kosul) fail++; console.log((kosul ? "✓ " : "✗ ") + ad + (extra !== undefined ? " → " + extra : "")); };
 
 class MutationObserverSim {
   constructor(cb) { this._cb = cb; this._hedef = null; }
@@ -297,3 +298,5 @@ const secimDegeri = (REGISTRY, id) => {
   console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
   process.exit(fail ? 1 : 0);
 })();
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 30) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-render-sahipligi.mjs kosan=" + __kosan + " beklenen=30"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-render-sahipligi.mjs:" + __kosan + ":30"); } });

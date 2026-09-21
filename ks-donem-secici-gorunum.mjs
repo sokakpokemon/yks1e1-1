@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-donem-secici-gorunum.mjs — DONEM-SECICI-UI-YAMASI süiti (GERÇEK DOM semantiği)
    Test edilen davranış: dönem kontrolü kalıcı host (#donem-ui-host) + sabit kimlikli
    select (#donem-secici) + buton (#yeni-donem-btn); ek-ders.js renderYonetim override'ı
@@ -13,7 +14,7 @@ const ekKaynak = readFileSync("ek-ders.js", "utf8");
 const html = readFileSync("index.html", "utf8");
 const inlineBloklar = [...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]).join("\n;\n");
 let n = 0;
-const t = (ad, kosul, extra) => { n++; console.log((kosul ? "✓ " : "✗ ") + ad + (extra !== undefined ? " → " + extra : "")); if (!kosul) process.exitCode = 1; };
+const t = (ad, kosul, extra) => { __kosan++;  n++; console.log((kosul ? "✓ " : "✗ ") + ad + (extra !== undefined ? " → " + extra : "")); if (!kosul) process.exitCode = 1; };
 
 function gercekDomKur(store) {
   const REGISTRY = Object.create(null);
@@ -199,3 +200,5 @@ t("ks-donem-secici-gorunum.mjs test.mjs'te tam 1 kez", (tsrc.match(/"ks-donem-se
 
 console.log(n === 0 ? "" : (process.exitCode === 1 ? "BAŞARISIZ" : n + "/" + n + " OK"));
 })();
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 44) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-donem-secici-gorunum.mjs kosan=" + __kosan + " beklenen=44"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-donem-secici-gorunum.mjs:" + __kosan + ":44"); } });

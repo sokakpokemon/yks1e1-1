@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-sinif-ogretmen-uyum.mjs — SINIF-OGRT-UYUM süiti
    Sınıf programı (DB.sinifProg) ↔ öğretmen haftalık program uyumu.
    Salt-okuma mantık testleri; mevcut davranışları bozmaz. */
@@ -12,7 +13,7 @@ const KNOWN_HTML = "7ee493bae3d1396cafd2e102dce2a10c6f70b6170a17ab35d699d3870e04
 const KNOWN_EKDERS = "3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f"; /* güncel checkout hash — bu dilim ek-ders.js'e dokunmaz */
 
 let pass = 0, fail = 0;
-function t(ad, ok) { if (ok) { pass++; console.log("  ✓ " + ad); } else { fail++; console.log("  ✗ " + ad); } }
+function t(ad, ok) { __kosan++;  if (ok) { pass++; console.log("  ✓ " + ad); } else { fail++; console.log("  ✗ " + ad); } }
 
 /* --- Sandbox boot (test.mjs süitlerindeki desen) --- */
 function mockEl() {
@@ -136,3 +137,5 @@ t("boot + 3 onarım sonrası hücre sayısı sabit", (() => { const n1 = JSON.st
 
 console.log(fail === 0 ? "\nHEPSİ GEÇTİ" : "\n" + fail + " TEST KIRMIZI");
 process.exit(fail ? 1 : 0);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 34) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-sinif-ogretmen-uyum.mjs kosan=" + __kosan + " beklenen=34"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-sinif-ogretmen-uyum.mjs:" + __kosan + ":34"); } });

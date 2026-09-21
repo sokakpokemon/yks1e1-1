@@ -1,3 +1,4 @@
+let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
 /* ks-grup-uyum.mjs — grup dersi veri uyumluluk katmanı testleri (dersOgrenciIds) */
 import { readFileSync } from "node:fs";
 const html = readFileSync("index.html", "utf8");
@@ -18,7 +19,7 @@ global.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => { s
 global.Chart = function () { this.destroy = () => {}; };
 
 let fail = 0;
-const t = (name, cond) => { console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) fail = 1; };
+const t = (name, cond) => { __kosan++;  console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) fail = 1; };
 
 let api;
 try {
@@ -184,3 +185,5 @@ console.log("7) Senaryolar: grup kayıt, isimli çakışma, birebir akış:");
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail);
+
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 41) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-grup-uyum.mjs kosan=" + __kosan + " beklenen=41"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-grup-uyum.mjs:" + __kosan + ":41"); } });

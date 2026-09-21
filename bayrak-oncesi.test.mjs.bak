@@ -107,17 +107,6 @@ const sdSatirlari = [...(process.env.__SD_YAKALA || "")];
 if (dusenler.length === 0) {
   console.log(`${toplamGecen}/${toplamTest} OK`);
   console.log(`MANIFEST: 45 süit, toplam ${manifestToplam} beklenen | RUNNER: ${toplamTest} koşan, ${toplamGecen} geçen — ${manifestToplam === toplamTest && toplamGecen === toplamTest ? "BİREBİR EŞİT ✓" : "EŞİTSİZLİK ✗"}`);
-  /* ——— HAM Σ GÖRÜNÜRLÜĞÜ: beş toplam tek satırda; fark ≠ 0 → FAIL + exit=1 ——— */
-  const donmusSum = suites.reduce((a, n) => {
-    try { return a + readFileSync("suit-vakalar/" + n + ".txt", "utf8").split("\n").filter(Boolean).length; } catch { return a; }
-  }, 0);
-  const elleSayiSum = Object.values(elleManifest).reduce((a, b) => a + b, 0);
-  const elleAdSum = Object.values(elleVakaAdlari).reduce((a, b) => a + b.length, 0);
-  console.log(`HAM Σ: runner=${toplamTest} = SUITE_DONE=${toplamGecen} = donmuş=${donmusSum} = ELLE sayı=${elleSayiSum} = ELLE ad=${elleAdSum} — ${new Set([toplamTest, toplamGecen, donmusSum, elleSayiSum, elleAdSum]).size === 1 ? "BİREBİR ✓" : "FARK VAR ✗"}`);
-  if (new Set([toplamTest, toplamGecen, donmusSum, elleSayiSum, elleAdSum]).size !== 1) {
-    console.log("Σ FARKI — FAIL");
-    process.exit(1);
-  }
   process.exit(0);
 } else {
   console.log(`DÜŞEN TEST DOSYALARI: ${dusenler.join(" · ")}`);

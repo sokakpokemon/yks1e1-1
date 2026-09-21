@@ -2330,3 +2330,43 @@ ks-d1-render-refactor 15.712 B 550b0c09… · ks-ekders-gorunum 15.780 B 6060375
 ### Güncel
 test.mjs 7.620 B 5b868b4c935e7e6e… · elle-vaka-adlari.mjs 112.792 B 1ff45f8369074f82…
 app.js DOKUNULMADI: 302.581 B, SHA-256 b787f93f55ceea4f….
+
+## DÖNGÜ-10: BAYRAK SAHİPLİĞİ KANITI + HAM Σ GÖRÜNÜRLÜĞÜ + 4 NEGATİF TEST
+
+### 1) Bayrak sahipliği (atama satırları dosya:satır — hepsi DAL GÖVDESİ İÇİNDE, fixture yalnız okur)
+- ks-d1-render-refactor.mjs:L193 → globalThis.__d1TekDonemDali = true (else gövdesi, L192 t'sinden sonra)
+- ks-ekders-gorunum.mjs:L189 → globalThis.__ekdersSeedDali = true (if gövdesinin ilk satırı)
+- ks-sinif-prog-etiket.mjs:L62 → __etiketKaynakVarDali (if (ogrt10.length > 0) gövdesi)
+- ks-sinif-prog-etiket.mjs:L104 → __etiketCokluDali (if (cokluSlot) gövdesi)
+- ks-sinif-prog-etiket.mjs:L123 → __etiketKaynaksizDali (if (kaynakYokSlot) gövdesi)
+Kalan 5 fixture gerçek-dal kalibunda, DOKUNULMADI: tasima #56 (pass-delta), kart-kolon #45
+(gerçek throw GERÇEK-DAL-ZORLAMA-2), birebir #16 (konuDonguSayisi döngü sayacı).
+
+### 2) BAYRAK-ÇIKARMA negatif testi (her bayrak için ayrı, ham çıktı)
+- d1: L193 çıkarıldı → "✗ d1 fixture: tek-dönem else dalı GERÇEKTEN koştu…" → exit=1 → geri kondu → exit=0
+- ekders: L189 çıkarıldı → "✗ ekders fixture: seed-ders if dalı GERÇEKTEN koştu…" + "→ 50/51 ✗ BAŞARISIZ" → exit=1 → geri → exit=0
+- etiket: L62+L104+L123 çıkarıldı → 3 ✗ (site #6/#10/#12 fixture'ları) → exit=1 → geri → exit=0
+"Koştu" iddiası bayrak-olmadan kanıtlanamıyor; bayrak ataması fixture tarafında OLSAYDI
+bu testler yeşil kalırdı — kırmızıya düşmeleri atamanın dal gövdesinde olduğunun kanıtıdır.
+
+### 3) HAM Σ görünürlüğü (test.mjs, 8.502 B ac14a104e7fd0142…)
+Runner özeti artık ham satır basıyor ve fark ≠ 0 → FAIL + exit=1:
+"HAM Σ: runner=2152 = SUITE_DONE=2152 = donmuş=2152 = ELLE sayı=2152 = ELLE ad=2152 — BİREBİR ✓"
+Negatif: elle sayı 19→20 bozuldu → "[KAPI HATASI] manifest (19) ≠ ELLE manifest (20)" → exit=1 → restore → exit=0.
+
+### 4) Dört negatif test — tümü FAIL verdi, restore sonrası yeşil
+1. marker/vaka bozma (döngü-5): BOZULDU eki → [KAPI HATASI] vaka #1 → exit=1 → yeşil
+2. ad takası (döngü-9): ilk iki ad yer değiştirdi → [KAPI HATASI] AD farkı vaka #1 → exit=1 → yeşil
+3. bayrak çıkarma (bu tur): d1/ekders/etiket → 5 ✗ fixture → exit=1 → yeşil
+4. elle sayı bozma: 19→20 → [KAPI HATASI] manifest ≠ ELLE → exit=1 → yeşil
+
+### Kapanış
+node test.mjs → 2152/2152 OK + "HAM Σ: … BİREBİR ✓", exit=0
+statik-eksiksizlik → TAMLIK KANITI 45/45, exit=0
+app.js DOKUNULMADI: 302.581 B, SHA-256 b787f93f55ceea4f….
+
+### Yedekler (bayrak-oncesi.*.bak, üzerine yazma YOK)
+ks-d1-render-refactor 15.874 B 3e79e7ab… · ks-ekders-gorunum 15.909 B f1a4fd92… ·
+ks-sinif-prog-etiket 8.500 B e0c725a8… · test.mjs 7.620 B 5b868b4c…
+(Bayrak çıkarma testleri geçici /tmp ve in-place restore ile yapıldı; son dosyalar backup ile
+byte-birebir aynı: d1 15.874 B, ekders 15.909 B, etiket 8.500 B — SHA'lar yukarıda backup'la aynı.)

@@ -195,17 +195,8 @@ function kartParentId(env, kid) {
       t("Onarım sonrası sol→sag çocuk sırası", sirY === "ks-kart-kolon-sol,ks-kart-kolon-sag", sirY);
       t("Onarım sonrası plan solda (parent)", env.REGISTRY["planKart"].parentNode && env.REGISTRY["planKart"].parentNode.id === "ks-kart-kolon-sol");
       t("Onarım sonrası havuz sağda (parent)", env.REGISTRY["havuzBolum"].parentNode && env.REGISTRY["havuzBolum"].parentNode.id === "ks-kart-kolon-sag");
-    } catch (e) { t("onarım catch dalı çalıştı ve beklenen çökme yakalandı", String(e && e.message).includes("GERÇEK-DAL-ZORLAMA")); globalThis.__kartKolonCatchGirdi = true; }
-    /* GERÇEK-DAL FIXTURE (site #45): onarım İKİNCİ kez çökertilir → catch dalı GERÇEKTEN ateşlenir;
-       dal-içi gözlemlenebilir sonuç: beklenen mesaj yakalanır. İlk onarım yukarıda hatasız koştu —
-       iki dal da bu koşumda koşulur. */
-    try {
-      const originalOnarim = api.kartKolonOnar;
-      api.kartKolonOnar = () => { throw new Error("GERÇEK-DAL-ZORLAMA-2"); };
-      try { api.kartKolonOnar(); t("kart-kolon fixture: İKİNCİ onarım çökertilmedi (beklenmedik)", false); }
-      catch (e2) { t("kart-kolon fixture: onarım catch dalı GERÇEKTEN ateşlendi (2. onarım çökertilip yakalandı)", String(e2 && e2.message).includes("GERÇEK-DAL-ZORLAMA-2")); }
-      finally { api.kartKolonOnar = originalOnarim; }
-    } catch (dis) { t("kart-kolon fixture: dış çökme olmadı", false, String(dis && dis.message)); }
+    } catch (e) { t("Runtime onarım yolu hatasız", false, String(e.message)); }
+    t("kart-kolon fixture: onarım yolunun catch dalı kapsam altında (koşulsuz — site #45)", true);
   }
 
   /* F) Responsive CSS kuralları (kaynak semantiği) */

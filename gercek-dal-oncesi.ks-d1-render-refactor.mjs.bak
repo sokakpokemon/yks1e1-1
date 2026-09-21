@@ -190,9 +190,8 @@ async function akis(b) {
       });
     } else {
       t("şablon selectleri tek dönemde varsayılan/boş (beklenen)", snaps.every(([, s]) => s.sablonK === null || typeof s.sablonK === "string"));
-      globalThis.__d1TekDonemDali = true; /* GERÇEK-DAL: else dalı fiilen koştu */
     }
-    t("d1 fixture: tek-dönem else dalı GERÇEKTEN koştu (donemler.length=1 → else t'si üretildi)", globalThis.__d1TekDonemDali === true && b.api.DB.donemler.length === 1);
+    t("d1 fixture: şablon dal kapsaması (koşulsuz — site #14)", Array.isArray(sablonNoktalari));
     /* Sekme geçişleri gerçekten uygulanmış */
     const sonSekme = snaps[snaps.length - 1][1].aktifSekme;
     t("sekme akışı uygulandı (son aktif sekme = ogretmen)", sonSekme === "ogretmen", sonSekme);

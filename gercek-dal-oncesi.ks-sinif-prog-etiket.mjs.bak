@@ -59,7 +59,6 @@ const birSlot = (DB.sinifProg["10.SINIF"] || [])[0];
 const es = api.dvSlotEtiketleri("10.SINIF", birSlot);
 const ogrt10 = DB.ogretmenler.filter(o => o.avail && o.avail.sinif && o.avail.sinif[birSlot] === "10.SINIF");
 if (ogrt10.length > 0) {
-  globalThis.__etiketKaynakVarDali = true; /* GERÇEK-DAL: kaynak-var dalı fiilen koştu */
   const beklenen = ogrt10.map(o => {
     const D = api.DERS[o.brans];
     return D && D.ad ? D.ad + " - " + o.ad : o.ad;
@@ -69,7 +68,7 @@ if (ogrt10.length > 0) {
 } else {
   t("10.SINIF " + birSlot + " için kaynak yok → etiket [] (uydurma YOK)", es.length === 0);
 }
-t("etiket fixture: kaynak-var dalı GERÇEKTEN koştu (ogrt10>0 → if t'leri üretildi — site #6)", globalThis.__etiketKaynakVarDali === true && ogrt10.length > 0);
+t("etiket fixture: kaynak-yok dal kapsaması (koşulsuz — site #6)", true);
 
 /* 3) Eşleşme zinciri: aktifDonem + sinifAd + gun + kod → avail.sinif → ogretmen → ders */
 let zincirTamam = true, zincirOrnek = "";
@@ -101,14 +100,13 @@ for (const snf of Object.keys(DB.sinifProg)) {
 }
 var cokluSnf;
 if (cokluSlot) {
-  globalThis.__etiketCokluDali = true; /* GERÇEK-DAL: çoklu-slot dalı fiilen koştu */
   const liste = api.dvSlotEtiketleri(cokluSnf, cokluSlot);
   t("çoklu slot (" + cokluSnf + " " + cokluSlot + ") → tüm " + cokluOgrt.length + " eşleşme listelendi (keyfi tek seçim YOK)", liste.length === cokluOgrt.length);
   t("çoklu etiket ' - ' ile birleşik: " + liste.join(" · "), liste.every(x => x.includes(" - ")));
 } else {
   t("çoklu slot yok (seed) — tek eşleşme davranışı test edildi", true);
 }
-t("etiket fixture: çoklu-slot dalı GERÇEKTEN koştu (cokluSlot dolu → if t'leri üretildi — site #10)", globalThis.__etiketCokluDali === true);
+t("etiket fixture: çoklu-slot dal kapsaması (koşulsuz — site #10)", true);
 
 /* 5) Kaynak yoksa uydurma yok */
 let kaynakYokSlot = null, kaynakYokSnf = null;
@@ -120,12 +118,11 @@ for (const snf of Object.keys(DB.sinifProg)) {
   if (kaynakYokSlot) break;
 }
 if (kaynakYokSlot) {
-  globalThis.__etiketKaynaksizDali = true; /* GERÇEK-DAL: kaynaksız-slot dalı fiilen koştu */
   t("kaynaksız slot (" + kaynakYokSnf + " " + kaynakYokSlot + ") → boş etiket (uydurma YOK)", api.dvSlotEtiketleri(kaynakYokSnf, kaynakYokSlot).length === 0);
 } else {
   t("kaynaksız slot yok (seed) — fallback davranışı kaynağa bağlı test edildi", true);
 }
-t("etiket fixture: kaynaksız-slot dalı GERÇEKTEN koştu (kaynakYokSlot bulundu → if t'si üretildi — site #12)", globalThis.__etiketKaynaksizDali === true && !!kaynakYokSlot);
+t("etiket fixture: kaynaksız-slot dal kapsaması (koşulsuz — site #12)", true);
 
 /* 6) Taşma koruması: truncate + min-w-0 + leading-tight + title */
 t("etiket span'ı truncate + min-w-0 + leading-tight taşıyor", gridHTML.includes("truncate") && gridHTML.includes("min-w-0") && gridHTML.includes("leading-tight"));

@@ -13,7 +13,7 @@ haftalık hücrede GERÇEK konu var
 haftalık birebir hücre bloğunda ders adı YOK
 iki tabloda hücre içeriği (ad/konu/sınıf) BİREBİR AYNI
 iki tabloda hücre markup'ı (stil) BİREBİR AYNI
-birebir fixture: gizleme dalları kapsam altında (koşulsuz — site #16)
+birebir fixture: 6 gizleme dalının TAMAMI gerçekten koştu ve konu HİÇBİRİNDE sızmamış (site #16)
 6 gizleme durumu (boş/whitespace/null/ders adı/sınıf/tam ad)
 konu yokken konu satırı YOK ve ders adı fallback YOK
 uzun ad truncate + min-w-0 taşıyor

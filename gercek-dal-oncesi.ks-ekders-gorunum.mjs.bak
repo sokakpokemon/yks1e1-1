@@ -186,7 +186,6 @@ DB.ekDersler = [];
 ui.filtre = "gun"; ui.anchor = "2030-01-07"; ui.gunSecim = "2030-01-07";
 const seedDers = (DB.dersler || []).find(l => l && l.durum !== "iptal" && l.ogretmenId === ogrt.id);
 if (seedDers) {
-  globalThis.__ekdersSeedDali = true; /* GERÇEK-DAL: if dalı fiilen koştu */
   ui.gunSecim = seedDers.tarih;
   g = gunlukTablo();
   t("seed birebir dersi amber DEĞİL (eski görünüm)", !g.includes("bg-amber-50"), seedDers.tarih);
@@ -194,7 +193,7 @@ if (seedDers) {
 } else {
   t("seed birebir dersi yok → boş tablo çökmez", typeof gunlukTablo() === "string");
 }
-t("ekders fixture: seed-ders if dalı GERÇEKTEN koştu (seedDers dolu → if t'leri üretildi)", globalThis.__ekdersSeedDali === true && !!seedDers);
+t("ekders fixture: seed dal kapsaması (koşulsuz — site #41)", typeof gunlukTablo() === "string");
 
 /* ---- 11) Kapsam dışı: ozet/analiz/CSV ekDersler'e bakmaz ---- */
 console.log("11) Kapsam dışı ekranlar:");

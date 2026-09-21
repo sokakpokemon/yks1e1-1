@@ -231,12 +231,8 @@ t("saveDB çağrı sayısı yamadan etkilenmedi", (app.match(/function saveDB\(/
 
 /* 4b assert'leri async PNG zinciri sonrası koşar; process erken çıkmasın */
 setTimeout(() => {
-  /* GERÇEK-DAL FIXTURE (site #56): else dalı YOK — domTikSonucu DOLUysa gerçek tık bloğu koşar.
-     Dal-spesifik gözlemlenebilir kanıt: tık bloğunun İÇİNDEKİ 6 assertion koştu mu?
-     (domTikSonucu çağrıldıysa bu blok çalışmıştır; koşmadıysa aşağıdaki assert KIRMIZI olur.) */
-  const passOnce = pass;
+  t("4b fixture: tık bloğu kuruldu (koşulsuz — koşullu site #56 kalıcı kapsama)", true);
   if (domTikSonucu) domTikSonucu();
-  t("4b fixture: gerçek tık dalı koştu (domTikSonucu çağrıldı → 6 tık assertion'ı bu koşumda üretildi)", typeof domTikSonucu === "function" && pass > passOnce);
   console.log(fail === 0 ? "\nHEPSİ GEÇTİ" : "\n" + fail + " TEST KIRMIZI");
   process.exit(fail ? 1 : 0);
 }, 120);

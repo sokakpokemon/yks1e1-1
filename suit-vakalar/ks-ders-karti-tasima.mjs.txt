@@ -47,10 +47,10 @@ dersBurak no-op: DB değişmedi (taşıma yolu canlı)
 DERS-KARTI-TASIMA-YAMASI işareti TEK
 ISLEM alanında kart butonu TEK noktadan üretiliyor
 saveDB çağrı sayısı yamadan etkilenmedi
-4b fixture: tık bloğu kuruldu (koşulsuz — koşullu site #56 kalıcı kapsama)
 tık → dersKartiAc çalıştı (html2canvas tam 1 çağrı)
 tık → durumTik 0 kez
 tık → duzenle 0 kez
 tık → silOnay 0 kez
 tık → localStorage yazımı yok
 buton markup'ı stopPropagation + preventDefault taşıyor (ISLEM şablonu)
+4b fixture: gerçek tık dalı koştu (domTikSonucu çağrıldı → 6 tık assertion'ı bu koşumda üretildi)

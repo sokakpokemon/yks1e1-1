@@ -3,10 +3,13 @@ app.js'te '>DV<' etiketi YOK
 sınıf grid render'ında DV metni YOK
 ders adı DERSLER'den (brans) geliyor: ["MATEMATİK - SALİM URTİMUR","BİYOLOJİ - ŞAHİN DOĞANAY"]
 öğretmen tam adı DB.ogretmenler.ad'dan geliyor
+etiket fixture: kaynak-yok dal kapsaması (koşulsuz — site #6)
 reverse lookup zinciri tüm dolu slotlarda tutarlı (aktif dönem)
 çoklu slot (MEZUN SAY 1 0-1) → tüm 3 eşleşme listelendi (keyfi tek seçim YOK)
 çoklu etiket ' - ' ile birleşik: MATEMATİK - SONER AÇIKGÖZ · FİZİK - MUSTAFA GÜRKAN · TÜRKÇE - EREN BİLGİLİ
+etiket fixture: çoklu-slot dal kapsaması (koşulsuz — site #10)
 kaynaksız slot (MEZUN SAY 1 2-1) → boş etiket (uydurma YOK)
+etiket fixture: kaynaksız-slot dal kapsaması (koşulsuz — site #12)
 etiket span'ı truncate + min-w-0 + leading-tight taşıyor
 title'da tam eşleşme (Toplu ders — ...)
 Boş hücre dalı korundu

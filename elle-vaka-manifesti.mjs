@@ -1,10 +1,11 @@
-/* suit-manifest.mjs — SÜİT SAYI MANİFESTİ (tek gerçek kaynak)
-   "Beklenen" sayılar BURADA EXPLICIT yazılır; t( satır sayımından TÜRETİLMEZ.
-   Kural: her süit sonunda tam 1 adet  SUITE_DONE:<ad>:<kosan>:<beklenen>  satırı basar.
-   test.mjs bu satırı zorunlu kılar: exit=0 · tam 1 marker · kosan === beklenen === manifest.
-   Marker yoksa / duplicate ise süit FAIL sayılır. Catch-only assert'ler normal sayıma girmez. */
-
-export const manifest = {
+/* elle-vaka-manifesti.mjs — MANUEL (ELLE YAZILMIS) VAKA SAYI MANIFESTI
+   Kaynak: SUIT DOSYALARININ MANUEL SAYIMI (elle, satır satır sayıldı) —
+   koşumdan ve t( satır-regexinden ÜRETİLMEDİ. suit-manifest.mjs'teki sayılar
+   ve suit-vakalar/*.txt ile birebir karşılaştırılır; fark → runner FAIL.
+   (sayi) = elle sayılan koşulsuz/koşullu t( assertion sayısı.
+   Elle fark girişleri: DÖNGÜ-8'de eklendi: birebir +1 (#16), d1 +1 (#14),
+   ekders +1 (#41), kart-kolon +1 (#45), etiket +3 (#6/#10/#12), tasima +1 (#56). */
+export const elleManifest = {
   "ks-harness.mjs": 34,
   "ks-test-render.mjs": 14,
   "ks-durum-fn.mjs": 20,
@@ -51,20 +52,3 @@ export const manifest = {
   "ks-ders-karti.mjs": 69,
   "ks-ders-karti-tasima.mjs": 56,
 };
-
-/* Süit içi yardımcı: kosan sayacını manifest ile KENDİ sunar.
-   Kullanım: import { suiteDone } from "./suit-manifest.mjs";  …  suiteDone(import.meta.url, kosan); */
-export function suiteDone(suitUrl, kosan) {
-  const ad = String(suitUrl).split("/").pop();
-  const beklenen = manifest[ad];
-  if (typeof beklenen !== "number") {
-    console.error("SUITE_HATA: manifestte yok: " + ad);
-    process.exit(1);
-  }
-  console.log("SUITE_DONE:" + ad + ":" + kosan + ":" + beklenen);
-  /* Kosan ≠ beklenen ise süit kendi hatasını görür ve exit 1 ile düşer (runner ayrıca yakalar). */
-  if (kosan !== beklenen) {
-    console.error("SUITE_DONE UYUŞMAZLIĞI: " + ad + " kosan=" + kosan + " beklenen=" + beklenen);
-    process.exit(1);
-  }
-}

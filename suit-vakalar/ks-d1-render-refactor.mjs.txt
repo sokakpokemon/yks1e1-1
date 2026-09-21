@@ -30,6 +30,7 @@ final host kardeşlik = ilk boot
 final veri imzası = ilk boot (DB byte-semantic birebir)
 final localStorage = ilk boot (render akışı LS değiştirmedi)
 şablon selectleri tek dönemde varsayılan/boş (beklenen)
+d1 fixture: şablon dal kapsaması (koşulsuz — site #14)
 sekme akışı uygulandı (son aktif sekme = ogretmen) → ogretmen
 override sonrası host AYNI eleman (silinmedi)
 override sonrası yb.innerHTML dolu

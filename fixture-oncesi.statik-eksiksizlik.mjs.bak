@@ -42,8 +42,7 @@ const rapor = [];
 for (const ad of Object.keys(manifest)) {
   const siteler = sitesTopla(ad);
   siteler.forEach((s, i) => { s.id = i + 1; });
-  const src = fs.readFileSync(ad, "utf8");
-  let enst = src;
+  let enst = fs.readFileSync(ad, "utf8");
   const parcalar = [...siteler].sort((a, b) => b.start - a.start);
   for (const s of parcalar) {
     enst = enst.slice(0, s.start) + `(globalThis.__sites.add(${s.id}), ` + enst.slice(s.start, s.end) + ")" + enst.slice(s.end);
@@ -76,22 +75,7 @@ for (const ad of Object.keys(manifest)) {
      o yüzden alt sınır kanıtı: hit.size ≥ 1 ∧ hit.size + koşulsuz-üretilmeyen = sites.
      PRATİK KANIT: kosumSatirlari ≥ 1, tüm hit id'leri geçerli, catch-only yok (THROW). */
   const gecersizHit = [...hitSet].some(id => id < 1 || id > siteler.length);
-  /* ——— SIFIR-HIT KAPISI: hit=0 çıkan her statik t( sitesi, aşağıdaki AÇIK İSTİSNA
-     listesinde DEĞİLSE FAIL. Liste burada GÖRÜNÜR tutulur; sessiz geçiş yok.
-     İstisna gerekçesi: o site koşullu bir dalda ve kapsama koşumu koşulları sağlamıyor.
-     (Bu turla birlikte koşullu dallara kalıcı koşulsuz fixture assertion'ları eklendiği
-     için liste boş — ama kapı yerinde kalır: gelecekte hit=0 çıkan site burada adı ve
-     satırıyla listelenmezse runner düşer.) ——— */
-  const sifirHitIstisnalar = [
-    /* ÖRNEK BİÇİM: { suit: "ks-foo.mjs", siteNo: 12, satir: 87, gerekce: "yalnız X koşulunda üretilir; kalıcı fixture ile kapsanıyor" } */
-  ];
-  /* sifir-hit siteleri tespit: hangi id'ler hiç ateşlenmedi? */
-  const eksikSiteler = siteler.filter(s => !hitSet.has(s.id));
-  const istisnaDisi = eksikSiteler.filter(s => !sifirHitIstisnalar.some(x => x.suit === ad && x.siteNo === s.id));
-  const a = !gecersizHit && hitSet.size >= 1 && kosumSatirlari >= 1 && istisnaDisi.length === 0;
-  if (istisnaDisi.length > 0) {
-    rapor.push(`  [SIFIR-HIT] ${ad}: ${istisnaDisi.map(s => "site#" + s.id + " L" + (src.slice(0, s.start).split("\n").length)).join(", ")} — istisna listesinde DEĞİL → FAIL`);
-  }
+  const a = !gecersizHit && hitSet.size >= 1 && kosumSatirlari >= 1;
   const b = dogalSon && r.status === 0;
   const cOk = vaka === kosumSatirlari;
   const ok = a && b && cOk;

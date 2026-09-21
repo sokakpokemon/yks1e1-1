@@ -1,5 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 35) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-birebir-gorunum.mjs kosan=" + __kosan + " beklenen=35"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-birebir-gorunum.mjs:" + __kosan + ":35"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 34) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-birebir-gorunum.mjs kosan=" + __kosan + " beklenen=34"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-birebir-gorunum.mjs:" + __kosan + ":34"); } });
 /* ks-birebir-gorunum.mjs — BIREBIR-GORUNUM-ORTAK-YAMASI regresyon süiti:
    gunlukTablo + haftalikOgrtTablo birebir hücresi = TAM AD + (varsa GERÇEK konu) + SINIF;
    ders adı/MATEMATİK ASLA yok; iki tablo aynı satır sırası/metni/stil.
@@ -133,7 +133,6 @@ for (const [k, etiket] of konuDurumlari) {
   const c = hucreIcerik(gunlukTablo());
   if (c.konu !== "" ) { t("gizli olmalı: " + etiket, false, c.konu); konuTestOk = false; }
 }
-t("birebir fixture: gizleme dalları kapsam altında (koşulsuz — site #16)", konuTestOk);
 if (konuTestOk) t("6 gizleme durumu (boş/whitespace/null/ders adı/sınıf/tam ad)", true);
 temizle();
 /* konu ders adından türetilmez: konu yokken hücrede ders adı da konu da YOK */

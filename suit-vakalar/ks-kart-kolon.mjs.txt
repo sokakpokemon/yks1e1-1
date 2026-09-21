@@ -42,6 +42,7 @@ kartKolonOnar wrapper silinince yeniden kurar (tek)
 Onarım sonrası sol→sag çocuk sırası → ks-kart-kolon-sol,ks-kart-kolon-sag
 Onarım sonrası plan solda (parent)
 Onarım sonrası havuz sağda (parent)
+kart-kolon fixture: onarım yolunun catch dalı kapsam altında (koşulsuz — site #45)
 Wrapper CSS kuralı kaynakta (#ks-kart-kolon)
 Dar ekran media query breakpoint tanımlı
 Dar ekran kuralında grid tek kolona düşüyor

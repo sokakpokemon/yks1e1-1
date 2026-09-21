@@ -38,6 +38,7 @@ haftalik birebir hücre bloğu (hucreUst) aynen
 durumRenk satırı aynen (birebir mavi/emerald)
 seed birebir dersi amber DEĞİL (eski görünüm)
 seed birebir dersi hücrede görünüyor
+ekders fixture: seed dal kapsaması (koşulsuz — site #41)
 function renderOzet() { ekDersler referansı yok [daraltıldı]
 function renderAnaliz() { ekDersler referansı yok [daraltıldı]
 function csvAktifDonemKayitSatirlari ekDersler referansı yok [daraltıldı]

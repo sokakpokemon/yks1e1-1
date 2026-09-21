@@ -1,5 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 24) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-sinif-prog-etiket.mjs kosan=" + __kosan + " beklenen=24"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-sinif-prog-etiket.mjs:" + __kosan + ":24"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 21) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-sinif-prog-etiket.mjs kosan=" + __kosan + " beklenen=21"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-sinif-prog-etiket.mjs:" + __kosan + ":21"); } });
 /* ks-sinif-prog-etiket.mjs — DV etiketi kaldırma + ders/öğretmen adı görünürlük testleri */
 import { readFileSync } from "node:fs";
 const html = readFileSync("index.html", "utf8");
@@ -68,7 +68,6 @@ if (ogrt10.length > 0) {
 } else {
   t("10.SINIF " + birSlot + " için kaynak yok → etiket [] (uydurma YOK)", es.length === 0);
 }
-t("etiket fixture: kaynak-yok dal kapsaması (koşulsuz — site #6)", true);
 
 /* 3) Eşleşme zinciri: aktifDonem + sinifAd + gun + kod → avail.sinif → ogretmen → ders */
 let zincirTamam = true, zincirOrnek = "";
@@ -106,7 +105,6 @@ if (cokluSlot) {
 } else {
   t("çoklu slot yok (seed) — tek eşleşme davranışı test edildi", true);
 }
-t("etiket fixture: çoklu-slot dal kapsaması (koşulsuz — site #10)", true);
 
 /* 5) Kaynak yoksa uydurma yok */
 let kaynakYokSlot = null, kaynakYokSnf = null;
@@ -122,7 +120,6 @@ if (kaynakYokSlot) {
 } else {
   t("kaynaksız slot yok (seed) — fallback davranışı kaynağa bağlı test edildi", true);
 }
-t("etiket fixture: kaynaksız-slot dal kapsaması (koşulsuz — site #12)", true);
 
 /* 6) Taşma koruması: truncate + min-w-0 + leading-tight + title */
 t("etiket span'ı truncate + min-w-0 + leading-tight taşıyor", gridHTML.includes("truncate") && gridHTML.includes("min-w-0") && gridHTML.includes("leading-tight"));

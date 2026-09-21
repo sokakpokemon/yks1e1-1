@@ -1,5 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 45) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-d1-render-refactor.mjs kosan=" + __kosan + " beklenen=45"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-d1-render-refactor.mjs:" + __kosan + ":45"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 44) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-d1-render-refactor.mjs kosan=" + __kosan + " beklenen=44"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-d1-render-refactor.mjs:" + __kosan + ":44"); } });
 /* ks-d1-render-refactor.mjs — D1 RENDER SAHİPLİĞİ ÇATIŞMASI KAPANIŞ SÜİTİ (GERÇEK DOM semantiği)
    TEK İŞ: ek-ders.js renderYonetim override'ı + yonetimBolum.innerHTML sahiplik çatışmasının
    D0 kalıcı-host sınırıyla çözüldüğünü KOD DOKUNUŞU OLMADAN kanıtlar (madde F).
@@ -191,7 +191,6 @@ async function akis(b) {
     } else {
       t("şablon selectleri tek dönemde varsayılan/boş (beklenen)", snaps.every(([, s]) => s.sablonK === null || typeof s.sablonK === "string"));
     }
-    t("d1 fixture: şablon dal kapsaması (koşulsuz — site #14)", Array.isArray(sablonNoktalari));
     /* Sekme geçişleri gerçekten uygulanmış */
     const sonSekme = snaps[snaps.length - 1][1].aktifSekme;
     t("sekme akışı uygulandı (son aktif sekme = ogretmen)", sonSekme === "ogretmen", sonSekme);

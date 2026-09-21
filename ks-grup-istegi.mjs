@@ -33,9 +33,9 @@ try {
   P = new Function(scripts + "\n  return " + EXPORTS + ";\n")();
   t("boot hatasız", true);
 } catch (e) {
-  t("boot hatasız → " + e.message, false);
-  console.log(e.stack.split("\n").slice(0, 6).join("\n"));
-  process.exit(1);
+  /* beklenmeyen catch: THROW (catch-only sayım kaldırıldı — SAYAÇ KAPISI kuralları) */
+  console.error(e.stack ? e.stack.split("\n").slice(0, 6).join("\n") : e);
+  throw e;
 }
 
 /* ---- Gerçek form DOM simülasyonu: id kayıt defteri; markup id'leri gerçekten kaydedilir ---- */

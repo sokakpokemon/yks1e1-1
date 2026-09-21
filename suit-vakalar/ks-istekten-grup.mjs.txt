@@ -1,0 +1,32 @@
+boot hatasız
+formaAktar çalıştı (aktifIstekId = istek)
+#ek-ogrenciler paneli DOM'a ekleniyor
+panel temiz başladı (ekOgrenciIds boş)
+sınıf filtresi DB'den otomatik
+panel açılınca arama + 'Tüm sınıflar' markup'ta
+tek ders kaydı oluştu (+1, kopya yok)
+ogrenciId = istek sahibi (Ayşe)
+ogrenciAd = Ayşe Demir
+ogrenciIds = [Zeynep, Emir]
+dersOgrenciIds tüm katılımcılar (3)
+istek kaydı tek ve bulunur (kopya/silme yok)
+istek id aynı
+istek sahibi (ogrenciId) AYNEN
+istek ogrenciAd/dersId/konu/olusturma AYNEN
+istek durumu 'planlandi'
+ui.aktifIstekId temizlendi
+uyarıda çakışan üyenin ADI var
+uyarıda 'ile dersi var' ifadesi var
+çakışma yoksayılmadıkça kayıt OLUŞMAZ
+tekli kayıt oluştu
+ogrenciIds YAZILMAZ (birebir)
+ogrenciId = Zeynep
+istek durumu planlandı (tekli dal)
+1 ek seçiliyken hâlâ birebir (ogrenciIds yok)
+10 ek öğrenci seçilebildi (sınır yok)
+10+ uyarı kartı gösterildi (#grup-panel-uyari)
+özet '11 öğrenci seçildi' (sahip dahil)
+ENGELLENMEDİ: tek kayıt oluştu
+kayıtta ogrenciIds 10 üye
+kayıt sahibi Ayşe
+istek durumu planlandı (grup daldan)

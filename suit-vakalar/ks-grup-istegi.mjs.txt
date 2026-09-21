@@ -1,0 +1,68 @@
+boot hatasız
+eski tekli istek normalize'da alanları korur
+eski tekli isteğe ogrenciIds ALANI EKLENMEZ
+istekOgrenciIds eski istekte hata vermez → [ogrenciId]
+havuz boyutu restore edildi
+yedek→yükleme sonrası tekli istek birebir (+donemId migration)
+yükleme sonrası istekOgrenciIds aynı
+havuz bağlamı açıldı
+havuz özet şeridi markup'ta
+1 öğrenci seçildi
+1 öğrenciyle kayıt OLUŞMAZ
+grup isteği kaydedildi
+ogrenciId = İLK seçilen (Ayşe)
+ogrenciIds = [Zeynep, Emir] (benzersiz, tekrar yok)
+ana, ogrenciIds'te YOK
+istekOgrenciIds tüm üyeler (3)
+ogrenciAdlari alanı YOK (isimler DB'den)
+11 öğrenci seçilebildi (sınır yok)
+özette '11 öğrenci seçildi' yazar
+özette geniş grup UYARISI var (engelleme yok)
+11 üyeli grup isteği KAYDEDİLDİ
+grup isteği havuzda TEK kayıt
+havuz kartı Ayşe (ana) adını gösterir
+havuz kartı üye badge'lerini gösterir (Zeynep, Emir)
+havuz başlığı 'Ortak Grup İsteği' butonunu taşır
+formaAktar grup istekte çalışır (aktifIstekId)
+TÜM ek üyeler otomatik seçili (2 ek)
+ana öğrenci form kutusunda
+panel açık + arama/sınıf temiz
+panelde ana 'Ana' etiketi + emir seçili işaretli
+istekten ek öğrenci eklenebilir (3 ek)
+tek ders kaydı (+1, kopya yok)
+ders.ogrenciId = ana (Ayşe)
+ders.ogrenciIds = [Zeynep, Emir, Elif]
+dersOgrenciIds tüm katılımcılar (4)
+snapshot gerçek deep-copy (referans değil)
+planlama öncesi snapshot alınmıştı (deep-copy)
+istekte yalnızca 'durum' alanı değişti
+durum artık 'planlandi'
+ogrenciId/ogrenciIds/konu/dersId/olusturma KORUNDU
+ui.aktifIstekId temizlendi
+çakışan üyenin ADI uyarıda
+öğretmen çakışması da uyarıda
+çakışma yoksayılmadıkça kayıt OLUŞMAZ
+tekli istekte seçim BOŞ kalır (eski davranış)
+tekli kayıt oluştu
+tekli kayıtta ogrenciIds YAZILMAZ
+tekli istek durumu planlandı (eski dal)
+aynı istekte tekrarlı çağrı aynı dizi
+sonuç benzersiz + sıra korunur
+bozuk kayıtta hata vermez
+yükleme sonrası grup isteği bulunur
+grup isteği alanları DEEP-EQUAL geri döner (+donemId migration)
+ogrenciIds eksiksiz (2 üye — planlama ek üyeyi isteğe yazmaz; süit 9 ile tutarlı)
+loadDB de grup isteğini korur
+ilk seçim sırası register'da [Zeynep, Emir]
+Zeynep kaldırıldı → görünen üyeler [Emir]
+register Zeynep'i SİLMEZ (slot korunur)
+Zeynep eski slotuna döndü → [Zeynep, Emir]
+yeni öğrenci register SONUNA eklenir
+çoklu kaldır+yeniden eklemede slot korunur
+duplicate engeli: her id en fazla 1 kez
+kapalı panelde govde GERÇEKTEN BOŞ
+kapalı panelde arama/filtre/liste DOM'a yazılmaz
+açılınca arama + sınıf filtresi + liste + Ana kurulur
+kapanınca govde temizlenir
+kapanışta register + seçimler korunur
+aç-kapat-aç sonrası govde birebir aynı (sıra+checkbox)

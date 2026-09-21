@@ -56,8 +56,9 @@ try {
   `)();
   t("boot hatasız", true);
 } catch (e) {
-  t("boot hatasız → " + e.message, false);
-  console.log(e.stack.split("\n").slice(0, 8).join("\n"));
+  /* beklenmeyen catch: THROW (catch-only sayım kaldırıldı — SAYAÇ KAPISI kuralları) */
+  console.error(e.stack ? e.stack.split("\n").slice(0, 8).join("\n") : e);
+  throw e;
   process.exit(1);
 }
 const { DB, ui, DERSLER, DERS, BRANS_DERS_HARITA, bransDersUygun, bransDersIzinliDersler, bransDersRedMesaji, planla, esc } = P;
@@ -184,7 +185,7 @@ try {
     return { DB, ui, ekPlanla, ekler, ekDersler: ekDersler };
   `)();
   t("ek-ders.js bağlamı boot hatasız", true);
-} catch (e) { t("ek-ders.js bağlamı boot hatasız → " + e.message, false); fail = 1; }
+} catch (e) { /* beklenmeyen catch: THROW — SAYAÇ KAPISI kuralları */ console.error(e && e.message); throw e; }
 if (P2) {
   const { DB: DB2, ui: ui2, ekPlanla, ekDersler } = P2;
   const ekler = ekDersler;

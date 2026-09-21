@@ -1,0 +1,85 @@
+boot hatasız
+çıktı UTF-8 BOM ile başlıyor
+ayraç noktalı virgül
+satır sonu CRLF
+schema sabit yks-csv-v1
+özel hücre quote kaçışlı
+Türkçe karakter düz geçer
+BOM kaldırıldı, başlık doğru
+quoted noktalı virgül korunur
+çok satırlı hücre tek alan
+Türkçe bayt kaybı yok
+trailing EOL fazladan satır üretmez
+tüm öğrenciler (4) var
+tüm öğretmenler (2) var
+tüm sinifIds (4) var
+kadro donemId sütunu boş
+aynı isimli 2 öğrenci 2 satır + farklı ID
+öğrenci sinifId helper ile dolu
+öğrenci ekAlanlarJson tel'i taşımaz (TELEFON3-YAMASI: üst düzey kolonlar)
+öğrenci ekAlanlarJson korumalı alan içermez
+öğretmen branş sütunu dolu
+yalnız 2 aktif dönem dersi
+başka dönem dersi (ders-B1) YOK
+tüm ders satırları aktif donemId'li
+yalnız 1 aktif dönem isteği
+başka dönem isteği (ist-B1) YOK
+ek üyeler sırayla: ogr-emir|ogr-ayse-2
+ana öğrenci ayrı sütunda
+konu ; ve " kaçışlı
+istek ogrenciIds de sıralı
+boş ogrenciIds boş hücre
+istek dosyası da (ogretmenId'siz) kabul edilir
+tam set içe aktarma ok
+eklenen 0 (hepsi mevcut)
+güncellenen 13 (4 öğrenci + 2 öğretmen + 4 sınıf + 2 ders + 1 istek)
+üretilen yeni ID 0
+2. içe aktarmada eklenen 0
+2. içe aktarmada öğrenci sayısı aynı
+2 yeni ID'li aynı isimli öğrenci eklendi
+4 Ayşe Demir kaydı (2 mevcut + 2 yeni)
+tüm ID'leri farklı
+aynı ID → güncelleme, yeni kayıt değil
+güncellenen kayıtta tel ekAlan'dan geldi
+eksik ID'li kayıtlar kabul edildi
+3 yeni ID üretildi ve raporlandı (2 kimlikUret + 1 kadroSnfId)
+üretilen öğrenci ID benzersiz
+üretilen öğretmen ID benzersiz
+ID'siz sınıf kadroSnfId ile üretildi
+boş ID'li mevcut sınıf güncellendi (yeni ID üretilmedi)
+bilinmeyen ogrenciId reddedildi
+hata: dataset+satır+kolon+sebep
+bilinmeyen ogretmenId reddedildi
+bilinmeyen sınıf reddedildi
+bilinmeyen ogrenciIds üyesi reddedildi
+DB hatalı işlemde DEĞİŞMEDİ
+localStorage hatalı işlemde DEĞİŞMEDİ
+boş donemId reddedildi
+farklı donemId reddedildi (sessiz düzeltilmedi)
+eski donemId'li ders ID'siyle güncelleme reddedildi
+ders-B1 donemId hâlâ eski dönem
+aynı dosyada yinelenen ID hata
+dataset içerikten okundu (dosya adı önemsiz)
+bilinmeyen schema reddedildi
+başarılı ekleme (öğrenci)
+csvGeriAl fonksiyonu mevcut
+yama kaynağında TEK saveDB başarı yolunda (kaynak assert)
+snapshot DB'ye dönüş tam (eklenen kaybolur)
+snapshot DB'ye dönüş tam (güncelleme geri döner)
+yarı hatalı dosya (yinelenen ID) reddedildi
+iyi satır bile UYGULANMADI
+DB byte-birebir aynı
+localStorage byte-birebir aynı
+ek alanlı istek kabul edildi
+ek alanlar geri yüklendi
+korumalı alan saldırısı reddedilmedi ama uygulanmadı
+korumalı: donemId değişmedi
+korumalı: id değişmedi
+korumalı: ogrenciId değişmedi
+korumasız ek alan güncellendi
+index.html değişmedi (checkpoint hash)
+index.html mevcut ve okunur
+ek-ders.js mevcut ve okunur
+vendor 5 dosya okunur
+index.html'de CSV yama işareti YOK
+ek-ders.js'te CSV yama işareti YOK

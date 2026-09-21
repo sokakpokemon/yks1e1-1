@@ -1,0 +1,19 @@
+kapalı hücre DOM'da mevcut ve title'lı
+kapalı hücre gri/soluk stil taşıyor (bg-slate-100 + opacity)
+kapalı hücrede kırmızı etiket YOK (bg-rose-200/rose-500 kalmadı)
+kapalı hücrede disabled YOK
+kapalı hücrede readonly YOK
+kapalı hücrede pointer-events:none YOK
+kapalı hücre onclick togOgrSecili'ye bağlı
+kapalı seçiliyken tıklama avail.musait'e yazdı
+saveDB çağrıldı (localStorage değişti)
+localStorage'daki kayıt 5-9 anahtarını taşıyor
+ikinci tıklama kapalıyı boşalttı (döngü korunur)
+togOgr çağrısı sonrası avail.musait dizi kaldı
+sınıf seçiliyken tıklama sinif kaydını yazdı
+boş hücre görünümü değişmedi (beyaz, boş içerik)
+haftalikOgrtTablo kaynakta mevcut ve gridTablo dışında
+yama işareti yalnız gridTablo/legend bölgesinde (app.js tek MARK kümesi)
+saveDB fonksiyonu değişmedi (imza satırı mevcut)
+togOgrSecili davranış gövdesi korunuyor (isSame + musait push dalı)
+durumSeciciHTML Kapalı butonu hâlâ rose vurgulu (seçici çubuk değişmedi)

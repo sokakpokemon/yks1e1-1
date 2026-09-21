@@ -1,0 +1,57 @@
+boot hatasız
+satır sayısı = dolu hücre sayısı (4 hücre)
+BOM ile başlıyor
+ayraç noktalı virgül
+satır sonu CRLF
+schema=yks-csv-v1 + dataset=sinifProg
+Türkçe sınıf adı ('12 DİL & FEN') kayıpsız
+kod/saat KS semantiği (8→15:30)
+durum=sinif + deger=hücre anahtarı
+degerJson geçerli JSON
+sinifId DB.sinifIds'ten geliyor
+dosya adı kuralı yks-sinif-programi-<aktifDonemId>.csv
+yalnız aktif dönem donemId'li
+başka dönem (B, boş) satırı YOK
+B aktifken yalnız B satırları
+A'ya dönüş: A satırları geri geldi
+import ok
+round-trip deep-equal (aktif dönem programı)
+eksik satır import ok
+eksik satır import'ta hücre silinir (boş hücre temsili)
+tam dosya tekrar import → orijinal hücreler
+başka donemId RED
+bilinmeyen donemId RED (otomatik dönem YOK)
+RED sonrası donemler değişmedi
+RED sonrası localStorage byte-birebir
+karışık dönem dosyası RED
+bilinmeyen sinifId RED
+sinifAd/sinifId uyuşmazlığı RED (ada göre bağlama YOK)
+geçersiz gun RED
+geçersiz kod RED
+saat/kod uyuşmazlığı RED
+geçersiz durum RED
+deger/anahtar uyuşmazlığı RED
+bozuk degerJson RED
+duplicate satır RED (2. satır 3)
+yanlış başlık RED
+yarı hatalı dosya RED
+iyi satır bile UYGULANMADI
+localStorage byte-birebir
+başarılı import ok
+başarılı import: dosyada olmayan hücre silinir (1-8 kaldı; 2-9/5-11 yoktu)
+başarılı import sonrası identity-rebind
+tam dosya tekrar import → orijinal hücreler geri geldi
+DB.sinifProg === DB.sinifProgDonemler[DB.sinifProgDonemId]
+sinifProgDonemId === aktifDonemId
+dönem değişimi sonrası identity-rebind korunur
+geri dönüşte de identity-rebind
+normalize(DB dışı nesne) canonical haritayı EZMEZ
+eski yedek: sinifProgDonemler oluşturuldu
+eski yedek: program hedef döneme bağlandı (kayıpsız; normalize ekstra boş sınıf anahtarları ekleyebilir)
+eski yedek: DB.sinifProg identity-rebind edilmiş canonical nesne
+eski yedek: ders/istekler korunur
+eski yedek: ogrenci/ogretmen korunur (kadro tamamlayabilir); sinifIds eski sınıfları kapsıyor
+stale sinifProg canonical 2026/2027'yi EZMİYOR (2026/2027 korunur)
+2027/2028'in boş programı yanlışlıkla DOLDURULMADI
+y'de identity-rebind
+import sonrası normalize kapısından geçen DB'de rebind (sinifProgCsvUygula kopyası normalize edilmez ama commit rebind'li)

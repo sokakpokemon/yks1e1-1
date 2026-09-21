@@ -1,0 +1,77 @@
+boot hatasız
+boot DB.donemler'de 'donem-2026-2027' var
+boot DB.aktifDonemId = donem-2026-2027
+donemSecKutusuHTML string döner
+seçici id 'donemSecici' markup'ta
+seçenek value'su dönem id'si
+seçenek metni dönem adı
+onchange donemSec'i çağırır
+ikinci dönem eklenince iki seçenek
+ikinci dönemin de id'si value'da
+sadece donem-2026-2027 selected
+donemSec sonrası seçim değişti (donem-2025-2026 selected)
+başlangıç aktif dönem A
+donemSec(B) → aktifDonemId = B
+aktifDonemId() helper da B döner
+donemler aktif işareti B'de
+donemler aktif işareti A'da kaldırıldı
+donemSec(A) geri dönüş → aktifDonemId = A
+aktif işaretleri geri hizalandı
+geçersiz id → aktifDonemId DEĞİŞMEDİ (güvenli)
+localStorage içeriği değişti (saveDB yazdı)
+kaydedilen DB.aktifDonemId = B
+kaydedilen donemler aktif işareti B'de
+geri dönüşte de kayıt güncel
+renderYonetim sonrası yönetim alanı dolu
+renderYonetim sonrası dönem seçici DOM'da
+renderDersler sonrası ders listesi alanı dolu
+donemSec tüm bölümleri yeniden çizdi (en az 3 bölüm değişti)
+2026/2027 aktifken 2025/2026 dersi listede YOK
+2026/2027 aktifken tüm görünenler A dönemli
+2025/2026 seçilince eski ders GÖRÜNÜR
+2025/2026 seçilince tüm görünenler B dönemli
+2026/2027 aktifken günlük tabloda eski dönem dersi YOK
+günlük tablo çökmüyor ve başlık dolu
+2025/2026 seçilince günlük tabloda eski ders GÖRÜNÜR
+2025/2026 günlük tablosunda ders satırı var
+2026/2027 aktifken haftalık grid eski dönem birebir dersini göstermez
+2026/2027 aktifken haftalık grid eski dönem grup dersini göstermez
+haftalık grid çökmüyor (başlık var)
+2025/2026 seçilince haftalık grid eski dersleri gösterir (satır içerik dolu)
+2025/2026 haftalık gridinde grup üyesi baş harfleri görünür
+2026/2027 aktifken bekleyen sayısı eski isteği saymaz
+2026/2027 havuzunda eski dönem isteği YOK
+havuz boş değil (mevcut 3 istek görünür)
+2025/2026 havuzunda eski istek GÖRÜNÜR
+2025/2026 havuzunda 1 bekleyen istek rozeti
+B dönemi havuz boşken doğru boş mesaj
+A'ya dönüşte bekleyen sayısı eski haline döndü
+mevcut istek donemId'leri değişmedi
+A aktifken yalnız A grup dersi görünür
+B aktifken yalnız B grup dersi görünür
+B'de grup üyeleri korunuyor (ogrenciIds)
+A'ya dönüşte grup üyeleri aynen (3 üye)
+tek dönemde seçici 1 seçenek gösterir
+tek dönemde de A selected
+donemler boşken yalnız donem-2026-2027 güvenli kullanılır
+tek dönemde tüm dersler görünür (filtre kırpmıyor)
+görünenlerin tamamı A dönemli
+normalize tek dönemli DB'yi bozmuyor (aktifDonemId aynı)
+ilk render'da seçici DOM'da
+renderYonetim çıktısı seçiciyi KART İÇİNDE barındırır (v2 gömülü)
+3 render sonrası hâlâ TEK donemSeciciKutu
+her render'da tam 1 kutu markup'ta (duplicate imkânsız)
+v2 gömülü enjeksiyon kaynakta; yonetimBolum'a insertAdjacentHTML YOK
+tekrar render'da seçim korunur
+ogrenciler değişmedi
+ogretmenler değişmedi
+sinifProg değişmedi
+sinifIds değişmedi
+ders kayıtları (donemId dahil) değişmedi
+istek kayıtları (donemId dahil) değişmedi
+grup üyelikleri değişmedi
+#ek-ogrenciler paneli hâlâ oluşturuluyor
+#grup-panel-govde hâlâ oluşturuluyor
+form destek alanları (#f-saat vb.) DOM'da
+dönem geçişi sonrası form destek hâlâ yerinde
+id 'donemSecici' yalnız seçici markup'ta

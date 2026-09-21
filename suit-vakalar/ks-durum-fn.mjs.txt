@@ -1,0 +1,20 @@
+boot + ilk render hatasız
+sınıf butonları DB'den geliyor (18 sınıf)
+en sonda Kapalı butonu var
+Kapalı çubuğun son butonu
+seçisiz tıklamada togOgr prompt ile sınıf atadı (geriye dönük uyum)
+durumSec sınıfı vurguladı (ui.seciliDurum=sinif, seciliOgrId=10.SINIF)
+vurgu ring'i sınıf butonuna uygulandı
+hücreye seçili sınıf atandı (müsaitle kayıt: avail.sinif)
+ikinci tıklama hücreyi Boş yaptı (döngüsüz)
+durumSec kapalıyı vurguladı
+hücre Kapalı oldu (avail.musait kaydı)
+ikinci tıklama Kapalı'yı Boş yaptı
+Kapalı, sınıf hücresini de kapalıya çevirdi
+takvimde durum çubuğu var
+legend'de tüm sınıf adları var
+legend'de Kapalı var, 'Müsait Değil' yok
+eski 'sınıf dersi' hücre sayısı sayıldı ve bozulmadı (68 hücre)
+Kapalı (musait) hücre sayısı: 34
+kapalı hücre kayıtlı meşgul durumunda
+duzeltmeBul kapalıyı 'musait' dalından Kapalı etiketiyle uyarıyor

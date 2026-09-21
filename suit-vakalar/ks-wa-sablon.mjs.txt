@@ -1,0 +1,47 @@
+boot hatasız
+seed öğrenci var
+ayarlar yokken mesaj üretiliyor (geriye dönük)
+boş ayarla bugünkü default byte-birebir
+boş alanlı şablon nesnesi de varsayılan
+null/undefined alanlarda da varsayılan
+custom başlık uygulanıyor
+custom giriş uygulanıyor
+custom kapanış uygulanıyor
+custom imza uygulanıyor
+imza satırı sonda
+eski varsayılan metin parçaları yok
+bilinmeyen yer tutucu literal kalır
+bilinen yer tutucu değişir
+ders listesi satırları var (1) …
+ders listesi şablona ALINMIYOR
+birebir mesajda 👥 YOK
+referans birebir ders bulundu (pencere)
+grupta 👥 satırı var
+grupta tüm üye adları mesajda
+grup sahibi üye mesajında 👥 var (mevcut davranış)
+grup test dersi kaldırıldı (temizlik)
+tek localStorage anahtarı (yeni anahtar YOK)
+DB.ayarlar.whatsappSablon saveDB'ye yazıldı
+loadDB sonrası şablon kalıcı
+round-trip'te şablon kayıpsız
+eski yedek (ayarlar yok) → varsayılan çalışır
+'WhatsApp Mesaj Şablonu' bölümü var
+bölüm tam 1 kez (duplicate yok)
+alan wa-sablon-baslik tam 1 kez
+alan wa-sablon-giris tam 1 kez
+alan wa-sablon-kapanis tam 1 kez
+alan wa-sablon-imza tam 1 kez
+yer tutucular belgelenmiş
+boş bırakılırsa varsayılan uyarısı var
+kaydet butonu waSablonKaydet çağırır
+kart tekrar üretimde birebir aynı (idempotent render)
+ayarTab 2. render'da NaN yok
+kaydet DB.ayarlar.whatsappSablon'a yazar
+kaydet diğer DB alanlarına dokunmaz (öğretmen/öğrenci/ders sayısı)
+kaydet localStorage'a yazdı (kalıcı)
+WA-SABLON-YAMASI işareti app.js'te
+listeMetni kaynakta 1 kez (dokunulmadı)
+waUrl/waGonder/waSatir/waKopyalaMesaj tanımlı
+👥 satır üretimi koddan (kaynakta)
+ks-wa-sablon.mjs test.mjs'te tam 1 kez
+mevcut 34 süit listede korundu

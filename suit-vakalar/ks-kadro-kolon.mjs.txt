@@ -1,0 +1,62 @@
+boot hatasız
+CSV_SCHEMA_KADRO = yks-csv-v2 (sabit korunur)
+CSV_SCHEMA_KADRO_V3 = yks-csv-v3
+v1 header sabiti KORUNDU
+v2 header sabiti KORUNDU
+v3 header birebir
+ders/istek header şemaları DEĞİŞMEDİ
+çok kelimeli: 'MEHMET ALI YILMAZ' → ad='MEHMET ALI', soyad='YILMAZ'
+Türkçe: 'ŞAHİN DOĞANAY' → ad='ŞAHİN', soyad='DOĞANAY'
+tek kelimelik: ad dolu, soyad boş
+boş ad: ikisi de boş
+fazla boşluk normalize edilir
+çok kelimeli soyad: ad='MAHMUT ZİYA YILDIRIM', soyad='ÇÖLAK'
+v3 satır genişliği 14 kolon
+öğrenci: ad='Ayşe', soyad='Demir'
+öğrenci: telefon AYRI kolonda, string korunur ('05551112233')
+anne/baba telefon AYRI kolonlarda (anneTelefon/babaTelefon)
++90 ve baştaki 0, boşluk, tire KORUNUR (biçimlendirme yok)
+boş tel → boş hücre (string)
+öğretmen çok kelimeli: ad='MEHMET ALI', soyad='YILMAZ'
+öğretmen branş kolonunda (index 10)
+sınıf satırı: ad = sınıf adı, soyad/telefon/anne/baba BOŞ
+sınıf satırında sinifAd = sınıf adı
+v3 schema kolonu yks-csv-v3
+ekAlanlarJson tel/anneTel/babaTel İÇERMEZ (v3 temizliği)
+v2 kadro satır üretici (kadroV2Satirlari) KORUNDU
+v1 kadro satır üretici (csvKadroSatirlari) KORUNDU
+v3 dosya BOM ile başlıyor
+v3 dosya CRLF satır sonu
+v3 header satırı noktalı virgüllü
+telefon +90'lı değer quote'suz güvenli geçer
+v3 import kabul edildi
+ad yeniden birleşti: 'Ayşe Demir'
+telefon DB .tel'e yazıldı
++90'lı telefon kayıpsız geri geldi
+öğretmen adı birleşti: 'MEHMET ALI YILMAZ'
+öğretmen branş korundu
+duplicate öğrenci/öğretmen YOK (upsert)
+sınıflar kayıpsız
+v3 round-trip import kabul edildi
+v3 round-trip: tel kayıpsız
+v3 round-trip: anneTelefon → anneTel kayıpsız
+v3 round-trip: babaTelefon → babaTel kayıpsız
+v3 round-trip: ad+soyad birleşti
+v3 boş kolon import ok
+v3 boş kolon → tel/anneTel/babaTel bilinçli ''
+v3 boş kolon: diğer ek alan korunur
+v2 import ok
+üst düzey telefon JSON'daki tel'i EZER
+v1 dosya (yks-csv-v1) kabul edildi
+v1 tam ad kolonu aynen kaydedilir (ayrıştırma YOK)
+v1 tel fallback: ekAlanlarJson.tel → DB .tel
+v1 ek alanlar da geri yüklenir
+v1 öğretmen ad + branş
+v2'li ders dosyası reddedilir
+v2 dosyada yinelenen ID reddedilir
+iyi satır bile uygulanmadı
+DB byte-birebir aynı
+localStorage byte-birebir aynı
+kadro satırı farklı dönem ID'si → RED
+bilinmeyen sınıf adlı öğrenci satırı mevcut davranışla aynı (sınıf adı serbest metin)
+ks-kadro-kolon.mjs test.mjs'te tam 1 kez

@@ -1,0 +1,87 @@
+boot hatasız
+sinifProgDonemler oluştu ve obje
+sinifProgDonemId = donem-2026-2027
+eski program donem-2026-2027 anahtarına KAYIPSIZ bağlandı
+migration sonrası DB.sinifProg hâlâ 2026/2027 programını gösteriyor
+program kopyası (referans değil)
+mevcut donemler kayıtları bozulmadı
+öncelik zinciri: sinifProgDonemId dolu → o döneme bağlandı
+öncelik zinciri: aktifDonemId → o döneme bağlandı
+öncelik zinciri: ikisi de yok → donem-2026-2027
+mevcut dönem programları birebir korundu (2020/2021 dahil)
+üzerine boş nesne YAZILMADI (ÖZEL SINIF hâlâ dolu)
+eksik anahtar yalnız ekleniyor (2027/2028 yoksa eklendi)
+2026/2027 programı DEĞİŞMEDİ (sinifProg aktif gösterimi)
+2. geçiş 0 değişiklik (idempotent)
+başlangıçta 2027/2028 YOK
+yeniDonemOlustur sonrası 2027/2028 var
+donemler'de 2027/2028 id'si TAM 1 kez
+2027/2028 adı TAM 1 kez (ad tekrarı yok)
+3 tıklama sonrası hâlâ TAM 1 kayıt (duplicate yok)
+3 tıklama sonrası program kopyası TEK
+ders sayısı değişmedi (37)
+istek sayısı değişmedi (3)
+tüm dersler HÂLÂ 2026/2027 dönemli (kopya damgası yok)
+tüm istekler HÂLÂ 2026/2027 dönemli
+2027/2028 dönemli ders kaydı YOK
+2027/2028 dönemli istek kaydı YOK
+DB.sinifProgDonemler['donem-2027-2028'] obje ve BOŞ
+aktif dönem 2027/2028'e geçildi
+sinifProgDonemId de 2027/2028 (aynı id)
+DB.sinifProg artık yeni dönemin BOŞ programı
+sinifProgAktif(ID_B) boş döner
+donemSeciliSinifProg aktif dönemi gösterir
+2026/2027 programı sinifProgDonemler'de birebir duruyor
+2026/2027'ye dönüşte ders listesi deep-equal geri geldi
+2026/2027 programına dönüş: DB.sinifProg = kayıtlı 2026/2027 programı
+2026/2027 programı seed anahtar kümesini içeriyor
+MEZUN SAY 1 hücreleri birebir
+ogrenciler birebir aynı
+ogretmenler birebir aynı
+sinifIds birebir aynı
+ders kayıtları (tüm alanlarıyla) birebir aynı
+istek kayıtları birebir aynı
+grup üyelikleri (ogrenciIds) değişmedi
+donemSec(2026) → ikisi de 2026/2027
+donemSec(2027) → ikisi de 2027/2028
+donemSec sonrası aktif işaret tek dönemde
+DB.sinifProg = 2027/2028 programı (boş)
+saveDB: kayıtlı DB'de ikisi de 2027/2028
+2026/2027'de dersler görünür (37) (tüm zamanlar penceresi)
+2027/2028'de ders listesi BOŞ (görünmez ama SİLİNMEDİ)
+2027/2028'de istek havuzu BOŞ
+2027/2028'de DB.sinifProg boş (yeni dönem programı)
+2026/2027'ye dönüş: program deep-equal geri geldi
+2026/2027'ye dönüş: ders/istek listeleri deep-equal
+2026/2027'ye dönüş: DB.sinifProg kayıtlı nesneyle AYNI referans
+geçiş turu sonrası 2026/2027 programı üzerine yazılmadı
+zaten varken yeniDonemOlustur dönem EKLEMEZ (duplicate YOK)
+zaten varken ders/istek KOPYALANMAZ
+zaten varken program verisi SİLİNMEZ/değişmez
+zaten varken 2027/2028'e GEÇER
+normalize dönemsiz alanları bozmuyor (idempotent)
+normalize mevcut dönemli programlara DOKUNMUZ
+ikinci normalize birebir aynı
+3. donemleriBaslat 0 dönem değişikliği
+renderYonetim çıktısında dönem seçici var
+renderYonetim çıktısında 'Yeni Dönem Oluştur' butonu var
+buton seçici kutusunun İÇİNDE (yanında)
+3 render sonrası TEK donemSeciciKutu
+3 render sonrası TEK donemYeniBtn
+buton kaynakta tam 1 kez tanımlı
+seçici 2 dönem + buton içeriyor
+seçicide 2027/2028 seçeneği var
+geçiş sonrası seçim korunur (aktifDonemId=A)
+loadDB: dönemli programlar birebir
+loadDB: donemler + işaretçiler birebir
+yedek→normalize: sinifProgDonemler kayıpsız
+eski yedek: program donem-2026-2027'ye bağlandı
+eski yedek: 2027/2028 programı yeniden BOŞ oluşturuldu (veri uydurma YOK)
+eski yedek: ders/istek verileri korunur
+2. yedek döngüsü birebir
+sinifProgDonemler localStorage'a yazıldı
+index.html SHA-256 değişmedi
+ek-ders.js SHA-256 değişmedi
+vendor 5 dosya okunur ve değişmez (5/5)
+index.html yama işareti YOK
+ek-ders.js yama işareti YOK

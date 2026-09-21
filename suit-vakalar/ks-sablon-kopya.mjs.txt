@@ -1,0 +1,72 @@
+boot hatasız (SABLON-KOPYA süiti)
+boş program → true
+null/undefined → true
+dizi → true (canonical değil)
+dolu sınıf dizisi → false
+boş dizi değerli sınıf → true
+boş hedefe sablonKopyaUygula true döner (onay kuyruğa girdi)
+onay onaylanmadan DB değişmez
+kopya hedefe yazıldı (deep-equal kaynak)
+kök referans farklı (notStrictEqual)
+iç içe dizi referansı farklı
+kaynak deep-equal korunur
+hedefte hücre değişince kaynak etkilenmez
+kaynakta hücre değişince hedef etkilenmez
+DB.aktifDonemId değişmedi
+DB.sinifProgDonemId değişmedi
+dersler kopyalanmaz (1 ders hâlâ tek, A dönemli)
+istekler kopyalanmaz
+başarılı akışta TEK saveDB (yama bloğunda saveDB(); tam 1)
+onay öncesi LS yazımı YOK (onay kuyrukta)
+inaktif hedef: DB.sinifProg AYNI referans
+inaktif hedef: DB.sinifProg içeriği değişmedi
+inaktif hedef: sinifProgDonemId hâlâ A
+aktif hedef: DB.sinifProg === DB.sinifProgDonemler[DONEM_C] (identity-rebind)
+aktif hedef: kopya içerik doğru
+aktif hedef: aktifDonemId hâlâ C
+aktif hedef: sinifProgDonemId hâlâ C
+dolu hedef: sablonKopyaUygula RED (false)
+dolu hedef: hedef korunur
+dolu hedef: kaynak korunur
+dolu hedef: localStorage byte-birebir
+kaynak = hedef RED
+boş id RED
+bilinmeyen kaynak RED
+bilinmeyen hedef RED
+RED sonrası sinifProgDonemler değişmedi
+RED sonrası localStorage byte-birebir
+onay reddi: DB byte-birebir
+onay reddi: localStorage byte-birebir
+yeniDonemOlustur: C programı BOŞ (otomatik kopya YOK)
+yeniDonemOlustur: A programı korunur
+aynı işlem tekrarında dolu hedef RED (ezme YOK)
+mevcut hedef referansı korunur
+kullanıcının eklediği hücre duruyor
+UI markup id="sablon-kopya-ui" tam 1
+UI markup id="sablon-kaynak-donem" tam 1
+UI markup id="sablon-hedef-donem" tam 1
+UI markup id="sablon-kopyala-btn" tam 1
+UI markup id="sablon-kopya-uyari" tam 1
+hedef select'te aktif dönem selected
+kaynak varsayılan hedef-dışı ilk dönem (B)
+seçenek value'ları gerçek dönem id'leri
+yedek döngüsü: kopyalanan hedef program deep-equal geri gelir
+yedek döngüsü: identity-rebind korunur
+yedek döngüsü: dönemsiz kaynak bozulmaz
+bilinmeyen id → getElementById null
+gerçek DOM boot hatasız
+ilk boot sonrası 1,1,1,1,1 → (host=1 secici=1 btn=1 sablon=1 sablonBtn=1)
+3 render sonrası 1,1,1,1,1 → (host=1 secici=1 btn=1 sablon=1 sablonBtn=1)
+alt sekme (ogretmen) sonrası 1,1,1,1,1 → (host=1 secici=1 btn=1 sablon=1 sablonBtn=1)
+alt sekme (ogrenci) sonrası 1,1,1,1,1 → (host=1 secici=1 btn=1 sablon=1 sablonBtn=1)
+alt sekme (ekders) sonrası 1,1,1,1,1 → (host=1 secici=1 btn=1 sablon=1 sablonBtn=1)
+alt sekme (ayar) sonrası 1,1,1,1,1 → (host=1 secici=1 btn=1 sablon=1 sablonBtn=1)
+geri dönüş (Öğretmen) sonrası 1,1,1,1,1 → (host=1 secici=1 btn=1 sablon=1 sablonBtn=1)
+sekme geçişi sonrası TEK #sablon-kopya-ui → (host=1 secici=1 btn=1 sablon=1 sablonBtn=1)
+şablon seçimleri sekme geçişinde korunur → k=donem-2027-2028 h=donem-2026-2027 (varsayılan hedef )
+gerçek DOM: kopya C'ye yazıldı
+gerçek DOM: A programı korunur
+gerçek DOM: dönem anahtarı sayısı artmadı (yeni dönem eklenmedi)
+kopya sonrası UI hâlâ 1,1,1,1,1 → (host=1 secici=1 btn=1 sablon=1 sablonBtn=1)
+renderYonetim sonrası yb içeriği dolu (override dayanıklılığı bağlamı)
+override sonrası host + şablon kartı DOM'da → (host=1 secici=1 btn=1 sablon=1 sablonBtn=1)

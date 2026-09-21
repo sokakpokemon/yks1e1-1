@@ -1,0 +1,23 @@
+import işaret dosyası mevcut
+yama 2. koşum no-op (exit 2)
+yama 2. koşum 'Zaten uygulanmış' diyor
+işaret kaynağı program-guncel.xml
+işaret SHA-256 eşleşiyor
+DB.ayarlar[EXCEL-K-IMPORT-YAMASI] var
+işaret sayıları K=309 DERS=243 BELIRSIZ=0
+avail.musait'te 34 G-K kaydı (gün-bazlı, XML ile birebir)
+avail.sinif'ta K kaydı YOK (0)
+musait değerleri kendi anahtarına eşit (G-K→G-K)
+veri JSON'unda mola (ÖĞLE ARASI) değeri yok
+PAZAR (6-*) hiçbir yerde yok
+musaitte yamaya ait Cuma/Pazar K kaydı yok (seed'in meşru 4-1 slot kaydı hariç)
+seed Cuma dersleri korundu (4-1 mevcut)
+FİKRİYE KIYAR mevcut
+FİKRİYE 0-5 = MEZUN SAY 1 (birleşik bölündü)
+FİKRİYE 0-5 birleşik metin yok
+sinifProg'da birleşik/bölünmemiş hücre metni yok
+sinifProg toplam slot > 243 (bölmeler dahil)
+sinifProg identity-rebind (JSON snapshot sonrası eş referans)
+öğrenci listesi boş değil (korunum)
+öğretmen listesi boş değil (korunum)
+dönem yapısı korunmuş

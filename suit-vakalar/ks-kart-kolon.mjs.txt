@@ -1,0 +1,51 @@
+boot hatasız
+Iki kolon wrapper'ı boot sonrası DOM'da
+Wrapper DOM'da tam bir kez
+Plan kartı tam bir kez
+İstek havuzu tam bir kez
+Wrapper iki kolon çocuklu (sol→sag, kaynak sırası) → ["ks-kart-kolon-sol","ks-kart-kolon-sag"]
+Plan kartı SOL kolonda (statik parent) → sol=9459 plan=9515 sag=15204
+İstek havuzu SAĞ kolonda (statik parent) → sag=15204 havuz=15313 kapa=19701
+Sol kolon ilk (plan solda)
+Sağ kolon ikinci (havuz sağda)
+Plan formu f-ogrenci DOM'da
+Plan formu f-ders DOM'da
+Plan formu f-konu DOM'da
+Plan formu f-ogretmen DOM'da
+Plan formu f-tarih DOM'da
+Plan formu f-saat DOM'da
+Planlama butonu btnPlan DOM'da
+hizliOgr anchor DOM'da ve dolduruldu
+hizliOgr plan kartının İÇİNDE (statik)
+Grup paneli (#ek-ogrenciler) DOM'da
+Grup paneli f-ogrenci'ye inject edildi (plan kartı içinde)
+Grup paneli plan kartı DIŞINA taşınmadı
+Havuz formu h-ogrenci DOM'da
+Havuz formu h-ders DOM'da
+İsteği Havuza Ekle butonu havuzda
+Ortak Grup İsteği butonu havuzda
+Havuz filtre çipleri render oluyor
+Havuzda istek satırı var (seed istekler)
+3× render sonrası wrapper tam bir kez
+3× render sonrası plan kartı tam bir kez
+3× render sonrası havuz tam bir kez
+render sonrası kolon üyeliği korunur (statik + runtime teklik)
+render sonrası panel hâlâ f-ogrenci altında (plan kartı içinde)
+Sekme geçişleri hatasız
+renderYonetim + sekme geçişleri sonrası iki kolon sırası korunuyor
+Sekmelerden sonra da wrapper tek
+kartKolonOnar tekrar çağrısı duplicate üretmez
+formaAktar + planla akışı hata vermiyor
+Akış sonrası wrapper hâlâ tek ve yerinde
+Akış sonrası kartlar tekli ve kolon yapısı bozulmadı
+kartKolonOnar wrapper silinince yeniden kurar (tek)
+Onarım sonrası sol→sag çocuk sırası → ks-kart-kolon-sol,ks-kart-kolon-sag
+Onarım sonrası plan solda (parent)
+Onarım sonrası havuz sağda (parent)
+Wrapper CSS kuralı kaynakta (#ks-kart-kolon)
+Dar ekran media query breakpoint tanımlı
+Dar ekran kuralında grid tek kolona düşüyor
+Masaüstü kuralı iki eşit minmax kolon
+Dar kolonda min-width:0 koruması
+ks-kart-kolon.mjs test.mjs'te tam 1 kez → 1
+Mevcut 31 süit test.mjs'te korundu (test sayısı düşmüyor) → 

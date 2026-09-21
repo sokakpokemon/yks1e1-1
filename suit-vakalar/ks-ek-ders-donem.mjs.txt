@@ -1,0 +1,59 @@
+boot hatasız
+ekDersler'de 1 kayıt var, donemId'siz
+saveDB sonrası donemId = aktifDonemId() = donem-2026-2027
+donemId string ve boş değil
+aktif dönem donem-2025-2026 yapıldı
+yeni ek dersin donemId'si = donem-2025-2026
+önceki kayıt (e1) donemId korundu
+dolu donemId'li kayıt saveDB+migration sonrası aynen
+2 donemId'siz ek ders backfill edildi (say.ek=2)
+undefined → DONEM_ILK_ID
+null → DONEM_ILK_ID
+dolu donemId (DONEM_B) korunuyor
+2. koşu: say.ek=0 (idempotent)
+3. koşu: say.ek=0 (idempotent)
+donemId'ler 3 koşuda birebir aynı
+kayıt sayısı artmadı (duplicate yok)
+ekDersler backfill 2. turda 0 (yalnız yeni eklenen eski ders işlendi)
+eski ders backfill çalışıyor (say.ders=1)
+dolu ders donemId korunuyor
+dolu istek donemId korunuyor
+yeni eski ders DONEM_ILK_ID aldı
+2. migration turunda hiçbir sayaç artmıyor
+donem-2026-2027'de 3 kayıt (e1, eski1, eski2)
+donem-2025-2026'da 2 kayıt (e3 + DONEM_B damgalı)
+toplam kayıt sayısı korundu (silme yok)
+aktifDonemKayitlari non-mutating (orijinal dizi aynı)
+normalize sonrası ek ders sayısı aynı
+donemId'ler kayıpsız (deep-equal)
+round-trip 2. turda da aynı
+donemId'siz eski yedek → DONEM_ILK_ID'ye bağlanır
+boş durumda uyarı yok
+çakan ek ders uyarı üretir
+uyarıda sınıf adı var
+uyarıda ders adı var
+uyarıda öğretmen adı var
+uyarıda tarih+saat var
+farklı dönemdeki ek ders uyarıya girmez
+iptal edilmiş ek ders uyarıya girmez
+birebir çakışma uyarısı korunmuş + ek ders uyarısı ikisi birden
+avail.musait → Kapalı uyarısı çalışıyor
+avail.sinif → Sınıf Dersi uyarısı çalışıyor
+ekDuzeltmeBul DB.dersler'e bakıyor
+ekDuzeltmeBul avail.musait kontrolü var
+ekDuzeltmeBul avail.sinif kontrolü var
+ek-ders.js kayıt push'u donemId yazmıyor (dokunulmadı)
+function gunlukTablo() { aktifDonemKayitlari(DB.ekDersler) kullanıyor
+function gunlukTablo() { EK-DERS etiket markup'ı taşıyor
+function haftalikOgrtTablo() { aktifDonemKayitlari(DB.ekDersler) kullanıyor
+function haftalikOgrtTablo() { EK-DERS etiket markup'ı taşıyor
+function renderOzet() { ekDersler referansı yok (kapsam dışı) [daraltıldı]
+function renderAnaliz() { ekDersler referansı yok (kapsam dışı) [daraltıldı]
+function csvAktifDonemKayitSatirlari ekDersler referansı yok (kapsam dışı) [daraltıldı]
+index.html değişmedi
+ek-ders.js değişmedi
+vendor/tailwind.js değişmedi
+vendor/fontawesome.css değişmedi
+vendor/html2canvas.js değişmedi
+vendor/chart.js hash'i çekirdek (bilinen değer)
+ks-ek-ders-donem.mjs test.mjs'te tam 1 kez

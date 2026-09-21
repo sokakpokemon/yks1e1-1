@@ -1,0 +1,47 @@
+DB.donemler dizi ve uzunluk 1
+dönem kaydı { id, ad, aktif } doğru
+donemler içinde 'donem-2026-2027' id'si tam 1 kez
+DB.aktifDonemId = donem-2026-2027
+DB.sinifProgDonemId = donem-2026-2027
+eski derslerin TAMAMINA donemId eklendi (37 ders)
+eklenen donemId sayısı = eski ders sayısı
+eski isteklerin TAMAMINA donemId eklendi (3 istek)
+eklenen donemId sayısı = eski istek sayısı
+boot DB'sinde de tüm derslerde donemId var (37 ders)
+boot DB'sinde de tüm isteklerde donemId var (3 istek)
+ders sayısı değişmedi (37)
+istek sayısı değişmedi (3)
+öğrenci/öğretmen sayıları değişmedi
+grup dersi (ogrenciIds'li) sayısı değişmedi
+grup istek (ogrenciIds'li) sayısı değişmedi
+her dersin donemId dışı alanları birebir
+her isteğin donemId dışı alanları birebir
+ders sırası ve ID'leri aynı
+istek sırası ve ID'leri aynı
+sinifProg yapısı birebir aynı
+sinifProg anahtar (sınıf ad) kümesi aynı
+sinifIds birebir aynı
+sinifProgDonemId yalnız EK alan (sinifProg nesnesi içinde değil
+ogrenciler birebir aynı
+ogretmenler birebir aynı
+öğrenci kayıtlarına donemId EKLENMEDİ
+öğretmen kayıtlarına donemId EKLENMEDİ
+ikinci donemleriBaslat 0 değişiklik raporlar
+ikinci normalize: dönem kaydı hâlâ tek
+ikinci normalize: dönem alanları birebir
+ikinci normalize: donemId değerleri değişmedi
+ikinci normalize: yeni dönem/ID/kopya kayıt YOK
+loadDB (boot yolu) dönem alanlarını değiştirmez
+kaydet→okuma döngüsünde dönem alanları birebir
+yedek→yükleme: donemler kayıpsız
+yedek→yükleme: aktifDonemId + sinifProgDonemId kayıpsız
+yedek→yükleme: tüm donemId'ler kayıpsız
+yedek→yükleme: ders/istek alanları donemId dışı birebir
+eski yedek yüklenince dönem kaydı oluşur (tek)
+eski yedekteki tüm ders/isteklere donemId taşındı
+eski yedekte taşınan: 37 ders + 3 istek, kopya yok
+ikinci yedek döngüsünde dönem alanları yine aynı
+index.html SHA-256 değişmedi
+ek-ders.js SHA-256 değişmedi
+ek-ders.js yama içermiyor (donemleriBaslat yok)
+index.html yama içermiyor (donemleriBaslat yok)

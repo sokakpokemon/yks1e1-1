@@ -81,8 +81,9 @@ try {
   `)();
   t("boot hatasız", true);
 } catch (e) {
-  t("boot hatasız → " + e.message, false);
-  console.log(e.stack.split("\n").slice(0, 8).join("\n"));
+  /* beklenmeyen catch: THROW (catch-only sayım kaldırıldı — SAYAÇ KAPISI kuralları) */
+  console.error(e.stack ? e.stack.split("\n").slice(0, 8).join("\n") : e);
+  throw e;
   process.exit(1);
 }
 const { DB, ui, gunlukTablo, haftalikOgrtTablo, dersDrag, dersBurak, istekDrag, istekBurak,

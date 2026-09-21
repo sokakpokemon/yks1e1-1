@@ -1,0 +1,34 @@
+SINIF-OGRT-UYUM-YAMASI işareti kaynakta
+sinifOgrtUyumOnar tek tanım
+boot çağrısı var
+normalize/loadDB çağrısı var
+aktif dönemde tüm öğretmen Sınıf Dersi slotlarının sınıf programında karşılığı var (0 uyumsuz / 68 slot)
+1. koşu idempotent (boot zaten kapattı: e=0)
+2. koşu 0 değişiklik
+3 koşu sonrası sinifProgDonemler birebir
+eksik slot eklendi (e=1)
+eklenen slot sinifProg'da
+mevcut hücreler korunur
+Kapalı slot eklenmez (musait çakışması atlanır)
+'Sınıf Dersi' placeholder'ı sınıf adı sayılmaz
+ogretmeni olmayan sinifProg hücresi silinmedi (30+ hücre mevcut)
+onarım mevcut ogretmen kayıtlarına dokunmaz
+dowIdx(Pazar)=6
+dowIdx(Pzt)=0 — Pazar-Pzt-Cmt aynı indeks kuralı
+haftalikOgrtTablo 7 gün aynı döngüyle
+aktifDonemId() = DB.aktifDonemId
+DB.sinifProg identity-rebind aktif dönem programı
+duzeltmeBul sinifProg dalı kaynakta
+gridTablo 'Toplu ders' dalı kaynakta
+Kapalı gri dalı
+Sınıf Dersi rose dalı (haftalık)
+Ek Ders amber dalı (haftalık)
+birebirHucreHTML ortak hücre
+haftalikOgrtTablo aktifDonemKayitlari(DB.dersler) filtresi
+ek-ders.js değişmedi
+index.html dokunulmadı (bu dilim)
+tüm öğretmen ID'leri dolu
+tüm ders donemId'leri dolu
+sinifIds birebir aynı kaldı (3 koşu sonrası)
+sinifProg hücre anahtarları her sınıfta benzersiz
+boot + 3 onarım sonrası hücre sayısı sabit

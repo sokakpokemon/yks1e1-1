@@ -56,8 +56,9 @@ try {
   `)();
   t("boot hatasız", true);
 } catch (e) {
-  t("boot hatasız → " + e.message, false);
-  console.log(e.stack.split("\n").slice(0, 8).join("\n"));
+  /* beklenmeyen catch: THROW (catch-only sayım kaldırıldı — SAYAÇ KAPISI kuralları) */
+  console.error(e.stack ? e.stack.split("\n").slice(0, 8).join("\n") : e);
+  throw e;
   process.exit(1);
 }
 const { DB, ui, renderDersler, gunlukTablo, haftalikOgrtTablo, ogrenciMesajMetni, pngAc, renderAnaliz,
@@ -144,7 +145,7 @@ t("birebir mesajda 👥 yok (eski metin)", !waTek.includes("👥"), waTek);
 
 /* 7) PNG: grup satırında tüm adlar (pngAc html2canvas yoksa güvenli şekilde çizimde kalır) */
 ui.filtre = "tumu";
-try { pngAc(); } catch (e) { t("pngAc hatasız", false, e.message); }
+try { pngAc(); } catch (e) { /* beklenmeyen catch: THROW — SAYAÇ KAPISI kuralları */ console.error(e && e.message); throw e; }
 const pngHTML = reg["pngRapor"].innerHTML;
 t("PNG grup satırında tüm adlar", pngHTML.includes(ayse.ad + ", " + zeynep.ad + ", " + emir.ad), pngHTML.slice(0, 150));
 t("PNG birebir satırında tek ad (virgülle birleşme yok)", !pngHTML.split("</tr>").filter(r => r.includes("Enerji")).some(r => r.includes(", ")));

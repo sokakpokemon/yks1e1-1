@@ -1,0 +1,50 @@
+boot hatasız
+boot DB aktifDonemId = donem-2026-2027
+aktifDonemId() 'donem-2026-2027' döner
+yeni birebir ders kaydı oluştu
+yeni dersin donemId'si = 'donem-2026-2027'
+donemId string + boş değil
+DB.aktifDonemId = donem-2025-2026 yapıldı
+aktifDonemId() o dönemi döner
+yeni dersin donemId'si = 'donem-2025-2026' (aktif dönem)
+aktifDonemId undefined → fallback
+aktifDonemId boş string → fallback
+aktifDonemId boşluk → fallback (trim)
+aktifDonemId null → fallback
+aktifDonemId sayı (geçersiz tip) → fallback
+aktifDonemId boşken planlanan ders fallback aldı
+yeni kayıtta donemId asla undefined/null/boş değil
+tekli istek kaydı oluştu
+yeni isteğin donemId'si = aktif dönem
+farklı aktif dönemde yeni istek o döneme damgalanır
+grup istek kaydı oluştu (TEK kayıt)
+grup isteği üyeleri doğru (3 üye)
+yeni grup isteğin donemId'si = aktif dönem
+farklı dönemde grup istek o döneme damgalanır
+grup ders kaydı TEK oluştu
+grup dersin donemId'si = aktif dönem
+grup üyeleri korunuyor (ogrenciIds 2 ek üye)
+düzenleme uygulandı (konu değişti)
+düzenlemede donemId 'donem-2025-2026' olarak AYNEN kaldı
+düzenleme yeni donemId (aktif) YAZMADI
+düzenleme sonrası yeni kopya kayıt oluşmadı
+grup düzenleme uygulandı (üye eklendi)
+grup düzenlemede donemId değişmedi
+planlama sonrası istek durumu 'planlandi'
+planlama yolu eski istek donemId'sini DEĞİŞTİRMEDİ
+normalize dolu donemId'li isteğe dokunmaz
+normalize eski istek alanlarını korur (donemId dahil)
+istek listeden çıkarıldı (temizlik)
+mevcut derslere dokunulmadı
+mevcut isteklere dokunulmadı
+öğrenci listesi değişmedi
+öğretmen listesi değişmedi
+sinifProg değişmedi
+yeni ders yalnızca donemId ile farklı değil — diğer alanlar da doğru
+helper DB.aktifDonemId doluysa ONU kullanır (yeni kayıt dönemi)
+dönen değer her koşulda dolu string
+fallback değeri 'donem-2026-2027' sözleşmesi kaynakta
+4 kayıt noktasında donemId: aktifDonemId() damgası var
+2. bağlamda yeni istek 'donem-2025-2026' aldı
+2. bağlamda yeni ders 'donem-2025-2026' aldı
+2. bağlamda yeni grup istek 'donem-2026-2027' aldı (A'ya döndük)

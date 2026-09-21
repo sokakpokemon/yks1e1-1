@@ -1,0 +1,34 @@
+08:50 → 1
+15:30 → 8
+16:00 → 8 (aralık kuralı)
+12:00 → '' (mola)
+13:00 → 5
+11:30 → 4 (aralık)
+18:20 → 11
+19:00 → '' (kapanış sonrası)
+16:00 → '8 · 15:30-16:10'
+15:30 → '8 · 15:30-16:10'
+10:00 → '2 · 09:40-10:20'
+sinif array → obje
+11 seçenek
+8 · 15:30-16:10 seçili
+Mola yok
+DB yüklü
+ksVer=2
+tüm derslerde kod var
+saatler kısa kod başlangıçları
+müsaitlik anahtarları kısa kod (X-9/X-10 yok)
+sinif sinif anahtarları kısa kod
+sınıfProg anahtarları kısa kod
+aynı gün+saatte çakışma uyarısı
+mesaj tanımsız/NaN içermiyor
+16:00 → kod 8 taşındı
+16:20 → kod 9 taşındı
+12:30 → belirsiz listelendi, dokunulmadı
+taşınan sayısı = 2
+avail sinif 0-9 → 0-1
+musait 5-9 → 5-1
+musait 1-10 → 1-2
+sinifProg 3-10 → 3-2
+ksVer bayrağı 2
+çift ksGec idempotent (kod sabit kalır)

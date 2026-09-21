@@ -42,9 +42,9 @@ try {
   api = new Function(scripts + "\n  return { DB, normalize, saveDB, yenile, aktifDonemId, donemSec, sinifProgAktif, sinifProgDonemleriBaslat, sinifProgCsvSatirlari, sinifProgCsvUygula, sinifProgCsvIndir, csvParse, csvDosya, csvSatir, CSV_SCHEMA, SINIFPROG_CSV_BASLIK, DONEM_ILK_ID, DONEM_YENI_ID, KISA_KOD, LS_KEY, yedekAl }; \n")();
   t("boot hatasız", true);
 } catch (e) {
-  t("boot hatasız → " + e.message, false);
-  console.log(e.stack.split("\n").slice(0, 6).join("\n"));
-  process.exit(1);
+  /* beklenmeyen catch: THROW (catch-only sayım kaldırıldı — SAYAÇ KAPISI kuralları) */
+  console.error(e.stack ? e.stack.split("\n").slice(0, 6).join("\n") : e);
+  throw e;
 }
 let { DB, normalize, saveDB, aktifDonemId, donemSec, sinifProgAktif, sinifProgCsvSatirlari, sinifProgCsvUygula, csvParse, CSV_SCHEMA, SINIFPROG_CSV_BASLIK, DONEM_ILK_ID, DONEM_YENI_ID, KISA_KOD, LS_KEY } = api;
 

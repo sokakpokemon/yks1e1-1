@@ -1,0 +1,14 @@
+boot ve ilk render hatasız
+11 kısa kod satırı (7 gün × 11 = 77 hücre)
+11 satır etiketi 1–11 (sticky td hücreleri)
+satır etiketi '1 · 08:50-09:30'
+satır etiketi '8 · 15:30-16:10'
+onclick 8. kodu geçiyor
+sınıf hücresi 0-1 anahtarında
+Mola sütunu var
+12 slot sütunu (11 ders + Mola)
+thead'de 4, Mola, 5 sıralı ve bulunur
+ders hücre saatleri kısa kod başlangıcı (13:00 değil 13:xx-mola)
+f-saat innerHTML dolduruldu (11 option)
+varsayılan değer 15:30
+ek-ders.js boot hatasız

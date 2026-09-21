@@ -1,0 +1,22 @@
+bilinmeyen id → getElementById null
+bilinen id → eleman döner
+innerHTML yazımında çocuk id kaydedilir
+innerHTML yeniden yazımı eski çocuğu SİLER
+insertAdjacentHTML markup id'yi DOM'a kaydeder
+boot hatasız (TypeError yok)
+ilk boot sonrası 1,1,1 → (host=1 secici=1 btn=1)
+3 render sonrası yine 1,1,1 → (host=1 secici=1 btn=1)
+Öğretmen sekmesi sonrası 1,1,1 → (host=1 secici=1 btn=1)
+Öğrenci & Sınıf sekmesi sonrası 1,1,1 → (host=1 secici=1 btn=1)
+Ek Ders sekmesi sonrası 1,1,1 → (host=1 secici=1 btn=1)
+Ayarlar & Yedekleme sekmesi sonrası 1,1,1 → (host=1 secici=1 btn=1)
+geri dönüş (Öğretmen) sonrası 1,1,1 → (host=1 secici=1 btn=1)
+override öncesi 1,1,1 → (host=1 secici=1 btn=1)
+observer yb'ye bağlı ve tek → yb=1 host=0
+gecikmeli yazım anında host+seçici 0 (hata koşulu gerçek) → (host=0 secici=0 btn=0)
+observer gecikmeli yazımı onarır (1,1,1) → (host=1 secici=1 btn=1)
+host'taki seçicide aktif dönem selected → <option value="donem-2026-2027" selected>
+ilk çağrı dönem ekler (1 yeni) → 1→2
+tekrarlı çağrı duplicate dönem EKLEMEZ
+tekrarlı buton sonrası hâlâ 1,1,1 → (host=1 secici=1 btn=1)
+eksik elementte self-check console.error verir

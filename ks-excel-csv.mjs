@@ -45,9 +45,9 @@ try {
   api = new Function(scripts + "\n  return { DB, normalize, saveDB, yenile, aktifDonemId, aktifDonemKayitlari, csvDosya, csvParse, csvSatir, csvHucre, csvKadroSatirlari, csvKayitSatiri, csvAktifDonemKayitSatirlari, csvImportUygula, csvGeriAl, CSV_SCHEMA, CSV_BASLIK_KADRO, CSV_BASLIK_DERS, CSV_BASLIK_ISTEK, kimlikUret, kadroSnfId, sinifId, LS_KEY, ui, DERS };\n")();
   t("boot hatasız", true);
 } catch (e) {
-  t("boot hatasız → " + e.message, false);
-  console.log(e.stack.split("\n").slice(0, 6).join("\n"));
-  process.exit(1);
+  /* beklenmeyen catch: THROW (catch-only sayım kaldırıldı — SAYAÇ KAPISI kuralları) */
+  console.error(e.stack ? e.stack.split("\n").slice(0, 6).join("\n") : e);
+  throw e;
 }
 const { DB, normalize, saveDB, yenile, aktifDonemId, aktifDonemKayitlari, csvDosya, csvParse, csvSatir, csvHucre, csvKadroSatirlari, csvKayitSatiri, csvAktifDonemKayitSatirlari, csvImportUygula, csvGeriAl, CSV_SCHEMA, CSV_BASLIK_KADRO, CSV_BASLIK_DERS, CSV_BASLIK_ISTEK, kimlikUret, kadroSnfId, sinifId, LS_KEY } = api;
 

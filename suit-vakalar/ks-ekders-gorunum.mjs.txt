@@ -1,0 +1,50 @@
+boot hatasız
+seed öğretmen var (id + ad)
+ek ders kaydı aktif dönemde (donemId=donem-2026-2027)
+tablo üretildi (boş değil)
+ek dersi hücresi amber stil taşıyor
+"Ek Ders" etiketi görünür
+ek dersi sınıf adı hücrede
+ek dersi öğretmen satırı var
+öğretmen adı tabloda
+2 ek ders (farklı slot) → hücrede 2 'Ek Ders' etiketi
+başka günkü ek ders günlük tabloda YOK
+DONEM_B ek dersi günlükte gizli
+etiket sayısı hâlâ 2 (DONEM_B + donemId'siz-görünmez kuralı)
+iptal ek ders günlükte YOK
+aynı slot'a 2. kayıt yazılsa bile etiket sayısı slot sayısı (2)
+her etiket TEK satırda (çift td yok)
+haftalık tablo üretildi (boş değil)
+haftalık: ek dersi amber stil (bg-amber-100/border-amber-300)
+haftalık: 'Ek Ders' etiketi görünür
+haftalık: 2 slot → 2 amber hücre (etiket+title ile toplam 4)
+haftalık: sınıf adı hücrede
+DONEM_B ek dersi haftalıkta gizli
+iptal ek dersi haftalıkta gizli
+ikinci seed öğretmen farklı
+başka öğretmenin ek dersi O öğretmenin programında YOK
+diğer öğretmenin programında kendi ek dersi VAR (1 amber hücre)
+diğer öğretmenin hücresi amber + doğru sınıf
+birebir stil hâlâ kaynakta (mavi/emerald)
+sinif (Sınıf Dersi) stil hâlâ kaynakta (rose)
+Kapali stil hâlâ kaynakta (slate)
+ek dersi stili amber — rose/mavi/slate hücre stiliyle ÇAKIŞMAZ
+ek dersi etiket metni 'Ek Ders' — 'Sınıf dersi' değil
+gunlukTablo ortak hücre yardımcısını kullanıyor (birebirHucreHTML)
+gunlukTablo grup satırı (grupUyelerG) aynen
+gunlukTablo hücresinde ders adı üretilmiyor
+haftalik grup satırı (grupUyeler) aynen
+haftalik birebir hücre bloğu (hucreUst) aynen
+durumRenk satırı aynen (birebir mavi/emerald)
+seed birebir dersi amber DEĞİL (eski görünüm)
+seed birebir dersi hücrede görünüyor
+function renderOzet() { ekDersler referansı yok [daraltıldı]
+function renderAnaliz() { ekDersler referansı yok [daraltıldı]
+function csvAktifDonemKayitSatirlari ekDersler referansı yok [daraltıldı]
+ekDersler penceredeDersler'e karışmadı (ders listesi), 
+donemId'siz ek ders aktif dönem filtresine girer
+donemId'siz (yeni) ek ders günlükte görünüyor
+gunlukTablo aktifDonemKayitlari(DB.ekDersler) kullanıyor
+haftalikOgrtTablo aktifDonemKayitlari(DB.ekDersler) kullanıyor
+yama MARK tam 5 kez (2 harita + 2 hücre dalı + 1 ekDers değişkeni)
+bu süit test.mjs'te tam 1 kez

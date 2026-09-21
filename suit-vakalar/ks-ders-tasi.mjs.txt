@@ -1,0 +1,91 @@
+boot hatasız
+dersDropHedef globali tam 1 kez
+dersDrag tanımı tam 1
+dersBurak tanımı tam 1
+paralel istekDropHedef globali korundu
+AYNI drop-zone yolu kullanılıyor (istekBurak → dersBurak devri)
+istekDragOver tek fonksiyon (paralel dragover yok)
+istekBurak kilit kontrolü korundu
+Mevcut istek kartı akışı korundu (formaAktar drop yolu)
+dersBurak yalnız tek öğrencili birebir (grup dersi guard'ı)
+dersBurak iptal guard'ı
+dersBurak mevcut duzeltmeBul kontrolünü kullanıyor (kaynak hariç: staged.id)
+dersBurak tarih yardımcılarını kullanıyor (manuel index yok)
+slot 6 → 13:50 · slot 8 → 15:30
+birebir ders hücresi draggable + dersDrag(event, ...) taşıyor
+birebir hücre içeriği değişmedi (tam ad)
+GRUP dersi hücresi draggable DEĞİL
+grup dersinde ana öğrenci adı hâlâ görünür
+İPTAL ders haftalık tabloda YOK (draggable kaynak olamaz)
+iptal guard'ı kaynakta (ders.durum !== "iptal")
+rose Sınıf Dersi hücresi draggable DEĞİL
+rose hücrede sınıf adı görünür, hiç draggable yok (o hücrede)
+amber Ek Ders hücresi draggable DEĞİL
+gri Kapalı hücresi draggable DEĞİL, o slotta drop-zone da DEĞİL
+günlük tablo birebir hücresi draggable (GUNLUK-DERS-TASI-YAMASI)
+draggable kaynak: 2 birebir hücre (haftalık + günlük) (2 kaynak satırı)
+boş "+" drop-zone markup'ı birebir korundu (dnd-bos + data-* + istekBurak)
+mola (12:00) için drop-zone YOK — KISA_KOD'da mola yok
+ksKodOf("12:00") = '' (mola kısa kodda yok)
+istekDragOver boşta tepki vermez (dersDropHedef de yoksa)
+mevcut istek kartı inline handler'ı birebir korundu (istekDrag + opaklık)
+istek kartı dragstart'ı tam 1 kez (paralel kaynak eklenmedi)
+aynı gün 6→8 → ders hedef gün/saate taşındı
+aynı gün 6→8 → TEK saveDB (setItem tam +1)
+aynı gün 6→8 → localStorage yazıldı
+aynı gün 6→8 → yalnız tarih/saat/kod değişti (id/öğrenci/öğretmen/ders/konu aynı)
+taşıma sonrası haftalık tabloda yeni slotta (eski slot boş + zona döndü)
+gün değişimi Pzt→Çar → ders hedef gün/saate taşındı
+gün değişimi Pzt→Çar → TEK saveDB (setItem tam +1)
+gün değişimi Pzt→Çar → localStorage yazıldı
+gün değişimi Pzt→Çar → yalnız tarih/saat/kod değişti (id/öğrenci/öğretmen/ders/konu aynı)
+ders artık Çarşamba'da (dowIdx=2)
+no-op: localStorage değişmedi
+no-op: DB değişmedi + saveDB çağrılmadı
+no-op: toast YOK (sessiz)
+dolu hedef → RED: localStorage byte-birebir aynı
+dolu hedef → RED: DB birebir aynı + saveDB çağrılmadı (0)
+dolu hedef → RED: toast gösterildi
+dolu senaryoda kaynak ders yerinde kaldı
+Kapalı hedef (avail.musait) → RED: localStorage byte-birebir aynı
+Kapalı hedef (avail.musait) → RED: DB birebir aynı + saveDB çağrılmadı (0)
+Kapalı hedef (avail.musait) → RED: toast gösterildi
+Sınıf Dersi hedefi (avail.sinif) → RED: localStorage byte-birebir aynı
+Sınıf Dersi hedefi (avail.sinif) → RED: DB birebir aynı + saveDB çağrılmadı (0)
+Sınıf Dersi hedefi (avail.sinif) → RED: toast gösterildi
+mola (12:00) hedefi → RED: localStorage byte-birebir aynı
+mola (12:00) hedefi → RED: DB birebir aynı + saveDB çağrılmadı (0)
+mola (12:00) hedefi → RED: toast gösterildi
+öğretmen çakışması → RED: localStorage byte-birebir aynı
+öğretmen çakışması → RED: DB birebir aynı + saveDB çağrılmadı (0)
+öğretmen çakışması → RED: toast gösterildi
+duzeltmeBul öğretmen çakışmasını bildiriyor (mevcut kontrol yeniden kullanıldı)
+öğrenci çakışması (başka öğretmenle aynı slot) → RED: localStorage byte-birebir aynı
+öğrenci çakışması (başka öğretmenle aynı slot) → RED: DB birebir aynı + saveDB çağrılmadı (0)
+öğrenci çakışması (başka öğretmenle aynı slot) → RED: toast gösterildi
+toplu ders (sınıf programı) engeli → RED: localStorage byte-birebir aynı
+toplu ders (sınıf programı) engeli → RED: DB birebir aynı + saveDB çağrılmadı (0)
+toplu ders (sınıf programı) engeli → RED: toast gösterildi
+grup dersi → RED: localStorage byte-birebir aynı
+grup dersi → RED: DB birebir aynı + saveDB çağrılmadı (0)
+grup dersi → RED: toast gösterildi
+hafta dışı hedef → RED: localStorage byte-birebir aynı
+hafta dışı hedef → RED: DB birebir aynı + saveDB çağrılmadı (0)
+hafta dışı hedef → RED: toast gösterildi
+uyum senaryosu Pzt/Cuma-8 → ders hedef gün/saate taşındı
+uyum senaryosu Pzt/Cuma-8 → TEK saveDB (setItem tam +1)
+uyum senaryosu Pzt/Cuma-8 → localStorage yazıldı
+uyum senaryosu Pzt/Cuma-8 → yalnız tarih/saat/kod değişti (id/öğrenci/öğretmen/ders/konu aynı)
+gün sekmesi (Cuma) taşınan dersi gösteriyor
+gün sekmesi (eski gün Pzt) dersi göstermiyor
+haftalık görünüm taşınan dersi yeni slotta gösteriyor
+ders DB'de TEK kayıt (kopya üretilmedi)
+havuz isteği boş slota bırakılınca ders oluştu
+istek havuzdan düştü
+istek akışı TEK saveDB
+istek akışı ders dalına kaymıyor (istekDropHedef ile çalışır)
+ders taşıma havuz isteklerine dokunmadı
+bu süit test.mjs'te tam 1 kez
+index.html değişmedi (bilinen hash)
+ek-ders.js değişmedi (bilinen hash)
+EK-DERS-GORUNUM mark sayısı 5 (değişmedi)

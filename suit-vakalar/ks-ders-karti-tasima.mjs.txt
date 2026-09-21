@@ -1,0 +1,55 @@
+DERS-KARTI-TASIMA-YAMASI işareti kaynakta
+dersKartiBtnHTML TEK tanım
+dersKartiAc TEK tanım
+dersKartiHTML TEK tanım
+waSatir TEK tanım
+haftalik hücrede kart butonu çağrısı KALDIRILDI (dersKartiBtnHTML(ders) 0 kez)
+ISLEM alanı: ISLEM yalnız 1 noktadan üretiliyor (taşınan tek satır)
+haftalik tablo üretildi (haftalikOgrtId seçiliyken)
+gunluk tablo üretildi
+haftalik hücrelerinde fa-image kart butonu YOK
+gunluk hücrelerinde fa-image kart butonu YOK
+haftalik hücrelerinde dersKartiAc çağrısı YOK
+gunluk hücrelerinde dersKartiAc çağrısı YOK
+haftalik hücre birebir içerik birebir (tam ad)
+ISLEM satır şablonu kaynakta (l.id ile dersKartiAc)
+ISLEM alanında kart butonu waSatir butonunun YANINDA (waSatir'den sonra, düzenle'den önce)
+kart butonu koşullu (dersKartiUygun(l) guard'ı)
+renderDersler DOM'a yazdı (derslerBolum.innerHTML)
+renderDersler çıktısında dersKartiAc butonu VAR
+renderDersler çıktısında waSatir butonu VAR
+renderDersler çıktısında WhatsApp ikonu VAR
+çıkışta kart butonu sayısı = penceredeki uygun ders sayısı
+renderDersler liste HTML'i satır başına kart+wa üretiyor
+uygun birebir ders bulundu
+dersKartiVeri: ad + ders + konu + sinif dolu
+kart HTML ad + konu + sinif içeriyor
+kart HTML telefon İÇERMEZ
+waAliciBilgisi akışı kaynakta (alıcı seçicisi yeniden kullanılıyor)
+dersKartiAc html2canvas PNG yolunu kullanıyor
+kart üretimi saveDB/localStorage YAZMAZ (dersKartiAc gövdesinde setItem yok)
+dersKartiUygun(iptal) false
+dersKartiUygun(grup) false
+dersKartiUygun(null) false
+rose Sınıf Dersi hücresi fa-image İÇERMİYOR (haftalik)
+amber Ek Ders hücresi fa-image İÇERMİYOR
+gri Kapalı hücresi fa-image İÇERMİYOR
+haftalik birebir hücre draggable + dersDrag
+gunluk birebir hücre draggable + dersDrag
+dersDrag TEK tanım
+dersBurak TEK tanım
+dersDropHedef globali korunur
+boş '+' drop-zone (istekBurak) korunur (haftalik)
+boş '+' drop-zone (istekBurak) korunur (gunluk)
+kart buton markup'ı draggable=false (td drag'ini tetiklemez)
+ISLEM butonunda stopPropagation — satır onclick'i tetiklenmez
+dersBurak no-op: DB değişmedi (taşıma yolu canlı)
+DERS-KARTI-TASIMA-YAMASI işareti TEK
+ISLEM alanında kart butonu TEK noktadan üretiliyor
+saveDB çağrı sayısı yamadan etkilenmedi
+tık → dersKartiAc çalıştı (html2canvas tam 1 çağrı)
+tık → durumTik 0 kez
+tık → duzenle 0 kez
+tık → silOnay 0 kez
+tık → localStorage yazımı yok
+buton markup'ı stopPropagation + preventDefault taşıyor (ISLEM şablonu)

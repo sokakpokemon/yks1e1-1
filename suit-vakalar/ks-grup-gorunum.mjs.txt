@@ -1,0 +1,28 @@
+boot hatasız
+grupOgrenciAdlari → 3 üye, ana ilk
+grupUyeEtiketleri → yalnız ek üyeler
+birebirde yardımcılar boş
+dersOgrenciIds bozuk kayıt → []
+2 ek üye: tümü görünür (2 badge)
+2 ek üye: +N özeti YOK
+2 ek üye: baş harfler ZK·EA
+tam ad yok (yalnız baş harf)
+3 ek üye: 2 badge + '+1' özeti
++N title'da tüm ilk adlar
+4 ek üyede '+2'
+açık: tüm üye adları TAM ad olarak alt alta (block w-max)
+açık: daralt düğmesi (−)
+grupUyeToggle('') daraltır + tabloyu yeniden çizer
+grup satırında ana ad + badge'ler
+birebir satırında grup-badges YOK
+grup hücresinde üye baş harfleri (ZK · EA)
+grup ders hücresinde TAM AD var, ders adı YOK
+birebir hücresinde baş harf satırı yok (eski)
+tablo çizildi
+grup üyesi mesajda tüm adlar
+birebir mesajda 👥 yok (eski metin)
+PNG grup satırında tüm adlar
+PNG birebir satırında tek ad (virgülle birleşme yok)
+her üye analizde görünüyor
+grup üyelerine ders dağıtıldı (n ≥ 2)
+özet: ders tek kez sayılır (donut merkezi)

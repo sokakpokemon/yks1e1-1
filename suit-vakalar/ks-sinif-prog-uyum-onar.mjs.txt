@@ -1,0 +1,36 @@
+boot hatasız
+SALİM URTİMUR → 1-1 kaydı var
+ŞAHİN DOĞANAY → 1-1 kaydı var
+kaynak slot sayısı ≥ 1
+DB.sinifProgDonemId = DB.aktifDonemId
+DB.sinifProg === DB.sinifProgDonemler[sinifProgDonemId] (identity-rebind)
+DB.sinifProg === DB.sinifProgDonemler[aktifDonemId]
+10.SINIF canonical map'te mevcut ve dolu
+avail.sinif'taki her 10.SINIF slotu canonical map'te
+sinifIds['10.SINIF'] kimliği var (isim + ID katmanı uyumlu)
+'10. SINIF' gibi alternatif anahtar üretilmiyor (isim eşleşmesi birebir)
+ogrenciTab hatasız
+10.SINIF grid'i boş değil (program grid'i + dolu hücre stili markup'ta)
+in-memory sinifProg === persisted.sinifProg (deep-equal)
+in-memory sinifProgDonemler === persisted (deep-equal)
+persisted 10.SINIF dolu
+loadDB 10.SINIF slotlarını koruyor
+reload sonrası identity-rebind yeniden kuruluyor
+1. koşu 0 değişiklik (boot zaten kapattı)
+2. koşu da 0 (duplicate yok)
+3 koşu sonrası sinifProg birebir
+3 koşu sonrası sinifProgDonemler birebir
+yeni dönemde onarım slot ekliyor (e > 0)
+yeni dönemde 10.SINIF canonical map'te dolu
+yeni dönemde de identity-rebind
+eski dönemin verisi EZİLMEDİ
+ilk döneme dönüş: 0 değişiklik (ezme yok, duplicate yok)
+avail.sinif kaynağı değişmedi
+mevcut dolu sinifProg hücreleri korundu
+toplam dolu slot sayısı makul (≥50, canonical map dolu)
+dowIdx(Pazartesi)=0
+dowIdx(Pazar)=6
+onarım anahtar biçimi G-K korunuyor
+kaynak yoksa 10.SINIF grid zorla doldurulmuyor
+tek kaynak geri konunca onarım slotu ekliyor
+ks-sinif-prog-uyum-onar.mjs test.mjs'te tam 1 kez

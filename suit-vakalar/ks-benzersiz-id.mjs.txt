@@ -1,0 +1,46 @@
+dönüş sayıları doğru (2 öğrenci, 1 öğretmen, 2 sınıf)
+mevcut öğrenci ID'si birebir
+mevcut öğretmen ID'si birebir
+mevcut ders kaydının ID'si birebir
+id'siz öğrenciye ID verildi
+id'siz öğretmene ID verildi
+tüm öğrenci/öğretmen/ders ID'leri artık dolu
+format: ks- ön ekli, benzersiz ID'ler
+yeni ID'ler mevcut ID'lerle ÇAKIŞMAZ
+sinifIds üretildi
+sinifProg anahtarına kimlik atandı
+avail.sinif'taki 9-A kimliği AYNI girdiyi işaret eder
+'Sınıf Dersi' placeholder'ı sınıf adı SAYILMADI
+sinifId() okuma yardımcısı DB'deki değeri döner
+sinifId() olmayan sınıf için boş döner (yan etkisiz)
+aynı sınıfta iki ayrı öğrenci → iki farklı ID
+her kayıt için ID sırayla üretildi ve benzersiz
+normalize aynı isimli iki kaydı AYRI ID'lerle tamamlar
+ikinci çalıştırma 0 değişiklik raporlar
+öğrenci ID'leri birebir aynı
+öğretmen ID'leri birebir aynı
+sinifIds birebir aynı
+normalize 3 kez üst üste → öğrenci ID'leri aynı
+normalize 3 kez üst üste → sinifIds aynı
+birebir ders ogrenciId + ogretmenId KORUNDU
+grup ders ogrenciIds DİZİSİ KORUNDU
+grup ders dersOgrenciIds() aynı üyeleri döner
+istek ogrenciId KORUNDU
+grup istek üyeleri kayıpsız (ogrenciId + ogrenciIds)
+grup istekte ana ogrenciIds'ten çıkar (mevcut sözleşme)
+ID tamamlama kayıtların ALANLARINI değiştirmedi
+boot sonrası tüm öğrenci ID'leri dolu
+boot sonrası tüm öğretmen ID'leri dolu
+boot sonrası sinifIds tüm sinifProg adlarını kapsıyor
+yedek → yükleme sonrası öğrenci ID'leri kayıpsız
+yedek → yükleme sonrası öğretmen ID'leri kayıpsız
+yedek → yükleme sonrası sinifIds kayıpsız
+yedek → yükleme sonrası ders referansları kayıpsız
+yedek → yükleme sonrası grup ders üyeleri kayıpsız
+ikinci yedek döngüsünde ID'ler yine aynı
+loadDB eksik ID'li veriyi tamamlar (öğrenci)
+loadDB eksik ID'li veriyi tamamlar (öğretmen)
+loadDB sinifIds'i tamamlar
+kaydedilmiş DB tekrar okunduğunda ID'ler değişmedi
+normalize DB yapısını korur (sayılar aynı)
+seed DB zaten kimlikli — 0 yeni ID gerekmedi

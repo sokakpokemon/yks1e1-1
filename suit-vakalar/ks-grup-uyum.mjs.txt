@@ -1,0 +1,41 @@
+boot hatasız
+dizi döndürür, sıra korunur
+tekrar kimlikler benzersizleştirilir
+dizideki null/undefined atılır
+tek kimlik → [ogrenciId]
+ogrenciIds yoksa eski alan kullanılır
+null ders → []
+undefined ders → []
+nesne değil (string) → []
+kimlik yok → []
+boş ogrenciId → []
+ogrenciIds dizi değil → []
+ogrenciIds null → eski ogrenciId kullanılır
+yardımcı girdi nesnesini değiştirmez
+seed derslerinde ogrenciId hâlâ dolu (alan bozulmadı)
+seed derslerinde ogrenciIds eklenmedi
+her seed dersinde yardımcı = [ogrenciId]
+dönen değerler dizi (tüm kayıtlar)
+ilk boot (renderFormDestek dahil) çökmeden tamamlanır
+ilk boot'ta #ek-ogrenciler paneli DOM'a eklendi
+ilk boot'ta #grup-ozet de DOM'da (null değil)
+ikinci boot da çökmeden tamamlanır
+2. renderFormDestek çağrısı çökmez
+panel idempotent: insertAdjacentHTML yalnızca 1 kez çağrıldı
+özet boşken ipucu metni dolu
+5 kişilik sabit sınır kaldırıldı (sayaç id yok, 'sınır yok' ipucu var)
+A: tam 1 kayıt oluştu (kopya değil)
+A: kayıtta ogrenciIds = [Zeynep, Emir]
+A: uyumluluk: ogrenciId alanı dolu (eski okuyucular için)
+A: dersOgrenciIds 3 kimlik verir
+A: kayıt sonrası grup chip listesi sıfırlandı (temizleForm)
+B: çakışan grup öğrencisi adıyla uyarıda geçiyor
+B: uyarı ders çakışması olarak nitelendiriliyor
+C: kayıt oluştu
+C: eski davranış: ogrenciIds alanı YOK
+C: ogrenciId = formdaki öğrenci
+C: dersOgrenciIds tek kimlik verir
+sinif dizi → obje (Sınıf Dersi değeriyle)
+musait dizi korunur
+Sınıf Dersi uyarısı bu şekille üretiliyor
+normalize() artık ek değişiklik yapmıyor (şekil birebir)

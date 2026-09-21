@@ -1,0 +1,35 @@
+boot hatasız
+seed öğrenciler var
+mesaj üretildi
+parantezli öğretmen adı
+satır biçimi: DERS (OGRT) — KONU
+1) tarih satırında öğretmen adı YOK
+1) tarih satırında gün + saat etiketi
+planlı cümle (2 kez: wd-1 + wd-3 grup)
+tamamlandı cümle (1 kez: wd-2)
+eski '✓ Tamamlandı' işareti YOK
+2) tamamlandı: tarih → cümle sırası
+3) grup dersi parantezli öğretmen (KİMYA)
+grup 👥 satırı + tüm üyeler
+birebir derslerde 👥 YOK
+grupta öğretmen tarih satırında YOK
+iptal ders öğrencinin mesajında YOK → null
+Ayşe mesajında iptal konusu YOK
+grup üyesi listede ama iptal dersi gösterilmiyor
+önizleme metni = ogrenciMesajMetni çıktısı (birebir)
+boş telefonda waGonder engellenir (window.open yok)
+waGonder waUrl metni = ogrenciMesajMetni
+waKopyalaMesaj metni = ogrenciMesajMetni
+önizleme=gonderme (waUrl query birebir)
+boş ayar → varsayılan planlı cümle
+boş ayar → varsayılan tamamlandı cümle
+özel planliSatir uygulanır
+özel tamamlandiSatir uygulanır
+özel ayarla varsayılan cümleler YOK
+planliSatir/tamamlandiSatir yer tutucu desteği (kaynakta satirDeger yolu)
+konu boş → bölüm gizlenir (— yok)
+konu boş → parantezli öğretmen kalır
+tek localStorage anahtarı yksOto_arsiv_v1
+WA-DURUM-YAMASI işareti app.js'te
+ks-wa-durum.mjs test.mjs'te tam 1 kez
+süit sayısı düşmüyor (≥38)

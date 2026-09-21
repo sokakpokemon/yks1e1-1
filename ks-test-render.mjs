@@ -52,8 +52,9 @@ try {
   t("boot ve ilk render hatasız", true);
 } catch (e) {
   console.log("1) index.html boot + yenile:");
-  t("boot ve ilk render hatasız → " + e.message, false);
-  console.log(e.stack.split("\n").slice(0,6).join("\n"));
+  /* beklenmeyen catch: THROW (catch-only sayım kaldırıldı — SAYAÇ KAPISI kuralları) */
+  console.error(e.stack ? e.stack.split("\n").slice(0,6).join("\n") : e);
+  throw e;
   process.exit(1);
 }
 const { gridTablo, gunlukTablo, KISA_KOD } = api;
@@ -104,7 +105,9 @@ try {
   /* ek-ders.js fonksiyonları IIFE'de local olabilir; boot hatasızlığı yeterli,
      çakışma mantığı index.html duzeltmeBul ile aynı ksKodOf anahtarlarını kullanıyor */
 } catch (e) {
-  t("ek-ders.js boot hatasız → " + e.message, false);
+  /* beklenmeyen catch: THROW — SAYAÇ KAPISI kuralları */
+  console.error(e && e.message);
+  throw e;
 }
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");

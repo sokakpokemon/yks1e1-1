@@ -58,7 +58,9 @@ try {
   P = new Function(scripts + "\n  return { DB, ui, waAc, waOnizle, waGonder, waKopyalaMesaj, waUrl, waKapat, waAliciDegistir, waAliciBilgisi, waAliciTipiOf: () => waAliciTipi, waAktifIdOf: () => waAktifOgrenciId, waSatir, ogrenciMesajMetni, penceredeDersler };")();
   t("boot hatasız", true);
 } catch (e) {
-  t("boot hatasız → " + e.message, false); console.log(e.stack.split("\n").slice(0, 6).join("\n")); process.exit(1);
+  /* beklenmeyen catch: THROW — SAYAÇ KAPISI kuralları */
+  console.error(e.stack ? e.stack.split("\n").slice(0, 6).join("\n") : e);
+  throw e;
 }
 const { DB, waAc, waOnizle, waGonder, waUrl, waKapat, waAliciDegistir, waAliciBilgisi, waAliciTipiOf, waAktifIdOf, waSatir, ogrenciMesajMetni } = P;
 

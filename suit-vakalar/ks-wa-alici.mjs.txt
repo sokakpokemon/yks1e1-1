@@ -1,0 +1,47 @@
+boot hatasız
+#waAlici app.js üretiminde tam 1 kez
+index.html'de waAlici YOK (bar app.js'ten, duplicate imkânsız)
+waAliciTipi başlangıç 'ogrenci'
+waAliciBilgisi tam 1 tanım
+waAc sonrası alici = ogrenci
+waAc sonrası aktif öğrenci null (henüz önizleme yok)
+ogrenci → tel
+anne → anneTel
+baba → babaTel
+telefon trim/normalize YOK (kayıtlı string aynen)
+bilinmeyen tip → ogrenci fallback tipi
+anne seçimi bellekte
+boş telefonda window.open çağrılmadı
+boş telefonda URL üretilmedi (fallback yok)
+anne gönderimi anneTel numarasını kullanır
+anne gönderiminde window.open 1 kez
+baba gönderimi babaTel numarasını kullanır
+ogrenci gönderimi tel numarasını kullanır
+waUrl formatı korunmuş
+waUrl boş tel → wa.me/?text
+waUrl imzası değişmedi (metin, tel)
+önizleme metni = ogrenciMesajMetni (birebir)
+waOnizle gövdesinde etiket/telefon MESAJA eklenmiyor
+alıcı üst bilgi kutusu ayrı (#waAliciBilgi)
+waAliciUyari metni kaynakta
+öğrenci değişince alici seçimi korunur (baba)
+waKapat → yeni waAc'te alici = ogrenci
+waKapat state temizledi (aktif öğrenci null)
+waSatir waGonder yolunu kullanıyor (kaynak)
+waGonder kaynakta a.telefon çözücüsü var
+waSatir gövdesi değişmedi (tel/anneTel/babaTel referansı yok)
+kopyala gövdesinde telefon/etiket YOK
+kopyala yalnız ogrenciMesajMetni + kopyalaMetin
+planlı varsayılan cümle kaynakta
+tamamlandı varsayılan cümle kaynakta
+👥 grup satırı kaynakta
+waAc iptal filtresi korunur
+parantezli öğretmen adı korunur
+yeni localStorage key eklenmedi
+alıcı değişimlerinde localStorage hâlâ aynı
+anneTel değerleri değişmedi
+babaTel değerleri değişmedi
+waAc innerHTML yolu waAlici markup'ı taşımıyor (mini-DOM innerHTML parse etmez → duplicate imkânsız kanıt)
+waAc gövdesinde waAliciSeciciHTML çağrısı tam 1 nokta (tekrarlı açılışta markup tazelenir, çoğalmaz)
+app.js'te waAliciSeciciHTML tam 1 tanım
+süit test.mjs'te tam 1 kez

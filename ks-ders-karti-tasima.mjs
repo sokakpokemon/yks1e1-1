@@ -118,7 +118,7 @@ try {
     return btnSay === uygun;
   })());
   t("renderDersler liste HTML'i satır başına kart+wa üretiyor", out.includes("dersKartiAc") && out.includes("waSatir"));
-} catch (e) { t("renderDersler runtime çökmedi", false); }
+} catch (e) { /* beklenmeyen catch: THROW — SAYAÇ KAPISI kuralları */ console.error(e && e.message); throw e; }
 global.toast = eskiToast;
 
 /* 4) (c) tık → alici seçici + PNG akışı */
@@ -221,7 +221,7 @@ try {
     fn.dersBurak(kay.ogretmenId, kay.tarih, kay.saat); /* no-op: kaynak=hedef */
     t("dersBurak no-op: DB değişmedi (taşıma yolu canlı)", JSON.stringify(DB.dersler) === once);
   }
-} catch (e) { t("dersBurak no-op çökmedi", false); }
+} catch (e) { /* beklenmeyen catch: THROW — SAYAÇ KAPISI kuralları */ console.error(e && e.message); throw e; }
 
 /* 7) İdempotans: yama işareti tek, çift çağrı güvenli */
 console.log("7) İdempotans:");

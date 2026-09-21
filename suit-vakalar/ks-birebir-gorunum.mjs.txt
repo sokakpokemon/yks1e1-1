@@ -1,0 +1,34 @@
+boot hatasız
+birebirHucreHTML app.js'te tanımlı (tek tanım)
+gunlukTablo birebirHucreHTML'i kullanıyor
+haftalikOgrtTablo birebirHucreHTML'i kullanıyor
+yardımcı dokümantasyonu: ders adı ASLA gösterilmez
+günlük hücrede TAM AD var
+günlük hücrede SINIF var
+günlük hücrede GERÇEK konu var
+günlük hücrede ders adı (MATEMATİK) YOK
+haftalık hücrede TAM AD var
+haftalık hücrede SINIF var
+haftalık hücrede GERÇEK konu var
+haftalık birebir hücre bloğunda ders adı YOK
+iki tabloda hücre içeriği (ad/konu/sınıf) BİREBİR AYNI
+iki tabloda hücre markup'ı (stil) BİREBİR AYNI
+6 gizleme durumu (boş/whitespace/null/ders adı/sınıf/tam ad)
+konu yokken konu satırı YOK ve ders adı fallback YOK
+uzun ad truncate + min-w-0 taşıyor
+uzun ad title attr'da tam
+Pazar satırı da ortak hücreyi gösteriyor (tam ad)
+farklı gün/slot'ta Pazar dersi YOK (slot eşleşmesi doğru)
+grup üye etiketleri yardımcısı yerinde
+Ek Ders amber dalı (günlük) korunmuş
+Ek Ders amber dalı (haftalık) korunmuş
+Sınıf Dersi rose dalı korunmuş
+Kapalı slate dalı korunmuş
+Boş hücre drop-zone korunmuş
+aktif dönem filtresi (günlük)
+aktif dönem filtresi (haftalık)
+dersOgrenciIds değişmedi (fonksiyon çağrılabilir)
+aktif dönem dışı kayıt günlükte YOK
+ek-ders.js değişmedi (bilinen hash)
+index.html değişmedi (bilinen hash)
+bu süit test.mjs'te tam 1 kez

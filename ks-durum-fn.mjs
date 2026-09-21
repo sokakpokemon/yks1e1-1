@@ -45,9 +45,9 @@ try {
   `)();
   t("boot + ilk render hatasız", true);
 } catch (e) {
-  t("boot + ilk render hatasız → " + e.message, false);
-  console.log(e.stack.split("\n").slice(0, 6).join("\n"));
-  process.exit(1);
+  /* beklenmeyen catch: THROW (catch-only sayım kaldırıldı — SAYAÇ KAPISI kuralları) */
+  console.error(e.stack ? e.stack.split("\n").slice(0, 6).join("\n") : e);
+  throw e;
 }
 const { DB, ui, durumSeciciHTML, durumSec, togOgrSecili, ogretmenTab, tumSiniflar } = api;
 

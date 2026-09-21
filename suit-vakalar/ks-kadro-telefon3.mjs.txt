@@ -1,0 +1,57 @@
+boot hatasız
+eksik anneTel → '' eklendi
+eksik babaTel → '' eklendi
+mevcut tel AYNEN korundu ('05551112233')
+mevcut anneTel DEĞİŞTİRİLMEDİ
+mevcut babaTel DEĞİŞTİRİLMEDİ
+normalize telefon YOK: +90/boşluk/tire aynen
+Türkçe adlı öğrencide alanlar var
+tüm öğrencilerde 3 alan var
+öğretmen kayıtlarına anne/baba tel EKLENMEDİ
+2. normalize idempotent (byte-birebir)
+localStorage tek anahtar (yksOto_arsiv_v1)
+yeni öğrenci kaydı oluştu
+3 alan formdan kaydedildi (biçim kayıpsız)
+kayıt sonrası form temizlendi
+güncelleme akışı 3 alanı yazar
+diğer öğrencinin anne/baba'sı korunur
+öğrenci silindi
+silme sonrası kalan kayıtlarda 3 alan duruyor
+header birebir: schema;dataset;donemId;tip;id;ad;soyad;telefon;anneTelefon;babaTelefon;brans;sinifId;sinifAd;ekAlanlarJson
+v3 satır genişliği 14
+öğrenci: telefon=tel, anneTelefon=anneTel, babaTelefon=babaTel
+biçim kayıpsız: +90/boşluk/tire aynen
+öğretmen satırında 3 telefon kolonu BOŞ
+sınıf satırında 3 telefon kolonu BOŞ
+ekAlanlarJson'da tel/anneTel/babaTel YOK (v3 temizliği)
+v2 üretici hâlâ çalışıyor (12 kolon)
+v1 üretici hâlâ çalışıyor (10 kolon)
+v3 dosya BOM + CRLF + noktalı virgül
+v3 import kabul edildi
+round-trip: 3 telefon alanı kayıpsız
+round-trip: ad+soyad birleşti (ad+soyad → ad)
+v2 import kabul edildi
+v2: telefon → tel yazıldı
+v2: mevcut anneTel KORUNDU (boşaltılmadı)
+v2: mevcut babaTel KORUNDU (boşaltılmadı)
+v1 import kabul edildi
+v1: ekAlanlarJson.tel fallback → tel
+v1: anneTel/babaTel '' başlar (yeni kayıt)
+v3 import ok
+boş anneTelefon/babaTelefon → bilinçli ''
+dolu telefon korunur
+yinelenen ID → RED
+iyi satır bile uygulanmadı
+DB byte-birebir aynı
+localStorage byte-birebir aynı
+geçersiz ekAlanlarJson sessizce yoksayılır (mevcut davranış), uygulama çökmez
+bozuk CSV sonrası da localStorage birebir
+waGonder waAliciBilgisi çözücüsünü kullanıyor (ogrenci → tel)
+waGonder anneTel/babaTel KULLANMIYOR
+waUrl imzası değişmedi (metin, tel)
+waUrl boş tel → wa.me/?text
+mesaj metni değişmedi (ogrenciMesajMetni çalışıyor)
+waGonder URL hedefi çözücünün telefonu (waUrl(metin, a.telefon))
+ks-kadro-telefon3.mjs test.mjs'te tam 1 kez
+app.js TELEFON3-YAMASI işareti tek (tanim-öncesi bölge dışı yok)
+d-tel/d-anne-tel/d-baba-tel duplicate id yok

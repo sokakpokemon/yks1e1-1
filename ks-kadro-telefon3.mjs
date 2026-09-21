@@ -35,9 +35,9 @@ try {
   api = new Function(scripts + "\n  return " + EXPORTS + ";\n")();
   t("boot hatasız", true);
 } catch (e) {
-  t("boot hatasız → " + e.message, false);
-  console.log(e.stack.split("\n").slice(0, 6).join("\n"));
-  process.exit(1);
+  /* beklenmeyen catch: THROW (catch-only sayım kaldırıldı — SAYAÇ KAPISI kuralları) */
+  console.error(e.stack ? e.stack.split("\n").slice(0, 6).join("\n") : e);
+  throw e;
 }
 const { DB, saveDB, csvDosya, csvImportUygula, CSV_SCHEMA, CSV_SCHEMA_KADRO, CSV_SCHEMA_KADRO_V3, CSV_BASLIK_KADRO_V3, CSV_BASLIK_KADRO_V2, CSV_BASLIK_KADRO, kadroV3Satirlari, kadroV2Satirlari, csvKadroSatirlari, kadroSnfId, sinifId, ogrenciEkle, ogrenciGuncelle, ogrenciDuzenle, oSil, normalize, waUrl, waGonder, ogrenciMesajMetni, LS_KEY, ui } = api;
 

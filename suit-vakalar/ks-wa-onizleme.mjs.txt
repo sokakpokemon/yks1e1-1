@@ -1,0 +1,36 @@
+boot hatasız
+#waModal DOM'da
+#waIcerik DOM'da
+#waOnizlemePanel index.html'de tanımlı
+#waOnizlemeMetin index.html'de tanımlı
+onizleme paneli tam 1 kez
+placeholder metni
+panel kapalıyken modal açık (waAc sonrası)
+her öğrenci satırında Önizle butonu
+en az 2 öğrenci
+1. öğrenci için mesaj görünüyor
+1. önizlemede panel hâlâ 1
+2. öğrenci için AYNI panel yeni mesaja döndü
+2. önizlemede ikinci panel YOK
+önizleme ≠ önceki öğrencinin mesajı
+satır sonları korunuyor
+emoji korunuyor (👋/📚/📅)
+literal { } textContent ile literal görünür
+HTML markup olarak yorumlanmıyor (textContent)
+waOnizle innerHTML ATAMASI kullanmıyor (kaynak kanıtı)
+waUrl formatı korunmuş
+encodeURIComponent aynı davranış
+waGonder ogrenciMesajMetni'ni çağırıyor (kaynak)
+waKopyalaMesaj ogrenciMesajMetni'ni çağırıyor (kaynak)
+geciciKopyala değişmedi (kaynak)
+waGonder window.open(waUrl(...)) davranışı (waAliciBilgisi çözücüsüyle)
+waGonder o ? o.tel fallback'i KALDIRILDI (bilinçli)
+👥 satır üretimi kaynaktan (uyeSatiri)
+tekrar açılışta panel tam 1
+tekrar açılışta placeholder geri
+app.js'te waOnizle tek tanım
+index.html'de panel id tek
+waOnizle şablon kodu KOPYALAMIYOR (whatsappSablon yok)
+waOnizle yalnız ogrenciMesajMetni çağırıyor
+ks-wa-onizleme.mjs test.mjs'te tam 1 kez
+süit sayısı düşmedi (≥36)

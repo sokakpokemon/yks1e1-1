@@ -3,6 +3,7 @@
    satırı basmak ZORUNDA; kosan === beklenen === manifest olmalı. Marker yoksa,
    çiftse veya sayılar uyuşmazsa süit FAIL sayılır. */
 import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { manifest } from "./suit-manifest.mjs";
 
 const suites = ["ks-harness.mjs", "ks-test-render.mjs", "ks-durum-fn.mjs", "ks-grup-uyum.mjs", "ks-panel-secim.mjs", "ks-grup-gorunum.mjs", "ks-istekten-grup.mjs", "ks-grup-istegi.mjs", "ks-benzersiz-id.mjs", "ks-gercek-kadro.mjs", "ks-donem-ilk.mjs", "ks-donem-damga.mjs", "ks-donem-secici.mjs", "ks-excel-csv.mjs", "ks-donem-olusturma.mjs", "ks-donem-secici-gorunum.mjs", "ks-donem-secici-dom.mjs", "ks-sinifprog-csv.mjs", "ks-sablon-kopya.mjs", "ks-render-sahipligi.mjs", "ks-d1-render-refactor.mjs", "ks-kadro-siralama.mjs", "ks-kapali-gorunum.mjs", "ks-ek-ders-donem.mjs", "ks-ekders-gorunum.mjs", "ks-ekders-ozet-csv.mjs", "ks-birebir-gorunum.mjs", "ks-sinif-ogretmen-uyum.mjs", "ks-sinif-prog-uyum-onar.mjs", "ks-sinif-prog-etiket.mjs", "ks-kart-sirasi.mjs", "ks-kart-kolon.mjs", "ks-brans-ders-kurali.mjs", "ks-excel-ui-kontrol.mjs", "ks-wa-sablon.mjs", "ks-wa-onizleme.mjs", "ks-wa-durum.mjs", "ks-wa-alici.mjs", "ks-excel-k-import.mjs", "ks-kadro-kolon.mjs", "ks-kadro-telefon3.mjs", "ks-ders-tasi.mjs", "ks-gunluk-ders-tasi.mjs", "ks-ders-karti.mjs", "ks-ders-karti-tasima.mjs"];
@@ -35,6 +36,18 @@ for (const name of suites) {
     else if (+kosan !== +bek) gateHata = `kosan=${kosan} ≠ beklenen=${bek}`;
     else if (+bek !== beklenen) gateHata = `beklenen=${bek} ≠ manifest=${beklenen}`;
     else if (ok + kotu !== +kosan) gateHata = `assertion satır sayısı (${ok + kotu}) ≠ kosan (${kosan})`;
+    else {
+      /* ——— VAKA LİSTESİ KAPISI (manifestin bağımsız kaynağı): assertion ADLARI donmuş
+         suit-vakalar/<ad>.txt listesiyle birebir karşılaştırılır. Fark → FAIL. ——— */
+      const vakaDosya = "suit-vakalar/" + name + ".txt";
+      const donmus = readFileSync(vakaDosya, "utf8").split("\n").filter(Boolean);
+      const gorulen = [...cikti.matchAll(/^\s*[✓✗] (.*)$/gm)].map(m => m[1]);
+      if (donmus.length !== gorulen.length) gateHata = `vaka sayısı: donmuş=${donmus.length} koşum=${gorulen.length}`;
+      else {
+        const fark = donmus.findIndex((v, i) => v !== gorulen[i]);
+        if (fark >= 0) gateHata = `vaka #${fark + 1}: donmuş="${donmus[fark]}" koşum="${gorulen[fark]}"`;
+      }
+    }
   }
   if (gateHata) console.log(`  [KAPI HATASI] ${gateHata}`);
 

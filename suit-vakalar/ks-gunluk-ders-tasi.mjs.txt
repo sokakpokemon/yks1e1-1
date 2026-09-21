@@ -1,0 +1,115 @@
+boot hatasız
+dersDropHedef globali tam 1 kez (mevcut)
+dersDrag tanımı tam 1 (YENİ sistem YOK)
+dersBurak tanımı tam 1 (YENİ sistem YOK)
+paralel dragover/dersDragOver YOK
+AYNI drop yolu (istekBurak → dersBurak devri) tam 1
+drop-zone çağrısı 2 yol (haftalık + günlük), aynı handler adı
+günlük yama işareti var (GUNLUK-DERS-TASI-YAMASI)
+günlük hücre MEVCUT dersDrag'i çağırıyor (yeni fonksiyon değil)
+günlük boş hücre MEVCUT istekDragOver/istekDragLeave/istekBurak yolunu kullanıyor
+günlük draggable yalnız tek öğrencili birebir (grup/iptal guard'ı)
+hedef saat MEVCUT SAAT_SLOTLARI yardımcısından (slot.b) — index varsayımı YOK
+hedef gün MEVCUT dowIdx(gunKey) ile — gün değişmez
+dersBurak mevcut duzeltmeBul kontrolünü kullanıyor (kaynak hariç: staged.id)
+mevcut istek kartı inline handler'ı korundu (istekDrag + opaklık + ondragend sıfırlama)
+slot 6 → 13:50 · slot 8 → 15:30 · slot 1 → 08:50
+boş hücre drop-zone markup'ı birebir (dnd-bos + data-drop-ogrt/gun/saat + istekBurak)
+satır öğretmen kimliği ogretmenId ile (data-drop-ogrt = T.id)
+hedef gün seçili güne sabit (data-drop-gun = 0)
+öğretmen satır adı hâlâ görünür (eski görünüm)
+günlük tablo hâlâ 12 slot başlıklı (11 ders + Mola)
+Mola hücresi drop-zone DEĞİL (data-drop-saat="12:00" yok)
+Mola hücresi markup'ı birebir korundu (emerald)
+ksKodOf("12:00") = '' (mola kısa kodda yok)
+birebir ders hücresi draggable + dersDrag taşıyor
+birebir hücre içeriği değişmedi (tam ad)
+GRUP dersi hücresi draggable DEĞİL
+grup dersinde ana öğrenci tam adı görünür
+amber Ek Ders hücresi draggable DEĞİL
+amber Ek Ders hücresi eski markup'ta (bg-amber-50 + 'Ek Ders')
+T satırında draggable sayısı = birebir ders sayısı (1)
+İPTAL ders günlük tabloda YOK (draggable kaynak olamaz)
+iptal guard'ı günlük kaynakta (ders.durum !== "iptal")
+aynı satır 6→8 → ders hedef SAATE taşındı (saat + kod)
+aynı satır 6→8 → TARİH ve ÖĞRETMEN DEĞİŞMEDİ (gün sabit)
+aynı satır 6→8 → diğer alanlar aynı (id/öğrenci/ders/konu/durum/donemId)
+aynı satır 6→8 → TEK saveDB (setItem tam +1)
+aynı satır 6→8 → localStorage yazıldı
+aynı satır 6→8 → kopya kayıt üretilmedi (tek kayıt)
+taşıma sonrası günlük tabloda yeni slot (eski slot boş → zona döndü)
+no-op: localStorage değişmedi
+no-op: DB değişmedi + saveDB çağrılmadı
+no-op: toast YOK (sessiz)
+no-op: ders yerinde (8. slot)
+cross-row (başka öğretmen satırı) → RED: localStorage byte-birebir aynı
+cross-row (başka öğretmen satırı) → RED: DB birebir aynı + saveDB çağrılmadı (0)
+cross-row (başka öğretmen satırı) → RED: toast gösterildi
+cross-row (başka öğretmen satırı) → RED: ders yerinde kaldı
+cross-row sonrası dersin ogretmenId'si DEĞİŞMEDİ
+mola (12:00) hedefi → RED: localStorage byte-birebir aynı
+mola (12:00) hedefi → RED: DB birebir aynı + saveDB çağrılmadı (0)
+mola (12:00) hedefi → RED: toast gösterildi
+mola (12:00) hedefi → RED: ders yerinde kaldı
+mola hedefi günlük tabloda drop-zone olarak da yok
+dolu hedef → RED: localStorage byte-birebir aynı
+dolu hedef → RED: DB birebir aynı + saveDB çağrılmadı (0)
+dolu hedef → RED: toast gösterildi
+dolu hedef → RED: ders yerinde kaldı
+dolu senaryoda kaynak ders yerinde (6. slot)
+Kapalı hedef (avail.musait) → RED: localStorage byte-birebir aynı
+Kapalı hedef (avail.musait) → RED: DB birebir aynı + saveDB çağrılmadı (0)
+Kapalı hedef (avail.musait) → RED: toast gösterildi
+Kapalı hedef (avail.musait) → RED: ders yerinde kaldı
+Sınıf Dersi hedefi (avail.sinif) → RED: localStorage byte-birebir aynı
+Sınıf Dersi hedefi (avail.sinif) → RED: DB birebir aynı + saveDB çağrılmadı (0)
+Sınıf Dersi hedefi (avail.sinif) → RED: toast gösterildi
+Sınıf Dersi hedefi (avail.sinif) → RED: ders yerinde kaldı
+Ek Ders (amber) hedefi → RED: localStorage byte-birebir aynı
+Ek Ders (amber) hedefi → RED: DB birebir aynı + saveDB çağrılmadı (0)
+Ek Ders (amber) hedefi → RED: toast gösterildi
+Ek Ders (amber) hedefi → RED: ders yerinde kaldı
+öğretmen çakışması → RED: localStorage byte-birebir aynı
+öğretmen çakışması → RED: DB birebir aynı + saveDB çağrılmadı (0)
+öğretmen çakışması → RED: toast gösterildi
+öğretmen çakışması → RED: ders yerinde kaldı
+duzeltmeBul öğretmen çakışmasını bildiriyor (mevcut kontrol yeniden kullanıldı)
+öğrenci çakışması (başka öğretmenle aynı slot) → RED: localStorage byte-birebir aynı
+öğrenci çakışması (başka öğretmenle aynı slot) → RED: DB birebir aynı + saveDB çağrılmadı (0)
+öğrenci çakışması (başka öğretmenle aynı slot) → RED: toast gösterildi
+öğrenci çakışması (başka öğretmenle aynı slot) → RED: ders yerinde kaldı
+toplu ders (sınıf programı) engeli → RED: localStorage byte-birebir aynı
+toplu ders (sınıf programı) engeli → RED: DB birebir aynı + saveDB çağrılmadı (0)
+toplu ders (sınıf programı) engeli → RED: toast gösterildi
+toplu ders (sınıf programı) engeli → RED: ders yerinde kaldı
+grup ders kaynağı → RED: localStorage byte-birebir aynı
+grup ders kaynağı → RED: DB birebir aynı + saveDB çağrılmadı (0)
+grup ders kaynağı → RED: toast gösterildi
+grup ders kaynağı → RED: ders yerinde kaldı
+tutarlılık senaryosu 6→8 → ders hedef SAATE taşındı (saat + kod)
+tutarlılık senaryosu 6→8 → TARİH ve ÖĞRETMEN DEĞİŞMEDİ (gün sabit)
+tutarlılık senaryosu 6→8 → diğer alanlar aynı (id/öğrenci/ders/konu/durum/donemId)
+tutarlılık senaryosu 6→8 → TEK saveDB (setItem tam +1)
+tutarlılık senaryosu 6→8 → localStorage yazıldı
+tutarlılık senaryosu 6→8 → kopya kayıt üretilmedi (tek kayıt)
+gün sekmesi taşınan dersi yeni slotta gösteriyor
+gün sekmesi eski slotta boş drop-zone gösteriyor
+günlük tablo ilk slotta (08:50) drop-zone gösteriyor
+haftalık tablo taşınan dersi yeni slotta gösteriyor
+haftalık tabloda eski slot artık boş "+" drop-zone
+haftalık tablo hâlâ birebir hücreyi aynı çiziyor (tam ad)
+DB'de TEK kayıt, tarih sabit
+havuz isteği günlük boş hücreye bırakılınca ders oluştu
+istek havuzdan düştü
+istek akışı TEK saveDB
+istek akışı ders dalına kaymıyor (istekDropHedef ile çalışır)
+ders taşıma havuz isteklerine dokunmadı
+istekDragOver boşta tepki vermez (dersDropHedef de yoksa) hata atmaz
+bu süit test.mjs'te tam 1 kez
+haftalık süit hâlâ test.mjs'te tam 1 kez
+index.html değişmedi (bilinen hash)
+ek-ders.js değişmedi (bilinen hash)
+EK-DERS-GORUNUM mark sayısı 5 (değişmedi)
+haftalık süitteki stale günlük assert güncellendi (draggable DEĞİL → birebir draggable)
+haftalık süitteki draggable kaynak sayısı 2'ye güncellendi
+yama script'i mevcut (assert'li, idempotent)

@@ -1,0 +1,34 @@
+boot hatasız
+csvYonetimKartHTML kart HTML'i üretiyor (boş değil)
+ayarTab Excel/CSV kartını içeriyor
+kart ayarTab çıktısında tam 1 kez (tek kart)
+kart HTML'inde 'NaN' YOK
+ayarTab çıktısında 'NaN' YOK
+csvTumunuIndir butonu tam 1 kez
+csvKadroIndir butonu tam 1 kez
+csvDersIndir butonu tam 1 kez
+csvIstekIndir butonu tam 1 kez
+csvEkDersIndir butonu tam 1 kez
+sinifProgCsvIndir butonu tam 1 kez
+csvImportTetik butonu tam 1 kez
+sinifProgCsvImportTetik butonu tam 1 kez
+csvGeriAl butonu tam 1 kez
+'Ek Dersleri CSV İndir' etiketi var
+'Sınıf Programı CSV İndir' etiketi var
+'CSV İçe Aktar' etiketi var
+'Son İçe Aktarmayı Geri Al' etiketi var
+AyarTab sayaç kaynakları sonlu sayı
+ayarTab HTML'inde NaN yok (sayı birleşiminde)
+2. render kart HTML'i birebir aynı (saf fonksiyon)
+2. ayarTab'ta NaN yok
+2. render'da duplicate buton yok
+function csvTumunuIndir app.js'te tanımlı
+function csvKadroIndir app.js'te tanımlı
+function csvDersIndir app.js'te tanımlı
+function csvIstekIndir app.js'te tanımlı
+function csvEkDersIndir app.js'te tanımlı
+function sinifProgCsvIndir app.js'te tanımlı
+function csvImportTetik app.js'te tanımlı
+function sinifProgCsvImportTetik app.js'te tanımlı
+function csvGeriAl app.js'te tanımlı
+ks-excel-ui-kontrol.mjs test.mjs'te tam 1 kez

@@ -1,0 +1,33 @@
+boot hatasız
+index.html'de planKart havuzBolum'den ÖNCE (statik sıra) → plan=9515 havuz=15313
+havuzBolum derslerBolum'den önce
+planKart bloğu ile havuzBolum arasına başka kart girmedi (bitişik)
+havuzBolum render hedefi app.js'te tek (id tabanlı lookup korunur)
+renderHavuz planKart'ın innerHTML'ine YAZMAZ (silinebilir yazım yok)
+#havuzBolum markup'ı tam 1 kez render edildi (renderHavuz)
+havuz bölümünde istek-kart satırı var (seed istekler) → 3 satır
+havuz formu alanları DOM'da (h-ogrenci, h-ders, h-konu)
+İsteği Havuza Ekle butonu duruyor
+Ortak Grup İsteği butonu duruyor
+filtre çipleri render oluyor
+plan formu alanları DOM'da (f-ogrenci/f-ders/f-konu/f-ogretmen/f-tarih/f-saat)
+Birebir Dersi Planla butonu duruyor (statik planKart bloğu)
+hizliOgr anchor planKart İÇİNDE (statik)
+hizliOgr dolduruldu (hızlı öğretmen butonları)
+grup paneli (#ek-ogrenciler) plan kartına inject oldu
+planKart statik bloğunda havuz markup'ı YOK (çapraz yazım yok)
+havuzBolum içinde plan formu alanları YOK (çapraz yazım yok)
+5× yenile sonrası havuz markup'ı duruyor
+5× yenile sonrası plan formu duruyor
+5× yenile sonrası id'ler tekil (duplicate yok)
+index.html'de kart id'leri tam 1'er kez
+render sonrası havuz içeriği yalnız havuzBolum'de
+formaAktar form alanlarını doldurdu
+formaAktar + planla akışı hata vermiyor → null
+istekten plan: istek kapanış akışı tamam (planlandi) → planlandi
+planlama sonrası yeni ders kaydı oluştu
+planlama + yenileme sonrası da iki kart yerinde
+test.mjs suites listesi bulunuyor
+ks-kart-sirasi.mjs test.mjs'te tam 1 kez
+mevcut 30 süit listede korundu
+süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 45

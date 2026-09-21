@@ -1,0 +1,45 @@
+boot hatasız
+renderOzet hatasız çalıştı
+yama işareti kaynakta (renderOzet)
+renderAnaliz hatasız çalıştı
+ek ders sayacı: aktif dönem 2 (ek1+ek2), iptal hariç
+dosya adı şeması kaynakta: yks-ek-dersler-<donemId>.csv
+BOM ile başlıyor
+ayraç noktalı virgül
+satır sonu CRLF
+başlık schema;dataset;donemId ile başlıyor
+dataset=ekders
+schema=yks-csv-v1
+yalnız aktif dönem kayıtları CSV'de (2 satır)
+başka dönem (ek3) CSV'de YOK
+iptal (ek4) CSV'de YOK
+aynı ek ders TEK kez (kopya yok)
+id alanı kayıpsız (ek1, ek2)
+ogretmenId alanı kayıpsız
+ikinci export birebir aynı (duplicate üretmez)
+ders CSV: 2 satır (yalnız aktif dönem)
+ders CSV dataset=dersler
+istek CSV (boş) dataset=istekler
+kadro CSV üretici değişmedi (3 satır)
+csvKayitSatiri(birebir) değişmedi
+gunlukTablo ortak birebir hücre yardımcısını kullanıyor
+gunlukTablo Ek Ders amber dalı KORUNDU
+haftalikOgrtTablo imzası değişmedi
+haftalikOgrtTablo aktifDonemKayitlari(DB.ekDersler) filtresi KORUNDU
+haftalikOgrtTablo Ek Ders amber etiketi KORUNDU
+haftalikOgrtTablo birebir durumRenk (mavi/emerald) KORUNDU
+haftalikOgrtTablo grup üye satırı KORUNDU
+haftalikOgrtTablo diff'i yalnız PAZAR-BIREBIR işaretli bölgede
+csvHucre değişmedi
+csvDosya değişmedi
+csvParse değişmedi (yalnız KADRO-KOLON-YAMASI schema satırları eklendi)
+csvAktifDonemKayitSatirlari değişmedi
+csvDersIndir değişmedi
+csvIstekIndir değişmedi
+csvKadroIndir değişmedi (KADRO-KOLON-YAMASI/TELEFON3-YAMASI işaretli değişiklik hariç)
+dersOgrenciIds değişmedi
+index.html değişmedi
+ek-ders.js değişmedi
+B dönemine geçince yalnız B ek dersleri (1 satır)
+B'de A'nın ek dersi YOK
+ks-ekders-ozet-csv.mjs test.mjs'te tam 1 kez

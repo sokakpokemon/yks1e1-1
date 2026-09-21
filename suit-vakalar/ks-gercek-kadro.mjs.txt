@@ -1,0 +1,80 @@
+öğretmen: BELGİN ÇOLAK
+öğretmen: EREN BİLGİLİ
+öğretmen: FATMA KURT
+öğretmen: FİKRİYE KIYAR
+öğretmen: KARDELEN ASLAN
+öğretmen: SELİNA KUTLU
+öğretmen: MEHMET ŞAŞAR
+öğretmen: MERT ASİL
+öğretmen: MERVE GEREK
+öğretmen: MUSTAFA GÜRKAN
+öğretmen: MİNE GÜRKAN
+öğretmen: NİHAT KANARIĞ
+öğretmen: RAVİDE DERYA
+öğretmen: SALİM URTİMUR
+öğretmen: SONER AÇIKGÖZ
+öğretmen: TAHSİN ASLAN
+öğretmen: ŞAHİN DOĞANAY
+toplam öğretmen sayısı 17
+sınıf: MEZUN SAY 1
+sınıf: MEZUN SAY 2
+sınıf: MEZUN SAY 3
+sınıf: MEZUN EA 1
+sınıf: MEZUN EA 2
+sınıf: 12 SAY 1
+sınıf: 12 SAY 2
+sınıf: 12 SAY CAL
+sınıf: 12 EA 1
+sınıf: 12 DİL
+sınıf: 11 SAY 1
+sınıf: 11 SAY 2
+sınıf: 11 SAY 3
+sınıf: 11 SAYCAL
+sınıf: 11 SAYISAL FEN
+sınıf: 11 EA 1
+sınıf: 10.SINIF
+sınıf: 9.SINIF
+toplam sinifIds girdisi 18
+normalize-ad tekrarı yok
+ham-ad tekrarı yok
+her kadro adından tam 1 kayıt
+tüm öğretmen ID'leri dolu
+tüm öğretmen ID'leri benzersiz
+tüm sınıf ID'leri dolu
+sınıf ID'leri benzersiz
+ID formatı: UUID veya ks-ogr-*
+sınıf ID formatı: ks-snf-*
+BELGİN ÇOLAK → kim
+EREN BİLGİLİ → tur
+FATMA KURT → tur
+FİKRİYE KIYAR → cgr
+KARDELEN ASLAN → kim
+SELİNA KUTLU → kim
+MEHMET ŞAŞAR → mat
+MERT ASİL → ing
+MERVE GEREK → mat
+MUSTAFA GÜRKAN → fiz
+MİNE GÜRKAN → mat
+NİHAT KANARIĞ → tar
+RAVİDE DERYA → fiz
+SALİM URTİMUR → mat
+SONER AÇIKGÖZ → mat
+TAHSİN ASLAN → mat
+ŞAHİN DOĞANAY → biy
+kadroDuzelt 2. koşu 0 yeni öğretmen/sınıf
+2. koşuda ID/ad/sinifIds/sinifProg birebir aynı
+normalize 3× → öğretmen ID'leri aynı
+normalize 3× → sinifIds aynı
+2. koşuda öğretmen sayısı hâlâ 17
+2. koşuda sinifIds hâlâ 18
+dersler/istekler/öğrenciler/ek-dersler birebir aynı
+ders sayısı değişmedi
+istek sayısı değişmedi
+grup dersi üyeleri değişmedi
+ders → öğretmen referansı (ogretmenId) çözümleniyor
+yükleme sonrası öğretmen ID'leri kayıpsız
+yükleme sonrası sinifIds kayıpsız
+yükleme sonrası öğretmen sayısı 17
+ikinci yedek döngüsünde ID'ler yine aynı
+kadro-dışı kayıt silinmez; eksik ID tamamlanır
+kadro 2. kez dokunulmadan yeni ID üretildi

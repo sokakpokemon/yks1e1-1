@@ -1,0 +1,69 @@
+boot hatasız
+dersKartiUygun(birebir) true
+dersKartiUygun(grup) false
+dersKartiUygun(iptal) false
+dersKartiUygun(null) false
+kart ad alanı öğrenci adı
+kart ders alanı
+kart konu alanı
+kart öğretmen alanı
+kart tarih+saat alanı
+kart sınıf alanı
+planlandi → 'Planlandı / ... olacaktır'
+tamamlandi → 'Yapıldı'
+kart HTML'i planlandi etiketini taşıyor
+kart HTML'i tamamlandi etiketini taşıyor
+kart HTML esc() ile üretiliyor (HTML enjeksiyon güvencesi)
+dersKartiVeri TEK tanım
+dersKartiHTML TEK tanım
+kart ogrenciMesajMetni'ni DURUM cümlesi kaynağı olarak kullanmıyor (türetme satırı var)
+waAliciBilgisi ogrenci→tel
+waAliciBilgisi anne→anneTel
+waAliciBilgisi baba→babaTel
+kartta telefon YOK
+kartta başka öğrenci adı GEÇMEZ
+telefon yoksa akış çökmez
+telefon yoksa html2canvas ÇAĞRILMAZ
+telefon yoksa localStorage değişmedi
+canShare dalı: navigator.share çağrıldı
+her durumda PNG indirme çağrıldı
+dosya adı ders-karti-<ogrenci>-<tarih>.png
+dosya adında telefon YOK
+paylaşım + indirme yolu localStorage'a YAZMADI
+canShare false → share çağrılmaz
+ClipboardItem yolu denenir (pano write)
+fallback yolunda da PNG indirilir
+clipboard yolu localStorage'a YAZMADI
+ISLEM satır şablonunda kart butonu koşulla sarılı (dersKartiUygun(l) guard'ı — DERS-KARTI-TASIMA-YAMASI)
+grup dersi ISLEM satırında dersKartiAc ÜRETİLMEZ (grup fixture, koşulsuz)
+grup dersi ISLEM satırında dersKartiBtnHTML/fa-image ÜRETİLMEZ
+grup dersi dersKartiUygun false (fixture)
+btnHTML TEK tanım
+btnHTML artık tablolarda DEĞİL, ISLEM alanında koşulla çağrılıyor
+iptal derste dersKartiUygun false
+Sınıf Dersi (rose) hücresi btn çağrısı İÇERMİYOR (rose dalı ayrı)
+Ek Ders (amber) hücresi btn çağrısı İÇERMİYOR
+Kapalı hücre btn çağrısı İÇERMİYOR
+tüm süit boyunca localStorage byte-birebir
+test.mjs'te tam 1 kez kayıtlı
+V2 buton draggable=false
+V2 buton onmousedown stopPropagation
+V2 buton onclick stopPropagation + preventDefault
+V2 birebir td draggable korunuyor (2 kaynak satır)
+V2 buton tıkı td dragstart'ı tetiklemez (stopPropagation köprüyü keser)
+V2 td dragstart bağımsız çalışır
+V2 td dragend bağımsız çalışır
+app.js süit sayısı değişmedi (43 eski + 1 yeni)
+file://: canShare true olsa bile share çağrılmaz
+file://: pano denenmez
+file://: PNG yine iner (her durumda indir garantisi)
+localhost/https: share denenir (reject edilse de)
+localhost/https: pano denenir (izin reddedilse de)
+reject yollarında PNG tek kez iner (tekrar indirme YOK)
+localhost/https boyunca localStorage byte-birebir
+dosya adı birebir: ders-karti-ayse-nur-colak-2030-01-07.png
+dosya adında '/' ve ':' YOK
+kartta grup üyesi adı YOK (grup dersten kart üretilmez)
+kartta telefon YOK (tel/anneTel/babaTel)
+kart yalnız kendi adını taşıyor
+dersKartiHTML id'li veri kaynağı TEK öğrenci (dersOgrenciIds[0])

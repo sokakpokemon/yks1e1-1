@@ -1,0 +1,54 @@
+boot hatasız
+BRANS_DERS_HARITA tek tanım (app.js'te 1 kez)
+bransDersUygun app.js'te tek tanım
+ek-ders.js kendi kopyasını İÇERMEZ (tek kaynak)
+harita: mat → [mat, geo]
+harita: tur → [tur, edb]
+mat öğretmen → mat KABUL
+mat öğretmen → geo KABUL
+mat öğretmen → fiz RED
+tur öğretmen → tur KABUL
+tur öğretmen → edb KABUL
+tur öğretmen → mat RED
+fiz öğretmen → fiz KABUL (kendi dersi)
+fiz öğretmen → mat RED (başka ders)
+fiz öğretmen → edb RED
+olmayan öğretmen → RED (fail-closed)
+branş 'FİZ' → fiz dersi KABUL (aksan+harf)
+branş 'TÜRKÇE' → edb KABUL (aksanlı harita girdisi)
+branş ' mat ' → geo KABUL (boşluk)
+branş 'GEOMETRI' → geo KABUL (kendi dersi)
+bilinmeyen ders id → RED
+branşsız öğretmen → RED (fail-closed)
+mesajda öğretmen branşı var
+mesajda seçilen ders var
+mesajda izinli dersler listesi var
+MAT öğretmene MATEMATİK atanamadı (kayıt artmadı)
+hata kartı gösterildi (branş-ders uyumu)
+FİZ öğretmene FİZİK kaydedildi (+1)
+TÜRKÇE öğretmene EDEBİYAT kaydedildi (+1)
+TÜRKÇE öğretmene MATEMATİK REDDEDİLDİ (kayıt artmadı)
+aykırı denemede mevcut kayıtlar bozulmadı
+MATEMATİK öğretmene GEOMETRİ kaydedildi (+1)
+grup: uygunsuz atama kayıt OLUŞTURMAZ
+grup: hata kartı gösterildi
+grup: uygun atama çalışır (referans)
+ek-ders.js bağlamı boot hatasız
+ek ders: MATEMATİK öğretmene FİZİK ek dersi REDDEDİLDİ (kayıt OLUŞMAZ)
+ek ders: MATEMATİK öğretmene MATEMATİK ek dersi kaydedildi
+belirsiz branş ('felsefe') ataması kayıt OLUŞTURMAZ
+belirsiz branş hata kartında
+fail-closed yolunda DERSLER/öğretmen kayıtları SİLİNMEZ (silme yok)
+belirsiz branşlı öğretmen hâlâ kayıtlı
+aykırı eski kayıt (tur öğretmen + fiz dersi) SİLİNMEDİ ve birebir korundu
+yeni atama denemesi REDDEDİLDİ (kayıt artmadı)
+red sonrası eski aykırı kayıt AYNEN kaldı
+fiz öğretmeni izinli dersler = [fiz]
+mat öğretmeni izinli dersler = [mat, geo]
+tur öğretmeni izinli dersler = [tur, edb]
+BRANS-DERS-KURALI-YAMASI işareti app.js'te
+BRANS-DERS-KURALI-EK-YAMASI işareti ek-ders.js'te
+planla() içinde bransDersUygun çağrısı var
+ekPlanla içinde bransDersUygun çağrısı var
+ks-brans-ders-kurali.mjs test.mjs'te tam 1 kez
+eski süit listesi korundu (ks-harness hâlâ 1. süit)

@@ -82,7 +82,9 @@ try {
   t("boot hatasız", true);
 } catch (e) {
   /* beklenmeyen catch: açıkça KIRMIZI ve koşulsuz (ölü/koşullu test yok) */
-  t("boot hatasız (beklenmeyen catch: " + e.message + ")", false); console.log(e.stack.split("\n").slice(0, 6).join("\n")); process.exit(1);
+  /* beklenmeyen catch: THROW (catch-only sayım kaldırıldı — SAYAÇ KAPISI kuralları) */
+  console.error(e.stack ? e.stack.split("\n").slice(0, 6).join("\n") : e);
+  throw e;
 }
 const { DB, ui, renderDersler, dersKartiAc, dersKartiHTML, dersKartiVeri, dersKartiUygun, dersKartiBtnHTML, haftalikOgrtTablo, gunlukTablo, waAliciDegistir, waAliciBilgisi, dersKartiIndirildiSifirla } = P;
 

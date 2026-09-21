@@ -1,0 +1,27 @@
+boot hatasız
+ilk tip ogretmen
+grup sırası tam olarak ogretmen→sinif→ogrenci
+tip dizisi [ogretmenler…, siniflar…, ogrenciler…]
+gruplar arasına yabancı tip yok (ilkGrup=["ogretmen","sinif","ogrenci"])
+öğretmen satır sayısı değişmedi
+sınıf satır sayısı değişmedi
+öğrenci satır sayısı değişmedi
+toplam satır sayısı eşit
+satır içerik kümesi aynı (tek fark sıra; TELEFON3-YAMASI: ekAlanlarJson'da tel alanları bilinçli olarak çıkarıldı)
+CSV_BASLIK_KADRO byte-identical (kaynak satırı)
+csvDosya header satırı CSV_BASLIK_KADRO'dan üretiliyor
+BOM korunur
+yeni sıra import'u hatasız
+yeni sıra import sonucu = eski sıra import sonucu (deep-equal)
+shuffled/mixed sıra import sonucu da aynı (deep-equal)
+round-trip import 1 hatasız
+round-trip: ikinci export birinciyle byte-identical
+round-trip import 2 hatasız (duplicate yok)
+hiçbir öğrenci kaybolmadı
+hiçbir öğretmen kaybolmadı
+hiçbir sınıf kaybolmadı (sinifIds deep-equal)
+duplicate öğrenci/öğretmen yok (upsert)
+dersler değişmedi
+istekler değişmedi
+sinifProg değişmedi
+ks-kadro-siralama.mjs test.mjs'te tam 1 kez

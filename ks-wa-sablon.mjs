@@ -47,7 +47,9 @@ P = new Function(scripts + "\n  return { DB, ui, saveDB, loadDB, normalize, ogre
 DB = P.DB;
   t("boot hatasız", true);
 } catch (e) {
-  t("boot hatasız → " + e.message, false); console.log(e.stack.split("\n").slice(0, 6).join("\n")); process.exit(1);
+  /* beklenmeyen catch: THROW — SAYAÇ KAPISI kuralları */
+  console.error(e.stack ? e.stack.split("\n").slice(0, 6).join("\n") : e);
+  throw e;
 }
 const { saveDB, loadDB, normalize, ogrenciMesajMetni, ayarTab, waSablonKaydet, waSablonKartHTML, waSablonVarsayilan, penceredeDersler, pencereAdi } = P;
 

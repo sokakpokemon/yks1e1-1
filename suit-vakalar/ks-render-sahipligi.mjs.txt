@@ -1,0 +1,30 @@
+bilinmeyen id → getElementById null
+bilinen id → eleman döner
+innerHTML yazımı çocuk id'yi kayıt defterine ekler
+innerHTML yeniden yazımı eski çocuğu gerçekten SİLER
+insertAdjacentHTML markup id'yi DOM'a kaydeder
+boot hatasız
+ilk boot sonrası beşli 1,1,1,1,1 → (donem-ui-host=1 donem-secici=1 yeni-donem-btn=1 sablon-kopya-ui=1 sablon-kopyala-btn=1)
+3 render sonrası beşli hâlâ 1,1,1,1,1 → (donem-ui-host=1 donem-secici=1 yeni-donem-btn=1 sablon-kopya-ui=1 sablon-kopyala-btn=1)
+Öğretmen sekmesi sonrası beşli 1 → (donem-ui-host=1 donem-secici=1 yeni-donem-btn=1 sablon-kopya-ui=1 sablon-kopyala-btn=1)
+Öğrenci & Sınıf sekmesi sonrası beşli 1 → (donem-ui-host=1 donem-secici=1 yeni-donem-btn=1 sablon-kopya-ui=1 sablon-kopyala-btn=1)
+Ek Ders sekmesi sonrası beşli 1 → (donem-ui-host=1 donem-secici=1 yeni-donem-btn=1 sablon-kopya-ui=1 sablon-kopyala-btn=1)
+Ayarlar & Yedekleme sekmesi sonrası beşli 1 → (donem-ui-host=1 donem-secici=1 yeni-donem-btn=1 sablon-kopya-ui=1 sablon-kopyala-btn=1)
+geri dönüş (Öğretmen) sonrası beşli 1 → (donem-ui-host=1 donem-secici=1 yeni-donem-btn=1 sablon-kopya-ui=1 sablon-kopyala-btn=1)
+host yb'nin KARDEŞİ ( parentNode === yb.parentNode )
+override sonrası host DOM'da kalıyor
+override sonrası beşli hâlâ 1 → (donem-ui-host=1 donem-secici=1 yeni-donem-btn=1 sablon-kopya-ui=1 sablon-kopyala-btn=1)
+duplicate id YOK (tümü tam 1) → (donem-ui-host=1 donem-secici=1 yeni-donem-btn=1 sablon-kopya-ui=1 sablon-kopyala-btn=1)
+dönem seçimi sekme geçişlerinde korunur → donem-2027-2028 → donem-2027-2028
+DB.aktifDonemId hâlâ seçilen dönem → donem-2027-2028
+DB.sinifProgDonemId ile uyumlu → donem-2027-2028
+şablon selectleri gerçek dönem id'leri taşıyor → k=donem-2026-2027 h=donem-2027-2028
+şablon kaynak/hedef seçimleri sekme geçişinde korunur → k=donem-2026-2027→donem-2026-2027 h=donem-2027-2028→donem-2027-2028
+dolu hedefe şablon kopyalama RED
+RED sonrası localStorage byte-birebir
+tekrarlı buton duplicate dönem OLUŞTURMAZ → 2→2
+tekrarlı buton sonrası beşli hâlâ 1 → (donem-ui-host=1 donem-secici=1 yeni-donem-btn=1 sablon-kopya-ui=1 sablon-kopyala-btn=1)
+render + sekme geçişleri localStorage'ı değiştirmedi
+sinifProg render'da değişmedi
+sinifProgDonemler render'da değişmedi
+tek #donem-ui-host (ikinci kalıcı host yok) → (donem-ui-host=1 donem-secici=1 yeni-donem-btn=1 sablon-kopya-ui=1 sablon-kopyala-btn=1)

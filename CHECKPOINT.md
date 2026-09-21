@@ -2060,3 +2060,36 @@ Runner çıktı ayrıştırması (test-oncesi → test-final), süit bazında ha
 
 ### Not
 Catch-only t() çağrıları sayaç KAPISINE girer (kosan=manifest eşitliği bunu zorunlu kılar); beklenmeyen catch süitin kendi try/catch'inin dışına LOW-LEVEL THROW olarak düşer (exit≠0 → runner FAIL). Ctrl+Shift+R notu geçerliliğini korur.
+
+## DÖNGÜ-5: MANİFEST KAYNAĞI + CATCH-ONLY DÖNÜŞÜMÜ + NEGATİF KAPI TESTİ
+
+### 1) Tur başı çelişkisi çözüldü (ham satır kanıtı)
+Runner çıktısı (/tmp/test-oncesi.txt): "DÜŞEN TEST DOSYALARI: ks-ders-karti-tasima.mjs (exit 1, 5 kırmızı test)" → "2091/2147 OK".
+Açılım: 2147 = o andaki toplam koşan (2142 ham ✓ + 5 ✗). Kırmızı sayısı 56 değil; 5 ✗ satırı dosyada tek tek listelidir (4'ü tasima bölüm-3, 1'i 4b tık). "5 kırmızı" = tek süitteki (tasima) kırmızı test sayısı. 2147'nin 2142'den +5 fazlası = o 5 ✗ satırı. Çelişki yok. 2091 = geçen (✓), 2147 = koşan (✓+✗).
+
+### 2) Ledger (tek zincir, satır satır)
+- ONCE.ham Σ=2142 → FINAL.ham Σ=2144; Δ kolonu: yalnız ekders-ozet-csv −1, sinif-ogretmen-uyum −1 (phantom boot satırları silindi), ders-karti-tasima +4 (4b tık bloğu +6 t(, boot satırı işaretsizleşti), geri kalan 42 süit 0.
+- "ks-ders-karti 66→69" iddiası BU TURA ait değil: her iki kolonda da 69 (Δ=0). Artış önceki turda (grup fixture) gerçekleşti; kanıt: gate-oncesi.ks-ders-karti.mjs.bak içinde de t( sayısı aynı, koşum 69.
+- Geçerli zincir tek cümleyle: 2142 − 3 phantom boot satırı + 2 net t( artışı (tasima +4, ekders −1, sinif −1) = 2144. ("2143→2144" ifadesi önceki raporların sayım artefaktıydı; geçerli zincir budur.)
+
+### 3) Manifestin bağımsız kaynağı + catch-only dönüşümü
+- VAKA LİSTESİ: 45 süit için assertion ADLARI sırayla suit-vakalar/<ad>.txt dosyalarına donduruldu (45 dosya, 2144 satır). Manifest sayıları bu donmuş isim listelerinin uzunluklarına denk; runner her koşumda assertion adlarını birebir, sırayla donmuş listeyle karşılaştırır — fark FAIL. (Kaynak: koşum ADLARI, koşum SAYISI değil.)
+- CATCH-ONLY → 0: string/yorum-duyarlı catch-blok analizi 50 bulgu verdi; 36'sı gerçek catch-only kalıbı (yanlış-pozitifler elendi), tamamı koşulsuz THROW'a çevrildi:
+  t("boot hatasız → "+e.message, false) → console.error(e); throw e; (34 dosya)
+  + tek satırlık kalıplar: brans-ders-kurali L187, ders-karti-tasima L121/L224, grup-gorunum L147, test-render L107, durum-fn L48, ders-karti L85.
+  Kalan tarayıcı bulguları template-literal yanlış-pozitifi (node --check + tüm süitlerin exit=0/marker=1 koşumuyla hakemlik).
+- NEGATİF KAPI TESTİ (kanıt): suit-vakalar/ks-kapali-gorunum.mjs.txt 1. vaka adı geçici "BOZULDU" eklendi → runner: [KAPI HATASI] vaka #1: donmuş="kapalı hücre DOM'da mevcut ve title'lı BOZULDU" koşum="kapalı hücre DOM'da mevcut ve title'lı" → süit BAŞARISIZ, exit=1, 2125/2144 OK. Restore sonrası: 2144/2144 OK, exit=0. Kapı FAIL veriyor.
+
+### 4) Kapanış — dört sayı birebir
+node test.mjs → 2144/2144 OK, 0 kırmızı, 0 KAPI HATASI, exit=0.
+Yama öncesi koşan=2147 (2091✓+5✗) → sonrası koşan=2144 = per-suite ham Σ=2144 = SUITE_DONE Σ=2144 = vaka satır Σ=2144. BİREBİR EŞİT.
+
+### Değişiklikler & yedekler (üzerine yazma YOK)
+- Catch-only THROW dönüşümü 34 dosya; yedekler catchfix-oncesi.<ad>.bak:
+  ks-birebir-gorunum 13.213 B 6befcdab…, ks-brans-ders-kurali 14.804 B 368a4359…, ks-ders-karti-tasima 15.820 B d0589161…, ks-ders-tasi 24.731 B facac5f6…, ks-grup-gorunum 10.997 B 510d45db…, ks-test-render 6.492 B e683ee4a…, ks-durum-fn 7.290 B 096d90ac…, ks-ders-karti 22.956 B e21ef067… (+24 otomatik düzeltme, tek biçimli boot kalıbı).
+- test.mjs 4.845 B 96061a64383a4eed… (vaka listesi kapısı eklendi; önceki 4.045 B 4f07b054… gate-oncesi zincirinde).
+- suit-vakalar/ 45 dosya / 2.144 satır (yeni, donmuş).
+- app.js DOKUNULMADI: 302.581 B, SHA-256 b787f93f55ceea4f….
+- Değişen assertion örnek metni (tümü aynı kalıp):
+  ESKI: t("boot hatasız → " + e.message, false); console.log(e.stack...); process.exit(1);
+  YENI: console.error(e.stack ? e.stack.split("\n").slice(0,6/8).join("\n") : e); throw e; (+ /* beklenmeyen catch: THROW — SAYAÇ KAPISI kuralları */)

@@ -1,0 +1,44 @@
+app.js renderYonetim markup'ı kart-içi donemSeciciKutu üretiyor
+ek-ders.js override markup'ı donemSeciciKutu ÜRETMEZ (root cause)
+ek-ders.js override yb.innerHTML'i bir kez yazıyor (silici atama)
+app.js override karşıt kanıtı: donemHostOnar host'u yb KARDEŞİ olarak kurar
+app.js sec() alt sekme değişiminde onarım planlıyor
+boot hatasız
+[ilk boot] beşli id sayımı 1×5 → (donem-ui-host=1 donem-secici=1 yeni-donem-btn=1 sablon-kopya-ui=1 sablon-kopyala-btn=1)
+[ilk boot] host yb kardeşi ve DOM'da
+[ilk boot] aktif dönem seçimi korunur → null ≟ donem-2026-2027
+[3 render] beşli id sayımı 1×5 → (donem-ui-host=1 donem-secici=1 yeni-donem-btn=1 sablon-kopya-ui=1 sablon-kopyala-btn=1)
+[3 render] host yb kardeşi ve DOM'da
+[3 render] aktif dönem seçimi korunur → null ≟ donem-2026-2027
+[sekme:ogretmen] beşli id sayımı 1×5 → (donem-ui-host=1 donem-secici=1 yeni-donem-btn=1 sablon-kopya-ui=1 sablon-kopyala-btn=1)
+[sekme:ogretmen] host yb kardeşi ve DOM'da
+[sekme:ogretmen] aktif dönem seçimi korunur → null ≟ donem-2026-2027
+[sekme:ogrenci] beşli id sayımı 1×5 → (donem-ui-host=1 donem-secici=1 yeni-donem-btn=1 sablon-kopya-ui=1 sablon-kopyala-btn=1)
+[sekme:ogrenci] host yb kardeşi ve DOM'da
+[sekme:ogrenci] aktif dönem seçimi korunur → null ≟ donem-2026-2027
+[sekme:ekders] beşli id sayımı 1×5 → (donem-ui-host=1 donem-secici=1 yeni-donem-btn=1 sablon-kopya-ui=1 sablon-kopyala-btn=1)
+[sekme:ekders] host yb kardeşi ve DOM'da
+[sekme:ekders] aktif dönem seçimi korunur → null ≟ donem-2026-2027
+[sekme:ayar] beşli id sayımı 1×5 → (donem-ui-host=1 donem-secici=1 yeni-donem-btn=1 sablon-kopya-ui=1 sablon-kopyala-btn=1)
+[sekme:ayar] host yb kardeşi ve DOM'da
+[sekme:ayar] aktif dönem seçimi korunur → null ≟ donem-2026-2027
+[tekrar:ogretmen] beşli id sayımı 1×5 → (donem-ui-host=1 donem-secici=1 yeni-donem-btn=1 sablon-kopya-ui=1 sablon-kopyala-btn=1)
+[tekrar:ogretmen] host yb kardeşi ve DOM'da
+[tekrar:ogretmen] aktif dönem seçimi korunur → null ≟ donem-2026-2027
+final snapshot beşli = ilk boot beşli → (donem-ui-host=1 donem-secici=1 yeni-donem-btn=1 sablon-kopya-ui=1 sablon-kopyala-btn=1)
+final host kardeşlik = ilk boot
+final veri imzası = ilk boot (DB byte-semantic birebir)
+final localStorage = ilk boot (render akışı LS değiştirmedi)
+şablon selectleri tek dönemde varsayılan/boş (beklenen)
+sekme akışı uygulandı (son aktif sekme = ogretmen) → ogretmen
+override sonrası host AYNI eleman (silinmedi)
+override sonrası yb.innerHTML dolu
+override markup'ı host id'sini İÇERMEZ (sahiplik sınırı: host yb dışında)
+dönem+şablon mutasyonlu senaryoda beşli 1×5 → (donem-ui-host=1 donem-secici=1 yeni-donem-btn=1 sablon-kopya-ui=1 sablon-kopyala-btn=1)
+ders/istek/sinifProg render akışında değişmedi
+aktifDonemId korunur → donem-2027-2028
+dolu hedefe şablon kopyalama RED (davranış korunuyor)
+RED sonrası localStorage byte-birebir
+RED akışı sonrası beşli 1×5 → (donem-ui-host=1 donem-secici=1 yeni-donem-btn=1 sablon-kopya-ui=1 sablon-kopyala-btn=1)
+tek localStorage anahtarı: yksOto_arsiv_v1 → yksOto_arsiv_v1
+süit test.mjs'te tam 1 kez → 1

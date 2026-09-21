@@ -1,0 +1,44 @@
+app.js yama damgası mevcut (DONEM-SECICI-UI-YAMASI)
+kart-içi seçici markup gerçek donemSeciciKutu id'li
+select sabit kimlikli + data-id takma adı
+buton sabit kimlikli + data-id takma adı
+yenile() kuyruğu onarımı çağırıyor
+boot hatasız (TypeError yok)
+#donem-ui-host tam 1 kez → (host=1 secici=1 btn=1)
+#donem-secici tam 1 kez
+#yeni-donem-btn tam 1 kez
+3+ render sonrası duplicate yok → (host=1 secici=1 btn=1)
+Öğretmen: host kalıcı → (host=1 secici=1 btn=1)
+Öğretmen: selector kalıcı
+Öğretmen: buton kalıcı
+Öğrenci: host kalıcı → (host=1 secici=1 btn=1)
+Öğrenci: selector kalıcı
+Öğrenci: buton kalıcı
+Ek Ders: host kalıcı → (host=1 secici=1 btn=1)
+Ek Ders: selector kalıcı
+Ek Ders: buton kalıcı
+Ayarlar: host kalıcı → (host=1 secici=1 btn=1)
+Ayarlar: selector kalıcı
+Ayarlar: buton kalıcı
+Tekrar Öğretmen: host kalıcı → (host=1 secici=1 btn=1)
+Tekrar Öğretmen: selector kalıcı
+Tekrar Öğretmen: buton kalıcı
+DB.donemler option olarak listelendi → options=1
+DB.aktifDonemId doğru option'ı selected yapıyor
+donemSec DB.aktifDonemId günceller
+donemSec sinifProgDonemId'yi hizalar
+donemSec saveDB çağırır (localStorage yazımı değişti)
+donemSec sonrası kontrol kalıcı → (host=1 secici=1 btn=1)
+geçersiz donem ID'si veri bozmaz
+yeni dönem eklendi
+tekrar çağrı duplicate dönem eklemez
+tekrarlı buton sonrası hâlâ tek kontrol → (host=1 secici=1 btn=1)
+yeni dönem saveDB ile kalıcı
+ilk dönem listede ve verisi korunur
+sekme değişimi selected değeri korur
+geri dönüşte selected değer korunur
+bilinmeyen id getElementById null döner
+tüm senaryolar null-on-miss ile hatasız koştu (yukarıdaki adımlar)
+alt sekme render'ı yb.innerHTML'i yeniden yazar
+yeniden yazıma rağmen host DOM'da kalır → (host=1 secici=1 btn=1)
+ks-donem-secici-gorunum.mjs test.mjs'te tam 1 kez

@@ -42,9 +42,9 @@ try {
   api = new Function(appKaynak + "\n;\n" + inlineBloklar + "\n  return { DB, saveDB, yenile, donemSec, aktifDonemId, sablonKopyaUygula, sablonKopyaProgramBosMu, sablonKopyaUIHTML, sablonKopyaOnayTazele, sablonKopyaBaslat, yeniDonemOlustur, onayAc, onayOnayla, onayKapat, normalize, sinifProgAktif, DONEM_ILK_ID, DONEM_YENI_ID, LS_KEY, esc };\n")();
   t("boot hatasız (SABLON-KOPYA süiti)", true);
 } catch (e) {
-  t("boot hatasız → " + e.message, false);
-  console.log(e.stack.split("\n").slice(0, 6).join("\n"));
-  process.exit(1);
+  /* beklenmeyen catch: THROW (catch-only sayım kaldırıldı — SAYAÇ KAPISI kuralları) */
+  console.error(e.stack ? e.stack.split("\n").slice(0, 6).join("\n") : e);
+  throw e;
 }
 let { DB, saveDB, donemSec, aktifDonemId, sablonKopyaUygula, sablonKopyaProgramBosMu, sablonKopyaUIHTML, yeniDonemOlustur, onayOnayla, onayKapat, DONEM_ILK_ID, DONEM_YENI_ID, LS_KEY, esc } = api;
 

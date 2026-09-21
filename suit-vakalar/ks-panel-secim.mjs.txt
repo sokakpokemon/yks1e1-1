@@ -1,0 +1,32 @@
+boot hatasız
+#ek-ogrenciler paneli DOM'da
+#grup-panel-govde kapalı başlar
+#grup-panel-arama kutusu yok (panel kapalı)
+sınıflar DB'den üretilir
+toggle → govde açıldı ve filtre markup'ı yazıldı
+filtre opsiyonlarında 'Tüm sınıflar' VAR
+arama inputu markup'ta VAR
+'ayşe' → yalnız Ayşe Demir
+arama TR-büyük/küçük duyarsız
+eşleşme yok → boş liste
+'12 DİL' → yalnız Ecrin Şahin
+filtre boşaltınca tümü döner
+aynı öğrenci iki kez listede olmaz (ham dizi benzersiz)
+olmayan id görünür seçimi etkilemez
+12 öğrenci seçilebilir (sınır yok)
+10+ uyarı kartı render edildi (#grup-panel-uyari)
+özet '12 öğrenci seçildi' içeriyor
+uyarı 10'un altında kaybolur
+ana öğrenci listede 'ana' işaretli
+ana öğrenci seçilemez (ek listeye girmez)
+ana checkbox markup'ta disabled
+düzenlemede 2 ek öğrenci yüklendi
+düzenlemede panel açık açıldı
+panelSecim.anaId = dersin ana öğrencisi
+form ana öğrenci adını taşıyor
+özet '3 öğrenci seçildi' (ana dahil)
+liste çizildi ve Zeynep checked
+ana değişince eski ana ek listede en fazla 1 kez (kopya oluşmaz)
+kayıt oluştu
+ogrenciIds YOK (birebir)
+ogrenciId = Ayşe

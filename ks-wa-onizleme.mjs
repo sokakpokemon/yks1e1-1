@@ -66,7 +66,9 @@ try {
   P = new Function(scripts + "\n  return { DB, ui, waAc, waOnizle, waOnizlemeSifirla, waGonder, waKopyalaMesaj, waUrl, waKapat, ogrenciMesajMetni, penceredeDersler, kopyalaMetinfn: () => kopyalaMetin, geciciKopyalafn: () => geciciKopyala };")();
   t("boot hatasız", true);
 } catch (e) {
-  t("boot hatasız → " + e.message, false); console.log(e.stack.split("\n").slice(0, 6).join("\n")); process.exit(1);
+  /* beklenmeyen catch: THROW — SAYAÇ KAPISI kuralları */
+  console.error(e.stack ? e.stack.split("\n").slice(0, 6).join("\n") : e);
+  throw e;
 }
 const { DB, waAc, waOnizle, waOnizlemeSifirla, waGonder, waKopyalaMesaj, waUrl, ogrenciMesajMetni, geciciKopyalafn, kopyalaMetinfn } = P;
 const waGonderGof = () => (appKaynak.split("function waGonder(ogrenciId) {")[1] || "").split("\nfunction ")[0];

@@ -2370,3 +2370,13 @@ ks-d1-render-refactor 15.874 B 3e79e7ab… · ks-ekders-gorunum 15.909 B f1a4fd9
 ks-sinif-prog-etiket 8.500 B e0c725a8… · test.mjs 7.620 B 5b868b4c…
 (Bayrak çıkarma testleri geçici /tmp ve in-place restore ile yapıldı; son dosyalar backup ile
 byte-birebir aynı: d1 15.874 B, ekders 15.909 B, etiket 8.500 B — SHA'lar yukarıda backup'la aynı.)
+
+
+## KABUL EDİLEN RESIDUAL — DÖNGÜ-10
+
+`elle-vaka-adlari.mjs` güncel koşum çıktısından tek seferlik aktarımla derlendi ve donduruldu; ad-takası kapısı gelecekteki değişimi yakalar, ancak ilk listenin eksiksizliğini bağımsız kanıtlamaz.
+
+
+## KABUL EDİLEN RESIDUAL — DÖNGÜ-10
+
+`elle-vaka-adlari.mjs` güncel koşum çıktısından tek seferlik aktarımla derlendi ve donduruldu; ad-takası kapısı gelecekteki değişimi yakalar, ancak ilk listenin eksiksizliğini bağımsız kanıtlamaz.

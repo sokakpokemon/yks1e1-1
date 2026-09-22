@@ -50,7 +50,7 @@ export const manifest = {
   "ks-gunluk-ders-tasi.mjs": 115,
   "ks-ders-karti.mjs": 69,
   "ks-ders-karti-tasima.mjs": 56,
-  "ks-ogrt-ders-karti.mjs": 53,
+  "ks-ogrt-ders-karti.mjs": 70,
 };
 
 /* Süit içi yardımcı: kosan sayacını manifest ile KENDİ sunar.

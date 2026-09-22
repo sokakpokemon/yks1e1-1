@@ -1,37 +1,44 @@
 boot hatasız
 ogrtGunlukSatirlar tanımlı
+ogrtGunlukSlotlari tanımlı (yatay kolon modeli)
 dersKartiOgrtGunlukHTML tanımlı
 dersKartiOgrtGunlukBtnHTML tanımlı
 dersKartiOgrtGunlukAc tanımlı
 öğrenci yolu: dersKartiAc çağrıları sayısı değişmedi (app'ta tanımlı)
 öğrenci kart HTML dersKartiGovde id'yi kullanır; öğrenci + öğretmen-tek-ders + öğretmen-tam-gün = 3 paylaşım
-(a) sınıf dersi satırı VAR
-(a) birebir satırı VAR
-(a) sınıf dersi Sınıf alanı = avail.sinif değeri
-(a) sınıf dersi Öğrenci = '—'
-(a) sınıf dersi Ders = öğretmen branşından (mat → MATEMATİK)
-(a) sınıf dersi Konu = '—' (gerçek alan yok, UYDURMA YOK)
-(a) birebir Öğrenci = gerçek öğrenci adı
-(a) birebir Sınıf = yalnız DB.ogrenciler[].sinif
-(a) birebir Konu = gerçek konu
-(a) sıralama slot artan
-(a) mola (K) slotu satırlarda YOK
-(a) HTML'de her iki satır da basılıyor (yalnız-birebir mutasyonu kırmızı olur)
-(a) rozet 'Planlandı (n)' — planlı sayısı
-görselde TELEFON YOK (tel değerleri sızamaz)
-başlıkta öğretmen adı + gün
-(b) yalnız sınıf dersi satırı (birebir YOK)
+(a) kolon sayısı 11 (KISA_KOD; ÖĞLE kolonu YOK)
+(a) kolon sırası KISA_KOD 1..11
+(a) kolon başlığı gerçek saat aralığı (b-e)
+(a) sınıf dersi o slottaki kolonda VAR
+(a) birebir o slottaki kolonda VAR
+(a) Sınıf dersi ögesi: Öğrenci '—', Konu '—' (UYDURMA YOK)
+(a) Birebir ögesi: gerçek ad + gerçek konu + DB.ogrenciler[].sinif
+(a) satır modeli de slot artan ve aynı içerikte (ekran sırası)
+(a) HTML'de her iki öge de basılıyor (yalnız-birebir mutasyonu kırmızı olur)
+(a) HTML'de 11 saat başlığı + ÖĞLE KOLONU ÇİZİLMEZ
+(b-öncesi) sınıf kartı içinde YALNIZ sınıf adı; DERS/KONU uydurma YOK
+(c-öncesi) birebir kartında DERS adı YOK (birebirHucreHTML ile aynı)
+(c-öncesi) konu boş → 'Genel tekrar' dalı
+(c-öncesi) konu = ders adı ile aynıysa → 'Genel tekrar' (birebirHucreHTML konu kuralı)
+(c-öncesi) öğrenci sinif alanı boşsa 'Sınıf belirtilmemiş'
+(b) yalnız sınıf dersi ögesi (birebir YOK)
 (b) HTML'de sınıf dersi basılıyor (yalnız-sınıf mutasyonu kırmızı olur)
-(b) HTML'de birebir satırı YOK (Tür kolonunda Birebir geçmiyor)
-(c) yalnız birebir satırı (sınıf dersi YOK)
-(c) konu boş → 'Genel tekrar' dalı (mutasyona karşı kapı)
+(b) HTML'de birebir kartı YOK (title='Birebir' yok)
+(b) rozet hepsi planlı → 'Planlandı' (ESKİ 'Planlandı (n)' KALDIRILDI)
+(c) yalnız birebir ögesi (sınıf dersi YOK)
 (c) HTML'de birebir basılıyor (yalnız-birebir-düşürme mutasyonu kırmızı olur)
-(c) HTML'de sınıf dersi satırı YOK
-(d) aynı slotta İKİ satır da kalır
-(d) her iki satıra ÇAKIŞMA işareti
-(d) HTML'de 2 × ÇAKIŞMA rozeti
-(e) K (mola) anahtarlı avail kaydı satır üretmez
-(e) boş gün → satır dizisi boş
+(c) HTML'de sınıf dersi kartı YOK
+(c) rozet hepsi planlı → 'Planlandı'
+(d) aynı slotta İKİ öge ALT ALTA (ezme/birleştirme YOK)
+(d) her iki ögeye ÇAKIŞMA işareti
+(d) HTML'de 2 × ÇAKIŞMA rozeti (ikinci kart düşürülüyor mutasyonu kırmızı olur)
+(d) HTML'de iki kart aynı hücrede (tek <td> içinde 2 kart bloğu)
+(d) rozet karışık → 'Kısmen tamamlandı' YOK (ikisi de planlı) → 'Planlandı'
+(e) K (mola) anahtarlı avail kaydı öge üretmez
+(e) bilinmeyen slot anahtarı ('9x') öge üretmez (uydurma YOK)
+(e) boş gün → tüm kolonlar boş
+(e) Kapalı (musait) slot → HTML'de gri '—' hücre, öge YOK
+(e) Ek Ders kaydı görselleşmez (ekran ölçütü) ama satır varlığı ETKİLEMEZ — buton YOK
 (e) satır yoksa buton çizilmez (gunlukTablo)
 buton draggable=false
 buton onmousedown stopPropagation
@@ -40,6 +47,11 @@ buton fa-image ikonu KULLANMAZ (eski kapı çakışması yok)
 buton öğretmen adı hücresinde (gunlukTablo, ad td içinde)
 buton birebir hücresine EKLENMEDİ (eski konum boş)
 haftalik izgarada öğretmen-kart butonu YOK
+başlık 'ÖĞRETMEN — <AD SOYAD>'
+alt satır: branş + gün adı + gg.aa.yyyy (tek gün; haftalık aralık YOK)
+rozet üçlüsü dal kapsamı: karışık → 'Kısmen tamamlandı'
+rozet üçlüsü dal kapsamı: hepsi tamamlandi → 'Yapıldı' (ESKİ 'Yapıldı (n)' KALDIRILDI)
+rozet kaynağı satır durumları (sınıf dersi 'planlı' sayılır)
 dosya adı öneki: ders-karti-ogretmen-
 dosya adı .png ile biter
 dosya adı telefon İÇERMEZ (yalnız ad+tarih kaynağı)
@@ -48,6 +60,11 @@ ogretmen tel yoksa varMi=false (fallback yok)
 akışta ogretmen hedefi tam 2 akış (tek-ders + tam-gün) okunur
 öğretmen tel yoksa toast: 'Öğretmen telefonu kayıtlı değil; görsel indirildi.'
 buton çizimi localStorage'a YAZMAZ
-grup birebir satırı TAM programda görünür (tam program sözleşmesi)
+grup birebir TAM programda görünür (grupHarici kesmesi kaldırıldı)
+ogretmenAd fallback dalı: ogrtId'siz kayıt ad eşlemesiyle görünür
+saat-kod fallback dalı: aralık-içi saat ('08:55') 1. kolona düşer
+mola saati ('12:15') öge üretmez (ekran da göstermez)
 iptal birebir satır üretmez
+GÜN ANAHTARI dowIdx (Pzt=0): diğer günün avail kaydı sızmaz
+başka günün birebir kaydı sızmaz
 süit test.mjs'te tam 1 kez kayıtlı

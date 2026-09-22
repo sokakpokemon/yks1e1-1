@@ -59,7 +59,7 @@ if (!globalThis.navigator) globalThis.navigator = {};
 let fail = 0;
 let __kosan = 0;
 const t = (name, cond, extra) => { __kosan++; console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 74) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ogrt-ders-karti.mjs kosan=" + __kosan + " beklenen=74"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ogrt-ders-karti.mjs:" + __kosan + ":74"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 70) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ogrt-ders-karti.mjs kosan=" + __kosan + " beklenen=70"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ogrt-ders-karti.mjs:" + __kosan + ":70"); } });
 
 let P;
 try {
@@ -123,18 +123,22 @@ t("(a) Birebir ögesi: gerçek ad + gerçek konu + DB.ogrenciler[].sinif", (() =
 t("(a) satır modeli de slot artan ve aynı içerikte (ekran sırası)", (() => { const satirlar = ogrtGunlukSatirlar(ogrt.id, gelecekSali); return satirlar.length === 2 && satirlar.every((r, i) => i === 0 || satirlar[i - 1].slot <= r.slot) && satirlar[0].tur === "Sınıf dersi"; })());
 const hA = dersKartiOgrtGunlukHTML(ogrt.id, gelecekSali);
 t("(a) HTML'de her iki öge de basılıyor (yalnız-birebir mutasyonu kırmızı olur)", hA.includes("Sınıf dersi") && hA.includes("Birebir"));
-t("(a) HTML'de 11 saat başlığı + ÖĞLE KOLONU ÇİZİLMEZ", (hA.match(/  · /g) || []).length === 11 && !hA.includes("12:10") && !hA.includes(">Mola<"));
+t("(a) HTML'de 11 saat başlığı + ÖĞLE KOLONU ÇİZİLMEZ", (hA.match(/\d+ · \d{2}:\d{2}</g) || []).length === 11 && !hA.includes("12:10") && !hA.includes(">Mola<"), "saat başlığı sayısı=" + (hA.match(/\d+ · \d{2}:\d{2}</g) || []).length);
 
 /* ---- 3) Sınıf dersi = rose kartta YALNIZ sınıf adı; birebir = ad · konu · sınıf ---- */
 console.log("3) Hücre içerik sözleşmesi (ekranla birebir):");
 sifirGun();
 ogrt.avail.sinif[sinifSlotAnahtar || gunNo + "-" + sinifSlotNo] = sinifDeger;
 const hS = dersKartiOgrtGunlukHTML(ogrt.id, gelecekSali);
-t("(b-öncesi) sınıf kartı içinde YALNIZ sınıf adı; DERS/KONU uydurma YOK", hS.includes("background:#ffe4e6") && hS.includes(sinifDeger) && !hS.includes("MATEMATİK"), "DERS adı rose kartta sızarsa kırmızı");
+/* YASAK taraması kart segmentiyle sınırlı: başlık alt satırı branşı (MATEMATİK) meşru basar; rose kartına sızarsa kırmızı */
+const segS = hS.slice(hS.indexOf('title="Sınıf dersi'), hS.indexOf("</td>", hS.indexOf('title="Sınıf dersi')));
+t("(b-öncesi) sınıf kartı içinde YALNIZ sınıf adı; DERS/KONU uydurma YOK", hS.includes("background:#ffe4e6") && segS.includes(sinifDeger) && !segS.includes("MATEMATİK"), "DERS adı rose kartta sızarsa kırmızı (başlıktaki branş adı sayılmaz)");
 sifirGun();
 ekleBirebir({});
 const hB1 = dersKartiOgrtGunlukHTML(ogrt.id, gelecekSali);
-t("(c-öncesi) birebir kartında DERS adı YOK (birebirHucreHTML ile aynı)", !hB1.includes("MATEMATİK") && hB1.includes(ogr.ad) && hB1.includes("Limit ve Süreklilik"));
+/* YASAK taraması kart segmentiyle sınırlı: başlık alt satırı branşı meşru basar; birebir kartına sızarsa kırmızı */
+const segB = hB1.slice(hB1.indexOf('title="Birebir"'), hB1.indexOf("</td>", hB1.indexOf('title="Birebir"')));
+t("(c-öncesi) birebir kartında DERS adı YOK (birebirHucreHTML ile aynı)", segB.includes(ogr.ad) && segB.includes("Limit ve Süreklilik") && !segB.includes("MATEMATİK"), "DERS adı birebir kartına sızarsa kırmızı (başlıktaki branş adı sayılmaz)");
 t("(c-öncesi) konu boş → 'Genel tekrar' dalı", (() => { const kayit = DB.dersler.find(l => l.id === "ks-ogrt-1"); kayit.konu = ""; const h = dersKartiOgrtGunlukHTML(ogrt.id, gelecekSali); kayit.konu = "Limit ve Süreklilik"; return h.includes("Genel tekrar"); })());
 t("(c-öncesi) konu = ders adı ile aynıysa → 'Genel tekrar' (birebirHucreHTML konu kuralı)", (() => { const kayit = DB.dersler.find(l => l.id === "ks-ogrt-1"); kayit.konu = "MATEMATİK"; const r = ogrtGunlukSatirlar(ogrt.id, gelecekSali); kayit.konu = "Limit ve Süreklilik"; return r[0].konu === "Genel tekrar"; })());
 t("(c-öncesi) öğrenci sinif alanı boşsa 'Sınıf belirtilmemiş'", (() => { const eski = ogr.sinif; ogr.sinif = ""; const r = ogrtGunlukSatirlar(ogrt.id, gelecekSali); ogr.sinif = eski; return r[0].sinif === "Sınıf belirtilmemiş"; })());

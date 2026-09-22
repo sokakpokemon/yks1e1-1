@@ -2380,3 +2380,82 @@ byte-birebir aynı: d1 15.874 B, ekders 15.909 B, etiket 8.500 B — SHA'lar yuk
 ## KABUL EDİLEN RESIDUAL — DÖNGÜ-10
 
 `elle-vaka-adlari.mjs` güncel koşum çıktısından tek seferlik aktarımla derlendi ve donduruldu; ad-takası kapısı gelecekteki değişimi yakalar, ancak ilk listenin eksiksizliğini bağımsız kanıtlamaz.
+
+## DÖNGÜ-11: OGRT-YATAY-KART — dikey tablo İPTAL, öğretmen günlük PNG = yatay saat şeridi
+
+### SÖZLEŞME DEĞİŞİKLİĞİ (AÇIK)
+- DÖNGÜ-10.5'te kurulan "tek-gün DİKEY tablo" (7 kolon: Saat|Tür|Öğrenci|Sınıf|Ders|Konu|Durum)
+  sözleşmesi İPTAL edildi (bilinçli ters dönüş; süit §2/§3/§4/§5/§6'daki dikey iddialar
+  sessiz gevşetme DEĞİL, sözleşme değişikliğiyle değiştirildi).
+- YENİ SÖZLEŞME: görsel = ekrandaki öğretmen çizelgesinin o günkü satırı (yatay şerit).
+  Hücre markup'ı yeniden yazılmaz: ogrtGunlukSatirlar/ogrtGunlukSlotlari KISA_KOD (1..11)
+  ile kolon modeli üretir; PNG offscreen kopya düğümden html2canvas ile basılır.
+  "Sınıf dersi hariç -> dahil" sözleşmesi KORUNUR: tam program = sınıf dersleri + birebirler.
+- Sınıf dersi Ders kolonu/kaynağı: avail.sinif değeri YALNIZ sınıf adı (ders/konu kaynağı
+  yoktur; rose kartta YALNIZ sınıf adı basılır, UYDURMA YOK). Branş başlık alt satırında.
+
+### app.js (yama: yama-ogrt-yatay.mjs, 16.300 B, 59c6433c9fd168da…)
+- ogrtGunlukSatirlar (app.js:4533): sınıf dersi + birebir satır modeli, dowIdx (Pzt=0) gün
+  anahtarı, Ek Ders HARİÇ (l.sinif && !l.ogrenciAd && !l.ogrenciId — ekran ölçütü), mola/
+  bilinmeyen slot uydurmaz, aralık-içi saat fallback (ksKodOf kuralı), grup birebir TAM
+  programda görünür, çakışma işareti aynı slotta >1 öge.
+- ogrtGunlukSlotlari (app.js:4582): KISA_KOD 11 kolon; her kolon alt-alta öge listesi.
+- dersKartiOgrtGunlukHTML (app.js:4596): inline-styled ayna (tailwind bağımsız); başlık
+  ÖĞRETMEN — <AD SOYAD>; alt satır branş · gün · gg.aa.yyyy; rozet Planlandı/Yapıldı/
+  Kısmen tamamlandı (durumsuz sınıf dersi planlı sayılır); ÖĞLE kolonu ÇİZİLMEZ; Kapalı
+  gri —; boş hücre boş; PNG'de buton/ikon/drag/+/TELEFON YOK.
+- dersKartiOgrtGunlukBtnHTML: draggable=false + onmousedown stopPropagation + onclick
+  stopPropagation+preventDefault+dersKartiOgrtGunlukAc; yalnız gunlukTablo öğretmen adı
+  hücresinde, ogrtGunlukSatirVar > 0 koşuluyla (app.js:3834-3838).
+- dersKartiOgrtGunlukAc: satır yok → toast + PNG yok; gunKey yok → PNG yok; WA hedefi
+  waAliciBilgisi(ogrtId,"ogretmen"); tel yoksa "Öğretmen telefonu kayıtlı değil; görsel
+  indirildi."; canShare→pano→her durumda indir; dosya adı ders-karti-ogretmen-<ad>-<tarih>.png
+  (TELEFON YOK). localStorage YAZIMI YOK.
+- ÖĞRENCİ YOLU BİREBİR: dersKartiAc 1 tanım, dersKartiGovde id 3 kullanım (öğrenci +
+  öğretmen-tek-ders + öğretmen-tam-gün), waAliciBilgisi öğrenci/anne/baba yolları değişmedi.
+
+### Backup'lar (üzerine yazma YOK)
+- app.js.ogrt-yatay2-oncesi.bak — 322.104 B, SHA-256 ba1064936d44efa107146052f27635d940f28d37c50b179ea2050ec557ee22b9 (tur başlangıcı; baseline SHA ile birebir)
+- app.js.ogrt-yatay-oncesi.bak — 322.104 B, aynı SHA (ilk yama turu başlangıcı)
+- ks-ogrt-ders-karti.dikey-oncesi.bak — 17.155 B, SHA-256 ff0db136fb5dfbbfa4eaba1456f395a4cc84762fb524407451e65de7f87910cd (dikey süit öncesi)
+
+### Süit yeniden yazımı (ks-ogrt-ders-karti.mjs, 25.646 B, feca59e2f442332c…)
+- 70 vaka (eski 53); yeni sözleşmeye göre: yatay kolon modeli (a-e fixture'ları gerçek
+  DB girdisiyle), hücre içerik sözleşmesi, rozet üçlüsü dal kapsamı, buton kalıbı/konumu,
+  dosya adı/WA hedefi, veri-değişmezlik + gerçek-dal fixture'ları.
+- 3 kırmızı-root-cause düzeltmesi süit tarafında: (1) saat başlığı regex'i tek-boşluk
+  "N · HH:MM<" formuna (HTML gerçek üretim), (2)-(3) MATEMATİK yasağı kart segmentiyle
+  sınırlı (başlık alt satırı branşı meşru basar) — yasak taraması tüm-HTML'den daraltıldı,
+  dal iddiası korundu.
+
+### Kapı güncellemeleri (HAM Σ birebir)
+- suit-manifest.mjs 2.609 B 7d4782dd…: ks-ogrt-ders-karti 53→70
+- elle-vaka-manifesti.mjs 1.996 B 7d4782dd…: aynı (ikisi bağımsız dosya, aynı sayı)
+- elle-vaka-adlari.mjs 117.358 B f278da5e…: 70 ad donduruldu (gerçek koşumdan tek kaynak)
+- suit-vakalar/ks-ogrt-ders-karti.mjs.txt 70 satır af11a5ff… (gerçek koşumdan)
+- Yeni HAM Σ = 2205 − 53 + 70 = 2222.
+
+### KAPANIŞ (fark sıfır)
+- node test.mjs → 2222/2222 OK, 46 süit, 0 kırmızı, exit=0
+- HAM Σ: runner=2222 = SUITE_DONE=2222 = donmuş=2222 = ELLE sayı=2222 = ELLE ad=2222 — BİREBİR ✓
+- statik-eksiksizlik.mjs → TAMLIK KANITI 46/46 (ks-ogrt-ders-karti site=70 hit=70 vaka=70), exit=0
+
+### Mutasyon/negatif testler (ham çıktı + restore SHA kanıtlı)
+- YENİ MUTASYON: app.js "s.ogeler.forEach" → "s.ogeler.slice(0,1).forEach" (ikinci kart
+  düşürülüyor) → 2 ✗: "(d) HTML'de 2 × ÇAKIŞMA rozeti" + "(d) HTML'de iki kart aynı hücrede"
+  → restore → app.js SHA f85e1585a87f3a9a… geri, süit 70/70 ✓
+- ESKİ 1: donmuş listede "BOZULDU" eki → [KAPI HATASI] AD farkı vaka #1 → exit=1 → restore (af11a5ff birebir)
+- ESKİ 2: ELLE ad listesinde ilk iki ad takas → [KAPI HATASI] AD farkı vaka #1 → exit=1 → restore (f278da5e birebir)
+- ESKİ 3: bayrak çıkarma (d1 L193, ekders L189, etiket L62/L104/L123) → 5 ✗ fixture
+  (d1+ekders+etiket × 3) → exit=1 → restore (3e79e7ab / f1a4fd92 / e0c725a8 birebir)
+- ESKİ 4: elle sayı 70→71 → [KAPI HATASI] manifest (70) ≠ ELLE manifest (71) → exit=1 → restore (7d4782dd birebir)
+
+### Yedek/araç dosyaları
+- yama-ogrt-yatay.mjs (16.300 B, 59c6433c…): sayımlı-ankor + konum-iddialı yama scripti
+  (str_replace proje-kök dosyalarını göremediği için CHECKPOINT protokolüyle Node ile).
+  Ders: regex-başlık değişimi İLK-geçtiği-yerden yutabilir; tek-eşleşme + bölge-uzunluk
+  iddiası zorunlu (bu turda ~44k yutma bu korumayla yakalandı, backup'tan dönüldü).
+
+### SON DURUM
+- app.js: 325.710 B, SHA-256 f85e1585a87f3a9a13dd026247a2e7970e05dcdd4f0c41ed3213ff6c37e5f098
+- node test.mjs yeşil + Σ birebir; statik-eksiksizlik TAMLIK; 4 eski + 1 yeni mutasyon testi FAIL→restore→yeşil

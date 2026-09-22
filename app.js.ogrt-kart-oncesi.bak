@@ -3860,9 +3860,7 @@ function gunlukTablo() {
              Taşıma MEVCUT dersDrag/dersBurak yoluyla yapılır — paralel DnD sistemi kurulmaz. */
           html += '<td class="px-1.5 py-2 border-r border-slate-200 hover:bg-blue-50 transition-colors"' +
             (ders.durum !== "iptal" && dersOgrenciIds(ders).length === 1 ? ' draggable="true" style="cursor:grab" ondragstart="dersDrag(event, \'' + esc(ders.id) + '\'); this.style.opacity=\'0.45\'" ondragend="dersDropHedef=null; this.style.opacity=\'\'"' : '') + '>' +
-            (dersKartiUygun(ders) ? dersKartiOgrtBtnHTML(ders) : "") + /* OGRT-KART-YAMASI: td içinde, birebir div ÖNCESİ — </div></td> bitişikliği bozulmaz */
             birebirHucreHTML(ders, ogrenci, ders.ogrenciAd || "", sinif, durumRenkG); /* DERS-KARTI-TASIMA-YAMASI: gunluk hücreden kart butonu kaldırıldı */
-
           if (grupUyelerG.length) html += '<div class="text-[8.5px] text-slate-400 mt-0.5">' + grupUyelerG.map(function (a) { return ilkHarfler(a); }).join(" · ") + '</div>';
           html += '</td>';
         } else if (ogrtId) {
@@ -4141,7 +4139,6 @@ function waAliciBilgisi(ogrenciId, aliciTipi) {
   var tip = aliciTipi === "anne" || aliciTipi === "baba" ? aliciTipi : "ogrenci";
   var etiket = tip === "anne" ? "Anne" : tip === "baba" ? "Baba" : "Öğrenci";
   var telefon = o ? (tip === "anne" ? o.anneTel : tip === "baba" ? o.babaTel : o.tel) : "";
-  if (aliciTipi === "ogretmen") { var t = DB.ogretmenler.find(function (x) { return x.id === ogrenciId; }); return { ogrenci: o || null, tip: "ogretmen", etiket: "Öğretmen", telefon: t && t.tel != null ? String(t.tel) : "", varMi: !!(t && t.tel) }; }
   return { ogrenci: o || null, tip: tip, etiket: etiket, telefon: telefon == null ? "" : String(telefon), varMi: !!(o && telefon) };
 }
 function waAliciDegistir(tip) {
@@ -4403,106 +4400,6 @@ function dersKartiAc(dersId) {
           }
         };
         /* DERS-KARTI-YAMASI-V2: file:// → pano denenmez; izin reddi → catch indir yoluyla biter */
-        if (guvendemi && navigator.clipboard && window.ClipboardItem) {
-          try {
-            navigator.clipboard.write([new ClipboardItem({ "image/png": blob })])
-              .then(function () { adim.pano = true; bitir(); })
-              .catch(function () { bitir(); });
-            return;
-          } catch (e) { /* ClipboardItem desteklenmiyor — indir yolu */ }
-        }
-        bitir();
-      }, "image/png");
-    })
-    .catch(function () { toast("Görsel oluşturulamadı.", "hata"); });
-}
-
-
-/* OGRT-KART-YAMASI: öğretmen modu GÜNLÜK birebir ders görseli (öğrenci hattının aynısı, öğretmen akışı).
-   - Öğrenci modu (dersKartiVeri/HTML/Ac/BtnHTML) BİREBİR korunur; çağrıları/metinleri/dosya adı değişmez.
-   - Sınıf kaynağı yalnız DB.ogrenciler[].sinif (boş → "Sınıf belirtilmemiş"); sinifProg/avail/ekDers KULLANILMAZ.
-   - HARIC (buton çizilmez, akış girmez): grup (>1 öğrenci), Sınıf Dersi (öğrenci boş), Ek Ders, iptal — dersKartiUygun dışlar.
-   - Görselde TELEFON YOK (ne öğrenci ne öğretmen); dosya adında telefon yok.
-   - WA hedefi "ogretmen" YALNIZ bu akışta okunur; öğretmen tel yoksa PNG yine iner.
-   - Bu özellik VERİ DEĞİŞTİRMEZ: saveDB/localStorage yazımı YOK. */
-function dersKartiOgrtVeri(d) {
-  var v = dersKartiVeri(d);
-  return { ogrAd: v.ogr, ad: v.ad, sinif: v.sinif || "Sınıf belirtilmemiş", ders: v.ders, konu: v.konu || "Genel tekrar", saat: v.saat, tarih: v.tarih, durum: d.durum === "tamamlandi" ? "Yapıldı" : "Planlandı" };
-}
-function dersKartiOgrtHTML(d) {
-  var v = dersKartiOgrtVeri(d);
-  function satir(b, x) { return '<div style="display:flex;gap:10px;font-size:14px;color:#334155;padding:5px 0"><span style="width:110px;font-size:10px;font-weight:800;letter-spacing:.06em;color:#94a3b8;padding-top:3px">' + b + "</span><span style=\"font-weight:600\">" + esc(x) + "</span></div>"; }
-  return '<div id="dersKartiGovde" style="width:640px;background:#fff;font-family:Inter,system-ui,sans-serif;padding:34px 40px;border-radius:0">' +
-    '<div style="display:flex;justify-content:space-between;align-items:center">' +
-      '<div style="display:flex;gap:12px;align-items:center"><div style="width:40px;height:40px;border-radius:13px;background:#14b8a6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px">🎓</div><div><div style="font-size:15px;font-weight:800;color:#0f172a">YKS Birebir Takip</div><div style="font-size:10px;color:#94a3b8;margin-top:2px">Günlük Ders Programı</div></div></div>' +
-      '<span style="background:' + (d.durum === "tamamlandi" ? "#d1fae5;color:#047857" : "#e0f2fe;color:#0369a1") + ';font-size:11px;font-weight:800;padding:4px 12px;border-radius:99px">' + esc(v.durum) + "</span>" +
-    "</div>" +
-    '<div style="border-bottom:2px solid #e2e8f0;margin:16px 0"></div>' +
-    '<div style="font-size:22px;font-weight:800;color:#0f172a">' + esc(v.ogrAd) + "</div>" +
-    satir("SAAT", v.saat) + satir("ÖĞRENCİ", v.ad) + satir("SINIF", v.sinif) +
-    satir("DERS", v.ders) + satir("KONU", v.konu) + satir("TARİH", v.tarih) +
-    '<div style="border-bottom:1px solid #f1f5f9;margin:14px 0"></div>' +
-    '<div style="font-size:9.5px;color:#94a3b8">Bu kart YKS Birebir Takip tarafından oluşturuldu · ' + esc(pencereAdi()) + "</div>" +
-  "</div>";
-}
-function dersKartiOgrtBtnHTML(d) {
-  return '<button draggable="false" title="Günlük ders görseli (PNG) üret" ' +
-    'onmousedown="event.stopPropagation()" onclick="event.stopPropagation();event.preventDefault();dersKartiOgrtAc(\'' + esc(d.id) + '\')" ' +
-    'class="w-6 h-6 rounded-full text-slate-300 hover:text-teal-600 hover:bg-teal-50 transition-colors"><i class="fa-solid fa-calendar-day text-[10px]"></i></button>';
-}
-function dersKartiOgrtAc(dersId) {
-  var d = DB.dersler.find(function (x) { return x.id === dersId; });
-  if (!d) { toast("Ders bulunamadı.", "hata"); return; }
-  if (!dersKartiUygun(d)) { toast("Görsel yalnız aktif tek öğrencili birebir ders için üretilir.", "uyari"); return; }
-  if (!d.tarih) { toast("Ders tarihi bilinmiyor; görsel üretilmedi.", "uyari"); return; }
-  if (!window.html2canvas) { toast("Görsel motoru (html2canvas) yüklenemedi. İnternet bağlantısını kontrol edip sayfayı yenileyin.", "hata"); return; }
-  /* OGRT-KART: WA hedefi (ogretmen) yalnız bu akışta okunur — ogrenci/anne/baba yolları birebir korunur.
-     Öğretmen tel yoksa: otomatik alıcı/WA hedefi EKLENMEZ, öğrenci telefonuna fallback YASAK; PNG yine iner. */
-  var a = waAliciBilgisi(d.ogretmenId || "", "ogretmen");
-  var guvendemi = !(typeof window.isSecureContext === "boolean" && window.isSecureContext === false);
-  var el = document.getElementById("dersKartiRapor");
-  if (!el) {
-    el = document.createElement("div");
-    el.id = "dersKartiRapor";
-    el.style.position = "fixed"; el.style.left = "-9999px"; el.style.top = "0";
-    document.body.appendChild(el);
-  }
-  el.innerHTML = dersKartiOgrtHTML(d);
-  function dosyaAdi() {
-    /* GIZLILIK: dosya adında TELEFON YOK — öğretmen adı + tarih */
-    var v = dersKartiOgrtVeri(d);
-    return "ders-karti-ogretmen-" + String(v.ogrAd)
-      .replace(/ğ/g, "g").replace(/Ğ/g, "g").replace(/ü/g, "u").replace(/Ü/g, "u")
-      .replace(/ş/g, "s").replace(/Ş/g, "s").replace(/ı/g, "i").replace(/İ/g, "i")
-      .replace(/ö/g, "o").replace(/Ö/g, "o").replace(/ç/g, "c").replace(/Ç/g, "c")
-      .replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "")
-      .toLowerCase() + "-" + d.tarih + ".png";
-  }
-  html2canvas(el, { scale: 2, backgroundColor: "#ffffff", useCORS: true, logging: false })
-    .then(function (canvas) {
-      canvas.toBlob(function (blob) {
-        if (!blob) { toast("Görsel oluşturulamadı.", "hata"); return; }
-        var ad = dosyaAdi();
-        var adim = { pano: false };
-        var bitir = function () {
-          if (dersKartiIndirildi) { return; }
-          dersKartiIndirildi = true;
-          /* Her durumda PNG indir */
-          var aEl = document.createElement("a");
-          aEl.download = ad; aEl.href = URL.createObjectURL(blob);
-          document.body.appendChild(aEl); aEl.click(); aEl.remove();
-          setTimeout(function () { URL.revokeObjectURL(aEl.href); }, 500);
-          var dosya = new File([blob], ad, { type: "image/png" });
-          if (guvendemi && a.varMi && navigator.canShare && navigator.canShare({ files: [dosya] })) {
-            navigator.share({ files: [dosya], title: "Ders Kartı" }).catch(function () {});
-            adim.paylas = true;
-          }
-          if (!adim.pano && !adim.paylas) {
-            toast(a.varMi ? ("Kart hazır: indirildi (" + ad + ").") : "Öğretmen telefonu kayıtlı değil; görsel indirildi.", "basarili");
-          } else {
-            toast("Kart hazır: panoya kopyalandı + indirildi. WhatsApp'ta Ctrl+V ile yapıştır veya dosyayı sürükle.", "basarili");
-          }
-        };
         if (guvendemi && navigator.clipboard && window.ClipboardItem) {
           try {
             navigator.clipboard.write([new ClipboardItem({ "image/png": blob })])

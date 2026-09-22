@@ -51,4 +51,5 @@ export const elleManifest = {
   "ks-gunluk-ders-tasi.mjs": 115,
   "ks-ders-karti.mjs": 69,
   "ks-ders-karti-tasima.mjs": 56,
+  "ks-ogrt-ders-karti.mjs": 37, /* OGRT-KART-YAMASI: elle sayım */
 };

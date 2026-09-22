@@ -1,0 +1,37 @@
+boot hatasız
+dersKartiOgrtVeri tanımlı (fonksiyon çağrılabilir)
+dersKartiOgrtHTML tanımlı
+dersKartiOgrtBtnHTML tanımlı
+dersKartiOgrtAc tanımlı
+öğrenci yolu: dersKartiAc çağrıları sayısı değişmedi (app'ta tanımlı + liste satırı)
+öğrenci kart HTML dersKartiGovde id'sini kullanır (tek kaynak), öğretmen HTML AYNI id'yi paylaşır
+uygun birebir derste buton VAR (dersKartiOgrtAc)
+grup dersi butonsuz (dersKartiUygun=false)
+grup satırında buton çağrısı YOK
+Sınıf Dersi (öğrenci boş) dersKartiUygun=false
+Sınıf Dersi satırında buton çağrısı YOK
+iptal ders dersKartiUygun=false
+iptal satırında buton çağrısı YOK
+buton draggable=false
+buton onmousedown stopPropagation
+buton onclick stopPropagation + dersKartiOgrtAc
+buton fa-image ikonu KULLANMAZ (eski kapı çakışması yok)
+öğretmen adı başlıkta (ogrAd)
+sınıf kaynağı yalnız DB.ogrenciler[].sinif
+konu boş → 'Genel tekrar'
+durum planlandi → 'Planlandı'
+durum tamamlandi → 'Yapıldı'
+sınıfı olmayan öğrenci → 'Sınıf belirtilmemiş'
+görselde TELEFON YOK (tel/anneTel/babaTel değerleri sızamaz)
+dosya adı öneki: ders-karti-ogretmen-
+dosya adı öğretmen adından türetilir (ogrAd)
+dosya adı .png ile biter
+dosya adı telefon İÇERMEZ (yalnız ad+tarih kaynağı)
+ogretmen hedefi tip=ogretmen, etiket=Öğretmen
+ogretmen tel yoksa varMi=false (fallback yok)
+öğrenci yolları birebir: ogrenci hedefi davranışı aynı
+akışta ogretmen hedefi yalnız dersKartiOgrtAc içinde
+öğretmen tel yoksa toast: 'Öğretmen telefonu kayıtlı değil; görsel indirildi.'
+buton çizimi localStorage'a YAZMAZ
+haftalik izgarada öğretmen-kart butonu YOK
+süit test.mjs'te tam 1 kez kayıtlı

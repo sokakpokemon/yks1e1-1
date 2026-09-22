@@ -3831,11 +3831,8 @@ function gunlukTablo() {
 
     html += '<tr class="border-b border-slate-200 ' + bg + '">';
     // Öğretmen adı
-    /* OGRT-TAMGUN-KART: buton yalnız günlük tam program satırı VARSA (sınıf dersi VEYA birebir) öğretmen adı hücresinde çizilir */
-    var ogrtGunlukSatirVar = ogrtGunlukSatirlar(ogrtId, gunKey).length > 0;
     html += '<td class="px-3 py-3 border-r border-slate-200 text-left">' +
-      '<div class="text-[12px] font-black text-slate-800 uppercase leading-tight">' + esc(ogrtAd) + '</div>' +
-      (ogrtId && ogrtGunlukSatirVar ? dersKartiOgrtGunlukBtnHTML(ogrtId, gunKey) : "") + '</td>';
+      '<div class="text-[12px] font-black text-slate-800 uppercase leading-tight">' + esc(ogrtAd) + '</div></td>';
 
     SAAT_SLOTLARI.forEach(function (slot) {
       if (slot.mola) {
@@ -3863,6 +3860,7 @@ function gunlukTablo() {
              Taşıma MEVCUT dersDrag/dersBurak yoluyla yapılır — paralel DnD sistemi kurulmaz. */
           html += '<td class="px-1.5 py-2 border-r border-slate-200 hover:bg-blue-50 transition-colors"' +
             (ders.durum !== "iptal" && dersOgrenciIds(ders).length === 1 ? ' draggable="true" style="cursor:grab" ondragstart="dersDrag(event, \'' + esc(ders.id) + '\'); this.style.opacity=\'0.45\'" ondragend="dersDropHedef=null; this.style.opacity=\'\'"' : '') + '>' +
+            (dersKartiUygun(ders) ? dersKartiOgrtBtnHTML(ders) : "") + /* OGRT-KART-YAMASI: td içinde, birebir div ÖNCESİ — </div></td> bitişikliği bozulmaz */
             birebirHucreHTML(ders, ogrenci, ders.ogrenciAd || "", sinif, durumRenkG); /* DERS-KARTI-TASIMA-YAMASI: gunluk hücreden kart butonu kaldırıldı */
 
           if (grupUyelerG.length) html += '<div class="text-[8.5px] text-slate-400 mt-0.5">' + grupUyelerG.map(function (a) { return ilkHarfler(a); }).join(" · ") + '</div>';
@@ -4479,165 +4477,6 @@ function dersKartiOgrtAc(dersId) {
       .replace(/ö/g, "o").replace(/Ö/g, "o").replace(/ç/g, "c").replace(/Ç/g, "c")
       .replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "")
       .toLowerCase() + "-" + d.tarih + ".png";
-  }
-  html2canvas(el, { scale: 2, backgroundColor: "#ffffff", useCORS: true, logging: false })
-    .then(function (canvas) {
-      canvas.toBlob(function (blob) {
-        if (!blob) { toast("Görsel oluşturulamadı.", "hata"); return; }
-        var ad = dosyaAdi();
-        var adim = { pano: false };
-        var bitir = function () {
-          if (dersKartiIndirildi) { return; }
-          dersKartiIndirildi = true;
-          /* Her durumda PNG indir */
-          var aEl = document.createElement("a");
-          aEl.download = ad; aEl.href = URL.createObjectURL(blob);
-          document.body.appendChild(aEl); aEl.click(); aEl.remove();
-          setTimeout(function () { URL.revokeObjectURL(aEl.href); }, 500);
-          var dosya = new File([blob], ad, { type: "image/png" });
-          if (guvendemi && a.varMi && navigator.canShare && navigator.canShare({ files: [dosya] })) {
-            navigator.share({ files: [dosya], title: "Ders Kartı" }).catch(function () {});
-            adim.paylas = true;
-          }
-          if (!adim.pano && !adim.paylas) {
-            toast(a.varMi ? ("Kart hazır: indirildi (" + ad + ").") : "Öğretmen telefonu kayıtlı değil; görsel indirildi.", "basarili");
-          } else {
-            toast("Kart hazır: panoya kopyalandı + indirildi. WhatsApp'ta Ctrl+V ile yapıştır veya dosyayı sürükle.", "basarili");
-          }
-        };
-        if (guvendemi && navigator.clipboard && window.ClipboardItem) {
-          try {
-            navigator.clipboard.write([new ClipboardItem({ "image/png": blob })])
-              .then(function () { adim.pano = true; bitir(); })
-              .catch(function () { bitir(); });
-            return;
-          } catch (e) { /* ClipboardItem desteklenmiyor — indir yolu */ }
-        }
-        bitir();
-      }, "image/png");
-    })
-    .catch(function () { toast("Görsel oluşturulamadı.", "hata"); });
-}
-
-/* OGRT-TAMGUN-KART: öğretmen günlük TAM program görseli (sınıf dersleri + birebirler, TEK tablo).
-   SÖZLEŞME DEĞİŞİKLİĞİ: öğretmen PNG artık TEK birebir kartı DEĞİL, seçili günkü TAM programdır.
-   - Birebir satırı: Tür="Birebir", Öğrenci=ogrenci.ad, Sınıf=yalnız DB.ogrenciler[].sinif (boş → "Sınıf belirtilmemiş"),
-     Ders=DERS[dersId].ad, Konu=konu || "Genel tekrar".
-   - Sınıf dersi satırı: Tür="Sınıf dersi", Öğrenci="—", Sınıf=avail.sinif değeri, Ders=öğretmen branşından (DERS[t.brans].ad), Konu/Durum gerçek alan yok → "—"/"Planlandı" (UYDURMA YOK).
-   - Sıralama: slot artan (KISA_KOD sırası). Mola (K) ve boş slotlar gösterilmez.
-   - Aynı slotta sınıf dersi + birebir → İKİ satır + her ikisine "ÇAKIŞMA" işareti.
-   - Rozet: planlı sayısı "Planlandı (n)"; hepsi tamamlandi → "Yapıldı (n)". Basitleştirme YOK: rozet kaynağı satır durumları.
-   - Görselde ve dosya adında TELEFON YOK; paylaşım zinciri (canShare → pano → her durumda PNG indir) aynen.
-   - WA hedefi "ogretmen" yalnız bu akışta; öğretmen tel yoksa PNG yine iner. VERİ DEĞİŞTİRMEZ. */
-function ogrtGunlukSatirlar(ogrtId, gunKey) {
-  var t = DB.ogretmenler.find(function (x) { return x.id === ogrtId; });
-  if (!t || !gunKey) return [];
-  var gunNo = new Date(gunKey + "T12:00:00").getDay(); /* 0=Pazar … 6=Cumartesi; KISA_KOD GUN_KISA ile aynı sıra */
-  var satirlar = [];
-  /* Sınıf dersleri: avail.sinif["gunNo-slot"] = sınıf adı (yalnız string); slot anahtarı günNo ile filtrelenir */
-  var avail = (t.avail && t.avail.sinif && typeof t.avail.sinif === "object") ? t.avail.sinif : {};
-  Object.keys(avail).forEach(function (k) {
-    var p = String(k).split("-");
-    if (p.length !== 2) return;
-    if (parseInt(p[0], 10) !== gunNo) return;
-    if (p[1] === "K") return; /* mola gösterilmez */
-    var slot = KISA_KOD.filter(function (x) { return x.no === p[1]; })[0];
-    if (!slot) return; /* bilinmeyen slot uydurulmaz */
-    var D = DERS[t.brans];
-    satirlar.push({ slot: parseInt(p[1], 10), saatYazi: slot.no + " · " + slot.b + "-" + slot.e, tur: "Sınıf dersi", ogrenci: "—", sinif: String(avail[k] || "—"), ders: (D && D.ad) ? D.ad : "—", konu: "—", durum: "Planlandı", cakisma: false, dersRef: null });
-  });
-  /* Birebirler: o gün o öğretmenin aktif (iptal değil) ders kayıtları; grup hariç tutulmaz — TAM program görselidir */
-  aktifDonemKayitlari(DB.dersler).forEach(function (l) {
-    if (l.tarih !== gunKey || l.durum === "iptal") return;
-    if (l.ogretmenId !== ogrtId) return;
-    if (!l.saat) return;
-    var slot = KISA_KOD.filter(function (x) { return x.b === l.saat; })[0] || KISA_KOD.filter(function (x) { return l.saat >= x.b && l.saat < x.e; })[0];
-    if (!slot) return; /* mola/çıkmaz saat uydurulmaz */
-    var o = DB.ogrenciler.find(function (x) { return x.id === l.ogrenciId; });
-    var grupUyeler = (typeof grupOgrenciAdlari === "function") ? grupOgrenciAdlari(l) : [];
-    var adYazi = grupUyeler.length > 1 ? grupUyeler.join(", ") : (o ? o.ad : (l.ogrenciAd || "—"));
-    var D = DERS[l.dersId] || DERS.tur;
-    satirlar.push({ slot: parseInt(slot.no, 10), saatYazi: saatEtiket(l.saat), tur: "Birebir", ogrenci: adYazi, sinif: (o && o.sinif) ? o.sinif : "Sınıf belirtilmemiş", ders: (D && D.ad) ? D.ad : "—", konu: l.konu || "Genel tekrar", durum: l.durum === "tamamlandi" ? "Yapıldı" : "Planlandı", cakisma: false, dersRef: l.id });
-  });
-  /* Sıralama: slot artan; aynı slot içinde önce sınıf dersi */
-  satirlar.sort(function (a, b) { return a.slot - b.slot || (a.tur === b.tur ? 0 : (a.tur === "Sınıf dersi" ? -1 : 1)); });
-  /* Çakışma: aynı slotta sınıf dersi + birebir → her ikisine işaret */
-  var slotSay = {};
-  satirlar.forEach(function (r) { slotSay[r.slot] = (slotSay[r.slot] || 0) + 1; });
-  satirlar.forEach(function (r) { if (slotSay[r.slot] > 1) r.cakisma = true; });
-  return satirlar;
-}
-function dersKartiOgrtGunlukHTML(ogrtId, gunKey) {
-  var t = DB.ogretmenler.find(function (x) { return x.id === ogrtId; });
-  var satirlar = ogrtGunlukSatirlar(ogrtId, gunKey);
-  var ogrAd = t ? String(t.ad || "") : "";
-  var gun = new Date(gunKey + "T12:00:00");
-  var gunAdlari = ["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"];
-  var baslikTarih = gunAdlari[gun.getDay()] + " · " + gunKey;
-  var planli = satirlar.filter(function (r) { return r.durum !== "Yapıldı"; }).length;
-  var tamam = satirlar.filter(function (r) { return r.durum === "Yapıldı"; }).length;
-  var rozet = (satirlar.length && tamam === satirlar.length) ? ("Yapıldı (" + tamam + ")") : ("Planlandı (" + planli + ")");
-  var th = function (x) { return '<th style="text-align:left;padding:8px 10px;font-size:9.5px;font-weight:800;color:#94a3b8;letter-spacing:.06em">' + x + "</th>"; };
-  var trlar = "";
-  satirlar.forEach(function (r) {
-    var durumRenk = r.durum === "Yapıldı" ? "#d1fae5;color:#047857" : "#e0f2fe;color:#0369a1";
-    trlar += '<tr style="border-bottom:1px solid #f1f5f9">' +
-      '<td style="padding:7px 10px;font-size:11px;font-weight:600;color:#334155;white-space:nowrap">' + esc(r.saatYazi) + "</td>" +
-      '<td style="padding:7px 10px;font-size:11px;color:#475569;white-space:nowrap">' + esc(r.tur) + "</td>" +
-      '<td style="padding:7px 10px;font-size:11px;font-weight:600;color:#334155">' + esc(r.ogrenci) + "</td>" +
-      '<td style="padding:7px 10px;font-size:11px;color:#475569">' + esc(r.sinif) + "</td>" +
-      '<td style="padding:7px 10px;font-size:11px;color:#475569;white-space:nowrap">' + esc(r.ders) + "</td>" +
-      '<td style="padding:7px 10px;font-size:11px;color:#64748b">' + esc(r.konu) + "</td>" +
-      '<td style="padding:7px 10px;font-size:11px;color:#475569">' + esc(r.durum) + (r.cakisma ? ' <span style="background:#ffe4e6;color:#e11d48;font-size:9px;font-weight:800;padding:1px 6px;border-radius:99px">ÇAKIŞMA</span>' : "") + "</td></tr>";
-    void durumRenk;
-  });
-  if (!satirlar.length) trlar = '<tr><td colspan="7" style="padding:26px;text-align:center;color:#94a3b8;font-size:12px">Bu gün için program kaydı yok.</td></tr>';
-  return '<div id="dersKartiGovde" style="width:900px;background:#fff;font-family:Inter,system-ui,sans-serif;padding:34px 40px;border-radius:0">' +
-    '<div style="display:flex;justify-content:space-between;align-items:center">' +
-      '<div style="display:flex;gap:12px;align-items:center"><div style="width:40px;height:40px;border-radius:13px;background:#14b8a6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px">🎓</div><div><div style="font-size:15px;font-weight:800;color:#0f172a">YKS Birebir Takip</div><div style="font-size:10px;color:#94a3b8;margin-top:2px">Günlük Ders Programı</div></div></div>' +
-      '<span style="background:' + (rozet.indexOf("Yapıldı") === 0 ? "#d1fae5;color:#047857" : "#e0f2fe;color:#0369a1") + ';font-size:11px;font-weight:800;padding:4px 12px;border-radius:99px">' + esc(rozet) + "</span>" +
-    "</div>" +
-    '<div style="border-bottom:2px solid #e2e8f0;margin:16px 0"></div>' +
-    '<div style="font-size:22px;font-weight:800;color:#0f172a">' + esc(ogrAd) + '</div><div style="font-size:11px;color:#94a3b8;margin-top:2px">' + esc(baslikTarih) + "</div>" +
-    '<div style="border-bottom:1px solid #f1f5f9;margin:12px 0"></div>' +
-    '<table style="width:100%;border-collapse:collapse"><tr style="background:#f8fafc">' +
-      th("SAAT") + th("TÜR") + th("ÖĞRENCİ") + th("SINIF") + th("DERS") + th("KONU") + th("DURUM") +
-    "</tr>" + trlar + "</table>" +
-    '<div style="border-bottom:1px solid #f1f5f9;margin:14px 0"></div>' +
-    '<div style="font-size:9.5px;color:#94a3b8">Bu kart YKS Birebir Takip tarafından oluşturuldu · ' + esc(pencereAdi()) + "</div>" +
-  "</div>";
-}
-function dersKartiOgrtGunlukBtnHTML(ogrtId, gunKey) {
-  return '<button draggable="false" title="Günlük program görseli (PNG) üret" ' +
-    'onmousedown="event.stopPropagation()" onclick="event.stopPropagation();event.preventDefault();dersKartiOgrtGunlukAc(\'' + esc(ogrtId) + '\', \'' + esc(gunKey) + '\')" ' +
-    'class="w-6 h-6 rounded-full text-slate-300 hover:text-teal-600 hover:bg-teal-50 transition-colors"><i class="fa-solid fa-calendar-day text-[10px]"></i></button>';
-}
-function dersKartiOgrtGunlukAc(ogrtId, gunKey) {
-  if (!DB.ogretmenler.find(function (x) { return x.id === ogrtId; })) { toast("Öğretmen bulunamadı.", "hata"); return; }
-  if (!gunKey) { toast("Tarih bilinmiyor; görsel üretilmedi.", "uyari"); return; }
-  var satirlar = ogrtGunlukSatirlar(ogrtId, gunKey);
-  if (!satirlar.length) { toast("Bu gun icin paylasilabilir ders yok.", "uyari"); return; }
-  if (!window.html2canvas) { toast("Görsel motoru (html2canvas) yüklenemedi. İnternet bağlantısını kontrol edip sayfayı yenileyin.", "hata"); return; }
-  /* OGRT-KART: WA hedefi (ogretmen) yalnız bu akışta okunur; öğretmen tel yoksa PNG yine iner (fallback YASAK). */
-  var a = waAliciBilgisi(ogrtId, "ogretmen");
-  var guvendemi = !(typeof window.isSecureContext === "boolean" && window.isSecureContext === false);
-  var el = document.getElementById("dersKartiRapor");
-  if (!el) {
-    el = document.createElement("div");
-    el.id = "dersKartiRapor";
-    el.style.position = "fixed"; el.style.left = "-9999px"; el.style.top = "0";
-    document.body.appendChild(el);
-  }
-  el.innerHTML = dersKartiOgrtGunlukHTML(ogrtId, gunKey);
-  function dosyaAdi() {
-    /* GIZLILIK: dosya adında TELEFON YOK — öğretmen adı + tarih */
-    var t = DB.ogretmenler.find(function (x) { return x.id === ogrtId; });
-    return "ders-karti-ogretmen-" + String(t && t.ad ? t.ad : "")
-      .replace(/ğ/g, "g").replace(/Ğ/g, "g").replace(/ü/g, "u").replace(/Ü/g, "u")
-      .replace(/ş/g, "s").replace(/Ş/g, "s").replace(/ı/g, "i").replace(/İ/g, "i")
-      .replace(/ö/g, "o").replace(/Ö/g, "o").replace(/ç/g, "c").replace(/Ç/g, "c")
-      .replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "")
-      .toLowerCase() + "-" + gunKey + ".png";
   }
   html2canvas(el, { scale: 2, backgroundColor: "#ffffff", useCORS: true, logging: false })
     .then(function (canvas) {

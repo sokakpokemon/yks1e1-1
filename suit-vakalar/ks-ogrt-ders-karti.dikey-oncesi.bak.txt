@@ -1,0 +1,53 @@
+boot hatasız
+ogrtGunlukSatirlar tanımlı
+dersKartiOgrtGunlukHTML tanımlı
+dersKartiOgrtGunlukBtnHTML tanımlı
+dersKartiOgrtGunlukAc tanımlı
+öğrenci yolu: dersKartiAc çağrıları sayısı değişmedi (app'ta tanımlı)
+öğrenci kart HTML dersKartiGovde id'yi kullanır; öğrenci + öğretmen-tek-ders + öğretmen-tam-gün = 3 paylaşım
+(a) sınıf dersi satırı VAR
+(a) birebir satırı VAR
+(a) sınıf dersi Sınıf alanı = avail.sinif değeri
+(a) sınıf dersi Öğrenci = '—'
+(a) sınıf dersi Ders = öğretmen branşından (mat → MATEMATİK)
+(a) sınıf dersi Konu = '—' (gerçek alan yok, UYDURMA YOK)
+(a) birebir Öğrenci = gerçek öğrenci adı
+(a) birebir Sınıf = yalnız DB.ogrenciler[].sinif
+(a) birebir Konu = gerçek konu
+(a) sıralama slot artan
+(a) mola (K) slotu satırlarda YOK
+(a) HTML'de her iki satır da basılıyor (yalnız-birebir mutasyonu kırmızı olur)
+(a) rozet 'Planlandı (n)' — planlı sayısı
+görselde TELEFON YOK (tel değerleri sızamaz)
+başlıkta öğretmen adı + gün
+(b) yalnız sınıf dersi satırı (birebir YOK)
+(b) HTML'de sınıf dersi basılıyor (yalnız-sınıf mutasyonu kırmızı olur)
+(b) HTML'de birebir satırı YOK (Tür kolonunda Birebir geçmiyor)
+(c) yalnız birebir satırı (sınıf dersi YOK)
+(c) konu boş → 'Genel tekrar' dalı (mutasyona karşı kapı)
+(c) HTML'de birebir basılıyor (yalnız-birebir-düşürme mutasyonu kırmızı olur)
+(c) HTML'de sınıf dersi satırı YOK
+(d) aynı slotta İKİ satır da kalır
+(d) her iki satıra ÇAKIŞMA işareti
+(d) HTML'de 2 × ÇAKIŞMA rozeti
+(e) K (mola) anahtarlı avail kaydı satır üretmez
+(e) boş gün → satır dizisi boş
+(e) satır yoksa buton çizilmez (gunlukTablo)
+buton draggable=false
+buton onmousedown stopPropagation
+buton onclick stopPropagation + dersKartiOgrtGunlukAc
+buton fa-image ikonu KULLANMAZ (eski kapı çakışması yok)
+buton öğretmen adı hücresinde (gunlukTablo, ad td içinde)
+buton birebir hücresine EKLENMEDİ (eski konum boş)
+haftalik izgarada öğretmen-kart butonu YOK
+dosya adı öneki: ders-karti-ogretmen-
+dosya adı .png ile biter
+dosya adı telefon İÇERMEZ (yalnız ad+tarih kaynağı)
+ogretmen hedefi tip=ogretmen, etiket=Öğretmen
+ogretmen tel yoksa varMi=false (fallback yok)
+akışta ogretmen hedefi tam 2 akış (tek-ders + tam-gün) okunur
+öğretmen tel yoksa toast: 'Öğretmen telefonu kayıtlı değil; görsel indirildi.'
+buton çizimi localStorage'a YAZMAZ
+grup birebir satırı TAM programda görünür (tam program sözleşmesi)
+iptal birebir satır üretmez
+süit test.mjs'te tam 1 kez kayıtlı

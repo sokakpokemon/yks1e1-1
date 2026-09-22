@@ -4519,20 +4519,21 @@ function dersKartiOgrtAc(dersId) {
     .catch(function () { toast("Görsel oluşturulamadı.", "hata"); });
 }
 
-/* OGRT-TAMGUN-KART: öğretmen günlük TAM program görseli (sınıf dersleri + birebirler, TEK tablo).
-   SÖZLEŞME DEĞİŞİKLİĞİ: öğretmen PNG artık TEK birebir kartı DEĞİL, seçili günkü TAM programdır.
-   - Birebir satırı: Tür="Birebir", Öğrenci=ogrenci.ad, Sınıf=yalnız DB.ogrenciler[].sinif (boş → "Sınıf belirtilmemiş"),
-     Ders=DERS[dersId].ad, Konu=konu || "Genel tekrar".
-   - Sınıf dersi satırı: Tür="Sınıf dersi", Öğrenci="—", Sınıf=avail.sinif değeri, Ders=öğretmen branşından (DERS[t.brans].ad), Konu/Durum gerçek alan yok → "—"/"Planlandı" (UYDURMA YOK).
-   - Sıralama: slot artan (KISA_KOD sırası). Mola (K) ve boş slotlar gösterilmez.
-   - Aynı slotta sınıf dersi + birebir → İKİ satır + her ikisine "ÇAKIŞMA" işareti.
-   - Rozet: planlı sayısı "Planlandı (n)"; hepsi tamamlandi → "Yapıldı (n)". Basitleştirme YOK: rozet kaynağı satır durumları.
-   - Görselde ve dosya adında TELEFON YOK; paylaşım zinciri (canShare → pano → her durumda PNG indir) aynen.
-   - WA hedefi "ogretmen" yalnız bu akışta; öğretmen tel yoksa PNG yine iner. VERİ DEĞİŞTİRMEZ. */
+/* OGRT-YATAY-KART: öğretmen günlük program görseli — EKRANDAKİ ÇİZELGEyle birebir YATAY saat şeridi.
+   SÖZLEŞME (bu tur): görsel = haftalikOgrtTablo'nun o günkü satırı; hücre içeriği/sırası ekranla aynı;
+   hücre markup'ı yeniden yazılmaz: aynı slot modeli (KISA_KOD 1..11), aynı alan kaynakları kullanılır.
+   - Ek Ders HARİÇ (ekran ölçütü: l.sinif && !l.ogrenciAd && !l.ogrenciId — gunlukTablo ile aynı).
+   - Sınıf dersi: rose kart, içinde YALNIZ sınıf adı (avail.sinif değeri; ders/konu kaynağı yoksa UYDURMA YOK).
+   - Birebir: ad · konu (boşsa "Genel tekrar") · öğrencinin sınıfı (boşsa "Sınıf belirtilmemiş"); DERS adı YOK (ekranla aynı).
+   - Sıralama KISA_KOD (1..11); ÖĞLE ARASI (mola/K) kolonu ÇİZİLMEZ; boş hücre boş; Kapalı gri "—".
+   - Aynı slotta çoklu kayıt ALT ALTA (ezme/birleştirme YOK); çokluysa her iki ögeye "ÇAKIŞMA".
+   - Gün anahtarı dowIdx (Pzt=0) — avail.sinif yazarlarıyla (gridTablo/togOgr*) aynı kural; eski getDay() kayması düzeltildi.
+   - Rozet: hepsi planlı "Planlandı" · hepsi yapıldı "Yapıldı" · karışık "Kısmen tamamlandı" (sınıf dersi planlı sayılır).
+   - TELEFON YOK (görsel + dosya adı); saveDB/localStorage YAZIMI YOK; paylaşım zinciri (canShare → pano → her durumda PNG indir) aynen. */
 function ogrtGunlukSatirlar(ogrtId, gunKey) {
   var t = DB.ogretmenler.find(function (x) { return x.id === ogrtId; });
   if (!t || !gunKey) return [];
-  var gunNo = new Date(gunKey + "T12:00:00").getDay(); /* 0=Pazar … 6=Cumartesi; KISA_KOD GUN_KISA ile aynı sıra */
+  var gunNo = dowIdx(gunKey); /* avail.sinif anahtarları Pzt=0 (gridTablo/togOgr yazımıyla aynı) */
   var satirlar = [];
   /* Sınıf dersleri: avail.sinif["gunNo-slot"] = sınıf adı (yalnız string); slot anahtarı günNo ile filtrelenir */
   var avail = (t.avail && t.avail.sinif && typeof t.avail.sinif === "object") ? t.avail.sinif : {};
@@ -4540,24 +4541,34 @@ function ogrtGunlukSatirlar(ogrtId, gunKey) {
     var p = String(k).split("-");
     if (p.length !== 2) return;
     if (parseInt(p[0], 10) !== gunNo) return;
-    if (p[1] === "K") return; /* mola gösterilmez */
     var slot = KISA_KOD.filter(function (x) { return x.no === p[1]; })[0];
-    if (!slot) return; /* bilinmeyen slot uydurulmaz */
+    if (!slot) return; /* mola (K) ve bilinmeyen slot uydurulmaz */
     var D = DERS[t.brans];
-    satirlar.push({ slot: parseInt(p[1], 10), saatYazi: slot.no + " · " + slot.b + "-" + slot.e, tur: "Sınıf dersi", ogrenci: "—", sinif: String(avail[k] || "—"), ders: (D && D.ad) ? D.ad : "—", konu: "—", durum: "Planlandı", cakisma: false, dersRef: null });
+    satirlar.push({ slot: parseInt(p[1], 10), saatYazi: saatEtiket(slot.b), tur: "Sınıf dersi", ogrenci: "—", sinif: String(avail[k] || "—"), ders: (D && D.ad) ? D.ad : "—", konu: "—", durum: "Planlandı", cakisma: false, dersRef: null });
   });
-  /* Birebirler: o gün o öğretmenin aktif (iptal değil) ders kayıtları; grup hariç tutulmaz — TAM program görselidir */
+  /* Birebirler: o gün o öğretmenin kayıtları — gunlukTablo ile AYNI tek-kayıt saat haritası
+     (harita anahtarı duplicate ezme imkânsız kılar); Ek Ders HARİÇ (ekran ölçütü); grup hariç tutulmaz — TAM program görselidir */
+  var saatMap = {};
   aktifDonemKayitlari(DB.dersler).forEach(function (l) {
     if (l.tarih !== gunKey || l.durum === "iptal") return;
-    if (l.ogretmenId !== ogrtId) return;
+    if (l.ogretmenId !== ogrtId && (l.ogretmenAd || "") !== t.ad) return;
     if (!l.saat) return;
-    var slot = KISA_KOD.filter(function (x) { return x.b === l.saat; })[0] || KISA_KOD.filter(function (x) { return l.saat >= x.b && l.saat < x.e; })[0];
-    if (!slot) return; /* mola/çıkmaz saat uydurulmaz */
+    if (l.sinif && !l.ogrenciAd && !l.ogrenciId) return; /* ek ders görselleşmez (ekranla aynı) */
+    saatMap[l.saat] = l;
+  });
+  Object.keys(saatMap).forEach(function (saat) {
+    var l = saatMap[saat];
+    var slot = KISA_KOD.filter(function (x) { return x.b === saat; })[0] || KISA_KOD.filter(function (x) { return saat >= x.b && saat < x.e; })[0]; /* ksKodOf aralık kuralı */
+    if (!slot) return; /* mola/çıkmaz saat uydurulmaz (ekran da göstermez) */
     var o = DB.ogrenciler.find(function (x) { return x.id === l.ogrenciId; });
     var grupUyeler = (typeof grupOgrenciAdlari === "function") ? grupOgrenciAdlari(l) : [];
     var adYazi = grupUyeler.length > 1 ? grupUyeler.join(", ") : (o ? o.ad : (l.ogrenciAd || "—"));
     var D = DERS[l.dersId] || DERS.tur;
-    satirlar.push({ slot: parseInt(slot.no, 10), saatYazi: saatEtiket(l.saat), tur: "Birebir", ogrenci: adYazi, sinif: (o && o.sinif) ? o.sinif : "Sınıf belirtilmemiş", ders: (D && D.ad) ? D.ad : "—", konu: l.konu || "Genel tekrar", durum: l.durum === "tamamlandi" ? "Yapıldı" : "Planlandı", cakisma: false, dersRef: l.id });
+    var dersAdi = (D && D.ad) ? D.ad : "";
+    var konu = (typeof l.konu === "string" ? l.konu : "").trim();
+    /* birebirHucreHTML konu-kurallarıyla AYNI geçerlilik: boş/derse-eşit/sınıfa-eşit/ad-eşit → "Genel tekrar" */
+    var konuGecerli = konu.length > 0 && konu !== dersAdi && konu !== ((o && o.sinif) || "") && konu !== adYazi;
+    satirlar.push({ slot: parseInt(slot.no, 10), saatYazi: saatEtiket(l.saat), tur: "Birebir", ogrenci: adYazi, sinif: (o && o.sinif) ? o.sinif : "Sınıf belirtilmemiş", ders: (D && D.ad) ? D.ad : "—", konu: konuGecerli ? konu : "Genel tekrar", durum: l.durum === "tamamlandi" ? "Yapıldı" : "Planlandı", cakisma: false, dersRef: l.id });
   });
   /* Sıralama: slot artan; aynı slot içinde önce sınıf dersi */
   satirlar.sort(function (a, b) { return a.slot - b.slot || (a.tur === b.tur ? 0 : (a.tur === "Sınıf dersi" ? -1 : 1)); });
@@ -4567,42 +4578,79 @@ function ogrtGunlukSatirlar(ogrtId, gunKey) {
   satirlar.forEach(function (r) { if (slotSay[r.slot] > 1) r.cakisma = true; });
   return satirlar;
 }
+/* Yatay şeridin kolon modeli: KISA_KOD'un 11 slottu (ÖĞLE kolonu yok); her kolon alt-alta öge listesi taşır */
+function ogrtGunlukSlotlari(ogrtId, gunKey) {
+  var satirlar = ogrtGunlukSatirlar(ogrtId, gunKey);
+  return KISA_KOD.map(function (k) {
+    return { no: k.no, b: k.b, e: k.e, ogeler: satirlar.filter(function (r) { return r.slot === parseInt(k.no, 10); }) };
+  });
+}
+/* PNG tablosu: ekran hücrelerinin INLINE-STYLED aynası (html2canvas offscreen kopyada runtime
+   tailwind üretimine bağımlı olamaz). Renk/boyut eşlemesi — haftalikOgrtTablo ile birebir:
+   rose kart = bg-rose-100 #ffe4e6 / border-rose-200 #fecdd3 / text-rose-700 #be123c;
+   birebir kart = bg-blue-50 #eff6ff / border-blue-200 #bfdbfe, tamamlandi → emerald-50 #ecfdf5 / emerald-200 #a7f3d0;
+   kapalı hücre = bg-slate-100 #f1f5f9 / text-slate-400 #94a3b8; boş hücre boş (+ istek kutusu PNG'ye girmez).
+   İÇİNDE YOK: buton, işlem ikonu, draggable/drop, "+ istek", TELEFON. */
 function dersKartiOgrtGunlukHTML(ogrtId, gunKey) {
   var t = DB.ogretmenler.find(function (x) { return x.id === ogrtId; });
   var satirlar = ogrtGunlukSatirlar(ogrtId, gunKey);
   var ogrAd = t ? String(t.ad || "") : "";
-  var gun = new Date(gunKey + "T12:00:00");
-  var gunAdlari = ["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"];
-  var baslikTarih = gunAdlari[gun.getDay()] + " · " + gunKey;
-  var planli = satirlar.filter(function (r) { return r.durum !== "Yapıldı"; }).length;
+  var gunNo = dowIdx(gunKey);
+  var gunAdlari = ["Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi","Pazar"];
+  var gunAdi = gunAdlari[gunNo] || "";
+  var brans = t ? DERS[t.brans] : null;
   var tamam = satirlar.filter(function (r) { return r.durum === "Yapıldı"; }).length;
-  var rozet = (satirlar.length && tamam === satirlar.length) ? ("Yapıldı (" + tamam + ")") : ("Planlandı (" + planli + ")");
-  var th = function (x) { return '<th style="text-align:left;padding:8px 10px;font-size:9.5px;font-weight:800;color:#94a3b8;letter-spacing:.06em">' + x + "</th>"; };
-  var trlar = "";
-  satirlar.forEach(function (r) {
-    var durumRenk = r.durum === "Yapıldı" ? "#d1fae5;color:#047857" : "#e0f2fe;color:#0369a1";
-    trlar += '<tr style="border-bottom:1px solid #f1f5f9">' +
-      '<td style="padding:7px 10px;font-size:11px;font-weight:600;color:#334155;white-space:nowrap">' + esc(r.saatYazi) + "</td>" +
-      '<td style="padding:7px 10px;font-size:11px;color:#475569;white-space:nowrap">' + esc(r.tur) + "</td>" +
-      '<td style="padding:7px 10px;font-size:11px;font-weight:600;color:#334155">' + esc(r.ogrenci) + "</td>" +
-      '<td style="padding:7px 10px;font-size:11px;color:#475569">' + esc(r.sinif) + "</td>" +
-      '<td style="padding:7px 10px;font-size:11px;color:#475569;white-space:nowrap">' + esc(r.ders) + "</td>" +
-      '<td style="padding:7px 10px;font-size:11px;color:#64748b">' + esc(r.konu) + "</td>" +
-      '<td style="padding:7px 10px;font-size:11px;color:#475569">' + esc(r.durum) + (r.cakisma ? ' <span style="background:#ffe4e6;color:#e11d48;font-size:9px;font-weight:800;padding:1px 6px;border-radius:99px">ÇAKIŞMA</span>' : "") + "</td></tr>";
-    void durumRenk;
+  var rozet = !satirlar.length ? "Planlandı" : (tamam === satirlar.length ? "Yapıldı" : (tamam > 0 ? "Kısmen tamamlandı" : "Planlandı"));
+  var rozetBg = rozet === "Yapıldı" ? "#ecfdf5;color:#047857" : rozet === "Kısmen tamamlandı" ? "#fef3c7;color:#b45309" : "#eff6ff;color:#1d4ed8";
+  /* Saat başlıkları: haftalikOgrtTablo ile AYNI üretim (KISA_KOD; ÖĞLE kolonu ÇİZİLMEZ) */
+  var saatBaslik = "";
+  KISA_KOD.forEach(function (k) {
+    saatBaslik += '<th style="padding:8px 8px;text-align:center;border-left:1px solid #f1f5f9;min-width:75px">' +
+      '<div style="font-size:11px;font-weight:800;color:#475569">' + k.no + " \u00b7 " + k.b + "</div>" +
+      '<div style="font-size:9px;color:#94a3b8">' + k.e + "</div></th>";
   });
-  if (!satirlar.length) trlar = '<tr><td colspan="7" style="padding:26px;text-align:center;color:#94a3b8;font-size:12px">Bu gün için program kaydı yok.</td></tr>';
-  return '<div id="dersKartiGovde" style="width:900px;background:#fff;font-family:Inter,system-ui,sans-serif;padding:34px 40px;border-radius:0">' +
+  var kapaliMi = function (no) { return (t && t.avail && Array.isArray(t.avail.musait)) ? t.avail.musait.indexOf(gunNo + "-" + no) >= 0 : false; };
+  var hcreler = "";
+  ogrtGunlukSlotlari(ogrtId, gunKey).forEach(function (s) {
+    if (kapaliMi(s.no)) { /* haftalik izgara: Kapalı gri "—" */
+      hcreler += '<td style="padding:6px;text-align:center;border-left:1px solid #f1f5f9;background:#f1f5f9"><span style="font-size:9px;color:#94a3b8">—</span></td>';
+      return;
+    }
+    if (!s.ogeler.length) { hcreler += '<td style="padding:6px;border-left:1px solid #f1f5f9"></td>'; return; } /* boş hücre boş kalır */
+    var ici = "";
+    s.ogeler.forEach(function (r) {
+      var cakismaRozeti = r.cakisma ? '<span style="display:inline-block;background:#ffe4e6;color:#e11d48;font-size:7.5px;font-weight:800;padding:1px 6px;border-radius:99px;margin-top:2px">ÇAKIŞMA</span>' : "";
+      if (r.tur === "Sınıf dersi") {
+        /* haftalikOgrtTablo rose kartı: İÇİNDE YALNIZ sınıf adı (UYDURMA YOK) */
+        ici += '<div title="Sınıf dersi — kilitli" style="background:#ffe4e6;border:1px solid #fecdd3;border-radius:8px;padding:4px 4px">' +
+          '<div style="font-size:8px;font-weight:700;color:#be123c;line-height:1.25">' + esc(r.sinif) + "</div>" + cakismaRozeti + "</div>";
+      } else {
+        var kayit = DB.dersler.find(function (x) { return x.id === r.dersRef; });
+        var o = kayit ? DB.ogrenciler.find(function (x) { return x.id === kayit.ogrenciId; }) : null;
+        var kartBg = kayit && kayit.durum === "tamamlandi" ? "#ecfdf5;border:1px solid #a7f3d0" : "#eff6ff;border:1px solid #bfdbfe";
+        /* birebir kartı = EKRANDAKİ birebirHucreHTML ile AYNI üç satır: ad · konu · sınıf (ders adı YOK) */
+        ici += '<div title="Birebir" style="background:' + kartBg + ';border-radius:8px;padding:4px 4px">' +
+          '<div style="font-size:10px;font-weight:700;color:#1e293b;line-height:1.25">' + esc(r.ogrenci) + "</div>" +
+          '<div style="font-size:9px;color:#64748b;line-height:1.25">' + esc(r.konu) + "</div>" +
+          '<div style="font-size:8px;font-weight:700;color:#94a3b8;line-height:1.25">' + esc(r.sinif) + "</div>" + cakismaRozeti + "</div>";
+      }
+    });
+    hcreler += '<td style="padding:6px;text-align:center;border-left:1px solid #f1f5f9;vertical-align:top">' + ici + "</td>";
+  });
+  return '<div id="dersKartiGovde" style="width:1060px;background:#fff;font-family:Inter,system-ui,sans-serif;padding:34px 40px;border-radius:0">' +
     '<div style="display:flex;justify-content:space-between;align-items:center">' +
       '<div style="display:flex;gap:12px;align-items:center"><div style="width:40px;height:40px;border-radius:13px;background:#14b8a6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px">🎓</div><div><div style="font-size:15px;font-weight:800;color:#0f172a">YKS Birebir Takip</div><div style="font-size:10px;color:#94a3b8;margin-top:2px">Günlük Ders Programı</div></div></div>' +
-      '<span style="background:' + (rozet.indexOf("Yapıldı") === 0 ? "#d1fae5;color:#047857" : "#e0f2fe;color:#0369a1") + ';font-size:11px;font-weight:800;padding:4px 12px;border-radius:99px">' + esc(rozet) + "</span>" +
+      '<span style="background:' + rozetBg + ';font-size:11px;font-weight:800;padding:4px 12px;border-radius:99px">' + esc(rozet) + "</span>" +
     "</div>" +
     '<div style="border-bottom:2px solid #e2e8f0;margin:16px 0"></div>' +
-    '<div style="font-size:22px;font-weight:800;color:#0f172a">' + esc(ogrAd) + '</div><div style="font-size:11px;color:#94a3b8;margin-top:2px">' + esc(baslikTarih) + "</div>" +
+    '<div style="font-size:20px;font-weight:800;color:#0f172a">ÖĞRETMEN — ' + esc(ogrAd.toUpperCase()) + "</div>" +
+    '<div style="font-size:11px;color:#94a3b8;margin-top:2px">' + esc((brans && brans.ad) ? brans.ad : "Branş yok") + " · " + esc(gunAdi) + " · " + esc(fmtTR(gunKey)) + "</div>" +
     '<div style="border-bottom:1px solid #f1f5f9;margin:12px 0"></div>' +
     '<table style="width:100%;border-collapse:collapse"><tr style="background:#f8fafc">' +
-      th("SAAT") + th("TÜR") + th("ÖĞRENCİ") + th("SINIF") + th("DERS") + th("KONU") + th("DURUM") +
-    "</tr>" + trlar + "</table>" +
+      '<th style="text-align:left;padding:8px 10px;font-size:10.5px;font-weight:800;color:#94a3b8;letter-spacing:.06em;min-width:100px;border-right:1px solid #f1f5f9">GÜN</th>' + saatBaslik +
+    "</tr><tr>" +
+      '<td style="padding:8px 10px;border-right:1px solid #f1f5f9;font-size:11.5px;font-weight:700;color:#475569;white-space:nowrap">' + esc(gunAdi) + "</td>" + hcreler +
+    "</tr></table>" +
     '<div style="border-bottom:1px solid #f1f5f9;margin:14px 0"></div>' +
     '<div style="font-size:9.5px;color:#94a3b8">Bu kart YKS Birebir Takip tarafından oluşturuldu · ' + esc(pencereAdi()) + "</div>" +
   "</div>";

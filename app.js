@@ -4300,7 +4300,9 @@ function kopyalaMetin(metin) {
    Bu özellik VERİ DEĞİŞTİRMEZ: saveDB/localStorage yazımı YOK.
    ═══════════════════════════════════════════════════════════════ */
 function dersKartiUygun(d) {
-  return !!(d && d.durum !== "iptal" && dersOgrenciIds(d).length === 1);
+  /* DÖNGÜ-15: iptal ARTIK dışlanmaz — iptal birebir derste görsel kart butonu görünür ve PNG üretilebilir.
+     WhatsApp METİN akışındaki iptal filtresi (ogrenciMesajMetni) AYNEN korunur ve bu fonksiyona bağlı değildir. */
+  return !!(d && dersOgrenciIds(d).length === 1);
 }
 function dersKartiEtiket(d) {
   /* WA-DURUM mantığıyla hizalı: planlandi → "... olacaktır", tamamlandi → "yapıldı" */
@@ -4323,22 +4325,49 @@ function dersKartiVeri(d) {
     if (og) ogrAd = og.ad;
   }
   var D = DERS[d.dersId] || DERS.tur;
-  return { o: o, ad: (o && o.ad) || d.ogrenciAd || "", ders: D.ad, konu: d.konu || "", ogr: ogrAd || "", tarih: fmtTR(d.tarih) + " " + GUNLER[dowIdx(d.tarih)], saat: saatEtiket(d.saat), sinif: (o && o.sinif) || "", durum: d.durum === "tamamlandi" ? "Yapıldı" : "Planlandı / ... olacaktır" };
+  var rozet = d.durum === "tamamlandi" ? "Yapıldı" : (d.durum === "iptal" ? "İptal Edildi" : "Planlandı");
+  return { o: o, ad: (o && o.ad) || d.ogrenciAd || "", ders: D.ad, konu: d.konu || "", ogr: ogrAd || "", tarih: fmtTR(d.tarih) + " " + GUNLER[dowIdx(d.tarih)], saat: saatEtiket(d.saat), sinif: (o && o.sinif) || "Sınıf belirtilmemiş", durum: rozet };
 }
 function dersKartiHTML(d) {
+  /* DÖNGÜ-15: BENTO tasarım — zemin #f4f6fa, beyaz yuvarlak kart, salt inline style (class= YOK).
+     Rozet 3 durum: Planlandı #ecfdf5/#047857 · Yapıldı #eff6ff/#1d4ed8 · İptal Edildi #fef2f2/#b91c1c.
+     Kutular: öğrenci slate-50+indigo · tarih #f0f4fa · saat #fff8f2+amber · ders #eff9f7+teal ·
+     konu #f9f5fc+mor · öğretmen slate-50. Harici CDN/font/ikon YASAK; nötr inline SVG takvim. */
   var v = dersKartiVeri(d);
-  function satir(b, x) { return x ? '<div style="display:flex;gap:10px;font-size:14px;color:#334155;padding:5px 0"><span style="width:110px;font-size:10px;font-weight:800;letter-spacing:.06em;color:#94a3b8;padding-top:3px">' + b + "</span><span style=\"font-weight:600\">" + esc(x) + "</span></div>" : ""; }
-  return '<div id="dersKartiGovde" style="width:640px;background:#fff;font-family:Inter,system-ui,sans-serif;padding:34px 40px;border-radius:0">' +
-    '<div style="display:flex;justify-content:space-between;align-items:center">' +
-      '<div style="display:flex;gap:12px;align-items:center"><div style="width:40px;height:40px;border-radius:13px;background:#14b8a6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px">🎓</div><div><div style="font-size:15px;font-weight:800;color:#0f172a">YKS Birebir Takip</div><div style="font-size:10px;color:#94a3b8;margin-top:2px">Ders Kartı</div></div></div>' +
-      '<span style="background:' + (d.durum === "tamamlandi" ? "#d1fae5;color:#047857" : "#e0f2fe;color:#0369a1") + ';font-size:11px;font-weight:800;padding:4px 12px;border-radius:99px">' + esc(v.durum) + "</span>" +
+  var rozetRenk = d.durum === "tamamlandi" ? { bg: "#eff6ff", fg: "#1d4ed8" } : (d.durum === "iptal" ? { bg: "#fef2f2", fg: "#b91c1c" } : { bg: "#ecfdf5", fg: "#047857" });
+  var etiketStil = 'font-size:8.5px;font-weight:800;letter-spacing:.08em;color:#94a3b8;margin-bottom:4px';
+  function kutu(arka, akant, etiket, deger) {
+    return '<div style="background:' + arka + ';border-radius:12px;padding:12px 14px;flex:1;min-width:0">' +
+      '<div style="' + etiketStil + '">' + etiket + "</div>" +
+      '<div style="font-size:14px;font-weight:700;color:#1e293b;line-height:1.35;border-left:3px solid ' + akant + ';padding-left:8px">' + esc(deger) + "</div></div>";
+  }
+  var svgKart = '<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="12" fill="#6366f1"/><rect x="11" y="12" width="18" height="16" rx="2" fill="none" stroke="#ffffff" stroke-width="2"/><line x1="11" y1="17" x2="29" y2="17" stroke="#ffffff" stroke-width="2"/><line x1="17" y1="10" x2="17" y2="14" stroke="#ffffff" stroke-width="2"/><line x1="23" y1="10" x2="23" y2="14" stroke="#ffffff" stroke-width="2"/></svg>';
+  var durumStil = 'background:' + rozetRenk.bg + ';color:' + rozetRenk.fg + ';font-size:11px;font-weight:800;padding:4px 12px;border-radius:99px';
+  return '<div id="dersKartiGovde" style="width:640px;background:#f4f6fa;font-family:Inter,system-ui,sans-serif;padding:24px;border-radius:16px">' +
+    '<div style="background:#ffffff;border-radius:14px;padding:24px 26px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px">' +
+        '<div style="display:flex;gap:12px;align-items:center">' + svgKart +
+        '<div><div style="font-size:16px;font-weight:800;color:#0f172a">Birebir Ders Kartı</div><div style="font-size:10.5px;color:#94a3b8;margin-top:2px;font-weight:700">Formül Kurs</div></div></div>' +
+        '<span style="' + durumStil + '">' + esc(v.durum) + "</span>" +
+      "</div>" +
+      '<div style="border-bottom:1px solid #f1f5f9;margin:16px 0"></div>' +
+      '<div style="background:#f8fafc;border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:14px">' +
+        '<div><div style="' + etiketStil + '">ÖĞRENCİ</div><div style="font-size:20px;font-weight:800;color:#0f172a">' + esc(v.ad) + "</div></div>" +
+        '<div style="text-align:right"><div style="' + etiketStil + '">SINIF</div><div style="font-size:13px;font-weight:800;color:#4338ca;background:#eef2ff;display:inline-block;padding:3px 10px;border-radius:99px">' + esc(v.sinif) + "</div></div>" +
+      "</div>" +
+      '<div style="display:flex;gap:12px;margin-top:12px">' +
+        kutu("#f0f4fa", "#6366f1", "TARİH", v.tarih) +
+        kutu("#fff8f2", "#f59e0b", "SAAT", v.saat) +
+      "</div>" +
+      '<div style="display:flex;gap:12px;margin-top:12px">' +
+        kutu("#eff9f7", "#14b8a6", "DERS", v.ders) +
+        kutu("#f9f5fc", "#8b5cf6", "KONU", v.konu || "Genel tekrar") +
+      "</div>" +
+      '<div style="margin-top:12px">' +
+        kutu("#f8fafc", "#94a3b8", "ÖĞRETMEN", v.ogr) +
+      "</div>" +
+      '<div style="font-size:9.5px;color:#94a3b8;margin-top:14px">Bu kart YKS Birebir Takip tarafından oluşturuldu · ' + esc(pencereAdi()) + "</div>" +
     "</div>" +
-    '<div style="border-bottom:2px solid #e2e8f0;margin:16px 0"></div>' +
-    '<div style="font-size:22px;font-weight:800;color:#0f172a">' + esc(v.ad) + "</div>" +
-    satir("DERS", v.ders) + satir("KONU", v.konu || "Genel tekrar") + satir("ÖĞRETMEN", v.ogr) +
-    satir("TARİH", v.tarih) + satir("SAAT", v.saat) + satir("SINIF", v.sinif) +
-    '<div style="border-bottom:1px solid #f1f5f9;margin:14px 0"></div>' +
-    '<div style="font-size:9.5px;color:#94a3b8">Bu kart YKS Birebir Takip tarafından oluşturuldu · ' + esc(pencereAdi()) + "</div>" +
   "</div>";
 }
 /* DERS-KARTI-YAMASI-V2: güvenli bağlam + tek indirme.
@@ -4366,6 +4395,7 @@ function dersKartiAc(dersId) {
     document.body.appendChild(el);
   }
   el.innerHTML = dersKartiHTML(d);
+  var temizle = function () { var rapor = document.getElementById("dersKartiRapor"); if (rapor) { rapor.innerHTML = ""; } };
   function dosyaAdi() {
     /* GIZLILIK: dosya adında TELEFON YOK — yalnız öğrenci adı + tarih */
     var v = dersKartiVeri(d);
@@ -4377,7 +4407,7 @@ function dersKartiAc(dersId) {
       .replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "")
       .toLowerCase() + "-" + d.tarih + ".png";
   }
-  html2canvas(el, { scale: 2, backgroundColor: "#ffffff", useCORS: true, logging: false })
+  html2canvas(el, { scale: 2, backgroundColor: "#f4f6fa", useCORS: false, allowTaint: false, foreignObjectRendering: false, logging: false })
     .then(function (canvas) {
       canvas.toBlob(function (blob) {
         if (!blob) { toast("Görsel oluşturulamadı.", "hata"); return; }
@@ -4416,7 +4446,9 @@ function dersKartiAc(dersId) {
         bitir();
       }, "image/png");
     })
-    .catch(function () { toast("Görsel oluşturulamadı.", "hata"); });
+    .catch(function () { toast("Görsel oluşturulamadı.", "hata"); })
+    /* DÖNGÜ-15: offscreen finally cleanup — hata/başarı ayrımı olmadan kopya node içeriği temizlenir */
+    .finally(function () { temizle(); });
 }
 
 

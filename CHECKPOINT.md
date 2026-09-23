@@ -2572,3 +2572,39 @@ mutasyonlar sırasında byte-birebir korunmuştur — aşağıda SHA kanıtı).
 ### Değişen dosyalar (yalnız test tarafı)
 - ks-ogrt-denetim.mjs (20006 B, SHA `998ab79d…`): tautoloji kaldırma
 - mutasyon-dongu14.mjs (YENİ, SHA `487a9b68…`): MUT-D/E1/E2/F kanıt zinciri — `node mutasyon-dongu14.mjs` → exit 0
+
+---
+
+## DÖNGÜ-15 OLAYI VE TAMAMLANMA KAYDI
+
+### OLAY (dürüst kayıt)
+b9d31af9… sürümü raporlandı ancak doğrulanabilir kopyası bulunamadı; mutasyon betiği canonical
+app.js'i pre-bento f85e1585… içeriğiyle ezdi. b9d31af9… geri yüklenmiş SAYILMAZ, 2288 koşumu
+yeniden üretilememiştir. Uygulama pre-bento durumdadır. Yeniden uygulama tamamlanana kadar
+görev DUR.
+
+### Olay sonrası kurtarma araştırması (kanıt)
+- Donmuş ağaç: /home/daytona/olay-dongu15-kilit/ (392 dosya, SHA-LISTESI.txt + BYTE-LISTESI.txt, chmod a-w).
+- Çelişki çözümü: "iki diff ile üretilebilir" iddiası GEÇERSİZDİ — backup'ta bento markup/rozetRenk yok; yeniden yazım.
+- Kurtarma avı: git loose objects (1337 zlib obje, eşleşme yok; pack boş), /tmp + ev (50+ aday, hiçbiri b9d31af9…), editör History/swap (yok), /proc/*/fd (yok) → BULUNAMADI.
+
+### Taban kararı (onaylı)
+- app.js tabanı: pre-bento f85e1585… (325.710 B) + MEVCUT bento test tarafı (SHA'ları korundu).
+- app.js DÖNGÜ-15 spec'ten yeniden uygulandı: bento tasarım (#f4f6fa zemin, beyaz kart, inline style-only), 3 durumlu rozet (Planlandı/Yapıldı/İptal Edildi + spec renkleri), dersKartiUygun iptal'i dışlamaz, WA iptal filtresi (ogrenciMesajMetni/aktif) aynen korunur, html2canvas bento ayarları + finally cleanup.
+- Yeni taban: app.js 328.333 B, SHA-256 8ce8093d71a8b2501386eccf6359b6d1902822740b486483d4f1f45d44bbb7b4.
+
+### Final kapılar (gerçek koşum)
+- node test.mjs → 2288/2288 OK, exit=0 · MANIFEST 47 süit birebir eşit · HAM Σ (runner=SUITE_DONE=donmuş=ELLE sayı=ELLE ad=2288) birebir ✓
+- node statik-eksiksizlik.mjs → TAMLIK 47/47, exit=0
+- node --check app.js OK · node --check ek-ders.js OK
+
+### Mutasyon kanıtları (güvenli betik: SHA-kilitli, restore yalnız tur-başı kopyasından)
+- node mutasyon-dongu15.mjs 8ce8093d… → 13 MUTASYON HEPSİ PASS (MUT-G1/G2/G3/G5 + H1..H8/H10).
+- MUT-G4 (WA iptal filtresi) kapsam dışı: süit fixture'ı pencere-dışı (hafta/bugün vs 2030-01-07) olduğundan davranışsal kanıt üretemez; statik test satır 131 kaynak-düzeyinde izliyor. Betik içinde gerekçeli.
+- Öğretmen kilidi: ks-ogrt-ders-karti + ks-ogrt-denetim exit=0 · 11 donmuş dosya SHA birebir AYNI.
+
+### Sözleşme özeti (DÖNGÜ-15)
+- Rozet (öğrenci kartı, tek ders): planlandi/durumsuz → "Planlandı" (#ecfdf5/#047857) · tamamlandi → "Yapıldı" (#eff6ff/#1d4ed8) · iptal → "İptal Edildi" (#fef2f2/#b91c1c); sayı eki YASAK; "Kısmen tamamlandı" YOK.
+- İptal ders: görsel kart butonu VAR + PNG üretilebilir; WhatsApp METİN mesajı ÜRETİLMEZ/GÖNDERİLMEZ (filtre korunur).
+- Veri: öğrenci/sınıf/ders/konu/öğretmen yalnız DB kaynakları; boş sınıf → "Sınıf belirtilmemiş", boş konu → "Genel tekrar".
+- PNG: harici CDN/font/ikon YOK (inline SVG); telefon yoksa html2canvas çağrılmaz; dosya adı sanitizasyonu korundu.

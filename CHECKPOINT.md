@@ -2683,3 +2683,16 @@ DÖNGÜ-15 TAMAMLANDI.
 - Değişmeyen (kilit): ek-ders.js · index.html · ks-ogrt-* · ks-wa-* · saatEtiket · tüm ortak yardımcılar
 
 Kullanıcı notu: PNG kartındaki değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (sabit önbellek atlamalı yenileme) yapın.
+### DÖNGÜ-16 EK YAZIMI (statik kanıt + mutasyon-güvenlik kuralı)
+
+1) DÖNGÜ-16'da eklenen 8 assertion'ın statik kanıtı (statik-eksiksizlik çıktısı, final koşum):
+   `OK  ks-ders-karti.mjs site=101 hit=101 vaka=101 koşum=101 doğalSon=true exit=0`
+   → 8 yeni statik nokta dahil tüm 101 site koşumda hit edildi (site=hit), donmuş vaka listesi (101) koşumla birebir,
+   süit doğal bitiş mesajıyla kapandı. TAMLIK KANITI: 47/47 süit, exit=0.
+
+2) MUTASYON BETİĞİ GÜVENLİK KURALI (kalıcı, yazılı tutulur):
+   Mutasyon betikleri canonical app.js'e YAZAMAZ. Mutasyon yalnız geçici kopya/klasör üzerinde uygulanır ve
+   testler o geçici kopyaya karşı koşturulur. Geri yükleme (restore) YALNIZ tur-başında alınan snapshot kopyadan
+   yapılır ve restore sonrası SHA birebir doğrulanır. `copyFileSync(<eski .bak>, "app.js")` tarzı doğrudan
+   canonical üzerine yazım YASAKTIR (DÖNGÜ-15 olayından kalıcı ders). Betik çıkışında canonical app.js SHA'sı
+   beklenen değerle birebir doğrulanır; donmuş test/manifest/vaka dosyalarının SHA'ları önce/sonra raporlanır.

@@ -3532,12 +3532,23 @@ function haftalikOgrtTablo() {
 
   var avail = t.avail || { sinif: {}, musait: [] };
 
-  // Kısa kod saat başlıkları
+  /* DÖNGÜ-17: 3 satırlı saat başlığı (no / b / e — b ve e EŞİT stil) + Mola kolonu (4 ile 5 arası,
+     günlük tablodaki SAAT_SLOTLARI modeliyle AYNI konum ve emerald tonlar). Drop/ders eşlemesi bozulmaz:
+     mola dalı hücre döngüsünde ders/drop dallarına HİÇ girmez. */
+  var HAFTA_SLOTLARI = KISA_KOD.slice(0, 4).concat([{ no: "Mola", b: "12:00", e: "13:00", mola: true }], KISA_KOD.slice(4));
   var saatBaslik = "";
-  KISA_KOD.forEach(function (k) {
-    saatBaslik += "<th class='px-2 py-2 text-center border-l border-slate-100' style='min-width:75px'>" +
-      '<div class="text-[11px] font-extrabold text-slate-600">' + k.no + " \u00b7 " + k.b + "</div>" +
-      '<div class="text-[9px] text-slate-400">' + k.e + "</div></th>";
+  HAFTA_SLOTLARI.forEach(function (k) {
+    if (k.mola) {
+      saatBaslik += "<th class='px-2 py-2 text-center border-l border-slate-100 bg-emerald-200' style='min-width:75px'>" +
+        '<div class="text-[11px] font-extrabold text-emerald-700">' + k.no + "</div>" +
+        '<div class="text-[9px] font-semibold text-emerald-500">' + k.b + "</div>" +
+        '<div class="text-[9px] font-semibold text-emerald-500">' + k.e + "</div></th>";
+    } else {
+      saatBaslik += "<th class='px-2 py-2 text-center border-l border-slate-100' style='min-width:75px'>" +
+        '<div class="text-[11px] font-extrabold text-slate-600">' + k.no + "</div>" +
+        '<div class="text-[9px] font-semibold text-slate-400">' + k.b + "</div>" +
+        '<div class="text-[9px] font-semibold text-slate-400">' + k.e + "</div></th>";
+    }
   });
 
   // Satırlar: her gün
@@ -3551,8 +3562,15 @@ function haftalikOgrtTablo() {
     satirlar += '<tr class="border-b border-slate-100 ' + bg + '">';
     satirlar += '<td class="px-3 py-2 border-r border-slate-100 text-[11.5px] font-bold text-slate-600 whitespace-nowrap" style="min-width:100px">' + gunAd + '</td>';
 
-    for (var hi = 0; hi < KISA_KOD.length; hi++) {
-      var no = KISA_KOD[hi].no;
+    for (var hi = 0; hi < HAFTA_SLOTLARI.length; hi++) {
+      var slotH = HAFTA_SLOTLARI[hi];
+      if (slotH.mola) { /* DÖNGÜ-17: Mola hücresi — ders/öğrenci/sınıf/+istek/sürükleme/drop DEĞİL (günlüktekiyle aynı emerald biçim) */
+        satirlar += '<td class="px-1.5 py-1.5 text-center border-l border-slate-100 bg-emerald-50">' +
+          '<div class="text-[10px] font-bold text-emerald-600">Mola</div>' +
+          '<div class="text-[9px] text-emerald-500">' + slotH.b + '-' + slotH.e + '</div></td>';
+        continue;
+      }
+      var no = slotH.no;
       var key = g + "-" + no;
       var ders = dersMap[key];
       var ekDers = ekMap[key]; /* EK-DERS-GORUNUM: bu slottaki ek ders (varsa) */
@@ -3589,7 +3607,7 @@ function haftalikOgrtTablo() {
           birebirHucreHTML(ders, ogrenci, ogrenciAd, sinif, durumRenk) + '</td>'; /* DERS-KARTI-TASIMA-YAMASI: haftalik hücreden kart butonu kaldırıldı — ders listesi ISLEM alanına taşındı */
       } else {
         // BOŞ HÜCRE → DROP ZONE (havuzdaki istek kartı buraya bırakılabilir)
-        var hk = KISA_KOD[hi].b;
+        var hk = slotH.b;
         satirlar += '<td class="dnd-bos px-1.5 py-1.5 text-center border-l border-slate-100 transition-colors"' +
           ' data-drop-ogrt="' + esc(t.id) + '" data-drop-gun="' + g + '" data-drop-saat="' + hk + '"' +
           ' ondragover="istekDragOver(event, this)" ondragleave="istekDragLeave(this)" ondrop="istekBurak(event, this, \'' + esc(t.id) + '\', \'' + addDaysKey(p.start, g) + '\', \'' + hk + '\')" title="Boş saat — havuzdan istek kartı sürükleyip bırakın">' +
@@ -3816,8 +3834,8 @@ function gunlukTablo() {
     var textColor = slot.mola ? 'text-emerald-700' : 'text-slate-600';
     html += '<th class="px-2 py-2 border-r border-slate-200 ' + bg + '" style="min-width:72px">' +
       '<div class="text-[12px] font-black ' + textColor + '">' + slot.no + '</div>' +
-      '<div class="text-[9px] font-semibold text-slate-400">' + slot.b + '</div>' +
-      '<div class="text-[9px] font-semibold text-slate-400">' + slot.e + '</div>' +
+      '<div class="text-[9px] font-semibold ' + (slot.mola ? 'text-emerald-500' : 'text-slate-400') + '">' + slot.b + '</div>' +
+      '<div class="text-[9px] font-semibold ' + (slot.mola ? 'text-emerald-500' : 'text-slate-400') + '">' + slot.e + '</div>' +
       '</th>';
   });
   html += '</tr></thead>';
@@ -4641,16 +4659,33 @@ function dersKartiOgrtGunlukHTML(ogrtId, gunKey) {
   var tamam = satirlar.filter(function (r) { return r.durum === "Yapıldı"; }).length;
   var rozet = !satirlar.length ? "Planlandı" : (tamam === satirlar.length ? "Yapıldı" : (tamam > 0 ? "Kısmen tamamlandı" : "Planlandı"));
   var rozetBg = rozet === "Yapıldı" ? "#ecfdf5;color:#047857" : rozet === "Kısmen tamamlandı" ? "#fef3c7;color:#b45309" : "#eff6ff;color:#1d4ed8";
-  /* Saat başlıkları: haftalikOgrtTablo ile AYNI üretim (KISA_KOD; ÖĞLE kolonu ÇİZİLMEZ) */
+  /* DÖNGÜ-17: 3 satırlı başlık (no / b / e — b ve e EŞİT stil) + Mola kolonu (4 ile 5 arası).
+     Ekran günlük tablosuyla AYNI GÖRSEL SLOT SIRASI: 1,2,3,4,Mola,5..11 (veri modeli 11 ders slotu kalır). */
+  var PNG_SLOTLARI = KISA_KOD.slice(0, 4).concat([{ no: "Mola", b: "12:00", e: "13:00", mola: true }], KISA_KOD.slice(4));
   var saatBaslik = "";
-  KISA_KOD.forEach(function (k) {
-    saatBaslik += '<th style="padding:8px 8px;text-align:center;border-left:1px solid #f1f5f9;min-width:75px">' +
-      '<div style="font-size:11px;font-weight:800;color:#475569">' + k.no + " \u00b7 " + k.b + "</div>" +
-      '<div style="font-size:9px;color:#94a3b8">' + k.e + "</div></th>";
+  PNG_SLOTLARI.forEach(function (k) {
+    if (k.mola) {
+      saatBaslik += '<th style="padding:8px 8px;text-align:center;border-left:1px solid #f1f5f9;min-width:75px;background:#d1fae5">' +
+        '<div style="font-size:11px;font-weight:800;color:#047857">' + k.no + "</div>" +
+        '<div style="font-size:9px;font-weight:600;color:#059669">' + k.b + "</div>" +
+        '<div style="font-size:9px;font-weight:600;color:#059669">' + k.e + "</div></th>";
+    } else {
+      saatBaslik += '<th style="padding:8px 8px;text-align:center;border-left:1px solid #f1f5f9;min-width:75px">' +
+        '<div style="font-size:11px;font-weight:800;color:#475569">' + k.no + "</div>" +
+        '<div style="font-size:9px;font-weight:600;color:#94a3b8">' + k.b + "</div>" +
+        '<div style="font-size:9px;font-weight:600;color:#94a3b8">' + k.e + "</div></th>";
+    }
   });
   var kapaliMi = function (no) { return (t && t.avail && Array.isArray(t.avail.musait)) ? t.avail.musait.indexOf(gunNo + "-" + no) >= 0 : false; };
   var hcreler = "";
+  var pngMolaBasildi = false;
   ogrtGunlukSlotlari(ogrtId, gunKey).forEach(function (s) {
+    if (!pngMolaBasildi && s.no === "5") { /* DÖNGÜ-17: Mola kolonu — 4 ile 5 arası, ekran günlüğüyle aynı görsel konum; mola hücresi ders/öğrenci/içerik TAŞIMAZ */
+      hcreler += '<td style="padding:6px;text-align:center;border-left:1px solid #f1f5f9;background:#ecfdf5;vertical-align:middle">' +
+        '<div style="font-size:10px;font-weight:700;color:#059669">Mola</div>' +
+        '<div style="font-size:9px;color:#10b981">12:00-13:00</div></td>';
+      pngMolaBasildi = true;
+    }
     if (kapaliMi(s.no)) { /* haftalik izgara: Kapalı gri "—" */
       hcreler += '<td style="padding:6px;text-align:center;border-left:1px solid #f1f5f9;background:#f1f5f9"><span style="font-size:9px;color:#94a3b8">—</span></td>';
       return;
@@ -4678,20 +4713,19 @@ function dersKartiOgrtGunlukHTML(ogrtId, gunKey) {
   });
   return '<div id="dersKartiGovde" style="width:1060px;background:#fff;font-family:Inter,system-ui,sans-serif;padding:34px 40px;border-radius:0">' +
     '<div style="display:flex;justify-content:space-between;align-items:center">' +
-      '<div style="display:flex;gap:12px;align-items:center"><div style="width:40px;height:40px;border-radius:13px;background:#14b8a6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px">🎓</div><div><div style="font-size:15px;font-weight:800;color:#0f172a">YKS Birebir Takip</div><div style="font-size:10px;color:#94a3b8;margin-top:2px">Günlük Ders Programı</div></div></div>' +
+      '<div style="display:flex;gap:12px;align-items:center"><div style="width:40px;height:40px;border-radius:13px;background:#14b8a6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px">🎓</div><div><div style="font-size:15px;font-weight:800;color:#0f172a">Formül Kurs</div><div style="font-size:10px;color:#94a3b8;margin-top:2px">Günlük Ders Programı</div></div></div>' +
       '<span style="background:' + rozetBg + ';font-size:11px;font-weight:800;padding:4px 12px;border-radius:99px">' + esc(rozet) + "</span>" +
     "</div>" +
     '<div style="border-bottom:2px solid #e2e8f0;margin:16px 0"></div>' +
     '<div style="font-size:20px;font-weight:800;color:#0f172a">ÖĞRETMEN — ' + esc(ogrAd.toUpperCase()) + "</div>" +
-    '<div style="font-size:11px;color:#94a3b8;margin-top:2px">' + esc((brans && brans.ad) ? brans.ad : "Branş yok") + " · " + esc(gunAdi) + " · " + esc(fmtTR(gunKey)) + "</div>" +
+    '<div style="font-size:14px;font-weight:700;color:#334155;margin-top:4px">' + esc((brans && brans.ad) ? brans.ad : "Branş yok") + " · " + esc(gunAdi) + " · " + esc(fmtTR(gunKey)) + "</div>" +
     '<div style="border-bottom:1px solid #f1f5f9;margin:12px 0"></div>' +
     '<table style="width:100%;border-collapse:collapse"><tr style="background:#f8fafc">' +
       '<th style="text-align:left;padding:8px 10px;font-size:10.5px;font-weight:800;color:#94a3b8;letter-spacing:.06em;min-width:100px;border-right:1px solid #f1f5f9">GÜN</th>' + saatBaslik +
     "</tr><tr>" +
       '<td style="padding:8px 10px;border-right:1px solid #f1f5f9;font-size:11.5px;font-weight:700;color:#475569;white-space:nowrap">' + esc(gunAdi) + "</td>" + hcreler +
     "</tr></table>" +
-    '<div style="border-bottom:1px solid #f1f5f9;margin:14px 0"></div>' +
-    '<div style="font-size:9.5px;color:#94a3b8">Bu kart YKS Birebir Takip tarafından oluşturuldu · ' + esc(pencereAdi()) + "</div>" +
+    /* DÖNGÜ-17: öğretmen günlük PNG footer KALDIRILDI */
   "</div>";
 }
 function dersKartiOgrtGunlukBtnHTML(ogrtId, gunKey) {

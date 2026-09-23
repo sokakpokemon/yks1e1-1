@@ -189,7 +189,8 @@ t("C4 diğer günün öğrenci adı SIZMAZ", !hIzoA.includes(ogr2.ad));
 t("C5 diğer günün konusu SIZMAZ", !hIzoA.includes("IZO-KONU-B"));
 t("C6 diğer günün gün adı SIZMAZ", !hIzoA.includes(gunAdiOf(gunNoB)));
 t("C7 diğer günün tarihi SIZMAZ", !hIzoA.includes(fmtTRYerel(gunB)));
-t("C8 mola/ÖĞLE kolonu ve boş slot uydurulmaz ('12:10'/'Mola' yok)", !hIzoA.includes("12:10") && !hIzoA.includes(">Mola<"));
+/* DÖNGÜ-17: Mola kolonu artık VAR (4 ile 5 arası, ekran günlüğüyle aynı görsel konum); uydurma ÖĞLE (12:10) yine YOK. Eski assertion güncellendi. */
+t("C8 ÖĞLE (12:10) uydurulmaz; Mola kolonu VAR ve doğru konumda", !hIzoA.includes("12:10") && hIzoA.includes(">Mola<"));
 t("C9 haftalık tarih aralığı YOK (tek gün; ' – ' aralık ayracı yok)", !hIzoA.includes(" – "));
 t("C10 aynı günün sınıf + birebir kayıtları KORUNUR (iki kart da basılı)", hIzoA.includes('title="Sınıf dersi') && hIzoA.includes('title="Birebir"') && satirA.length === 2);
 /* temizlik */
@@ -239,8 +240,9 @@ const tabloBas = hMat.indexOf('<tr style="background:#f8fafc">');
 const tabloSon = hMat.indexOf("</tr>", tabloBas);
 const baslikSatiri = hMat.slice(tabloBas, tabloSon);
 const beklenenBasliklar = Object.entries(SINIF_SAATLERI).map(([no, b]) => no + " · " + b);
-t("E4 saat başlıkları kart tablosunda TAM biçimde: '1 · 08:50' … '11 · 18:00' (11 kolon)", beklenenBasliklar.every(b => baslikSatiri.includes(b)) && (baslikSatiri.match(/ · \d{2}:\d{2}</g) || []).length === 11, JSON.stringify(beklenenBasliklar.filter(b => !baslikSatiri.includes(b))));
-t("E5 saat başlığı ÖĞLE kolonu ÇİZİLMEZ (12:10 başlıkta yok)", !baslikSatiri.includes("12:10"));
+/* DÖNGÜ-17: başlık 3 satırlı (no/b/e); 12 görsel kolon (11 ders + Mola). Eski "1 · 08:50" tek-satır biçimi KALDIRILDI. */
+t("E4 saat başlıkları 3 satırlı ve 12 görsel kolon (11 ders + Mola, b/e eşit stil)", (() => { const no = (baslikSatiri.match(/>(\d{1,2}|Mola)</g) || []).map(x => x.slice(1, -1)); return JSON.stringify(no) === JSON.stringify(["1","2","3","4","Mola","5","6","7","8","9","10","11"]) && (baslikSatiri.match(/font-size:9px;font-weight:600/g) || []).length === 24 && (baslikSatiri.match(/font-size:9px;color:#94a3b8/g) || []).length === 0; })());
+t("E5 saat başlığında ÖĞLE (12:10) YOK; Mola saatleri 12:00/13:00", !baslikSatiri.includes("12:10") && baslikSatiri.includes("12:00") && baslikSatiri.includes("13:00"));
 temizleA(); temizleB();
 sinifGeri();
 t("denetim süiti test.mjs'te tam 1 kez kayıtlı", (testKaynak.match(/ks-ogrt-denetim\.mjs/g) || []).length === 1);

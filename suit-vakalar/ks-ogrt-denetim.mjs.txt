@@ -23,7 +23,7 @@ C4 diğer günün öğrenci adı SIZMAZ
 C5 diğer günün konusu SIZMAZ
 C6 diğer günün gün adı SIZMAZ
 C7 diğer günün tarihi SIZMAZ
-C8 mola/ÖĞLE kolonu ve boş slot uydurulmaz ('12:10'/'Mola' yok)
+C8 ÖĞLE (12:10) uydurulmaz; Mola kolonu VAR ve doğru konumda
 C9 haftalık tarih aralığı YOK (tek gün; ' – ' aralık ayracı yok)
 C10 aynı günün sınıf + birebir kayıtları KORUNUR (iki kart da basılı)
 D1 statik: dersKartiOgrtGunlukAc akışında saveDB çağrısı YOK
@@ -37,6 +37,6 @@ D8 dosya adında TELEFON YOK
 E1 MATEMATİK başlıkta branş olarak BULUNABİLİR (geçerli)
 E2 kart segmentinde (sınıf kartı) MATEMATİK BULUNAMAZ — yalnız sınıf adı
 E3 kart segmentinde (birebir kartı) MATEMATİK BULUNAMAZ
-E4 saat başlıkları kart tablosunda TAM biçimde: '1 · 08:50' … '11 · 18:00' (11 kolon)
-E5 saat başlığı ÖĞLE kolonu ÇİZİLMEZ (12:10 başlıkta yok)
+E4 saat başlıkları 3 satırlı ve 12 görsel kolon (11 ders + Mola, b/e eşit stil)
+E5 saat başlığında ÖĞLE (12:10) YOK; Mola saatleri 12:00/13:00
 denetim süiti test.mjs'te tam 1 kez kayıtlı

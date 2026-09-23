@@ -15,7 +15,9 @@ dersKartiOgrtGunlukAc tanımlı
 (a) Birebir ögesi: gerçek ad + gerçek konu + DB.ogrenciler[].sinif
 (a) satır modeli de slot artan ve aynı içerikte (ekran sırası)
 (a) HTML'de her iki öge de basılıyor (yalnız-birebir mutasyonu kırmızı olur)
-(a) HTML'de 11 saat başlığı + ÖĞLE KOLONU ÇİZİLMEZ
+(a) HTML'de 12 görsel kolon başlığı (11 ders + Mola) ve ÖĞLE (12:10) YOK
+(a) görsel sıra tam: 1,2,3,4,Mola,5..11 (başlık satırı)
+(a) başlık 3 satırlı ve b/e EŞİT stil (PNG)
 (b-öncesi) sınıf kartı içinde YALNIZ sınıf adı; DERS/KONU uydurma YOK
 (c-öncesi) birebir kartında DERS adı YOK (birebirHucreHTML ile aynı)
 (c-öncesi) konu boş → 'Genel tekrar' dalı
@@ -68,3 +70,21 @@ iptal birebir satır üretmez
 GÜN ANAHTARI dowIdx (Pzt=0): diğer günün avail kaydı sızmaz
 başka günün birebir kaydı sızmaz
 süit test.mjs'te tam 1 kez kayıtlı
+D17-1 haftalık başlık veri hücresi = 12
+D17-2 haftalık her gövde satırında 12 hücre
+D17-3 haftalık görsel sıra 1,2,3,4,Mola,5..11
+D17-4a haftalıkta 7 Mola hücresi ve hiçbiri drop/drag içermiyor
+D17-4b mola hücresinde draggable/drop/+ istek YOK
+D17-5 5. ders Mola'dan SONRA doğru görsel kolonda ve doğru drop hedefiyle görünür
+D17-6 günlük ekran ve PNG aynı görsel slot sırası
+D17-7 PNG başlık th = gövde td = 13 (GÜN + 12 kolon)
+D17-8 PNG başlık b/e eşit font (24 çift div eşit stil)
+D17-8b günlük ekran b/e eşit stil (24 çift)
+D17-8c haftalık ekran b/e eşit stil (24 çift)
+D17-9 PNG marka 'Formül Kurs' + alt başlık 'Günlük Ders Programı' KORUNDU
+D17-9b PNG footer YOK
+D17-9c PNG tarih/gün satırı büyütüldü (font-size:14px;font-weight:700)
+D17-9d öğretmen TEK-DERS kartı footer + marka KORUNDU (kapsam dışı)
+D17-10 öğrenci PNG kartı değişmedi (footer YOK + bento zemini + saatKisa)
+D17-11 saatEtiket AYNI ('8 · 15:30-16:10' üretir)
+D17-12 WA mesajında '8 · ' HÂLÂ VAR

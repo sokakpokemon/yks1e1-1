@@ -59,20 +59,20 @@ if (!globalThis.navigator) globalThis.navigator = {};
 let fail = 0;
 let __kosan = 0;
 const t = (name, cond, extra) => { __kosan++; console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 70) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ogrt-ders-karti.mjs kosan=" + __kosan + " beklenen=70"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ogrt-ders-karti.mjs:" + __kosan + ":70"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 90) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ogrt-ders-karti.mjs kosan=" + __kosan + " beklenen=90"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ogrt-ders-karti.mjs:" + __kosan + ":90"); } });
 
 let P;
 try {
   P = new Function(scripts + `
     yenile();
-    return { DB, ui, gunlukTablo, haftalikOgrtTablo, ogrtGunlukSatirlar, ogrtGunlukSlotlari, dersKartiOgrtGunlukHTML, dersKartiOgrtGunlukBtnHTML, dersKartiOgrtGunlukAc, waAliciBilgisi, dersKartiHTML, dersKartiVeri, dersKartiOgrtHTML, dersKartiUygun };
+    return { DB, ui, gunlukTablo, haftalikOgrtTablo, saatEtiket, ogrenciMesajMetni, ogrtGunlukSatirlar, ogrtGunlukSlotlari, dersKartiOgrtGunlukHTML, dersKartiOgrtGunlukBtnHTML, dersKartiOgrtGunlukAc, waAliciBilgisi, dersKartiHTML, dersKartiVeri, dersKartiOgrtHTML, dersKartiUygun };
   `)();
   t("boot hatasız", true);
 } catch (e) {
   console.error(e.stack ? e.stack.split("\n").slice(0, 8).join("\n") : e);
   process.exit(1);
 }
-const { DB, ui, gunlukTablo, haftalikOgrtTablo, ogrtGunlukSatirlar, ogrtGunlukSlotlari, dersKartiOgrtGunlukHTML, dersKartiOgrtGunlukBtnHTML, dersKartiOgrtGunlukAc, waAliciBilgisi, dersKartiHTML, dersKartiVeri, dersKartiOgrtHTML, dersKartiUygun } = P;
+const { DB, ui, gunlukTablo, haftalikOgrtTablo, saatEtiket, ogrenciMesajMetni, ogrtGunlukSatirlar, ogrtGunlukSlotlari, dersKartiOgrtGunlukHTML, dersKartiOgrtGunlukBtnHTML, dersKartiOgrtGunlukAc, waAliciBilgisi, dersKartiHTML, dersKartiVeri, dersKartiOgrtHTML, dersKartiUygun } = P;
 
 /* Gelecek SALI (gerçek DB gün eşlemesiyle; dowIdx Pzt=0 ve Date.getDay() Salı=2 aynı takvimi kullanır) */
 const gelecekSali = (() => { const d = new Date(); do { d.setDate(d.getDate() + 1); } while (d.getDay() !== 2); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); })();
@@ -123,7 +123,10 @@ t("(a) Birebir ögesi: gerçek ad + gerçek konu + DB.ogrenciler[].sinif", (() =
 t("(a) satır modeli de slot artan ve aynı içerikte (ekran sırası)", (() => { const satirlar = ogrtGunlukSatirlar(ogrt.id, gelecekSali); return satirlar.length === 2 && satirlar.every((r, i) => i === 0 || satirlar[i - 1].slot <= r.slot) && satirlar[0].tur === "Sınıf dersi"; })());
 const hA = dersKartiOgrtGunlukHTML(ogrt.id, gelecekSali);
 t("(a) HTML'de her iki öge de basılıyor (yalnız-birebir mutasyonu kırmızı olur)", hA.includes("Sınıf dersi") && hA.includes("Birebir"));
-t("(a) HTML'de 11 saat başlığı + ÖĞLE KOLONU ÇİZİLMEZ", (hA.match(/\d+ · \d{2}:\d{2}</g) || []).length === 11 && !hA.includes("12:10") && !hA.includes(">Mola<"), "saat başlığı sayısı=" + (hA.match(/\d+ · \d{2}:\d{2}</g) || []).length);
+/* DÖNGÜ-17 sözleşme değişikliği: 11 kolon → 12 görsel kolon (Mola, 4 ile 5 arası) · başlık 3 satır (no/b/e) · ÖĞLE (12:10) yine YOK. Eski assertion güncellendi. */
+t("(a) HTML'de 12 görsel kolon başlığı (11 ders + Mola) ve ÖĞLE (12:10) YOK", (() => { const baslikSatiri = (hA.match(/<tr style="background:#f8fafc">[\s\S]*?<\/tr>/) || [""])[0]; const thler = (baslikSatiri.match(/<th[\s\S]*?<\/th>/g) || []); return thler.length === 13 && !baslikSatiri.includes("12:10") && baslikSatiri.includes(">Mola<"); })(), "th sayısı=" + ((hA.match(/<tr style="background:#f8fafc">[\s\S]*?<\/tr>/) || [""])[0].match(/<th/g) || []).length);
+t("(a) görsel sıra tam: 1,2,3,4,Mola,5..11 (başlık satırı)", (() => { const baslikSatiri = (hA.match(/<tr style="background:#f8fafc">[\s\S]*?<\/tr>/) || [""])[0]; const sira = (baslikSatiri.match(/>(\d{1,2}|Mola)</g) || []).map(x => x.slice(1, -1)); return JSON.stringify(sira) === JSON.stringify(["1","2","3","4","Mola","5","6","7","8","9","10","11"]); })());
+t("(a) başlık 3 satırlı ve b/e EŞİT stil (PNG)", (() => { const m = hA.match(/<div style="font-size:11px;font-weight:800;color:#475569">1<\/div><div style="font-size:9px;font-weight:600;color:#94a3b8">08:50<\/div><div style="font-size:9px;font-weight:600;color:#94a3b8">09:30<\/div>/); return !!m; })());
 
 /* ---- 3) Sınıf dersi = rose kartta YALNIZ sınıf adı; birebir = ad · konu · sınıf ---- */
 console.log("3) Hücre içerik sözleşmesi (ekranla birebir):");
@@ -244,4 +247,48 @@ t("süit test.mjs'te tam 1 kez kayıtlı", (testKaynak.match(/ks-ogrt-ders-karti
 if (sinifSlotAnahtar) ogrt.avail.sinif[sinifSlotAnahtar] = __orijinalSinifKayit;
 sifirGun();
 console.log(fail ? "\nKIRMIZI TEST VAR" : "\nHEPSİ GEÇTİ");
+/* ---- DÖNGÜ-17 HİZALAMA ASSERTION'LARI (onaylı ek kapılar; gerçek üretilen HTML'den) ---- */
+console.log("D17) Öğretmen tabloları ve PNG hizalama:");
+ui.haftalikOgrtId = ogrt.id;
+sifirGun();
+ekleBirebir({ id: "d17-hafta-1", saat: SINIF_SAATLERI["4"] });
+ekleBirebir({ id: "d17-hafta-2", saat: SINIF_SAATLERI["5"] });
+const haftaHTML = haftalikOgrtTablo();
+sifirGun();
+ekleBirebir({ id: "d17-gunluk-1" });
+const gunlukHTMLD17 = gunlukTablo();
+const pngHTML = dersKartiOgrtGunlukHTML(ogrt.id, gelecekSali);
+/* 1) Haftalık BAŞLIK satırında veri hücresi sayısı tam 12 */
+t("D17-1 haftalık başlık veri hücresi = 12", (() => { const tr = (haftaHTML.match(/<tr[^>]*>\s*<th[\s\S]*?<\/tr>/) || [""])[0]; return (tr.match(/<th/g) || []).length === 13; })()); /* GÜN başlık th + 12 veri kolonu */
+/* 2) Haftalık HER gövde satırında veri hücresi = 12 */
+t("D17-2 haftalık her gövde satırında 12 hücre", (() => { const satirlar = haftaHTML.match(/<tr class="border-b[^>]*>[\s\S]*?<\/tr>/g) || []; return satirlar.length === 7 && satirlar.every(tr => (tr.match(/<td/g) || []).length === 13); })()); /* GUN td + 12 veri */
+/* 3) Görsel sıra: 1,2,3,4,Mola,5..11 (haftalık başlık) */
+t("D17-3 haftalık görsel sıra 1,2,3,4,Mola,5..11", (() => { const tr = (haftaHTML.match(/<tr[^>]*>\s*<th[\s\S]*?<\/tr>/) || [""])[0]; const sira = (tr.match(/>(\d{1,2}|Mola)</g) || []).map(x => x.slice(1, -1)); return JSON.stringify(sira) === JSON.stringify(["1","2","3","4","Mola","5","6","7","8","9","10","11"]); })());
+/* 4) "+ istek"/drop-zone 11 KALIR; Mola hücresinde draggable/drop/+ YOK */
+t("D17-4a haftalıkta 7 Mola hücresi ve hiçbiri drop/drag içermiyor", (() => { const molaTds = (haftaHTML.match(/bg-emerald-50">[\s\S]*?<\/td>/g) || []).filter(x => x.includes("Mola")); return molaTds.length === 7 && molaTds.every(m => !m.includes("dnd-bos") && !m.includes("dnd-kilit") && !m.includes("istekBurak") && !m.includes("draggable")); })());
+t("D17-4b mola hücresinde draggable/drop/+ istek YOK", (() => { const m = haftaHTML.match(/bg-emerald-50">[\s\S]*?<\/td>/) || [""]; const h = m[0]; return !h.includes("draggable") && !h.includes("istekBurak") && !h.includes("dnd-bos") && !h.includes(">+</span>"); })());
+/* 5) 5. ders Mola'dan SONRA doğru görsel kolonda + doğru drop hedefi */
+t("D17-5 5. ders Mola'dan SONRA doğru görsel kolonda ve doğru drop hedefiyle görünür", (() => { sifirGun(); ekleBirebir({ id: "d17-slot5", saat: "15:30" }); const g = gunlukTablo(); sifirGun(); const molaIdx = g.indexOf(">Mola<"); const dersIdx = g.indexOf(">Limit ve Süreklilik<"); const dropIdx = g.indexOf('data-drop-saat="15:30"');
+      /* drop hedefi: haftalık tabloda 15:30 boşsa VAR; günlükte tek satır dolu olduğundan günlükte drop-zone beklenmez.
+         Kritik: günlükte MOLA konumunda data-drop-saat="12:00" uydurulmaz. */
+      const haftaD = haftalikOgrtTablo();
+      return molaIdx >= 0 && dersIdx > molaIdx && !g.includes('data-drop-saat="12:00"') && haftaD.includes('data-drop-saat="15:30"'); })());
+/* 6) Günlük ekran ve PNG AYNI GÖRSEL SLOT SIRASI (veri modeli 11 ders slotu kalır) */
+t("D17-6 günlük ekran ve PNG aynı görsel slot sırası", (() => { const sira = (h) => { const tr = (h.match(/<tr[^>]*>\s*<th[\s\S]*?<\/tr>/) || [""])[0]; return (tr.match(/>(\d{1,2}|Mola)</g) || []).map(x => x.slice(1, -1)); }; return JSON.stringify(sira(gunlukHTMLD17)) === JSON.stringify(sira(pngHTML)) && JSON.stringify(sira(pngHTML)) === JSON.stringify(["1","2","3","4","Mola","5","6","7","8","9","10","11"]); })());
+/* 7) PNG başlık hücre sayısı = gövde hücre sayısı (13 = GÜN + 12) */
+t("D17-7 PNG başlık th = gövde td = 13 (GÜN + 12 kolon)", (() => { const trs = pngHTML.match(/<tr[^>]*>[\s\S]*?<\/tr>/g) || []; const baslik = trs.find(tr => tr.includes("<th")); const govde = trs.find(tr => tr.includes("<td") && !tr.includes("<th")); return baslik && govde && (baslik.match(/<th/g) || []).length === 13 && (govde.match(/<td/g) || []).length === 13; })());
+/* 8) PNG b/e EŞİT font; günlük+haftalık da öyle */
+t("D17-8 PNG başlık b/e eşit font (24 çift div eşit stil)", (() => { return (pngHTML.match(/font-size:9px;font-weight:600/g) || []).length === 24; })());
+t("D17-8b günlük ekran b/e eşit stil (24 çift)", (() => { return (gunlukHTMLD17.match(/text-\[9px\] font-semibold/g) || []).length === 24; })());
+t("D17-8c haftalık ekran b/e eşit stil (24 çift)", (() => { return (haftaHTML.match(/text-\[9px\] font-semibold/g) || []).length === 24; })());
+/* PNG korumaları: marka, footer, tarih satırı büyüklüğü */
+t("D17-9 PNG marka 'Formül Kurs' + alt başlık 'Günlük Ders Programı' KORUNDU", (() => { const i0 = pngHTML.indexOf("Günlük Ders Programı"); const seg = pngHTML.slice(Math.max(0, i0 - 260), i0 + 60); return seg.includes("Formül Kurs"); })());
+t("D17-9b PNG footer YOK", !pngHTML.includes("Bu kart YKS Birebir Takip"));
+t("D17-9c PNG tarih/gün satırı büyütüldü (font-size:14px;font-weight:700)", (() => { const i = pngHTML.indexOf("Branş yok"); const seg = i >= 0 ? pngHTML.slice(Math.max(0, i - 220), i) : ""; return seg.includes("font-size:14px;font-weight:700") || (() => { const j = pngHTML.indexOf(" · "); return (pngHTML.match(/font-size:14px;font-weight:700/g) || []).length >= 1; })(); })());
+t("D17-9d öğretmen TEK-DERS kartı footer + marka KORUNDU (kapsam dışı)", (() => { sifirGun(); ekleBirebir({ id: "d17-tek" }); const h = dersKartiOgrtHTML(DB.dersler[DB.dersler.length - 1]); sifirGun(); return h.includes("Bu kart YKS Birebir Takip") && h.includes("YKS Birebir Takip"); })());
+/* Koruma: öğrenci PNG + WA + saatEtiket */
+t("D17-10 öğrenci PNG kartı değişmedi (footer YOK + bento zemini + saatKisa)", (() => { sifirGun(); ekleBirebir({ id: "d17-ogr", saat: "15:30" }); const d = DB.dersler[DB.dersler.length - 1]; const h = dersKartiHTML(d); const v = dersKartiVeri(d); sifirGun(); return !h.includes("Bu kart YKS") && h.includes("background:#f4f6fa") && v.saatKisa === "15:30-16:10"; })());
+t("D17-11 saatEtiket AYNI ('8 · 15:30-16:10' üretir)", saatEtiket("15:30") === "8 · 15:30-16:10");
+t("D17-12 WA mesajında '8 · ' HÂLÂ VAR", (() => { sifirGun(); ekleBirebir({ id: "d17-wa", saat: "15:30" }); const f = ui.filtre; ui.filtre = "tumu"; const m = ogrenciMesajMetni(ogr.id); ui.filtre = f; sifirGun(); return !!m && m.includes("8 · 15:30-16:10"); })());
+
 process.exit(fail ? 1 : 0);

@@ -1,18 +1,41 @@
 boot hatasız
 dersKartiUygun(birebir) true
 dersKartiUygun(grup) false
-dersKartiUygun(iptal) false
+dersKartiUygun(iptal) true (DÖNGÜ-15: iptal ARTIK dışlanmaz)
 dersKartiUygun(null) false
 kart ad alanı öğrenci adı
 kart ders alanı
 kart konu alanı
 kart öğretmen alanı
 kart tarih+saat alanı
-kart sınıf alanı
-planlandi → 'Planlandı / ... olacaktır'
+kart sınıf alanı (sinif dolu)
+kart sınıf alanı boş → tam 'Sınıf belirtilmemiş' (uydurma YOK)
+konu boş → tam 'Genel tekrar' (HTML)
+kart bento zemin #f4f6fa taşıyor
+kart başlığı 'Birebir Ders Kartı' + 'Formül Kurs'
+kart markup'ında class= YOK (Tailwind bağımsız)
+kart markup'ında fa- ikonu YOK
+kart markup'ında harici CDN URL YOK
+nötr inline SVG ikon VAR
+bento bölümleri: TARİH/SAAT/DERS/KONU/ÖĞRETMEN/SINIF etiketleri VAR
+ogrenciMesajMetni iptal filtresi kaynakta (WA korunumu)
+dersKartiAc WhatsApp metin akışı AÇMAZ (window.open yok)
+dersKartiAc offscreen finally cleanup kaynakta
+html2canvas bento ayarları (backgroundColor #f4f6fa · useCORS false · allowTaint false · foreignObjectRendering false · uydurma option YOK)
+dersKartiAc TEK tanım
+planlandi → 'Planlandı'
 tamamlandi → 'Yapıldı'
-kart HTML'i planlandi etiketini taşıyor
-kart HTML'i tamamlandi etiketini taşıyor
+iptal → 'İptal Edildi'
+durumsuz kayıt → 'Planlandı'
+kart HTML'i planlandi rozetini taşıyor (gerçek HTML)
+kart HTML'i tamamlandi rozetini taşıyor (gerçek HTML)
+kart HTML'i iptal rozetini taşıyor (gerçek HTML)
+rozet 'Kısmen tamamlandı' öğrenci kartında ÜRETİLMİYOR (planlı/tamamlanmış/iptal)
+rozet sayı eki '(n)' YASAK (üç durum)
+rozet rengi planlandi: bg #ecfdf5 / fg #047857 (gerçek HTML)
+rozet rengi tamamlandi: bg #eff6ff / fg #1d4ed8 (gerçek HTML)
+rozet rengi iptal: bg #fef2f2 / fg #b91c1c (gerçek HTML)
+bento kutu renkleri: tarih #f0f4fa · saat #fff8f2 · ders #eff9f7 · konu #f9f5fc · öğretmen slate-50 (gerçek HTML)
 kart HTML esc() ile üretiliyor (HTML enjeksiyon güvencesi)
 dersKartiVeri TEK tanım
 dersKartiHTML TEK tanım
@@ -40,7 +63,8 @@ grup dersi ISLEM satırında dersKartiBtnHTML/fa-image ÜRETİLMEZ
 grup dersi dersKartiUygun false (fixture)
 btnHTML TEK tanım
 btnHTML artık tablolarda DEĞİL, ISLEM alanında koşulla çağrılıyor
-iptal derste dersKartiUygun false
+iptal derste dersKartiUygun true (DÖNGÜ-15: PNG üretilebilir)
+iptal ders WhatsApp MESAJ üretmiyor (ogrenciMesajMetni filtresi davranışla)
 Sınıf Dersi (rose) hücresi btn çağrısı İÇERMİYOR (rose dalı ayrı)
 Ek Ders (amber) hücresi btn çağrısı İÇERMİYOR
 Kapalı hücre btn çağrısı İÇERMİYOR

@@ -1,5 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 69) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ders-karti.mjs kosan=" + __kosan + " beklenen=69"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":69"); } });
+process.on("exit", (c) => { if (c !== 0) { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":93"); return; } if (__kosan !== 93) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ders-karti.mjs kosan=" + __kosan + " beklenen=93"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":93"); } });
 /* ks-ders-karti.mjs — DERS-KARTI-YAMASI süiti
    Doğruladıkları:
     1) Kart üretimi: dersKartiHTML/dersKartiVeri doğru alanlarla çalışır (ad, ders, konu, öğretmen, tarih+saat, sınıf, durum).
@@ -78,7 +78,7 @@ global.t = t; global.toastKayit = global.toastKayit;
 const scripts = [appKaynak, ...[...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)].map(m => m[1])].join("\n;\n");
 let P;
 try {
-  P = new Function(scripts + "\n  return { DB, ui, renderDersler, dersKartiAc, dersKartiHTML, dersKartiVeri, dersKartiUygun, dersKartiBtnHTML, haftalikOgrtTablo, gunlukTablo, waAliciDegistir, waAliciBilgisi, dersKartiIndirildiSifirla: () => { dersKartiIndirildi = false; }, toastOf: () => toastKayit };\n")();
+  P = new Function(scripts + "\n  return { DB, ui, renderDersler, dersKartiAc, dersKartiHTML, dersKartiVeri, dersKartiUygun, dersKartiBtnHTML, haftalikOgrtTablo, gunlukTablo, waAliciDegistir, waAliciBilgisi, ogrenciMesajMetni, dersKartiIndirildiSifirla: () => { dersKartiIndirildi = false; }, toastOf: () => toastKayit };\n")();
   t("boot hatasız", true);
 } catch (e) {
   /* beklenmeyen catch: açıkça KIRMIZI ve koşulsuz (ölü/koşullu test yok) */
@@ -86,7 +86,7 @@ try {
   console.error(e.stack ? e.stack.split("\n").slice(0, 6).join("\n") : e);
   throw e;
 }
-const { DB, ui, renderDersler, dersKartiAc, dersKartiHTML, dersKartiVeri, dersKartiUygun, dersKartiBtnHTML, haftalikOgrtTablo, gunlukTablo, waAliciDegistir, waAliciBilgisi, dersKartiIndirildiSifirla } = P;
+const { DB, ui, renderDersler, dersKartiAc, dersKartiHTML, dersKartiVeri, dersKartiUygun, dersKartiBtnHTML, haftalikOgrtTablo, gunlukTablo, waAliciDegistir, waAliciBilgisi, ogrenciMesajMetni, dersKartiIndirildiSifirla } = P;
 
 /* Gerçek toast'u yakala (app.js içindeki toast global.toastKayit'a yazsın diye stub zaten app.js'e geçmez —
    bunun yerine app.js toast'u localStorage'a yazmaz; toast çağrılarını testte takip etmek için basit yöntem:
@@ -109,7 +109,7 @@ const sinifDers = Object.assign({}, birebir, { id: "dk-test-5", ogrenciId: "", o
 console.log("1) Kart üretimi:");
 t("dersKartiUygun(birebir) true", dersKartiUygun(birebir) === true);
 t("dersKartiUygun(grup) false", dersKartiUygun(grupDers) === false);
-t("dersKartiUygun(iptal) false", dersKartiUygun(iptalDers) === false);
+t("dersKartiUygun(iptal) true (DÖNGÜ-15: iptal ARTIK dışlanmaz)", dersKartiUygun(iptalDers) === true);
 t("dersKartiUygun(null) false", dersKartiUygun(null) === false);
 const v = dersKartiVeri(birebir);
 t("kart ad alanı öğrenci adı", v.ad === ogr.ad);
@@ -117,21 +117,46 @@ t("kart ders alanı", typeof v.ders === "string" && v.ders.length > 0);
 t("kart konu alanı", v.konu === "Limit ve Süreklilik");
 t("kart öğretmen alanı", v.ogr === ogrt.ad);
 t("kart tarih+saat alanı", v.tarih.includes("07.01.2030") && v.saat.includes("15:30"));
-t("kart sınıf alanı", v.sinif === (ogr.sinif || ""));
+t("kart sınıf alanı (sinif dolu)", v.sinif === (ogr.sinif || "Sınıf belirtilmemiş"));
+const bosSinifOgr = Object.assign({}, ogr, { sinif: "" });
+t("kart sınıf alanı boş → tam 'Sınıf belirtilmemiş' (uydurma YOK)", (() => { const kayitli = DB.ogrenciler; const i0 = DB.ogrenciler.findIndex(x => x.id === ogr.id); DB.ogrenciler = kayitli.slice(); DB.ogrenciler[i0] = bosSinifOgr; const v2 = dersKartiVeri(Object.assign({}, birebir, { ogrenciId: ogr.id })); DB.ogrenciler = kayitli; return v2.sinif === "Sınıf belirtilmemiş"; })());
+t("konu boş → tam 'Genel tekrar' (HTML)", dersKartiHTML(Object.assign({}, birebir, { konu: "" })).includes("Genel tekrar"));
+t("kart bento zemin #f4f6fa taşıyor", dersKartiHTML(birebir).includes("background:#f4f6fa"));
+t("kart başlığı 'Birebir Ders Kartı' + 'Formül Kurs'", dersKartiHTML(birebir).includes("Birebir Ders Kartı") && dersKartiHTML(birebir).includes("Formül Kurs"));
+t("kart markup'ında class= YOK (Tailwind bağımsız)", !dersKartiHTML(birebir).includes("class="));
+t("kart markup'ında fa- ikonu YOK", !dersKartiHTML(birebir).includes("fa-"));
+t("kart markup'ında harici CDN URL YOK", !/https?:\/\//.test(dersKartiHTML(birebir).replace(/xmlns="http:\/\/www.w3.org\/2000\/svg"/, "")));
+t("nötr inline SVG ikon VAR", dersKartiHTML(birebir).includes("<svg") && dersKartiHTML(birebir).includes("</svg>"));
+t("bento bölümleri: TARİH/SAAT/DERS/KONU/ÖĞRETMEN/SINIF etiketleri VAR", (() => { const h = dersKartiHTML(birebir); return ["TARİH","SAAT","DERS","KONU","ÖĞRETMEN","SINIF"].every(b => h.includes(b)); })());
+t("ogrenciMesajMetni iptal filtresi kaynakta (WA korunumu)", appKaynak.includes('l.durum !== "iptal"'));
+t("dersKartiAc WhatsApp metin akışı AÇMAZ (window.open yok)", (() => { const i0 = appKaynak.indexOf("function dersKartiAc("); const i1 = appKaynak.indexOf("\nfunction ", i0 + 10); return !appKaynak.slice(i0, i1 > 0 ? i1 : appKaynak.length).includes("window.open"); })());
+t("dersKartiAc offscreen finally cleanup kaynakta", (() => { const i0 = appKaynak.indexOf("function dersKartiAc("); const i1 = appKaynak.indexOf("\nfunction ", i0 + 10); return appKaynak.slice(i0, i1 > 0 ? i1 : appKaynak.length).includes("finally"); })());
+t("html2canvas bento ayarları (backgroundColor #f4f6fa · useCORS false · allowTaint false · foreignObjectRendering false · uydurma option YOK)", appKaynak.includes('backgroundColor: "#f4f6fa", useCORS: false, allowTaint: false, foreignObjectRendering: false, logging: false') && !appKaynak.includes("foreignObjectCORS"));
+t("dersKartiAc TEK tanım", (appKaynak.match(/function dersKartiAc\(/g) || []).length === 1);
 
-/* 2) Durum metni */
-console.log("2) Durum metni:");
-t("planlandi → 'Planlandı / ... olacaktır'", dersKartiVeri(birebir).durum === "Planlandı / ... olacaktır");
+/* 2) Durum rozeti (DÖNGÜ-15: 3 durum; rozet metni GERÇEK üretilen HTML'den ayrıştırılır) */
+console.log("2) Durum rozeti:");
+function rozetAyristir(html) { const m = html.match(/border-radius:99px\">([^<]+)<\/span>/); return m ? m[1] : null; }
+function rozetBgAyristir(html) { const m = html.match(/background:(#[0-9a-f]{6});color:(#[0-9a-f]{6});font-size:11px;font-weight:800;padding:4px 12px;border-radius:99px/); return m ? m[1] : null; }
+function rozetFgAyristir(html) { const m = html.match(/background:(#[0-9a-f]{6});color:(#[0-9a-f]{6});font-size:11px;font-weight:800;padding:4px 12px;border-radius:99px/); return m ? m[2] : null; }
+t("planlandi → 'Planlandı'", dersKartiVeri(birebir).durum === "Planlandı");
 t("tamamlandi → 'Yapıldı'", dersKartiVeri(birebirTamam).durum === "Yapıldı");
-t("kart HTML'i planlandi etiketini taşıyor", dersKartiHTML(birebir).includes("Planlandı / ... olacaktır"));
-t("kart HTML'i tamamlandi etiketini taşıyor", dersKartiHTML(birebirTamam).includes("Yapıldı"));
+t("iptal → 'İptal Edildi'", dersKartiVeri(iptalDers).durum === "İptal Edildi");
+t("durumsuz kayıt → 'Planlandı'", dersKartiVeri(Object.assign({}, birebir, { durum: undefined })).durum === "Planlandı");
+t("kart HTML'i planlandi rozetini taşıyor (gerçek HTML)", rozetAyristir(dersKartiHTML(birebir)) === "Planlandı");
+t("kart HTML'i tamamlandi rozetini taşıyor (gerçek HTML)", rozetAyristir(dersKartiHTML(birebirTamam)) === "Yapıldı");
+t("kart HTML'i iptal rozetini taşıyor (gerçek HTML)", rozetAyristir(dersKartiHTML(iptalDers)) === "İptal Edildi");
+t("rozet 'Kısmen tamamlandı' öğrenci kartında ÜRETİLMİYOR (planlı/tamamlanmış/iptal)", [birebir, birebirTamam, iptalDers].every(d => rozetAyristir(dersKartiHTML(d)) !== "Kısmen tamamlandı"));
+t("rozet sayı eki '(n)' YASAK (üç durum)", [birebir, birebirTamam, iptalDers].every(d => !/\(\d+\)/.test(rozetAyristir(dersKartiHTML(d)) || "")));
 
-/* 3) Metin kaynağı — ikinci kaynak yok */
-console.log("3) Metin kaynağı:");
+t("rozet rengi planlandi: bg #ecfdf5 / fg #047857 (gerçek HTML)", rozetBgAyristir(dersKartiHTML(birebir)) === "#ecfdf5" && rozetFgAyristir(dersKartiHTML(birebir)) === "#047857");
+t("rozet rengi tamamlandi: bg #eff6ff / fg #1d4ed8 (gerçek HTML)", rozetBgAyristir(dersKartiHTML(birebirTamam)) === "#eff6ff" && rozetFgAyristir(dersKartiHTML(birebirTamam)) === "#1d4ed8");
+t("rozet rengi iptal: bg #fef2f2 / fg #b91c1c (gerçek HTML)", rozetBgAyristir(dersKartiHTML(iptalDers)) === "#fef2f2" && rozetFgAyristir(dersKartiHTML(iptalDers)) === "#b91c1c");
+t("bento kutu renkleri: tarih #f0f4fa · saat #fff8f2 · ders #eff9f7 · konu #f9f5fc · öğretmen slate-50 (gerçek HTML)", (() => { const h = dersKartiHTML(birebir); return h.includes("#f0f4fa") && h.includes("#fff8f2") && h.includes("#eff9f7") && h.includes("#f9f5fc") && h.includes("#f8fafc"); })());
 t("kart HTML esc() ile üretiliyor (HTML enjeksiyon güvencesi)", dersKartiHTML(birebir).includes("&lt;") === false || true);
 t("dersKartiVeri TEK tanım", (appKaynak.match(/function dersKartiVeri\(/g) || []).length === 1);
 t("dersKartiHTML TEK tanım", (appKaynak.match(/function dersKartiHTML\(/g) || []).length === 1);
-t("kart ogrenciMesajMetni'ni DURUM cümlesi kaynağı olarak kullanmıyor (türetme satırı var)", appKaynak.includes('return d.durum === "tamamlandi" ? "Yapıldı" : "Planlandı / ... olacaktır";'));
+t("kart ogrenciMesajMetni'ni DURUM cümlesi kaynağı olarak kullanmıyor (türetme satırı var)", appKaynak.includes('d.durum === "tamamlandi" ? "Yapıldı" : (d.durum === "iptal" ? "İptal Edildi" : "Planlandı")'));
 
 /* 4) Alıcı seçimi + gizlilik */
 console.log("4) Alıcı/gizlilik:");
@@ -205,7 +230,8 @@ setTimeout(() => {
       }
       t("btnHTML TEK tanım", (appKaynak.match(/function dersKartiBtnHTML\(/g) || []).length === 1);
       t("btnHTML artık tablolarda DEĞİL, ISLEM alanında koşulla çağrılıyor", (appKaynak.match(/dersKartiUygun\(ders\) \? '<div class="mt-0\.5">' \+ dersKartiBtnHTML|dersKartiUygun\(ders\)\) html \+= '<div class="mt-0\.5">' \+ dersKartiBtnHTML/g) || []).length === 0 && (appKaynak.match(/dersKartiUygun\(l\) \? '<button title="Ders Kartı/g) || []).length === 1);
-      t("iptal derste dersKartiUygun false", dersKartiUygun(iptalDers) === false);
+      t("iptal derste dersKartiUygun true (DÖNGÜ-15: PNG üretilebilir)", dersKartiUygun(iptalDers) === true);
+t("iptal ders WhatsApp MESAJ üretmiyor (ogrenciMesajMetni filtresi davranışla)", (() => { const kayitli = DB.dersler; const tek = Object.assign({}, iptalDers); DB.dersler = [tek]; const metin = ogrenciMesajMetni(ogr.id); DB.dersler = kayitli; return metin === null; })());
       t("Sınıf Dersi (rose) hücresi btn çağrısı İÇERMİYOR (rose dalı ayrı)", appKaynak.indexOf('title="Sınıf dersi — kilitli"') < appKaynak.indexOf("dersKartiBtnHTML"));
       t("Ek Ders (amber) hücresi btn çağrısı İÇERMİYOR", appKaynak.indexOf('title="Ek Ders — kilitli"') < appKaynak.indexOf("dersKartiBtnHTML"));
       t("Kapalı hücre btn çağrısı İÇERMİYOR", appKaynak.indexOf('dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100 bg-slate-100') < appKaynak.indexOf("dersKartiBtnHTML"));

@@ -48,7 +48,7 @@ export const manifest = {
   "ks-kadro-telefon3.mjs": 57,
   "ks-ders-tasi.mjs": 91,
   "ks-gunluk-ders-tasi.mjs": 115,
-  "ks-ders-karti.mjs": 69,
+  "ks-ders-karti.mjs": 93,
   "ks-ders-karti-tasima.mjs": 56,
   "ks-ogrt-ders-karti.mjs": 70,
   "ks-ogrt-denetim.mjs": 42,

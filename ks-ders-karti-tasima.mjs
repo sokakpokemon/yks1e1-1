@@ -186,7 +186,7 @@ if (birebir) {
 
 /* 5) (e) grup/iptal/Sınıf Dersi/Ek Ders/Kapali'da buton YOK */
 console.log("5) İstisna satırlarda/hücrelerde buton YOK:");
-t("dersKartiUygun(iptal) false", fn.dersKartiUygun({ durum: "iptal", ogrenciId: "x" }) === false);
+t("dersKartiUygun(iptal) true (DÖNGÜ-15: iptal PNG üretilebilir)", fn.dersKartiUygun({ durum: "iptal", ogrenciId: "x" }) === true);
 t("dersKartiUygun(grup) false", fn.dersKartiUygun({ durum: "planlandi", ogrenciId: "x", ogrenciIds: ["a", "b"] }) === false);
 t("dersKartiUygun(null) false", fn.dersKartiUygun(null) === false);
 t("rose Sınıf Dersi hücresi fa-image İÇERMİYOR (haftalik)", (() => {

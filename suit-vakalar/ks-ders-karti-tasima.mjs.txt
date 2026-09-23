@@ -28,7 +28,7 @@ kart HTML telefon İÇERMEZ
 waAliciBilgisi akışı kaynakta (alıcı seçicisi yeniden kullanılıyor)
 dersKartiAc html2canvas PNG yolunu kullanıyor
 kart üretimi saveDB/localStorage YAZMAZ (dersKartiAc gövdesinde setItem yok)
-dersKartiUygun(iptal) false
+dersKartiUygun(iptal) true (DÖNGÜ-15: iptal PNG üretilebilir)
 dersKartiUygun(grup) false
 dersKartiUygun(null) false
 rose Sınıf Dersi hücresi fa-image İÇERMİYOR (haftalik)

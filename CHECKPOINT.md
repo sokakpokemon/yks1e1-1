@@ -2771,3 +2771,19 @@ D17-11 saatEtiket AYNI · D17-12 WA '8 · ' HÂLÂ VAR.
 - Kapsam dışı dokunulmayanlar: öğrenci PNG (dersKartiHTML/saatKisa), WhatsApp akışları, saatEtiket, saat kolonları, ek-ders.js.
 
 Kullanıcı notu: Tablo ve PNG değişikliklerini görmek için tarayıcıda Ctrl+Shift+R (önbellek atlamalı yenileme) yapın.
+### DÖNGÜ-17 KAPANIŞ KANITLARI (ek kayıt — bu üç kayıt görülmeden "DÖNGÜ-17 TAMAMLANDI" yazılmaz)
+
+1) ks-ogrt-ders-karti.mjs statik kanıtı (statik-eksiksizlik çıktısı, final koşum):
+   OK  ks-ogrt-ders-karti.mjs site=91 hit=91 vaka=91 koşum=91 doğalSon=true exit=0
+   → 19 yeni/güncellenmiş statik nokta dahil tüm 91 site koşumda hit; donmuş vaka listesi (91) koşumla birebir.
+
+2) HAM Σ zinciri (tam yazım, final koşum):
+   runner = SUITE_DONE = donmuş vaka = ELLE sayı = ELLE ad = 2317
+   (node test.mjs → 2317/2317 OK, exit=0 · MANIFEST 47 süit birebir eşit ✓)
+
+3) Kalıcı kural doğrulaması — CHECKPOINT.md'de mevcut (DÖNGÜ-16 EK YAZIMI bölümü):
+   "Mutasyon betikleri canonical app.js'e YAZAMAZ. Mutasyon yalnız geçici kopya/klasör üzerinde uygulanır ve
+   testler o geçici kopyaya karşı koşturulur. Geri yükleme (restore) YALNIZ tur-başında alınan snapshot kopyadan
+   yapılır ve restore sonrası SHA birebir doğrulanır."
+
+DÖNGÜ-17 TAMAMLANDI (yukarıdaki üç kanıtla).

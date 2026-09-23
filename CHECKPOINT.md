@@ -2544,3 +2544,31 @@ mutasyonlar sırasında byte-birebir korunmuştur — aşağıda SHA kanıtı).
 
 ### Yeni dosya
 - mutasyon-dongu13.mjs (DÖNGÜ-13 kanıt zinciri; tekrar koşturulabilir: `node mutasyon-dongu13.mjs` → exit 0)
+
+## DÖNGÜ-14: TAUTOLOJİ KALDIRILDI + SÖZLEŞME-METİN MUTASYONLARI — TAMAMLANDI
+
+### 1) Tautoloji kaldırıldı (sabit-true fixture = 0)
+- ks-ogrt-denetim.mjs:90'daki tek `t("denetim: boot hatasız", true)` literal-true satırı kaldırıldı.
+- YENİ HALİ: `let P, bootHatasi = null;` → catch'te `bootHatasi = e` → assertion `t("denetim: boot hatasız", bootHatasi === null, String(bootHatasi))` GERÇEK koşula bağlandı; boot kırılırsa KIRMIZI (catch process.exit(1) koruması da ayrıca duruyor).
+- Tarama sonrası: t(..., true) = 0 · t(..., false) = 0 — DÖNGÜ-5/6 "sabit-true yok" kuralına tam uyum.
+- Süit davranışı değişmedi: 42 vaka, SUITE_DONE 42/42; suit-manifest/elle-manifest/elle-adlar/vakalar-txt/statik-tarafta sayı adı DEĞİŞMEDİ (42) → HAM Σ aynı.
+
+### 2) Sözleşme-metin mutasyonları (mutasyon-dongu14.mjs; yalnız app.js geçici kopyası; D14_EXIT=0)
+- MUT-D (rozet " (n)" eki) → A1–A6 HEPSİ kırmızı (6/6), exit=1 → yasak metin yakalanıyor.
+- MUT-E1 (sayı-ekisiz 'Planlandi' — Türkçe karakter düşürülmüş) → A1–A6 HEPSİ kırmızı, exit=1.
+- MUT-E2 (sayı-ekisiz 'Bozuk rozet') → A1–A6 HEPSİ kırmızı, exit=1.
+- → MUT-D+E birlikte: testler "ne varsa ona eşit" DEĞİL, sözleşmenin TAM METNİNİ zorluyor.
+- MUT-F (durum kaynağı karşit çevrilir: planlı↔tamamlanmış; rozet metni değişse de koku bozulur) → 3 kırmızı: A2, A3, A4 (exit=1) — düşen vakalar TEK TEK kanıtlandı.
+- RAPOR NOTU: tek mutasyonun A1–A6'nın tamamını düşürmesi, altı vakanın AYNI rozet alanını (border-radius:99px span'i) okuduğunu gösterir — tek noktadan beslenen altı assert; rozet üretimindeki tek bozulma altısında da yakalanır.
+- Her mutasyon sonrası app.js SHA `f85e1585…` BİREBİR restore + normal koşum yeşil.
+- Test tarafı 6 dosya (denetim süiti, 2 manifest, elle-adlar, vakalar txt, statik) mutasyon koşumları SIRASINDA önce/sonra SHA birebir: `998ab79d…` · `017af469…` · `da7bdabf…` · `07e6efe6…` · `8951c0e9…` · `8273952f…` → "Test tarafı değişmedi: KANITLANDI" (1. maddedeki süit düzeltmesi mutasyonlardan ÖNCE yapılıp SHA'ları öyle donduruldu).
+
+### 3) Kapanış koşumları
+- node test.mjs → 2264/2264 OK, 0 kırmızı, exit=0, 47 süit; HAM Σ = 2264 BİREBİR (elle ayar yok; süit sayısı tautoloji düzeltmesiyle değişmedi)
+- statik-eksiksizlik.mjs → TAMLIK 47/47, exit=0
+- node --check app.js + ek-ders.js → OK
+- **app.js DEĞİŞMEDİ**: 325.710 B, SHA-256 `f85e1585a87f3a9a13dd026247a2e7970e05dcdd4f0c41ed3213ff6c37e5f098`
+
+### Değişen dosyalar (yalnız test tarafı)
+- ks-ogrt-denetim.mjs (20006 B, SHA `998ab79d…`): tautoloji kaldırma
+- mutasyon-dongu14.mjs (YENİ, SHA `487a9b68…`): MUT-D/E1/E2/F kanıt zinciri — `node mutasyon-dongu14.mjs` → exit 0

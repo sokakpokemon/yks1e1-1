@@ -80,18 +80,20 @@ const t = (name, cond, extra) => { __kosan++; console.log((cond ? "  ✓" : "  �
 const __BEKLENEN = 42;
 process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== __BEKLENEN) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ogrt-denetim.mjs kosan=" + __kosan + " beklenen=" + __BEKLENEN); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ogrt-denetim.mjs:" + __kosan + ":" + __BEKLENEN); } });
 
-let P;
+let P, bootHatasi = null;
 try {
   P = new Function(scripts + `
     yenile();
     return { DB, ui, gunlukTablo, haftalikOgrtTablo, ogrtGunlukSatirlar, ogrtGunlukSlotlari, dersKartiOgrtGunlukHTML, dersKartiOgrtGunlukBtnHTML, dersKartiOgrtGunlukAc, ogretmenTab, ogrenciTab, waAliciBilgisi,
       kartIndirildiSifirla: function () { dersKartiIndirildi = false; } };
   `)();
-  t("denetim: boot hatasız", true);
 } catch (e) {
+  bootHatasi = e;
   console.error(e.stack ? e.stack.split("\n").slice(0, 8).join("\n") : e);
   process.exit(1);
 }
+/* SAYAÇ KAPISI: koşul GERÇEK — bootHatasi catch'te set edilir; boot kırılırsa assertion KIRMIZI (tautoloji yok) */
+t("denetim: boot hatasız", bootHatasi === null, String(bootHatasi));
 const { DB, ui, gunlukTablo, haftalikOgrtTablo, ogrtGunlukSatirlar, ogrtGunlukSlotlari, dersKartiOgrtGunlukHTML, dersKartiOgrtGunlukBtnHTML, dersKartiOgrtGunlukAc, ogretmenTab, ogrenciTab, waAliciBilgisi, kartIndirildiSifirla } = P;
 
 /* ---- gerçek DB fixture altyapısı ---- */

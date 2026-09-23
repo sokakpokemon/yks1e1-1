@@ -2608,3 +2608,23 @@ görev DUR.
 - İptal ders: görsel kart butonu VAR + PNG üretilebilir; WhatsApp METİN mesajı ÜRETİLMEZ/GÖNDERİLMEZ (filtre korunur).
 - Veri: öğrenci/sınıf/ders/konu/öğretmen yalnız DB kaynakları; boş sınıf → "Sınıf belirtilmemiş", boş konu → "Genel tekrar".
 - PNG: harici CDN/font/ikon YOK (inline SVG); telefon yoksa html2canvas çağrılmaz; dosya adı sanitizasyonu korundu.
+### MUT-G4 KANIT TAMAMLANMASI (CHECKPOINT ek yazımı — tek yazım)
+
+Spec-4 zorunlu mutasyonu "WhatsApp iptal filtresi kaldırıldı → test kırmızı" GERÇEKLEŞTİRİLDİ:
+
+- Yöntem: canonical app.js'e DOKUNULMADI; geçici çalışma kopyası (/tmp/g4-calisma) üzerinden
+  ogrenciMesajMetni gövdesindeki `&& l.durum !== "iptal"` filtresi kaldırıldı
+  (yalnız bu fonksiyon içindeki tek satır; aktif()/ekDersler satırlarına dokunulmadı).
+- DONMUS ks-wa-durum.mjs (SHA cb759c1a…, değiştirilmedi) geçici app.js'e karşı koşturuldu:
+  - KIRMIZI: `✗ iptal ders öğrencinin mesajında YOK → null` (ks-wa-durum.mjs satır 121) · **exit=1**
+  - DAVRANIŞSAL KANIT (WA_DEBUG): filtre sökülünce Zeynep'in iptal dersi (wd-4, BİYOLOJİ/Hücre)
+    mesajında `1) BİYOLOJİ (MİNE GÜRKAN) — Hücre` olarak ARTIK ÜRETİLİYOR.
+  - Negatif kontrol: canonical app.js ile aynı süit exit=0 → kırmızı yalnız mutasyondan geliyor.
+- ks-wa-sablon.mjs koşumu yeşil kaldı (kendi filtre satırları süit içinde; dokunulmadı).
+- Temizlik: geçici klasör(ler) silindi; canonical app.js SHA'sı
+  `8ce8093d71a8b2501386eccf6359b6d1902822740b486483d4f1f45d44bbb7b4` birebir korundu.
+- 11 donmuş test dosyası SHA önce/sonra: **11/11 AYNI** (kanıt koşumu sırasında değişiklik yok).
+- mutasyon-dongu15.mjs içindeki MUT-G4 "kapsam dışı" notu bu kanıtla değiştirildi;
+  zincir yeniden koşuldu: 13 MUTASYON HEPSİ PASS.
+
+DÖNGÜ-15 TAMAMLANDI.

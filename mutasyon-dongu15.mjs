@@ -84,10 +84,14 @@ kontrol("MUT-G2 iptal→Planlandı eşlemesi söküldü", (s) =>
 kontrol("MUT-G3 rozet rengi durum-takası", (s) =>
   s.replace('var rozetRenk = d.durum === "tamamlandi" ? { bg: "#eff6ff", fg: "#1d4ed8" } : (d.durum === "iptal" ? { bg: "#fef2f2", fg: "#b91c1c" } : { bg: "#ecfdf5", fg: "#047857" });',
             'var rozetRenk = d.durum === "tamamlandi" ? { bg: "#ecfdf5", fg: "#047857" } : (d.durum === "iptal" ? { bg: "#fef2f2", fg: "#b91c1c" } : { bg: "#eff6ff", fg: "#1d4ed8" });'), "rozet rengi");
-/* MUT-G4: ks-ders-karti süitindeki WA iptal-filtresi testleri pencere-dışı fixture (ui.filtre="hafta", anchor=bugün vs 2030-01-07)
-   nedeniyle davranışsal kanıt üretemez; statik test (satır 131) 'l.durum !== "iptal"' string'ini aktif()/ekDersler satırlarından da bulduğu için
-   tek-nokta sökme ile kırmızıya düşmez. MUT-G4 kanıtı KAPSAM DIŞI bırakıldı; WA iptal filtresinin korunumu
-   ks-ders-karti.mjs satır 131 (statik kaynak) + satır 234 (davranış, pencere-dışı) ile izleniyor. */
+/* MUT-G4 GERÇEK KANITI — betik dışı, geçici kopya kanıt koşumuyla verildi (scripts kanıt günlüğü):
+   ogrenciMesajMetni gövdesindeki '&& l.durum !== "iptal"' filtresi /tmp/g4-calisma kopyasında söküldü;
+   DONMUS ks-wa-durum.mjs geçici app.js'e karşı koşturuldu:
+     → ✗ "iptal ders öğrencinin mesajında YOK → null" (satır 121) · exit=1 · KIRMIZI
+     → WA_DEBUG çıktısı: "1) BİYOLOJİ (MİNE GÜRKAN) — Hücre" → iptal dersi mesaj ARTIK ÜRETİLİYOR (davranışsal kanıt)
+     → canonical app.js ile koşum exit=0 (kırmızı yalnız mutasyondan geliyor)
+     → canonical SHA birebir korundu; 11 donmuş dosya SHA AYNI.
+   ks-wa-sablon.mjs koşumu yeşil kaldı (kendi filtre satırları süit içinde; dokunulmadı). */
 kontrol("MUT-G5 dersKartiUygun iptal dışlaması geri eklendi", (s) =>
   s.replace('function dersKartiUygun(d) {\n  /* DÖNGÜ-15: iptal ARTIK dışlanmaz — iptal birebir derste görsel kart butonu görünür ve PNG üretilebilir.\n     WhatsApp METİN akışındaki iptal filtresi (ogrenciMesajMetni) AYNEN korunur ve bu fonksiyona bağlı değildir. */\n  return !!(d && dersOgrenciIds(d).length === 1);',
             'function dersKartiUygun(d) {\n  return !!(d && d.durum !== "iptal" && dersOgrenciIds(d).length === 1);'), "DÖNGÜ-15: iptal");

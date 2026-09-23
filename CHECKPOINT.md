@@ -2505,3 +2505,42 @@ byte-birebir aynı: d1 15.874 B, ekders 15.909 B, etiket 8.500 B — SHA'lar yuk
 - Yedek/geri alma: mutasyonlar yalnız geçici kopyada; kalıcı dosyalarda mutasyon yok.
 
 **Değişikliği görmek için Ctrl+Shift+R / Cmd+Shift+R ile sert yenileme yapın.**
+
+## DÖNGÜ-13: "KOD MU, TEST MU?" AYRIMININ KANITLANMASI — TAMAMLANDI
+
+### Sonuç: "kod zaten uygundu" KANITLANDI — "test koda uyduruldu" DEĞİL
+app.js'in DÖNGÜ-11'deki son hali (SHA `f85e1585…`, 325.710 B) beş denetim sözleşmesini
+ZATEN KARŞILIYOR; DÖNGÜ-12 süiti yalnız bu davranışı DONMUŞTUR (test-tarafı dosyaları
+mutasyonlar sırasında byte-birebir korunmuştur — aşağıda SHA kanıtı).
+
+### 0) Rozet çelişkisinin çözümü
+- app.js:4603 (GERÇEK kaynak): `var rozet = !satirlar.length ? "Planlandı" : (tamam === satirlar.length ? "Yapıldı" : (tamam > 0 ? "Kısmen tamamlandı" : "Planlandı"));` — kodda "(n)" üreten satır YOK.
+- D11 raporundaki "Planlandı (n) / Yapıldı (n)" ifadesi GEÇMİŞ sözleşmenin ADIYDI (ks-ogrt-ders-karti.mjs:16 + satır 155/210: "ESKİ 'Planlandı (n)' KALDIRILDI"); D11 CHECKPOINT kaydı (2404-2405) sayı-ekisiz üçlüyü doğru yazıyor. Çelişki YOK; A3/A4 zorluyor.
+- CANLI KANIT (mutasyon-dongu13.mjs): gerçek DB fixture → gerçek dersKartiOgrtGunlukHTML → rozet HTML'DEN ayrıştırıldı (koddan okunmadı):
+  A1 yalnız sınıf dersi → "Planlandı" · A3 yalnız tamamlanmış → "Yapıldı" · A4 sınıf+tamamlanmış → "Kısmen tamamlandı" · A5 planlı+tamamlanmış → "Kısmen tamamlandı".
+- MUT-D: rozet üretimine " (n)" eklendi (geçici app.js kopyası) → **A1–A6 HEPSİ kırmızı, exit=1** → A-serisi sayı-eki yasağını GERÇEKTEN ZORLUYOR. Restore SHA birebir.
+
+### 1) Mutasyon kaynağı kanıtı (mutasyon-dongu13.mjs; D13_EXIT=0)
+- Değiştirilen dosya: SADECE app.js (geçici kopyadan yazılır, her mutasyon sonrası restore).
+- Test tarafı ÖNCE/SONRA SHA-256 birebir (7 dosya): ks-ogrt-denetim.mjs `bc3912d7…` · suit-manifest `017af469…` · elle-vaka-adlari `07e6efe6…` · elle-vaka-manifesti `da7bdabf…` · suit-vakalar/ks-ogrt-denetim.txt `8951c0e9…` · ks-ogrt-ders-karti.mjs `feca59e2…` · suit-vakalar/ks-ogrt-ders-karti.txt `af11a5ff…` → "Test tarafı değişmedi: KANITLANDI".
+- Ham kırmızı çıktılar: MUT-A → ✗E2 (exit 1) · MUT-B → ✗E4 (exit 1) · MUT-C → ✗B1+B2+B3 (exit 1) · MUT-D → ✗A1..A6 (exit 1). Her restore: app.js SHA `f85e1585…` BİREBİR.
+
+### 2) Test bağımsızlığı (fit-to-implementation riski)
+- Beklenen değerlerin dayanağı: kullanıcı sözleşme satırları (rozet üçlüsü; buton ad-hücresi;
+  gün izolasyonu; yazımsızlık; MATEMATİK-sadece-başlık; saat başlığı biçimi) + D11 CHECKPOINT
+  kabul metni (2404-2420). Test beklenenleri bu sözleşmeden ELLE yazıldı; app.js string'inden
+  kopyalanmadı: rozet metinleri, "Sınıf belirtilmemiş", "Genel tekrar" süitte ELLE yazılı
+  (grep: ks-ogrt-denetim.mjs'te bu üçü YOK; yalnız ks-ogrt-ders-karti.mjs'te sözleşme sabiti olarak var).
+- Süitte fixture işaretleyicileri (ROZET-9A, BTN-9A, IZO-9A/B, MAT-9A, YAZ-9A, CANLI-SNF)
+  TESTE ÖZGÜ benzersiz dizeler — app.js'te geçmez; sızma testleri tek yönlü (davranış → HTML).
+- Boolean fixture: t(..., true) = 1 (yalnız "boot hatasız" throw-gate, sayıma girmez); t(..., false) = 0. Sabit-TRUE fixture YOK.
+
+### 3) Kapanış koşumları
+- node test.mjs → 2264/2264 OK, 0 kırmızı, exit=0, 47 süit
+- HAM Σ: runner=SUITE_DONE=donmuş=ELLE sayı=ELLE ad=2264 BİREBİR
+- statik-eksiksizlik.mjs → TAMLIK 47/47, exit=0
+- node --check app.js + ek-ders.js → OK
+- **app.js DEĞİŞMEDİ**: 325.710 B, SHA-256 `f85e1585a87f3a9a13dd026247a2e7970e05dcdd4f0c41ed3213ff6c37e5f098`
+
+### Yeni dosya
+- mutasyon-dongu13.mjs (DÖNGÜ-13 kanıt zinciri; tekrar koşturulabilir: `node mutasyon-dongu13.mjs` → exit 0)

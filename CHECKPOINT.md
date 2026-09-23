@@ -2696,3 +2696,78 @@ Kullanıcı notu: PNG kartındaki değişiklikleri görmek için tarayıcıda Ct
    yapılır ve restore sonrası SHA birebir doğrulanır. `copyFileSync(<eski .bak>, "app.js")` tarzı doğrudan
    canonical üzerine yazım YASAKTIR (DÖNGÜ-15 olayından kalıcı ders). Betik çıkışında canonical app.js SHA'sı
    beklenen değerle birebir doğrulanır; donmuş test/manifest/vaka dosyalarının SHA'ları önce/sonra raporlanır.
+### DÖNGÜ-17 KAYDI — ÖĞRETMEN TABLOLARI VE GÜNLÜK PNG GÜNCELLEMESİ
+
+#### Uygulama (yalnız üç görünüm; veri modeli değişmedi)
+A) SAAT BAŞLIKLARI (3 satır: no / b / e; b ve e EŞİT stil)
+- haftalikOgrtTablo: "1 · 08:50" tek-satır biçimi kaldırıldı → 3 satırlı başlık (HAFTA_SLOTLARI).
+- gunlukTablo: mevcut 3 satırlı başlık; mola saat renkleri emerald'a eşitlendi (b/e eşit stil).
+- dersKartiOgrtGunlukHTML (PNG): 3 satırlı başlık; saatler KISA_KOD'dan (sabit saat YOK).
+- saatEtiket() ortak yardımcısı DEĞİŞMEDİ (blok diff AYNI, çağrı sayısı 19→19).
+
+B) MOLA SÜTUNU (görsel sıra: 1,2,3,4,Mola,5..11 — 12 görsel kolon)
+- Haftalık ekran tablosuna Mola EKLENDİ (SAAT_SLOTLARI modeliyle aynı konum, emerald tonlar);
+  Mola hücresi ders/öğrenci/sınıf/+istek/drag/drop DEĞİL (slot.mola dalı diğer dallara girmez).
+- Günlük ekran Mola'sı korundu ve aynı biçime getirildi.
+- Öğretmen günlük PNG'ye aynı konumda Mola EKLENDİ (veri modeli ogrtGunlukSlotlari 11 ders slotu KALIR;
+  Mola yalnız HTML katmanında 4. dersten sonra basılır → PNG ile günlük ekran AYNI GÖRSEL SLOT SIRASI).
+- Kolon eşleşmesi korundu: drop hedefi hk=slotH.b; data-drop-saat değerleri yalnız KISA_KOD b kümesi, 12:00 ASLA drop değil (D17-4c).
+
+C) ÖĞRETMEN GÜNLÜK PNG KARTI
+- Marka "YKS Birebir Takip" → "Formül Kurs" (yalnız bu kart; alt başlık "Günlük Ders Programı" AYNEN).
+- Branş/gün/tarih satırı büyütüldü (font-size:11px → 14px, weight 700).
+- Footer satırı TAMAMEN KALDIRILDI (öğretmen tek-ders kartındaki footer + marka KORUNDU — kapsam dışı).
+- Öğrenci PNG, WhatsApp akışları, saatEtiket: KORUNDU (D17-10/11/12 koruma assertion'ları).
+- saveDB=0 / localStorage.setItem=0 (kart akışında).
+
+#### Güncellenen eski assertion'lar (dosya:satır; silme/gevşetme YOK, eski→yeni gerekçeli)
+- ks-ogrt-ders-karti.mjs:~126 "(a) HTML'de 11 saat başlığı + ÖĞLE ÇİZİLMEZ" → "12 görsel kolon (11 ders + Mola) + ÖĞLE (12:10) YOK" + görsel sıra + 3 satırlı başlık/b-e eşit stil (DÖNGÜ-17 sözleşme değişikliği: 11 kolon → 12 görsel kolon, PNG'ye Mola dahil).
+- ks-ogrt-denetim.mjs:192 (C8) "'12:10'/'Mola' yok" → "ÖĞLE (12:10) uydurulmaz; Mola kolonu VAR ve doğru konumda" (spec-B: PNG/ekrana Mola eklendi).
+- ks-ogrt-denetim.mjs:242 (E4) "'1 · 08:50' … 11 kolon" → "3 satırlı başlık + 12 görsel kolon, b/e eşit stil" (spec-A: tek-satır biçim kaldırıldı).
+- ks-ogrt-denetim.mjs:243 (E5) "ÖĞLE çizilmez" → "12:10 YOK; Mola saatleri 12:00/13:00" (spec-B).
+- ks-ders-karti.mjs:129 D16 "öğretmen günlük kartında footer + '8 · ' HÂLÂ VAR" → D17 "günlük PNG footer YOK + Mola VAR + 12 kolon; TEK-DERS kartı footer + '8 · ' KORUNDU" (spec-C: günlük PNG footer kaldırıldı).
+- ks-ekders-ozet-csv.mjs:166 "haftalikOgrtTablo diff'i yalnız PAZAR-BIREBIR bölgesinde" → KELIMELER listesine DÖNGÜ-17 yasal değişiklik bölgesi anahtarları eklendi (HAFTA_SLOTLARI, slotH.*, emerald, saatBaslik += vs).
+
+#### Yeni D17 assertion'ları (ks-ogrt-ders-karti.mjs; gerçek üretilen HTML'den; 91 koşum)
+D17-1 haftalık başlık veri hücresi (GÜN th + 12) · D17-2 her gövde satırı GÜN td + 12 veri hücresi ·
+D17-3 haftalık görsel sıra 1,2,3,4,Mola,5..11 · D17-4a 7 Mola hücresi, hiçbiri drop/drag içermiyor ·
+D17-4c data-drop-saat değerleri yalnız KISA_KOD b kümesi; 12:00 ASLA drop değil ·
+D17-5 5. ders Mola'dan SONRA doğru görsel kolonda; 12:00 drop uydurulmaz ·
+D17-6 günlük ekran ve PNG AYNI GÖRSEL SLOT SIRASI (veri modeli 11 ders slotu kalır) ·
+D17-7 PNG başlık th = gövde td = 13 (GÜN + 12) · D17-8/8b/8c PNG/günlük/haftalık b-e eşit font (24 çift × 3) ·
+D17-9 PNG marka 'Formül Kurs' + alt başlık korundu · D17-9b PNG footer YOK ·
+D17-9c tarih/gün satırı büyütüldü (font-size:14px;font-weight:700) ·
+D17-9d öğretmen TEK-DERS kartı footer + marka KORUNDU · D17-10 öğrenci PNG değişmedi ·
+D17-11 saatEtiket AYNI · D17-12 WA '8 · ' HÂLÂ VAR.
+
+#### Manifest/vaka (gerçek koşumdan, elle ayar yok)
+- ks-ogrt-ders-karti.mjs koşum 70 → 91 (2 sözleşme-güncelleme + 19 yeni D17 assertion); süit içi SUITE_DONE beklenen gerçek koşumdan.
+- suit-manifest.mjs + elle-vaka-manifesti.mjs: "ks-ogrt-ders-karti.mjs": 70 → 91.
+- elle-vaka-adlari.mjs + suit-vakalar/ks-ogrt-ders-karti.mjs.txt: gerçek koşum ✓ adlarından (91).
+- ks-ders-karti.mjs vaka listesi de D17 assertion güncellemesiyle gerçek koşumdan yenilendi (101).
+
+#### Mutasyon kanıtları (mutasyon-dongu17.mjs — yalnız geçici kopya; canonical SHA birebir korundu)
+- M1 haftalık gövdeden Mola çıkarıldı → D17-2 kırmızı (kotu=2) PASS
+- M2 Mola yanlış kolona taşındı → D17-3 kırmızı PASS
+- M3 5. ders bir kolon kaydırıldı (günlük başlık no'ları) → D17-5 kırmızı PASS
+- M4 gövde satırı 11 hücre → D17-2 kırmızı PASS
+- M5 Mola'ya drop/+ eklendi → D17-4a kırmızı PASS
+- M6 PNG footer geri → D17-9b kırmızı PASS
+- M7 marka 'YKS Birebir Takip' geri → D17-9 kırmızı PASS
+- M8 tarih/gün font büyütmesi geri alındı → D17-9c kırmızı PASS
+- M9 saatEtiket değiştirildi → D17-11 koruma kırmızı PASS
+- Sonuç: **9/9 PASS** · canonical app.js son SHA BİREBİR OK · donmuş test tarafı 11/11 AYNI.
+
+#### Final kapılar
+- node test.mjs → **2317/2317 OK**, exit=0 · MANIFEST 47 süit birebir · HAM Σ (2317) birebir ✓
+- node statik-eksiksizlik.mjs → TAMLIK 47/47, exit=0 · node --check app.js / ek-ders.js OK
+
+#### Dosya karnesi
+- Backup: app.js.dongu17-ogrt-gunluk-oncesi.bak — 328.789 B, SHA ad3b980bfaf6edb5498631b53a0809a0aba5f39b33be3ff46f8b528dfff71fe8
+- Final: app.js — 331.443 B, SHA dc0537661672236f22a592c85c6bc362bb9dca99c8978cf16e0ab61c347589f8
+- Değişen dosyalar: app.js · ks-ogrt-ders-karti.mjs · ks-ogrt-denetim.mjs · ks-ders-karti.mjs · ks-ekders-ozet-csv.mjs ·
+  suit-manifest.mjs · elle-vaka-manifesti.mjs · elle-vaka-adlari.mjs · suit-vakalar/ks-ogrt-ders-karti.mjs.txt ·
+  suit-vakalar/ks-ders-karti.mjs.txt · suit-vakalar/ks-ogrt-denetim.mjs.txt · mutasyon-dongu17.mjs (YENİ) · CHECKPOINT.md (bu kayıt)
+- Kapsam dışı dokunulmayanlar: öğrenci PNG (dersKartiHTML/saatKisa), WhatsApp akışları, saatEtiket, saat kolonları, ek-ders.js.
+
+Kullanıcı notu: Tablo ve PNG değişikliklerini görmek için tarayıcıda Ctrl+Shift+R (önbellek atlamalı yenileme) yapın.

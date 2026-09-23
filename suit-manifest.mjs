@@ -50,7 +50,7 @@ export const manifest = {
   "ks-gunluk-ders-tasi.mjs": 115,
   "ks-ders-karti.mjs": 101,
   "ks-ders-karti-tasima.mjs": 56,
-  "ks-ogrt-ders-karti.mjs": 90,
+  "ks-ogrt-ders-karti.mjs": 91,
   "ks-ogrt-denetim.mjs": 42,
 };
 

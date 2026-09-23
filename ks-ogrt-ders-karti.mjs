@@ -59,20 +59,20 @@ if (!globalThis.navigator) globalThis.navigator = {};
 let fail = 0;
 let __kosan = 0;
 const t = (name, cond, extra) => { __kosan++; console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 90) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ogrt-ders-karti.mjs kosan=" + __kosan + " beklenen=90"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ogrt-ders-karti.mjs:" + __kosan + ":90"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 91) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ogrt-ders-karti.mjs kosan=" + __kosan + " beklenen=91"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ogrt-ders-karti.mjs:" + __kosan + ":91"); } });
 
 let P;
 try {
   P = new Function(scripts + `
     yenile();
-    return { DB, ui, gunlukTablo, haftalikOgrtTablo, saatEtiket, ogrenciMesajMetni, ogrtGunlukSatirlar, ogrtGunlukSlotlari, dersKartiOgrtGunlukHTML, dersKartiOgrtGunlukBtnHTML, dersKartiOgrtGunlukAc, waAliciBilgisi, dersKartiHTML, dersKartiVeri, dersKartiOgrtHTML, dersKartiUygun };
+    return { DB, ui, gunlukTablo, haftalikOgrtTablo, saatEtiket, KISA_KOD, ogrenciMesajMetni, ogrtGunlukSatirlar, ogrtGunlukSlotlari, dersKartiOgrtGunlukHTML, dersKartiOgrtGunlukBtnHTML, dersKartiOgrtGunlukAc, waAliciBilgisi, dersKartiHTML, dersKartiVeri, dersKartiOgrtHTML, dersKartiUygun };
   `)();
   t("boot hatasız", true);
 } catch (e) {
   console.error(e.stack ? e.stack.split("\n").slice(0, 8).join("\n") : e);
   process.exit(1);
 }
-const { DB, ui, gunlukTablo, haftalikOgrtTablo, saatEtiket, ogrenciMesajMetni, ogrtGunlukSatirlar, ogrtGunlukSlotlari, dersKartiOgrtGunlukHTML, dersKartiOgrtGunlukBtnHTML, dersKartiOgrtGunlukAc, waAliciBilgisi, dersKartiHTML, dersKartiVeri, dersKartiOgrtHTML, dersKartiUygun } = P;
+const { DB, ui, gunlukTablo, haftalikOgrtTablo, saatEtiket, KISA_KOD, ogrenciMesajMetni, ogrtGunlukSatirlar, ogrtGunlukSlotlari, dersKartiOgrtGunlukHTML, dersKartiOgrtGunlukBtnHTML, dersKartiOgrtGunlukAc, waAliciBilgisi, dersKartiHTML, dersKartiVeri, dersKartiOgrtHTML, dersKartiUygun } = P;
 
 /* Gelecek SALI (gerçek DB gün eşlemesiyle; dowIdx Pzt=0 ve Date.getDay() Salı=2 aynı takvimi kullanır) */
 const gelecekSali = (() => { const d = new Date(); do { d.setDate(d.getDate() + 1); } while (d.getDay() !== 2); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); })();
@@ -266,6 +266,7 @@ t("D17-2 haftalık her gövde satırında 12 hücre", (() => { const satirlar = 
 t("D17-3 haftalık görsel sıra 1,2,3,4,Mola,5..11", (() => { const tr = (haftaHTML.match(/<tr[^>]*>\s*<th[\s\S]*?<\/tr>/) || [""])[0]; const sira = (tr.match(/>(\d{1,2}|Mola)</g) || []).map(x => x.slice(1, -1)); return JSON.stringify(sira) === JSON.stringify(["1","2","3","4","Mola","5","6","7","8","9","10","11"]); })());
 /* 4) "+ istek"/drop-zone 11 KALIR; Mola hücresinde draggable/drop/+ YOK */
 t("D17-4a haftalıkta 7 Mola hücresi ve hiçbiri drop/drag içermiyor", (() => { const molaTds = (haftaHTML.match(/bg-emerald-50">[\s\S]*?<\/td>/g) || []).filter(x => x.includes("Mola")); return molaTds.length === 7 && molaTds.every(m => !m.includes("dnd-bos") && !m.includes("dnd-kilit") && !m.includes("istekBurak") && !m.includes("draggable")); })());
+t("D17-4c her drop-zone hücresinin data-drop-saat'i kendi slotun GERÇEK başlangıcı; 12:00 (mola) ASLA drop değil", (() => { const zorlar = (haftaHTML.match(/data-drop-saat="([^"]+)"/g) || []).map(x => x.slice(16, -1).replace('data-drop-saat="', '')); const gercek = KISA_KOD.map(k => k.b); return zorlar.length > 0 && zorlar.every(z => gercek.includes(z)) && !zorlar.includes("12:00"); })());
 t("D17-4b mola hücresinde draggable/drop/+ istek YOK", (() => { const m = haftaHTML.match(/bg-emerald-50">[\s\S]*?<\/td>/) || [""]; const h = m[0]; return !h.includes("draggable") && !h.includes("istekBurak") && !h.includes("dnd-bos") && !h.includes(">+</span>"); })());
 /* 5) 5. ders Mola'dan SONRA doğru görsel kolonda + doğru drop hedefi */
 t("D17-5 5. ders Mola'dan SONRA doğru görsel kolonda ve doğru drop hedefiyle görünür", (() => { sifirGun(); ekleBirebir({ id: "d17-slot5", saat: "15:30" }); const g = gunlukTablo(); sifirGun(); const molaIdx = g.indexOf(">Mola<"); const dersIdx = g.indexOf(">Limit ve Süreklilik<"); const dropIdx = g.indexOf('data-drop-saat="15:30"');

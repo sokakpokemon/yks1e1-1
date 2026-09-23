@@ -2459,3 +2459,49 @@ byte-birebir aynı: d1 15.874 B, ekders 15.909 B, etiket 8.500 B — SHA'lar yuk
 ### SON DURUM
 - app.js: 325.710 B, SHA-256 f85e1585a87f3a9a13dd026247a2e7970e05dcdd4f0c41ed3213ff6c37e5f098
 - node test.mjs yeşil + Σ birebir; statik-eksiksizlik TAMLIK; 4 eski + 1 yeni mutasyon testi FAIL→restore→yeşil
+
+## DÖNGÜ-12: DÖNGÜ-11 DENETİM AÇIKLARININ KAPATILMASI — TAMAMLANDI (fark sıfır)
+
+### app.js
+- **app.js DEĞİŞMEDİ** (salt-okuma turu): 325.710 B, SHA-256 `f85e1585a87f3a9a13dd026247a2e7970e05dcdd4f0c41ed3213ff6c37e5f098`
+- Backup: `app.js.dongu12-denetim-oncesi.bak` (325.710 B, SHA `f85e1585…` — birebir aynı)
+
+### Yeni denetim süiti: ks-ogrt-denetim.mjs (42 vaka, HEPSİ gerçek DB girdisi)
+- **A) Rozet sözleşmesi** (A1–A6): yalnız görünen satırlar; TAM üç metin. A1 yalnız sınıf dersi→Planlandı · A2 yalnız planlı birebir→Planlandı · A3 yalnız tamamlanmış→Yapıldı · A4 sınıf+tamamlanmış→Kısmen (sınıf dersi planlı sayılır) · A5 planlı+tamamlanmış→Kısmen · A6 sayı eki "(n)" YASAK.
+- **B) Buton yerleşimi/tekliği** (B1–B10): ad hücresinde TAM 1 (tek ders / çok ders / sınıf+birebir), satır yoksa 0, ad hücresi DIŞINDA 0 (B7), birebir hücresi segmentinde 0 (B7b), ogretmenTab/ogrenciTab/ek-ders.js'de 0 (B8–B10); draggable=false + stopPropagation + preventDefault kalıbı (B5–B6).
+- **C) Gün izolasyonu** (C1–C10): iki günlük gerçek DB fixture (Salı/Çarşamba, benzersiz IZO- işaretleri); seçili gün satırları+başlık GÖRÜNÜR; diğer günün sınıf/öğrenci/konu/gün-adı/tarih HİÇBİRİ sızmaz; mola/ÖĞLE yok; haftalık aralık yok; aynı gün sınıf+birebir korunur. dowIdx gün anahtarı DAVRANIŞSAL kanıtlandı.
+- **D) Yazımsızlık** (D1–D8): statik (saveDB/localStorage.setItem akışta yok) + DİNAMİK: gerçek dersKartiOgrtGunlukAc akışı stub'lu html2canvas/navigator ile koşturuldu → setItem=0, removeItem/clear=0, DB byte aynı, localStorage byte aynı, html2canvas=1 + PNG indirildi (ders-karti-ogretmen-…png, telefon yok).
+- **E) MATEMATİK kapsam + saat başlığı** (E1–E5): branş BAŞLIKTA meşru (E1); sınıf kartı segmentinde YASAK (E2), birebir kartı segmentinde YASAK (E3); saat başlıkları kart tablosu başlık satırı bağlamında TAM biçim "1 · 08:50"…"11 · 18:00" (11 kolon, E4) ve ÖĞLE yok (E5).
+
+### Mutasyon kanıtları (mutasyon-dongu12.mjs — geçici kopya, restore SHA'lı)
+- MUT-A: sınıf kartı segmentine MATEMATİK sızdırıldı → **E2 kırmızı, exit=1** ✓
+- MUT-B: PNG tablosu saat başlık üretimi bozuldu ("1 · 08:50"→"1 ·08:51") → **E4 kırmızı, exit=1** ✓ (haftalik izgara L3539'e dokunulmaz; yalnız PNG başlık ankoru L4609)
+- MUT-C: ad hücresinde buton 2× çizildi → **B1 kırmızı, exit=1** ✓
+- Her mutasyon sonrası restore SHA byte-birebir + normal koşum yeniden yeşil (MUTEXIT=0).
+
+### 4 eski negatif test (yeni süit kapıları üzerinden)
+1. Vaka adına BOZULDU eki → vaka-listesi kapısı FAIL (N1_EXIT=1) → restore SHA `8951c0e9…` birebir
+2. ELLE ad listesinde A1↔A2 takası → "AD farkı vaka #2" FAIL (N2_EXIT=1) → restore SHA `07e6efe6…` birebir
+3. Elle sayı 42→43 → "manifest (42) ≠ ELLE manifest (43)" FAIL (N3_EXIT=1) → restore SHA `da7bdabf…` birebir
+4. A1 assertion çıkarılması → "SUITE_DONE UYUŞMAZLIĞI: kosan=41 beklenen=42" FAIL (N4_EXIT=1) → restore SHA `bc3912d7…` birebir
+
+### Kapı dosyası güncellemeleri (yeni toplam YALNIZ gerçek assertion eklemeden doğdu)
+- test.mjs: süit listesine `ks-ogrt-denetim.mjs` + özet yazısı 47 süit — SHA `6e523f25…`
+- suit-manifest.mjs / elle-vaka-manifesti.mjs: `42` — SHA `017af469…` / `da7bdabf…`
+- elle-vaka-adlari.mjs: 42 donmuş ad (ks-kart-sirasi sayım adı da 46→47 doğal koşumdan) — SHA `07e6efe6…`
+- suit-vakalar/ks-ogrt-denetim.mjs.txt (42 satır, koşum ✓'lerinden) — SHA `8951c0e9…`; suit-vakalar/ks-kart-sirasi.mjs.txt (→47) — SHA `82a0400a…`
+- statik-eksiksizlik.mjs: yeni süit otomatik keşfedildi (site=42 hit=42, SIFIR-HIT YOK, istisna eklenmedi); özet yazısı 47/47 — SHA `8273952f…`
+- ks-kart-sirasi.mjs DEĞİŞMEDİ (SHA `766614f0…`); donmuş/ELLE tarafındaki sayım adı doğal koşum artışıyla güncellendi.
+
+### Zorunlu sonuçlar (SON KOŞUM)
+- node test.mjs → **2264/2264 OK, 0 kırmızı, exit=0, 47 süit**
+- HAM Σ: runner=2264 = SUITE_DONE=2264 = donmuş=2264 = ELLE sayı=2264 = ELLE ad=2264 — **BİREBİR ✓**
+- node statik-eksiksizlik.mjs → **TAMLIK 47/47, exit=0** (yeni sıfır-hit YOK)
+- node --check app.js · node --check ek-ders.js → OK
+- Beş denetim maddesinin HER BİRİ: normal yeşil → mutasyon kırmızı → restore SHA birebir → normal yeniden yeşil.
+
+### Not
+- ks-ogrt-ders-karti.mjs (70 vaka) GEVŞETİLMEDİ; bu tur yalnız YENİ denetim süiti ekledi.
+- Yedek/geri alma: mutasyonlar yalnız geçici kopyada; kalıcı dosyalarda mutasyon yok.
+
+**Değişikliği görmek için Ctrl+Shift+R / Cmd+Shift+R ile sert yenileme yapın.**

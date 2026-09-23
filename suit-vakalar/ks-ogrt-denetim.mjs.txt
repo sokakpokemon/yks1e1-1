@@ -1,0 +1,42 @@
+denetim: boot hatasız
+A1 yalnız sınıf dersi → 'Planlandı'
+A2 yalnız planlı birebir → 'Planlandı'
+A3 yalnız tamamlanmış birebir → 'Yapıldı'
+A4 sınıf dersi + tamamlanmış birebir → 'Kısmen tamamlandı' (sınıf dersi planlı sayılır)
+A5 planlı + tamamlanmış birebir → 'Kısmen tamamlandı'
+A6 rozet TAM üç metinden biri; 'Planlandı (n)' / 'Yapıldı (n)' sayı eki YASAK
+B1 tek ders → öğretmen ADI hücresinde TAM 1 buton
+B2 aynı gün birden fazla ders → buton ÇOĞALMAZ, tam 1
+B3 sınıf dersi + birebir → tam 1 buton
+B4 seçili günde hiç satır yok → 0 buton
+B5 buton kalıbı korunur: draggable=false + onmousedown stopPropagation + onclick preventDefault
+B6 tıklama öğretmen düzenlemeyi/sürüklemeyi tetiklemez (ogrDuzenle/draggable=true yok)
+B7 buton birebir hücresinde üretilmez (ad hücresi dışında dersKartiOgrtGunlukAc yok)
+B7b buton adı hücresi SEGMENTİNDE yer alıyor (birebir hücresinde değil)
+B8 haftalık öğretmen çizelgesinde (ogretmenTab) buton YOK
+B9 sınıf programı/öğrenci sekmesinde (ogrenciTab) buton YOK
+B10 Ek Ders sekmesi (ek-ders.js) buton İÇERMEZ
+C1 seçili günün tüm satırları görünür (sınıf + birebir)
+C2 seçili gün başlığı: öğretmen adı + gün adı + gg.aa.yyyy
+C3 diğer günün sınıf adı SIZMAZ
+C4 diğer günün öğrenci adı SIZMAZ
+C5 diğer günün konusu SIZMAZ
+C6 diğer günün gün adı SIZMAZ
+C7 diğer günün tarihi SIZMAZ
+C8 mola/ÖĞLE kolonu ve boş slot uydurulmaz ('12:10'/'Mola' yok)
+C9 haftalık tarih aralığı YOK (tek gün; ' – ' aralık ayracı yok)
+C10 aynı günün sınıf + birebir kayıtları KORUNUR (iki kart da basılı)
+D1 statik: dersKartiOgrtGunlukAc akışında saveDB çağrısı YOK
+D2 statik: dersKartiOgrtGunlukAc akışında localStorage.setItem YOK
+D3 dinamik: localStorage.setItem = 0
+D4 dinamik: removeItem/clear = 0 (yazma/silme/temizleme yok)
+D5 dinamik: DB değişikliği YOK (byte karşılaştırma)
+D6 dinamik: localStorage içerik değişikliği YOK
+D7 akış GERÇEK kart yoluna girdi: html2canvas çağrıldı + PNG indirildi
+D8 dosya adında TELEFON YOK
+E1 MATEMATİK başlıkta branş olarak BULUNABİLİR (geçerli)
+E2 kart segmentinde (sınıf kartı) MATEMATİK BULUNAMAZ — yalnız sınıf adı
+E3 kart segmentinde (birebir kartı) MATEMATİK BULUNAMAZ
+E4 saat başlıkları kart tablosunda TAM biçimde: '1 · 08:50' … '11 · 18:00' (11 kolon)
+E5 saat başlığı ÖĞLE kolonu ÇİZİLMEZ (12:10 başlıkta yok)
+denetim süiti test.mjs'te tam 1 kez kayıtlı

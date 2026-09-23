@@ -1,5 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":93"); return; } if (__kosan !== 93) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ders-karti.mjs kosan=" + __kosan + " beklenen=93"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":93"); } });
+process.on("exit", (c) => { if (c !== 0) { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":101"); return; } if (__kosan !== 101) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ders-karti.mjs kosan=" + __kosan + " beklenen=101"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":101"); } });
 /* ks-ders-karti.mjs — DERS-KARTI-YAMASI süiti
    Doğruladıkları:
     1) Kart üretimi: dersKartiHTML/dersKartiVeri doğru alanlarla çalışır (ad, ders, konu, öğretmen, tarih+saat, sınıf, durum).
@@ -78,7 +78,7 @@ global.t = t; global.toastKayit = global.toastKayit;
 const scripts = [appKaynak, ...[...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)].map(m => m[1])].join("\n;\n");
 let P;
 try {
-  P = new Function(scripts + "\n  return { DB, ui, renderDersler, dersKartiAc, dersKartiHTML, dersKartiVeri, dersKartiUygun, dersKartiBtnHTML, haftalikOgrtTablo, gunlukTablo, waAliciDegistir, waAliciBilgisi, ogrenciMesajMetni, dersKartiIndirildiSifirla: () => { dersKartiIndirildi = false; }, toastOf: () => toastKayit };\n")();
+  P = new Function(scripts + "\n  return { DB, ui, renderDersler, dersKartiAc, dersKartiHTML, dersKartiVeri, dersKartiUygun, dersKartiBtnHTML, haftalikOgrtTablo, gunlukTablo, waAliciDegistir, waAliciBilgisi, ogrenciMesajMetni, dersKartiIndirildiSifirla: () => { dersKartiIndirildi = false; }, toastOf: () => toastKayit, dersKartiOgrtHTML, dersKartiOgrtGunlukHTML };\n")();
   t("boot hatasız", true);
 } catch (e) {
   /* beklenmeyen catch: açıkça KIRMIZI ve koşulsuz (ölü/koşullu test yok) */
@@ -86,7 +86,7 @@ try {
   console.error(e.stack ? e.stack.split("\n").slice(0, 6).join("\n") : e);
   throw e;
 }
-const { DB, ui, renderDersler, dersKartiAc, dersKartiHTML, dersKartiVeri, dersKartiUygun, dersKartiBtnHTML, haftalikOgrtTablo, gunlukTablo, waAliciDegistir, waAliciBilgisi, ogrenciMesajMetni, dersKartiIndirildiSifirla } = P;
+const { DB, ui, renderDersler, dersKartiAc, dersKartiHTML, dersKartiVeri, dersKartiUygun, dersKartiBtnHTML, haftalikOgrtTablo, gunlukTablo, waAliciDegistir, waAliciBilgisi, ogrenciMesajMetni, dersKartiIndirildiSifirla, dersKartiOgrtHTML, dersKartiOgrtGunlukHTML } = P;
 
 /* Gerçek toast'u yakala (app.js içindeki toast global.toastKayit'a yazsın diye stub zaten app.js'e geçmez —
    bunun yerine app.js toast'u localStorage'a yazmaz; toast çağrılarını testte takip etmek için basit yöntem:
@@ -118,6 +118,16 @@ t("kart konu alanı", v.konu === "Limit ve Süreklilik");
 t("kart öğretmen alanı", v.ogr === ogrt.ad);
 t("kart tarih+saat alanı", v.tarih.includes("07.01.2030") && v.saat.includes("15:30"));
 t("kart sınıf alanı (sinif dolu)", v.sinif === (ogr.sinif || "Sınıf belirtilmemiş"));
+/* DÖNGÜ-16: öğrenci kartı footer KALDIRILDI + SAAT slot-numarasız; WA/öğretmen koruması */
+t("D16 kart SAAT alanı slot-numarasız: '15:30-16:10' VAR", v.saatKisa === "15:30-16:10", v.saatKisa);
+t("D16 kart SAAT alanında '8 · ' öneki YOK", !String(v.saatKisa).includes(" · "));
+const d16HTML = dersKartiHTML(birebir);
+t("D16 öğrenci kartı HTML'inde footer metni YOK", !d16HTML.includes("Bu kart YKS Birebir Takip tarafından oluşturuldu"));
+t("D16 öğrenci kartı SAAT kutusunda '8 · ' YOK ve '15:30-16:10' VAR", (() => { const i = d16HTML.indexOf("SAAT"); const kutu = d16HTML.slice(i, i + 400); return !kutu.includes("8 · ") && kutu.includes("15:30-16:10"); })());
+t("D16 WA mesajında '8 · 15:30-16:10' HÂLÂ VAR", (() => { const kayitliD = DB.dersler; const kayitliF = ui.filtre; const kayitliA = ui.anchor; DB.dersler = [birebir]; ui.filtre = "tumu"; const m = ogrenciMesajMetni(ogr.id); DB.dersler = kayitliD; ui.filtre = kayitliF; ui.anchor = kayitliA; return !!m && m.includes("8 · 15:30-16:10"); })());
+t("D16 öğretmen tek-ders kartında footer + '8 · ' HÂLÂ VAR", (() => { const h = dersKartiOgrtHTML(birebir); return h.includes("Bu kart YKS Birebir Takip tarafından oluşturuldu") && h.includes("8 · 15:30-16:10"); })());
+t("D16 öğretmen günlük kartında footer + '8 · ' HÂLÂ VAR", (() => { const gun = (() => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + 7); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); })(); const kayitli = DB.dersler; DB.dersler = [birebir]; const h = dersKartiOgrtGunlukHTML(ogrt.id, gun); DB.dersler = kayitli; return h.includes("Bu kart YKS Birebir Takip tarafından oluşturuldu") && h.includes("8 · "); })());
+t("D16 fallback: KISA_KOD dışı saat → String(saat)", (() => { const v2 = dersKartiVeri(Object.assign({}, birebir, { saat: "06:15" })); return v2.saatKisa === "06:15"; })());
 const bosSinifOgr = Object.assign({}, ogr, { sinif: "" });
 t("kart sınıf alanı boş → tam 'Sınıf belirtilmemiş' (uydurma YOK)", (() => { const kayitli = DB.ogrenciler; const i0 = DB.ogrenciler.findIndex(x => x.id === ogr.id); DB.ogrenciler = kayitli.slice(); DB.ogrenciler[i0] = bosSinifOgr; const v2 = dersKartiVeri(Object.assign({}, birebir, { ogrenciId: ogr.id })); DB.ogrenciler = kayitli; return v2.sinif === "Sınıf belirtilmemiş"; })());
 t("konu boş → tam 'Genel tekrar' (HTML)", dersKartiHTML(Object.assign({}, birebir, { konu: "" })).includes("Genel tekrar"));

@@ -2628,3 +2628,58 @@ Spec-4 zorunlu mutasyonu "WhatsApp iptal filtresi kaldırıldı → test kırmı
   zincir yeniden koşuldu: 13 MUTASYON HEPSİ PASS.
 
 DÖNGÜ-15 TAMAMLANDI.
+### DÖNGÜ-16 KAYDI — ÖĞRENCİ KARTI SAAT VE FOOTER DÜZENLEMESİ
+
+#### Kapsam (yalnız iki değişiklik)
+1. Öğrenci birebir PNG kartındaki footer satırı ("Bu kart YKS Birebir Takip tarafından oluşturuldu · …") kaldırıldı.
+2. Öğrenci kartı SAAT alanı slot numarasız: "8 · 15:30-16:10" → "15:30-16:10".
+
+#### Kilit koruması (kanıtlı)
+- Ortak saatEtiket() (app.js:101) DEĞİŞMEDİ — blok diff'i AYNI; çağrı sayısı 19 → 19 (diff raporu: 0 değişiklik).
+- dersKartiOgrtHTML / dersKartiOgrtGunlukHTML / dersKartiOgrtVeri blokları diff'te AYNI (byte-düzeyde korunum).
+- WhatsApp akışları (ogrenciMesajMetni/waGonder/waOnizle/waKopyalaMesaj/waAliciBilgisi/waAliciTipi/waUrl) değişmedi;
+  WA "8 · 15:30-16:10" gösterimi koruma testiyle kanıtlandı (D16 assertion).
+- Öğretmen kartlarında footer KORUNDU (grep: yalnız 4486 ve 4694'te kalan 2 üretim noktası = öğretmen tek-ders + öğretmen günlük).
+
+#### Uygulama mimarisi
+- dersKartiVeri'ye kart-kapsamlı biçimleyici EKLENDİ (TEK çağrı noktası; KISA_KOD tabanlı; fallback String(saat) aynen):
+  v.saat (öğretmen kartının tükettiği "8 · …" — korundu) + v.saatKisa ("15:30-16:10", yalnız öğrenci kartı).
+- dersKartiHTML SAAT kutusu v.saatKisa'yı kullanır; footer satırı kaldırıldı (yerine DÖNGÜ-16 yorum işareti).
+- Rozetler, renkler, iptal kartı davranışı DEĞİŞMEDİ. saveDB=0 / localStorage.setItem=0 (kart akışı; tek "saveDB"
+  geçişi yalnız mevcut açıklama yorumundadır). PNG'de telefon/buton/CDN bağımlılığı yok.
+
+#### Yeni assertion'lar (ks-ders-karti.mjs, gerçek üretilen çıktıdan; 8 adet)
+- D16 kart SAAT alanı slot-numarasız: '15:30-16:10' VAR (v.saatKisa)
+- D16 kart SAAT alanında '8 · ' öneki YOK
+- D16 öğrenci kartı HTML'inde footer metni YOK
+- D16 öğrenci kartı SAAT kutusunda '8 · ' YOK ve '15:30-16:10' VAR
+- D16 WA mesajında '8 · 15:30-16:10' HÂLÂ VAR (ui.filtre=tumu ile gerçek ogrenciMesajMetni)
+- D16 öğretmen tek-ders kartında footer + '8 · ' HÂLÂ VAR (dersKartiOgrtHTML)
+- D16 öğretmen günlük kartında footer + '8 · ' HÂLÂ VAR (dersKartiOgrtGunlukHTML)
+- D16 fallback: KISA_KOD dışı saat → String(saat) ("06:15")
+
+#### Manifest/vaka güncelleme (gerçek koşumdan, elle ayar yok)
+- ks-ders-karti.mjs koşumu 93 → 101 (8 yeni assertion); süit içi SUITE_DONE beklenen değeri koşumdan güncellendi.
+- suit-manifest.mjs + elle-vaka-manifesti.mjs: "ks-ders-karti.mjs": 93 → 101.
+- elle-vaka-adlari.mjs + suit-vakalar/ks-ders-karti.mjs.txt: gerçek koşum ✓ adlarından yeniden üretildi (101).
+
+#### Mutasyon kanıtları (mutasyon-dongu16.mjs — yalnız geçici kopya; canonical SHA birebir korundu)
+- M1 footer öğrenci kartına geri → "D16 … footer metni YOK" kırmızı (kotu=1) PASS
+- M2 öğrenci SAAT v.saat'e döndü → "D16 … '8 · ' YOK" kırmızı (kotu=1) PASS
+- M3 saatEtiket slot öneki kaldırıldı (ortak yardımcı bozuldu) → öğretmen koruma testi kırmızı (kotu=2) PASS
+- M4 öğretmen tek-ders footer kaldırıldı → öğretmen koruma testi kırmızı (kotu=1) PASS
+- M5 öğretmen günlük footer kaldırıldı → günlük koruma testi kırmızı (kotu=1) PASS
+- Sonuç: 5/5 PASS · canonical app.js son SHA BİREBİR OK · donmuş test tarafı 11/11 AYNI.
+
+#### Final kapılar
+- node test.mjs → **2296/2296 OK**, exit=0 · MANIFEST 47 süit birebir · HAM Σ (2296) birebir ✓
+- node statik-eksiksizlik.mjs → TAMLIK 47/47, exit=0 · node --check app.js / ek-ders.js OK
+
+#### Dosya karnesi
+- Backup: app.js.dongu16-saat-footer-oncesi.bak — 328.333 B, SHA 8ce8093d71a8b2501386eccf6359b6d1902822740b486483d4f1f45d44bbb7b4
+- Final: app.js — 328.789 B, SHA ad3b980bfaf6edb5498631b53a0809a0aba5f39b33be3ff46f8b528dfff71fe8
+- Değişen dosyalar: app.js · ks-ders-karti.mjs · suit-manifest.mjs · elle-vaka-manifesti.mjs · elle-vaka-adlari.mjs ·
+  suit-vakalar/ks-ders-karti.mjs.txt · mutasyon-dongu16.mjs (YENİ) · CHECKPOINT.md (bu kayıt)
+- Değişmeyen (kilit): ek-ders.js · index.html · ks-ogrt-* · ks-wa-* · saatEtiket · tüm ortak yardımcılar
+
+Kullanıcı notu: PNG kartındaki değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (sabit önbellek atlamalı yenileme) yapın.

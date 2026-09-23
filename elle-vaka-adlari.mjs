@@ -2129,6 +2129,14 @@ export const elleVakaAdlari = {
     "kart öğretmen alanı",
     "kart tarih+saat alanı",
     "kart sınıf alanı (sinif dolu)",
+    "D16 kart SAAT alanı slot-numarasız: '15:30-16:10' VAR",
+    "D16 kart SAAT alanında '8 · ' öneki YOK",
+    "D16 öğrenci kartı HTML'inde footer metni YOK",
+    "D16 öğrenci kartı SAAT kutusunda '8 · ' YOK ve '15:30-16:10' VAR",
+    "D16 WA mesajında '8 · 15:30-16:10' HÂLÂ VAR",
+    "D16 öğretmen tek-ders kartında footer + '8 · ' HÂLÂ VAR",
+    "D16 öğretmen günlük kartında footer + '8 · ' HÂLÂ VAR",
+    "D16 fallback: KISA_KOD dışı saat → String(saat)",
     "kart sınıf alanı boş → tam 'Sınıf belirtilmemiş' (uydurma YOK)",
     "konu boş → tam 'Genel tekrar' (HTML)",
     "kart bento zemin #f4f6fa taşıyor",
@@ -2210,7 +2218,7 @@ export const elleVakaAdlari = {
     "kartta grup üyesi adı YOK (grup dersten kart üretilmez)",
     "kartta telefon YOK (tel/anneTel/babaTel)",
     "kart yalnız kendi adını taşıyor",
-    "dersKartiHTML id'li veri kaynağı TEK öğrenci (dersOgrenciIds[0])",
+    "dersKartiHTML id'li veri kaynağı TEK öğrenci (dersOgrenciIds[0])"
   ],
   "ks-ders-karti-tasima.mjs": [
     "DERS-KARTI-TASIMA-YAMASI işareti kaynakta",

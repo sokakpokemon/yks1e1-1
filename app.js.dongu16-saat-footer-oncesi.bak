@@ -4326,14 +4326,7 @@ function dersKartiVeri(d) {
   }
   var D = DERS[d.dersId] || DERS.tur;
   var rozet = d.durum === "tamamlandi" ? "Yapıldı" : (d.durum === "iptal" ? "İptal Edildi" : "Planlandı");
-  /* DÖNGÜ-16: kart-kapsamlı saat biçimleyici — slot numarası YOK ("15:30-16:10").
-     Ortak saatEtiket'e dokunulmaz (WA/öğretmen "8 · " gösterimini korur); TEK çağrı noktası burası.
-     KISA_KOD eşleşmezse fallback String(saat) — saatEtiket fallback'iyle aynı sözleşme. */
-  var kartSaati = (function (saat) {
-    var m = KISA_KOD.filter(function (x) { return x.no === ksKodOf(saat); })[0];
-    return m ? m.b + "-" + m.e : String(saat || "");
-  })(d.saat);
-  return { o: o, ad: (o && o.ad) || d.ogrenciAd || "", ders: D.ad, konu: d.konu || "", ogr: ogrAd || "", tarih: fmtTR(d.tarih) + " " + GUNLER[dowIdx(d.tarih)], saat: saatEtiket(d.saat), saatKisa: kartSaati, sinif: (o && o.sinif) || "Sınıf belirtilmemiş", durum: rozet };
+  return { o: o, ad: (o && o.ad) || d.ogrenciAd || "", ders: D.ad, konu: d.konu || "", ogr: ogrAd || "", tarih: fmtTR(d.tarih) + " " + GUNLER[dowIdx(d.tarih)], saat: saatEtiket(d.saat), sinif: (o && o.sinif) || "Sınıf belirtilmemiş", durum: rozet };
 }
 function dersKartiHTML(d) {
   /* DÖNGÜ-15: BENTO tasarım — zemin #f4f6fa, beyaz yuvarlak kart, salt inline style (class= YOK).
@@ -4364,7 +4357,7 @@ function dersKartiHTML(d) {
       "</div>" +
       '<div style="display:flex;gap:12px;margin-top:12px">' +
         kutu("#f0f4fa", "#6366f1", "TARİH", v.tarih) +
-        kutu("#fff8f2", "#f59e0b", "SAAT", v.saatKisa) +
+        kutu("#fff8f2", "#f59e0b", "SAAT", v.saat) +
       "</div>" +
       '<div style="display:flex;gap:12px;margin-top:12px">' +
         kutu("#eff9f7", "#14b8a6", "DERS", v.ders) +
@@ -4373,7 +4366,7 @@ function dersKartiHTML(d) {
       '<div style="margin-top:12px">' +
         kutu("#f8fafc", "#94a3b8", "ÖĞRETMEN", v.ogr) +
       "</div>" +
-      /* DÖNGÜ-16: öğrenci kartı footer KALDIRILDI (öğretmen kartlarındaki footer korunur) */
+      '<div style="font-size:9.5px;color:#94a3b8;margin-top:14px">Bu kart YKS Birebir Takip tarafından oluşturuldu · ' + esc(pencereAdi()) + "</div>" +
     "</div>" +
   "</div>";
 }

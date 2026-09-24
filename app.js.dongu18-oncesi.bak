@@ -216,14 +216,6 @@ function ilkHarfler(ad) {
   var p = String(ad || "?").trim().split(/\s+/);
   return ((p[0] || "?")[0] + (p.length > 1 ? p[p.length - 1][0] : "")).toLocaleUpperCase("tr-TR");
 }
-/* DÖNGÜ-18: Görsel ad normalizasyonu — YALNIZ render anında, DB'ye ASLA yazılmaz.
-   Türkçe güvenli: toLocaleLowerCase("tr-TR") + kelime başı toLocaleUpperCase("tr-TR")
-   (İ/ı bozulmaz). Örn. "MURAT ÇINAR" → "Murat Çınar"; "ayşe demir" → "Ayşe Demir". */
-function gorselOgrenciAdi(ad) {
-  return String(ad || "").trim().split(/\s+/)
-    .map(function (w) { return w ? w.toLocaleLowerCase("tr-TR").charAt(0).toLocaleUpperCase("tr-TR") + w.toLocaleLowerCase("tr-TR").slice(1) : w; })
-    .join(" ");
-}
 function avatar(ad, i) {
   var r = AVATAR_RENK[Math.abs((i == null ? 0 : i)) % AVATAR_RENK.length];
   return '<div class="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ' + r[0] + " " + r[1] + '">' + esc(ilkHarfler(ad)) + "</div>";
@@ -628,7 +620,7 @@ function grupPanelGovdeHTML() {
       "</div>" +
       '<select id="grup-panel-sinif" onchange="grupPanelSinifSec(this.value)" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[12.5px] font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-400/40">' + sinifOps + "</select>" +
     "</div>" +
-    '<div id="grup-panel-liste" class="mt-2 max-h-56 min-w-[280px] overflow-y-auto overflow-x-hidden rounded-xl border border-slate-200/70 bg-white divide-y divide-slate-100">' + grupPanelListeHTML() + '</div>';
+    '<div id="grup-panel-liste" class="mt-2 max-h-56 overflow-y-auto rounded-xl border border-slate-200/70 bg-white divide-y divide-slate-100">' + grupPanelListeHTML() + '</div>';
 }
 /* ISTEK-GRUP-ISTEGI-YAMASI-v5 (B2): liste markup'ı TEK kaynaktan — grupPanelGovdeHTML ve
    grupPanelListeCiz aynı üreticiyi kullanır; govde innerHTML'i Ana/checked içerir. */
@@ -640,9 +632,8 @@ function grupPanelListeHTML() {
       ' onchange="grupPanelSec(\'' + esc(e.o.id) + '\')" class="w-4 h-4 rounded border-slate-300 accent-teal-600 cursor-pointer' + (e.ana ? " opacity-50 cursor-not-allowed" : "") + '" />';
     var anaTag = e.ana ? '<span class="text-[10px] font-extrabold text-teal-600 bg-teal-50 border border-teal-200 rounded-full px-2 py-0.5 ml-auto">Ana</span>' : "";
     var sinifTag = e.o.sinif ? '<span class="text-[10px] font-bold text-slate-300 ' + (e.ana ? "" : "ml-auto") + ' shrink-0">' + esc(e.o.sinif) + "</span>" : "";
-    return '<label class="flex items-start gap-3 px-3 py-2 hover:bg-teal-50/50 cursor-pointer' + (e.ana ? " bg-slate-50/80" : "") + '">' +
-      kutu.replace('class="w-4 h-4', 'class="mt-0.5 w-4 h-4') +
-      '<span class="flex-1 min-w-0 text-[13px] font-semibold text-slate-700 whitespace-normal break-words leading-snug">' + esc(gorselOgrenciAdi(e.o.ad)) + "</span>" + anaTag + sinifTag + "</label>";
+    return '<label class="flex items-center gap-3 px-3 py-2 hover:bg-teal-50/50 cursor-pointer' + (e.ana ? " bg-slate-50/80" : "") + '">' + kutu +
+      '<span class="text-[13px] font-semibold text-slate-700">' + esc(e.o.ad) + "</span>" + anaTag + sinifTag + "</label>";
   }).join("");
 }
 function istekOgrenciIds(istek) {

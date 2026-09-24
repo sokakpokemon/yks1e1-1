@@ -11,7 +11,7 @@ export const elleManifest = {
   "ks-durum-fn.mjs": 20,
   "ks-grup-uyum.mjs": 41,
   "ks-panel-secim.mjs": 33,
-  "ks-grup-gorunum.mjs": 35,
+  "ks-grup-gorunum.mjs": 42,
   "ks-istekten-grup.mjs": 32,
   "ks-grup-istegi.mjs": 68,
   "ks-benzersiz-id.mjs": 46,

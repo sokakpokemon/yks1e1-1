@@ -220,35 +220,9 @@ function avatar(ad, i) {
   var r = AVATAR_RENK[Math.abs((i == null ? 0 : i)) % AVATAR_RENK.length];
   return '<div class="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ' + r[0] + " " + r[1] + '">' + esc(ilkHarfler(ad)) + "</div>";
 }
-/* DÖNGÜ-19: Birebir planlama + istek havuzu TEK ortak öğrenci etiketi formatter'ı.
-   KURAL: grep ile bu tanım TAM 1 kez bulunmalı; hostlarda inline ad markup'ı yazılmaz.
-   - sinif === null  → serbest metin istek (DB öğrencisi yok): sınıf spanı ÜRETİLMEZ
-   - sinif === ""    → gerçek DB öğrencisi, sınıf boş: "Sınıf belirtilmemiş"
-   - sinif dolu      → gerçek DB öğrencisi, sınıf etiketi adın yanında
-   Ad gorselAd() ile Türkçe güvenli normal harf düzeninde; iki satıra sarar; kırpmasız. */
-function birebirEtiketHTML(ad, sinif) {
-  var snfSpan = "";
-  if (sinif !== null) snfSpan = '<span class="text-[10px] font-medium text-slate-400 shrink-0">' + esc(sinif ? sinif : "Sınıf belirtilmemiş") + "</span>";
-  return '<span class="birebir-etiket inline-flex items-baseline gap-2 min-w-0 flex-wrap"><span class="text-[12px] font-semibold normal-case tracking-normal text-slate-800 whitespace-normal break-words leading-snug">' + esc(gorselAd(ad)) + "</span>" + snfSpan + "</span>";
-}
-/* DÖNGÜ-19: TEK ortak custom suggestion satırı renderer'ı — TÜM autocomplete hostları bu renderer'ı kullanır.
-   Kopya host markup'ı yasaktır. ogrenci=true ise ad + sınıf (birebirEtiketHTML); ogrenci=false ise yalnız ad. */
-function ksSugSatirHTML(ad, sinif, ogrenci) {
-  return ogrenci ? birebirEtiketHTML(ad, sinif) : '<span class="text-[12px] font-semibold normal-case tracking-normal text-slate-800 whitespace-normal break-words leading-snug">' + esc(gorselAd(ad)) + "</span>";
-}
-/* DÖNGÜ-19: Custom suggestion listesi — native datalist popup'ı CSS ile biçimlendirilemez;
-   input'a list attribute'unu bırakmadan (native popup kapalı) aynı datalist değerlerinden
-   filtreli, kompakt, sınıflı liste üretir. Input değeri HAM ad kalır; eşleşme mantığı değişmez. */
-function ksSugListeHTML(items, tip) {
-  return '<div class="ks-sug-liste hidden absolute z-30 left-0 right-0 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg p-1">' +
-    items.map(function (it) {
-      return '<button type="button" class="ks-sug-satir w-full text-left px-3 py-2 rounded-lg hover:bg-teal-50/70 cursor-pointer flex" data-ks-sug="' + esc(it.deger) + '" data-ks-sug-hedef="' + esc(tip) + '">' +
-        it.html + '</button>';
-    }).join("") +
-    (items.length ? "" : '<div class="px-3 py-2 text-[10px] font-medium text-slate-300">Eşleşme yok</div>') + "</div>";
-}
-/* DÖNGÜ-19: gorselAd — DB'deki ham adı render anında Türkçe güvenli normal harf düzenine çevirir.
-   "SONER AÇIKGÖZ" → "Soner Açıkgöz"; İ/ı bozulmaz; DB ASLA değişmez. */
+/* DÖNGÜ-18: Görsel ad dönüşümü — YALNIZ render anında; DB'deki ham ad ASLA değişmez.
+   Türkçe güvenli: toLocaleLowerCase("tr-TR") ile küçültüp kelime başlarını
+   toLocaleUpperCase("tr-TR") ile büyütür; İ/ı bozulmaz. "SONER AÇIKGÖZ" → "Soner Açıkgöz". */
 function gorselAd(ad) {
   return String(ad || "").trim().split(/\s+/)
     .map(function (w) { return w ? w.toLocaleLowerCase("tr-TR").replace(/(^|\u2019)([\u00e7\u011f\u0131\u00f6\u015f\u00fc\u00e2\u00e0-\u00ff\u0259a-z])/g, function (_m, p, c) { return p + c.toLocaleUpperCase("tr-TR"); }) : w; })
@@ -667,7 +641,7 @@ function grupPanelListeHTML() {
     var anaTag = e.ana ? '<span class="text-[10px] font-extrabold text-teal-600 bg-teal-50 border border-teal-200 rounded-full px-2 py-0.5 ml-auto">Ana</span>' : "";
     var sinifTag = e.o.sinif ? '<span class="text-[10px] font-bold text-slate-300 ' + (e.ana ? "" : "ml-auto") + ' shrink-0">' + esc(e.o.sinif) + "</span>" : "";
     return '<label class="flex items-start gap-3 px-3 py-2 hover:bg-teal-50/50 cursor-pointer' + (e.ana ? " bg-slate-50/80" : "") + '">' + kutu +
-      birebirEtiketHTML(e.o.ad, e.o.sinif || "") + anaTag + sinifTag + "</label>";
+      '<span class="flex-1 min-w-0 text-[13px] font-semibold text-slate-700 whitespace-normal break-words leading-snug">' + esc(e.o.ad) + "</span>" + anaTag + sinifTag + "</label>";
   }).join("");
 }
 function istekOgrenciIds(istek) {
@@ -725,7 +699,7 @@ function istekGrupOzetHTML() {
   var uyeler = istekGrupUyeleri();
   var chipler = uyeler.map(function (oid, i) {
     var o = DB.ogrenciler.find(function (x) { return x.id === oid; });
-    return '<span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-normal break-words ' + (i === 0 ? "bg-slate-800 text-white" : "bg-teal-50 border border-teal-200 text-teal-700") + '">' + esc(o ? gorselAd(o.ad) : "?") + (i === 0 ? ' <span class="opacity-70">(Ana)</span>' : "") + "</span>";
+    return '<span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10.5px] font-bold ' + (i === 0 ? "bg-slate-800 text-white" : "bg-teal-50 border border-teal-200 text-teal-700") + '">' + esc(o ? o.ad : "?") + (i === 0 ? ' <span class="opacity-70 font-extrabold">(Ana)</span>' : "") + "</span>";
   }).join("");
   var uyari = uyeler.length >= 10 ? '<span class="rounded-full bg-amber-100 text-amber-700 px-2.5 py-0.5 text-[10.5px] font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Geniş grup</span>' : "";
   return '<div id="istek-grup-ozet" class="flex flex-wrap items-center gap-2 mb-3 rounded-2xl border border-teal-100 bg-teal-50/50 px-3.5 py-2.5">' +
@@ -2909,17 +2883,17 @@ function renderHavuz() {
     var uyeHtml = istekOgrenciIds(r).length > 1 ? ' <span class="grup-istek-uyeler inline-flex flex-wrap items-center gap-1 align-middle">' +
       istekOgrenciIds(r).slice(1).map(function (oid) {
         var mo = DB.ogrenciler.find(function (x) { return x.id === oid; });
-        return mo ? '<span class="inline-flex items-center rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[10px] font-medium text-slate-500 whitespace-normal break-words">' + esc(gorselAd(mo.ad)) + "</span>" : "";
+        return mo ? '<span class="inline-flex items-center rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-500">' + esc(mo.ad) + "</span>" : "";
       }).join("") + "</span>" : "";
     var bekliyor = r.durum === "bekliyor";
     liste += '<div draggable="' + bekliyor + '" data-istek="' + r.id + '" class="istek-kart flex items-center gap-3 rounded-xl border px-3.5 py-2.5 ' + (bekliyor ? "border-slate-100 hover:border-teal-300 transition-colors cursor-grab active:cursor-grabbing" : "border-green-100 bg-green-50/40") + '"' +
       (bekliyor ? ' ondragstart="istekDrag(event, \'' + r.id + '\'); this.style.opacity=\'0.45\'" ondragend="istekDropHedef=null; this.style.opacity=\'\'"' : "") + ">" +
       avatar((o ? o.ad : r.ogrenciAd), i) +
-      '<div class="flex-1 min-w-0"><div class="flex items-center gap-2 flex-wrap">' + (o ? birebirEtiketHTML(o.ad, o.sinif || "") : birebirEtiketHTML(r.ogrenciAd, null)) + uyeHtml +
-      (D2 ? '<span class="rounded-full px-2 py-0.5 text-[11px] font-semibold ' + D2.bg + " " + D2.tx + '">' + D2.ad + "</span>" : "") +
-      '<span class="text-[10px] font-medium rounded-full px-2 py-0.5 ' + (bekliyor ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700") + '">' + (bekliyor ? "Bekliyor" : "Planlandı") + "</span></div>" +
-      '<div class="text-[10px] font-medium text-slate-500 whitespace-normal break-words mt-0.5">' + (r.konu ? "<i>Eksik konu:</i> " + esc(r.konu) : '<span class="italic text-slate-300">Konu belirtilmedi</span>') + "</div>" +
-      '<div class="text-[10px] font-medium text-slate-400 mt-0.5"><i class="fa-regular fa-calendar mr-1"></i>' + fmtTR(r.olusturma) + (r.saat ? " · <i class=\'fa-regular fa-clock ml-1 mr-1\'></i>" + saatEtiket(r.saat) : "") + "</div></div>" +
+      '<div class="flex-1 min-w-0"><div class="flex items-center gap-2 flex-wrap"><b class="text-[12px] font-semibold normal-case tracking-normal text-slate-800 whitespace-normal break-words">' + esc(o ? gorselAd(o.ad) : gorselAd(r.ogrenciAd)) + "</b>" + uyeHtml +
+      (D2 ? '<span class="rounded-full px-2 py-0.5 text-[10.5px] font-bold ' + D2.bg + " " + D2.tx + '">' + D2.ad + "</span>" : "") +
+      '<span class="text-[10px] font-bold rounded-full px-2 py-0.5 ' + (bekliyor ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700") + '">' + (bekliyor ? "Bekliyor" : "Planlandı") + "</span></div>" +
+      '<div class="text-[11.5px] text-slate-500 truncate mt-0.5">' + (r.konu ? "<i>Eksik konu:</i> " + esc(r.konu) : '<span class="italic text-slate-300">Konu belirtilmedi</span>') + "</div>" +
+      '<div class="text-[10px] text-slate-400 font-semibold mt-0.5"><i class="fa-regular fa-calendar mr-1"></i>' + fmtTR(r.olusturma) + (r.saat ? " · <i class=\'fa-regular fa-clock ml-1 mr-1\'></i>" + saatEtiket(r.saat) : "") + "</div></div>" +
       (bekliyor
         ? '<button onclick="formaAktar(\'' + r.id + '\')" title="Sürükleyip planlama formuna bırakın veya tıklayın" class="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-teal-500 hover:bg-teal-600 text-white text-[11.5px] font-bold px-3.5 py-2 shadow-sm transition-colors"><i class="fa-solid fa-arrow-right-arrow-left"></i>Eşleştir &amp; Planla</button>'
         : '<span class="text-[10.5px] text-emerald-600 font-bold shrink-0"><i class="fa-solid fa-check mr-1"></i>Derse dönüştürüldü</span>') +
@@ -3028,42 +3002,6 @@ function dersOpsi() {
   DERSLER.forEach(function (d) { s += '<option value="' + d.id + '">' + d.ad + "</option>"; });
   return s;
 }
-/* DÖNGÜ-19: Custom suggestion — native datalist popup'ı biçimlendirilemez; TÜM hostlar
-   (birebir planlama öğrenci/öğretmen + havuz öğrenci) TEK renderer (ksSugSatirHTML) ile listelenir.
-   Input değeri HAM ad kalır; list="..." kaldırılmadığı için native davranış da bozulmaz (listeler gizli). */
-function ksSugOgrenci(q) {
-  var s = kucuk(q || "");
-  return DB.ogrenciler.filter(function (o) { return !s || kucuk(o.ad).indexOf(s) !== -1; })
-    .map(function (o) { return { deger: o.ad, html: birebirEtiketHTML(o.ad, o.sinif || "") }; });
-}
-function ksSugOgretmen(q) {
-  var s = kucuk(q || "");
-  return DB.ogretmenler.filter(function (t) { return !s || kucuk(t.ad).indexOf(s) !== -1; })
-    .map(function (t) { return { deger: t.ad, html: ksSugSatirHTML(t.ad, null, false) }; });
-}
-function ksSugCiz(inpId, tip) {
-  var inp = $(inpId); if (!inp) return;
-  var liste = tip === "ogretmen" ? ksSugOgretmen(inp.value) : ksSugOgrenci(inp.value);
-  var host = inp.parentNode; if (!host) return;
-  var el = document.getElementById("ks-sug-" + tip);
-  if (!el) {
-    if (!host.insertAdjacentHTML) return;
-    host.insertAdjacentHTML("beforeend", ksSugListeHTML(liste, tip));
-    el = document.getElementById("ks-sug-" + tip);
-    if (el && !inp.dataset.ksSug) {
-      inp.dataset.ksSug = "1";
-      inp.addEventListener("focus", function () { ksSugCiz(inpId, tip); if (el) el.classList.remove("hidden"); });
-      inp.addEventListener("input", function () { ksSugCiz(inpId, tip); if (el) el.classList.remove("hidden"); });
-      inp.addEventListener("blur", function () { setTimeout(function () { if (el) el.classList.add("hidden"); }, 160); });
-    }
-    if (el) el.addEventListener("mousedown", function (e) {
-      var b = e.target && e.target.closest ? e.target.closest("[data-ks-sug]") : null;
-      if (b && inp) { inp.value = b.getAttribute("data-ks-sug"); if (tip === "ogrenci") duzenleBannerGuncelle(); if (el) el.classList.add("hidden"); e.preventDefault(); }
-    });
-  } else {
-    el.innerHTML = ksSugListeHTML(liste, tip).replace(/^<div[^>]*>/, "").replace(/<\/div>$/, "");
-  }
-}
 function renderFormDestek() {
   var dlO = '<option value=""></option>';
   DB.ogrenciler.forEach(function (o) { dlO += '<option value="' + esc(o.ad) + '"></option>'; });
@@ -3072,17 +3010,6 @@ function renderFormDestek() {
   var dlT = '<option value=""></option>';
   DB.ogretmenler.forEach(function (t) { dlT += '<option value="' + esc(t.ad) + '"></option>'; });
   $("dl-ogretmen").innerHTML = dlT;
-  /* DÖNGÜ-19: custom suggestion hostları — birebir planlama (f-ogrenci/f-ogretmen) + havuz (h-ogrenci) */
-  ["f-ogrenci:ogrenci", "h-ogrenci:ogrenci", "f-ogretmen:ogretmen"].forEach(function (p) {
-    var par = p.split(":"); var inp = $(par[0]);
-    if (!inp) return;
-    var host = inp.parentNode; if (!host) return;
-    var st = host.style || {};
-    if (!host.className || host.className.indexOf("relative") === -1) {
-      if (host.classList && host.classList.add) { host.classList.add("relative"); }
-    }
-    ksSugCiz(par[0], par[1]);
-  });
 
   var dersSec = $("f-ders");
   if (!dersSec.innerHTML.trim()) {
@@ -3114,7 +3041,7 @@ function renderFormDestek() {
   /* GRUP PANEL v2 — chip yerine: arama + sınıf filtresi + checkbox listesi */
   var ekPanel = '<div id="ek-ogrenciler" class="no-print rounded-2xl border border-slate-100 bg-slate-50/60 p-3 mt-2">' +
     '<div class="flex items-center justify-between gap-2">' +
-      '<span class="text-[9px] font-bold text-slate-400 normal-case tracking-normal"><i class="fa-solid fa-user-group mr-1"></i>Grup Öğrencileri</span>' +
+      '<span class="text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wide"><i class="fa-solid fa-user-group mr-1"></i>Grup Öğrencileri</span>' +
       '<button type="button" onclick="grupPanelToggle()" class="text-[11px] font-bold text-teal-600 hover:text-teal-700 flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-teal-50 transition-colors"><i id="grup-panel-ok" class="fa-solid fa-chevron-down text-[9px] transition-transform"></i><span id="grup-panel-ok-yazi">Öğrenci Seç</span></button>' +
     '</div>' +
     '<div id="grup-ozet" class="mt-2"></div>' +
@@ -3249,7 +3176,7 @@ function grupPanelOzetCiz() {
   var toplam = katilimcilar.length;
   var chipler = secili.filter(function (oid) { return oid !== anaId; }).map(function (oid) {
     var o = DB.ogrenciler.find(function (x) { return x.id === oid; });
-    return '<span class="inline-flex items-center gap-1.5 rounded-full bg-teal-50 border border-teal-200 pl-2.5 pr-1.5 py-1 text-[11px] font-semibold text-teal-700 whitespace-normal break-words">' + esc(o ? gorselAd(o.ad) : "?") +
+    return '<span class="inline-flex items-center gap-1.5 rounded-full bg-teal-50 border border-teal-200 pl-2.5 pr-1.5 py-1 text-[11.5px] font-bold text-teal-700">' + esc(o ? o.ad : "?") +
       '<button type="button" onclick="grupPanelSec(\'' + esc(oid) + '\')" title="Çıkar" class="w-4 h-4 -mr-0.5 rounded-full hover:bg-teal-200 text-teal-600 flex items-center justify-center"><i class="fa-solid fa-xmark text-[9px]"></i></button></span>';
   }).join("");
   var ic;
@@ -3296,7 +3223,7 @@ function duzenleBannerGuncelle() {
     var l = DB.dersler.find(function (x) { return x.id === ui.editId; });
     if (l) {
       banner.className = "inline-flex items-center gap-2 rounded-full bg-amber-50 border border-amber-200 px-3.5 py-1.5 text-[11.5px] font-bold text-amber-700";
-      banner.innerHTML = '<i class="fa-solid fa-pen"></i>Ders düzenleniyor: ' + esc(gorselAd(l.ogrenciAd)) + " · " + fmtTR(l.tarih) + " " + saatEtiket(l.saat);
+      banner.innerHTML = '<i class="fa-solid fa-pen"></i>Ders düzenleniyor: ' + esc(l.ogrenciAd) + " · " + fmtTR(l.tarih) + " " + saatEtiket(l.saat);
       banner.classList.remove("hidden");
       $("btnBaslik").textContent = "Dersi Düzenle";
       $("btnPlanYazi").textContent = "Değişiklikleri Kaydet";
@@ -3358,7 +3285,7 @@ function duzeltmeBul(adet, yokSay, grupOgrenciIds) {
     var cakisan = DB.dersler.find(function (l) {
       return l.ogretmenId === ogr.id && l.tarih === adet.tarih && ksKodOf(l.saat) === saatKod && l.durum !== "iptal" && l.id !== (adet.id || "");
     });
-    if (cakisan) uyari.push("Aynı kısa kod saatinde " + ogr.ad + " öğretmeninin <b>" + esc(gorselAd(cakisan.ogrenciAd)) + "</b> ile başka bir dersi var (" + fmtTR(cakisan.tarih) + " " + saatEtiket(cakisan.saat) + ").");
+    if (cakisan) uyari.push("Aynı kısa kod saatinde " + ogr.ad + " öğretmeninin <b>" + cakisan.ogrenciAd + "</b> ile başka bir dersi var (" + fmtTR(cakisan.tarih) + " " + saatEtiket(cakisan.saat) + ").");
     /* EK-DERS-DONEM-YAMASI: iki yönlü çakışma — birebir planlarken öğretmenin AKTİF DÖNEMDEKİ ek dersi de uyarılır.
        Diğer dönemdeki ek dersler uyarıya DAHİL EDİLMEZ; mesajda sınıf + ders adı + tarih/saat okunur. */
     var cakisanEkDers = aktifDonemKayitlari(Array.isArray(DB.ekDersler) ? DB.ekDersler : []).find(function (l) {
@@ -3371,7 +3298,7 @@ function duzeltmeBul(adet, yokSay, grupOgrenciIds) {
   }
   var o = DB.ogrenciler.find(function (s) { return s.id === adet.ogrenciId; });
   if (o && o.sinif && (DB.sinifProg[o.sinif] || []).indexOf(key) >= 0) {
-    uyari.push(gorselAd(o.ad) + " öğrencisinin sınıfı (<b>" + o.sinif + "</b>) o kısa kod saatinde toplu derste.");
+    uyari.push(o.ad + " öğrencisinin sınıfı (<b>" + o.sinif + "</b>) o kısa kod saatinde toplu derste.");
   }
   /* Grup dersi: ekOgrenciIds'teki her öğrenci de o gün+kod'da boş olmalı (dersOgrenciIds ile) */
   var grup = Array.isArray(grupOgrenciIds) ? grupOgrenciIds : [];

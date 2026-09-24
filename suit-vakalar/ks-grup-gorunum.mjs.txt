@@ -28,8 +28,15 @@ grup üyelerine ders dağıtıldı (n ≥ 2)
 özet: ders tek kez sayılır (donut merkezi)
 D18 havuz adı 12px + font-semibold
 D18 havuz adı eski 13px değil
-D18 havuz adı bloğunda truncate/ellipsis YOK
-D18 havuz adı whitespace-normal + break-words (kırpmasız)
+D19 havuz adı ortak formatter'dan (birebir-etiket) + kırpmasız + sınıf etiketi VAR
 D18 görsel ad 'Ayşe Demir' biçiminde (DB ham adı değişmeden)
 D18 gorselAd('SONER AÇIKGÖZ') → 'Soner Açıkgöz' (Türkçe güvenli)
 D18 grup üye badge'i ad'dan küçük ölçekte (text-[10px])
+D19 havuz kartı metadata ölçeği kompakt (ders 11px/600 · konu truncate YOK)
+D19 birebirEtiketHTML tek tanım (grep TAM 1)
+D19 sinif=null → sınıf spanı YOK ('Sınıf belirtilmemiş' üretilmez)
+D19 sinif='' → 'Sınıf belirtilmemiş' + 10px/500 gri etiket
+D19 sinif dolu → sınıf adın yanında (gap-2 wrapper)
+D19 serbest metin havuz isteğinde sınıf EKLENMEZ (gerçek DOM)
+D19 tüm autocomplete hostları TEK renderer (ksSugListeHTML · 3 host · ks-sug-liste)
+D19 öğretmen suggestion satırı 12px/600 + sınıf spanı YOK; chip+banner gorselAd (sınıfsız)

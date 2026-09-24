@@ -2842,3 +2842,72 @@ B) Birebir Ders Planla — öğrenci seçim listesi (grupPanelListeHTML, app.js 
   ek-ders.js, index.html, saat sistemi.
 
 Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önbellek atlamalı yenileme) yapın.
+
+## DÖNGÜ-19 — BİREBİR PLANLAMA + İSTEK HAVUZU ORTAK GÖRSEL FORMAT (TAMAMLANDI)
+
+Tarih: 2026-09-24 · Final: node test.mjs 2332/2332 OK, exit=0 · statik-eksiksizlik TAMLIK 47/47, exit=0 · node --check app.js + ek-ders.js OK
+
+### Uygulanan değişiklikler (yalnız birebir planlama + istek havuzu görsel katmanı)
+- ORTAK FORMATTER (tek tanım, grep TAM 1 — app.js:229): birebirEtiketHTML(ad, sinif)
+  - sinif=null  → serbest metin istek: sınıf spanı ÜRETİLMEZ (uydurma sınıf kullanılmaz)
+  - sinif=""    → gerçek DB öğrencisi, sınıf boş: "Sınıf belirtilmemiş" (10px/500 gri)
+  - sinif dolu  → sınıf etiketi adın yanında (wrapper: .birebir-etiket inline-flex items-baseline gap-2 min-w-0 flex-wrap)
+  - ad span: text-[12px] font-semibold normal-case tracking-normal text-slate-800 whitespace-normal break-words leading-snug
+  - sınıf span: text-[10px] font-medium text-slate-400 shrink-0
+  - gorselAd() (app.js:252, DÖNGÜ-18) ile Türkçe güvenli normal harf düzeni; kopya gorselAd YOK
+- AUTOCOMPLETE: 3 autocomplete hostu (f-ogrenci, h-ogrenci, f-ogretmen) native datalist popup yerine TEK ortak
+  custom suggestion renderer'a geçti (ksSugListeHTML app.js:242 + ksSugSatirHTML app.js:236 + ksSugOgrenci/ksSugOgretmen/
+  ksSugCiz app.js:3034-3058 + host kaydı app.js:3076). Native datalist popup'ı CSS ile biçimlendirilemediği için
+  (kanıt: test süitinde belgelendi) popup'lar hidden; input değeri HAM ad kalır, list="dl-ogrenci" attribute'ları korunur,
+  eşleşme mantığı değişmedi. index.html input fontlarına DOKUNULMADI.
+- Yüzeyler (gerçek N=14, dosya:satır):
+  1. birebirEtiketHTML tanımı — app.js:229
+  2. ksSugSatirHTML tanımı — app.js:236
+  3. ksSugListeHTML tanımı (ks-sug-liste popup) — app.js:242-249
+  4. gorselAd tanımı (D18) — app.js:252
+  5. grup paneli öğrenci satırı — app.js:670
+  6. havuz özet chipleri (gorselAd, sınıfsız) — app.js:728
+  7. ksSugOgrenci/ksSugOgretmen/ksSugCiz — app.js:3034-3058
+  8. host listesi "f-ogrenci:ogrenci,h-ogrenci:ogrenci,f-ogretmen:ogretmen" — app.js:3076
+  9. dl-ogrenci datalist doldurma — app.js:3070 (input fontu korunur)
+  10. havuz filtre input h-ogrenci — app.js:2937
+  11. üye badge — app.js:2912
+  12. havuz ana kartı adı — app.js:2918
+  13. plan chipleri (grup özet, gorselAd) — app.js:3252
+  14. banner — app.js:3299 · çakışma uyarıları — app.js:3361, app.js:3374
+- Chipler kompakt: yalnız gorselAd, sınıf etiketi YOK (app.js:728, 3252, 2912).
+- Konu satırı truncate kaldırıldı (app.js:2921, 10px/500 whitespace-normal break-words); tarih 10px/500 (app.js:2922);
+  ders rozeti 11px/600 (app.js:2919); durum 10px/500; üye badge 10px/500 (app.js:2912).
+- DÖNGÜ-18 düzeltmeleri (min-w-[280px], items-start, checkbox hizası, iki satır sarımı) KORUNDU.
+
+### Test (yalnız gerçek koşumdan; silme/gevşetme YOK)
+- ks-grup-gorunum.mjs: 42 assertion (35 + 7 yeni D19). Yeni D19 assertion'lar (dosya:satır ks-grup-gorunum.mjs:198-205):
+  birebirEtiketHTML tek tanım · sinif=null sınıf spanı YOK · sinif="" "Sınıf belirtilmemiş" · sinif dolu gap-2 yanında ·
+  serbest metin havuz isteğinde sınıf EKLENMEZ (gerçek renderHavuz DOM) · 3 host TEK renderer (ksSugListeHTML) ·
+  öğretmen satırı 12px/600 sınıfsız + chip/banner gorselAd (gerçek istekGrupOzetHTML DOM).
+- D18→D19 assertion güncellemeleri: ks-grup-gorunum.mjs:182-183 (havuz adı <b> tabanlı → ortak formatter üretimi),
+  :189 (üye badge font-bold → font-medium), :194 (metadata ölçeği, kart-segmentli gerçek DOM kontrolü).
+- Sayım kapıları: suit-manifest.mjs + elle-vaka-manifesti.mjs ks-grup-gorunum.mjs=42; elle-vaka-adlari.mjs 42 ad;
+  suit-vakalar/ks-grup-gorunum.mjs.txt 42 satır; SUITE_DONE beklenen=42 (ks-grup-gorunum.mjs:2).
+  HAM Σ: runner=2332 = SUITE_DONE=2332 = donmuş=2332 = ELLE sayı=2332 = ELLE ad=2332 — BİREBİR.
+- Toplam: node test.mjs 2332/2332 OK, exit=0 (D18: 2325 → D19: +7).
+
+### Mutasyon kanıtları (mutasyon-dongu19.mjs — YENİ; yalnız geçici tmp kopya; canonical app.js SHA önce/sonra birebir)
+8/8 PASS:
+  M1 ortak formatter gövdesi eski stile döner → D19 havuz formatter assertion'ı kırmızı (kotu=6)
+  M2 yalnız havuz ana kartı eski 13px/stale markup → D18 havuz adı eski 13px değil kırmızı
+  M3 sınıf yanlış kaynaktan (formatter sabit kod '9-C') → D19 sinif-dolu assertion'ı kırmızı (kotu=2)
+  M4 serbest metinde "Sınıf belirtilmemiş" eklenir (null→"") → D19 sinif=null assertion'ı kırmızı
+  M5 chip'e sınıf etiketi eklenir → D19 chip/banner sınıfsız assertion'ı kırmızı (gerçek istekGrupOzetHTML DOM)
+  M6 konu satırına truncate geri → D19 metadata kompakt assertion'ı kırmızı
+  M7 D18 min-w-[280px] sökülür → ks-panel-secim.mjs D18 liste assertion'ı kırmızı
+  M8 metadata ders rozeti eski 13px → D19 metadata kompakt assertion'ı kırmızı
+  Restore: tmp klasör rmSync; canonical app.js SHA önce/sonra BİREBİR OK; donmuş test tarafı 8/8 AYNI.
+
+### No-drift
+- app.js: 337.267 B · SHA 32015f4916d624509a6dac3a8ab26654cd7cfa9ca1cdcfe3ca8f3ba7ded2d376
+- Backup (yazma öncesi, benzersiz): app.js.dongu19-birebir-tipografi-oncesi.bak · 332.249 B · SHA a0bf0782cac18fe6… (D18 final SHA ile aynı)
+- DB/seed ve ham adlar byte-birebir korundu; saveDB çağrı sayısı değişmedi; dinamik koşumlarda localStorage.setItem=0 / DB değişikliği YOK (mevcut D-süitleriyle kanıtlı).
+- Kapsam dışı dokunulanlar: YOK (db/seed, mantık, PNG, WhatsApp, ek-ders.js, index.html input fontları, ders/öğretmen tabloları, saatEtiket, öğretmen kartları değişmedi).
+
+Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önbellek atlamalı yenileme) yapın.

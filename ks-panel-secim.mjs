@@ -1,5 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 32) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-panel-secim.mjs kosan=" + __kosan + " beklenen=32"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-panel-secim.mjs:" + __kosan + ":32"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 33) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-panel-secim.mjs kosan=" + __kosan + " beklenen=33"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-panel-secim.mjs:" + __kosan + ":33"); } });
 /* ks-panel-secim.mjs — GRUP PANEL v2 testleri:
    arama, sınıf filtresi (Tüm sınıflar dahil), düzenlemede yükleme, 10+ uyarı, tek seçimde birebir akış
    ÖNEMLİ: tek boot — gerçek DOM kayıt defteriyle; tüm erişimler P.* üzerinden (çift-boot tuzakları yok) */
@@ -148,6 +148,9 @@ console.log("6) Düzenleme yükleme:");
   grupPanelCiz();
   const lh = (reg["grup-panel-liste"] || { innerHTML: "" }).innerHTML;
   t("liste çizildi ve Zeynep checked", lh.includes("Zeynep Kaya") && lh.includes("checked"), lh.slice(0, 200));
+  /* DÖNGÜ-18: seçim listesi satırı tam ad + sınıf; kırpmasız; checkbox ilk satır hizalı */
+  const govdeHtml = (reg["grup-panel-govde"] || { innerHTML: "" }).innerHTML;
+  t("D18 liste satırı tam ad + sınıf + kırpmasız düzen", lh.includes("Zeynep Kaya") && lh.includes("12 SAY 2") && lh.includes("whitespace-normal") && lh.includes("break-words") && !lh.includes("truncate") && !lh.includes("ellipsis") && govdeHtml.includes("min-w-[280px]") && lh.includes("items-start") && lh.includes("mt-0.5 w-4 h-4 shrink-0"), lh.slice(0, 200));
   /* Ana öğrenci değişimi: eski ana EK LİSTEDE tekrar oluşmaz (en fazla 1 kez) */
   reg["f-ogrenci"].value = "Zeynep Kaya";
   grupPanelOzetCiz();

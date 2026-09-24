@@ -216,17 +216,17 @@ function ilkHarfler(ad) {
   var p = String(ad || "?").trim().split(/\s+/);
   return ((p[0] || "?")[0] + (p.length > 1 ? p[p.length - 1][0] : "")).toLocaleUpperCase("tr-TR");
 }
-/* DÖNGÜ-18: Görsel ad normalizasyonu — YALNIZ render anında, DB'ye ASLA yazılmaz.
-   Türkçe güvenli: toLocaleLowerCase("tr-TR") + kelime başı toLocaleUpperCase("tr-TR")
-   (İ/ı bozulmaz). Örn. "MURAT ÇINAR" → "Murat Çınar"; "ayşe demir" → "Ayşe Demir". */
-function gorselOgrenciAdi(ad) {
-  return String(ad || "").trim().split(/\s+/)
-    .map(function (w) { return w ? w.toLocaleLowerCase("tr-TR").charAt(0).toLocaleUpperCase("tr-TR") + w.toLocaleLowerCase("tr-TR").slice(1) : w; })
-    .join(" ");
-}
 function avatar(ad, i) {
   var r = AVATAR_RENK[Math.abs((i == null ? 0 : i)) % AVATAR_RENK.length];
   return '<div class="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ' + r[0] + " " + r[1] + '">' + esc(ilkHarfler(ad)) + "</div>";
+}
+/* DÖNGÜ-18: Görsel ad dönüşümü — YALNIZ render anında; DB'deki ham ad ASLA değişmez.
+   Türkçe güvenli: toLocaleLowerCase("tr-TR") ile küçültüp kelime başlarını
+   toLocaleUpperCase("tr-TR") ile büyütür; İ/ı bozulmaz. "SONER AÇIKGÖZ" → "Soner Açıkgöz". */
+function gorselAd(ad) {
+  return String(ad || "").trim().split(/\s+/)
+    .map(function (w) { return w ? w.toLocaleLowerCase("tr-TR").replace(/(^|\u2019)([\u00e7\u011f\u0131\u00f6\u015f\u00fc\u00e2\u00e0-\u00ff\u0259a-z])/g, function (_m, p, c) { return p + c.toLocaleUpperCase("tr-TR"); }) : w; })
+    .join(" ");
 }
 
 // ---------- Veri katmanı ----------
@@ -628,7 +628,7 @@ function grupPanelGovdeHTML() {
       "</div>" +
       '<select id="grup-panel-sinif" onchange="grupPanelSinifSec(this.value)" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[12.5px] font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-400/40">' + sinifOps + "</select>" +
     "</div>" +
-    '<div id="grup-panel-liste" class="mt-2 max-h-56 min-w-[280px] overflow-y-auto overflow-x-hidden rounded-xl border border-slate-200/70 bg-white divide-y divide-slate-100">' + grupPanelListeHTML() + '</div>';
+    '<div id="grup-panel-liste" class="mt-2 max-h-56 overflow-y-auto overflow-x-hidden rounded-xl border border-slate-200/70 bg-white divide-y divide-slate-100 min-w-[280px]">' + grupPanelListeHTML() + '</div>';
 }
 /* ISTEK-GRUP-ISTEGI-YAMASI-v5 (B2): liste markup'ı TEK kaynaktan — grupPanelGovdeHTML ve
    grupPanelListeCiz aynı üreticiyi kullanır; govde innerHTML'i Ana/checked içerir. */
@@ -637,12 +637,11 @@ function grupPanelListeHTML() {
   if (!liste.length) return '<div class="px-3 py-3 text-[11.5px] text-slate-300 italic">Bu filtreye uyan öğrenci yok</div>';
   return liste.map(function (e) {
     var kutu = '<input type="checkbox"' + (e.secili || e.ana ? " checked" : "") + (e.ana && grupPanelBaglami() !== "havuz" ? " disabled" : "") +
-      ' onchange="grupPanelSec(\'' + esc(e.o.id) + '\')" class="w-4 h-4 rounded border-slate-300 accent-teal-600 cursor-pointer' + (e.ana ? " opacity-50 cursor-not-allowed" : "") + '" />';
+      ' onchange="grupPanelSec(\'' + esc(e.o.id) + '\')" class="mt-0.5 w-4 h-4 shrink-0 rounded border-slate-300 accent-teal-600 cursor-pointer' + (e.ana ? " opacity-50 cursor-not-allowed" : "") + '" />';
     var anaTag = e.ana ? '<span class="text-[10px] font-extrabold text-teal-600 bg-teal-50 border border-teal-200 rounded-full px-2 py-0.5 ml-auto">Ana</span>' : "";
     var sinifTag = e.o.sinif ? '<span class="text-[10px] font-bold text-slate-300 ' + (e.ana ? "" : "ml-auto") + ' shrink-0">' + esc(e.o.sinif) + "</span>" : "";
-    return '<label class="flex items-start gap-3 px-3 py-2 hover:bg-teal-50/50 cursor-pointer' + (e.ana ? " bg-slate-50/80" : "") + '">' +
-      kutu.replace('class="w-4 h-4', 'class="mt-0.5 w-4 h-4') +
-      '<span class="flex-1 min-w-0 text-[13px] font-semibold text-slate-700 whitespace-normal break-words leading-snug">' + esc(gorselOgrenciAdi(e.o.ad)) + "</span>" + anaTag + sinifTag + "</label>";
+    return '<label class="flex items-start gap-3 px-3 py-2 hover:bg-teal-50/50 cursor-pointer' + (e.ana ? " bg-slate-50/80" : "") + '">' + kutu +
+      '<span class="flex-1 min-w-0 text-[13px] font-semibold text-slate-700 whitespace-normal break-words leading-snug">' + esc(e.o.ad) + "</span>" + anaTag + sinifTag + "</label>";
   }).join("");
 }
 function istekOgrenciIds(istek) {
@@ -2890,7 +2889,7 @@ function renderHavuz() {
     liste += '<div draggable="' + bekliyor + '" data-istek="' + r.id + '" class="istek-kart flex items-center gap-3 rounded-xl border px-3.5 py-2.5 ' + (bekliyor ? "border-slate-100 hover:border-teal-300 transition-colors cursor-grab active:cursor-grabbing" : "border-green-100 bg-green-50/40") + '"' +
       (bekliyor ? ' ondragstart="istekDrag(event, \'' + r.id + '\'); this.style.opacity=\'0.45\'" ondragend="istekDropHedef=null; this.style.opacity=\'\'"' : "") + ">" +
       avatar((o ? o.ad : r.ogrenciAd), i) +
-      '<div class="flex-1 min-w-0"><div class="flex items-center gap-2 flex-wrap"><b class="text-[13px] text-slate-800">' + esc(o ? o.ad : r.ogrenciAd) + "</b>" + uyeHtml +
+      '<div class="flex-1 min-w-0"><div class="flex items-center gap-2 flex-wrap"><b class="text-[12px] font-semibold normal-case tracking-normal text-slate-800 whitespace-normal break-words">' + esc(o ? gorselAd(o.ad) : gorselAd(r.ogrenciAd)) + "</b>" + uyeHtml +
       (D2 ? '<span class="rounded-full px-2 py-0.5 text-[10.5px] font-bold ' + D2.bg + " " + D2.tx + '">' + D2.ad + "</span>" : "") +
       '<span class="text-[10px] font-bold rounded-full px-2 py-0.5 ' + (bekliyor ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700") + '">' + (bekliyor ? "Bekliyor" : "Planlandı") + "</span></div>" +
       '<div class="text-[11.5px] text-slate-500 truncate mt-0.5">' + (r.konu ? "<i>Eksik konu:</i> " + esc(r.konu) : '<span class="italic text-slate-300">Konu belirtilmedi</span>') + "</div>" +

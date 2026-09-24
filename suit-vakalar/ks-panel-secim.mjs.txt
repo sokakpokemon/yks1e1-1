@@ -26,6 +26,7 @@ panelSecim.anaId = dersin ana öğrencisi
 form ana öğrenci adını taşıyor
 özet '3 öğrenci seçildi' (ana dahil)
 liste çizildi ve Zeynep checked
+D18 liste satırı tam ad + sınıf + kırpmasız düzen
 ana değişince eski ana ek listede en fazla 1 kez (kopya oluşmaz)
 kayıt oluştu
 ogrenciIds YOK (birebir)

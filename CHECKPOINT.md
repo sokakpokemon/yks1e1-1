@@ -2787,3 +2787,58 @@ Kullanıcı notu: Tablo ve PNG değişikliklerini görmek için tarayıcıda Ctr
    yapılır ve restore sonrası SHA birebir doğrulanır."
 
 DÖNGÜ-17 TAMAMLANDI (yukarıdaki üç kanıtla).
+
+## DÖNGÜ-18 KAYDI — İSTEK HAVUZU İSİM PUNTOSU + GRUP ÖĞRENCİ SEÇİM LİSTESİ GÖRÜNÜMÜ
+
+### Uygulama (yalnız iki görsel alan; veri modeli değişmedi)
+A) İstek havuzu kartı adı (renderHavuz, app.js ~2892):
+   - text-[13px] → text-[12px] + font-semibold + normal-case + tracking-normal
+   - whitespace-normal + break-words (truncate/ellipsis/overflow-hidden YOK; taşma satır kırılmasıyla)
+   - ad GÖRSEL olarak gorselAd() ile "Soner Açıkgöz" biçiminde; DB.ogrenciler[].ad ve istek kayıtları BİREBİR korunur (dönüşüm yalnız render anında)
+   - grup üye badge (text-[10px]) ad ile eş/küçük ölçekte
+B) Birebir Ders Planla — öğrenci seçim listesi (grupPanelListeHTML, app.js ~631/642/646):
+   - liste konteyneri min-w-[280px] + overflow-x-hidden (yatay taşma yok; parent grid bozulmadı)
+   - satır items-start; checkbox mt-0.5 w-4 h-4 shrink-0 (ilk satırla hizalı)
+   - ad span: flex-1 min-w-0 whitespace-normal break-words leading-snug (iki satıra taşar, karakter kırılması yok)
+   - sınıf etiketi shrink-0 korundu; seçili chipler/Ana etiketi korundu
+
+### gorselAd() — Türkçe güvenli dönüşüm
+- toLocaleLowerCase("tr-TR") + kelime başı toLocaleUpperCase("tr-TR"); İ/ı bozulmaz.
+  Kanıt: gorselAd("SONER AÇIKGÖZ")="Soner Açıkgöz", gorselAd("İBRAHİM İLHAN")="İbrahim İlhan".
+
+### Yeni D18 assertion'ları (gerçek üretilen HTML'den; +8)
+- ks-grup-gorunum.mjs (28→35): D18 havuz adı 12px+font-semibold · eski 13px değil · bloğunda truncate/ellipsis YOK ·
+  whitespace-normal+break-words · görsel ad "Ayşe Demir" (DB ham adı değişmeden) · gorselAd Türkçe güvenli ·
+  grup üye badge text-[10px] ad'dan küçük.
+- ks-panel-secim.mjs (32→33): D18 liste satırı tam ad + sınıf + kırpmasız düzen
+  (whitespace-normal/break-words, truncate/ellipsis YOK, min-w-[280px], items-start, mt-0.5 shrink-0 checkbox).
+
+### Manifest/vaka güncelleme (gerçek koşumdan)
+- suit-manifest.mjs + elle-vaka-manifesti.mjs: ks-grup-gorunum 28→35, ks-panel-secim 32→33.
+- elle-vaka-adlari.mjs + suit-vakalar/*.txt: gerçek koşum ✓ adlarından yenilendi.
+- Yeni toplam: 2325 (2317 + 8).
+
+### Mutasyon kanıtları (mutasyon-dongu18.mjs — yalnız geçici kopya; canonical SHA birebir korundu; 8/8 PASS)
+- M1 havuz adı 13px/700'e döner → kırmızı PASS · M2 gorselAd bozuk casing → kırmızı PASS
+- M3 min-w-[280px] kaldırılır → kırmızı PASS · M4 flex-1/min-w-0 kaldırılır → kırmızı PASS
+- M5 truncate eklenir → kırmızı PASS · M6 items-start→items-center → kırmızı PASS
+- M7 sınıf etiketi kaldırılır → kırmızı PASS · M8 havuz adı kırpmaya döner → kırmızı PASS
+- NOT: "uppercase geri eklendi" mutasyonu SENTETİK/kontrat mutasyonudur — büyük harf zaten veriden geliyor;
+  asıl davranış kanıtı M2/D18 gorselAd testidir. Bu mutasyon ayrı uygulanmadı.
+
+### Final kapılar
+- node test.mjs → 2325/2325 OK, exit=0 · MANIFEST 47 süit birebir · HAM Σ (2325) birebir ✓
+- node statik-eksiksizlik.mjs → TAMLIK 47/47, exit=0
+- node --check app.js + ek-ders.js OK · saveDB=0 / localStorage.setItem=0 (bu akışta)
+- PNG + WhatsApp çıktıları değer olarak AYNI; ders/öğretmen tabloları, saatEtiket, istek→grup dönüşümü etkilenmedi.
+
+### Dosya karnesi
+- Backup: app.js.dongu18-oncesi.bak — 331.443 B, SHA dc0537661672236f22a592c85c6bc362bb9dca99c8978cf16e0ab61c347589f8
+- Final: app.js — 332.249 B, SHA a0bf0782cac18fe63d72f5019bc59234b479f193236fc90920c7dd7700c26e3c
+- Değişen dosyalar: app.js · ks-grup-gorunum.mjs · ks-panel-secim.mjs · suit-manifest.mjs · elle-vaka-manifesti.mjs ·
+  elle-vaka-adlari.mjs · suit-vakalar/ks-grup-gorunum.mjs.txt · suit-vakalar/ks-panel-secim.mjs.txt ·
+  mutasyon-dongu18.mjs (YENİ) · CHECKPOINT.md (bu kayıt)
+- Kapsam dışı dokunulmayanlar: DB/seed, filtre/seçim/grup mantığı, grupUyeEtiketleri/grupUyeSatirlari, PNG ve WhatsApp akışları,
+  ek-ders.js, index.html, saat sistemi.
+
+Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önbellek atlamalı yenileme) yapın.

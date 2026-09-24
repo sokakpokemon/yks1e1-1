@@ -1,5 +1,6 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 28) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-grup-gorunum.mjs kosan=" + __kosan + " beklenen=28"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-grup-gorunum.mjs:" + __kosan + ":28"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 35) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-grup-gorunum.mjs kosan=" + __kosan + " beklenen=35"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-grup-gorunum.mjs:" + __kosan + ":35"); } });
+/* DÖNGÜ-18: kosan=35 (28 + 7 yeni D18 havuz-kartı assertion'ı) */
 /* ks-grup-gorunum.mjs — GRUP GÖRÜNÜM testleri:
    badge markup (+N özeti, aç/kapa), tablo hücreleri, WhatsApp/PNG metinleri, analiz dağıtımı,
    birebir derslerde eski görünüm. Tek boot + gerçek id kayıt defteri (stub DOM). */
@@ -52,7 +53,7 @@ try {
   P = new Function(scripts + `
     yenile();
     return { DB, ui, renderDersler, gunlukTablo, haftalikOgrtTablo, ogrenciMesajMetni, pngAc, renderAnaliz,
-      grupBadgeHTML, grupUyeEtiketleri, grupOgrenciAdlari, grupUyeToggle, dersOgrenciIds, renderOzet };
+      grupBadgeHTML, grupUyeEtiketleri, grupOgrenciAdlari, grupUyeToggle, dersOgrenciIds, renderOzet, renderHavuz, gorselAd };
   `)();
   t("boot hatasız", true);
 } catch (e) {
@@ -62,7 +63,7 @@ try {
   process.exit(1);
 }
 const { DB, ui, renderDersler, gunlukTablo, haftalikOgrtTablo, ogrenciMesajMetni, pngAc, renderAnaliz,
-  grupBadgeHTML, grupUyeEtiketleri, grupOgrenciAdlari, grupUyeToggle, dersOgrenciIds, renderOzet } = P;
+  grupBadgeHTML, grupUyeEtiketleri, grupOgrenciAdlari, grupUyeToggle, dersOgrenciIds, renderOzet, renderHavuz, gorselAd } = P;
 
 /* Gelecek pazartesi: tüm pencere filtrelerinde görünür */
 const gelecekPzt = (() => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + 7); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); })();
@@ -170,6 +171,20 @@ t("özet: ders tek kez sayılır (donut merkezi)", (() => {
 })(), "beklenen=" + DB.dersler.filter(l => l.durum !== "iptal").length);
 
 function fmtSayiKontrol(n) { return Number(n).toLocaleString("tr-TR"); }
+
+/* 9) DÖNGÜ-18: İstek havuzu kartı ad markup'ı (12px/semibold, uppercase yok, Türkçe görsel ad, kırpmasız) */
+console.log("9) D18 havuz kartı ad markup'ı:");
+DB.istekler.push({ id: "d18-istek", ogrenciId: ayse.id, ogrenciAd: ayse.ad, dersId: "mat", konu: "Paragraf", durum: "bekliyor", olusturma: "2026-09-20" });
+renderHavuz();
+const havuzHTML = (reg["havuzBolum"] || { innerHTML: "" }).innerHTML;
+t("D18 havuz adı 12px + font-semibold", havuzHTML.includes('text-[12px] font-semibold normal-case tracking-normal'), havuzHTML.slice(0, 100));
+t("D18 havuz adı eski 13px değil", !havuzHTML.includes('text-[13px] text-slate-800'));
+t("D18 havuz adı bloğunda truncate/ellipsis YOK", !/text-\[12px\][^"]*"[^<]*<\/b>[\s\S]{0,200}/.test(havuzHTML) || !havuzHTML.split('<b class="text-[12px]').slice(1).some(s => s.split("</div>")[0].includes("truncate")), havuzHTML.slice(0, 80));
+t("D18 havuz adı whitespace-normal + break-words (kırpmasız)", /istek-kart[\s\S]*?whitespace-normal break-words[\s\S]*?<\/b>/.test(havuzHTML));
+t("D18 görsel ad 'Ayşe Demir' biçiminde (DB ham adı değişmeden)", havuzHTML.includes("Ayşe Demir") && DB.ogrenciler.find(o => o.id === ayse.id).ad === "Ayşe Demir");
+t("D18 gorselAd('SONER AÇIKGÖZ') → 'Soner Açıkgöz' (Türkçe güvenli)", gorselAd("SONER AÇIKGÖZ") === "Soner Açıkgöz" && gorselAd("İBRAHİM İLHAN") === "İbrahim İlhan");
+t("D18 grup üye badge'i ad'dan küçük ölçekte (text-[10px])", (() => { DB.istekler.push({ id: "d18-grp", ogrenciId: ayse.id, ogrenciAd: ayse.ad, ogrenciIds: [zeynep.id, emir.id], dersId: "mat", konu: "T", durum: "bekliyor", olusturma: "2026-09-20" }); renderHavuz(); const h = (reg["havuzBolum"] || { innerHTML: "" }).innerHTML; const kart = h.split("data-istek=\"d18-grp\"")[1] || ""; const ok = kart.includes('text-[12px] font-semibold') && kart.includes('grup-istek-uyeler') && kart.includes('text-[10px] font-bold text-slate-500'); DB.istekler = DB.istekler.filter(r => r.id !== "d18-grp"); renderHavuz(); return ok; })());
+DB.istekler = DB.istekler.filter(r => r.id !== "d18-istek");
 
 /* temizlik */
 DB.dersler = DB.dersler.filter(l => l.id !== "gtest-1" && l.id !== "gtest-2" && l.id !== "gtest-4");

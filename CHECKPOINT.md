@@ -2911,3 +2911,42 @@ Tarih: 2026-09-24 · Final: node test.mjs 2332/2332 OK, exit=0 · statik-eksiksi
 - Kapsam dışı dokunulanlar: YOK (db/seed, mantık, PNG, WhatsApp, ek-ders.js, index.html input fontları, ders/öğretmen tabloları, saatEtiket, öğretmen kartları değişmedi).
 
 Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önbellek atlamalı yenileme) yapın.
+
+## DÖNGÜ-20 — BİREBİR PANELLERİ ALT ALTA YIĞINLAMA (TAMAMLANDI)
+
+### Kapsam
+- "Birebir Ders Planla" ÜSTTE, "Öğrenci Birebir İstek Havuzu" ALTTA; iki kolon düzeni tamamen kaldırıldı.
+- index.html:6-12: DONGU-20 CSS — #ks-kart-kolon { display:grid; grid-template-columns: minmax(0,1fr); gap:1rem; align-items:start; } + #ks-kart-kolon > div { min-width:0; max-width:100%; overflow-wrap:break-word; }.
+- Eski @media (max-width:1023.98px) iki-kolon kuralı SIFIR hit (yalnız @media print blokları kaldı).
+- CSS order KULLANILMADI; sıra yalnız DOM sırasından (planKart → havuzBolum).
+- app.js kartKolonMarkup/kartKolonOnar (app.js:5037-5064) DOKUNULMADI: kartKolonOnar TEK sahip + idempotent; sol=üst, sag=alt çocuk sırası aynı kalır.
+
+### Test (ks-kart-kolon.mjs — D20 revizyonu; 55 assertion)
+- D18→D20 assertion güncellemeleri (dosya:satır): ks-kart-kolon.mjs:124-129 ("iki kolon sol→sag" → "TAM 2 çocuk, tek kolon üst→alt"), :133 (yeni tek-kolon CSS sözleşmesi), :136 (2 panel bölümü), :167 ("kolon üyeliği"→"panel üyeliği"), :182 ("iki kolon sırası"→"üst→alt yığın sırası"), :196 ("kolon yapısı"→"yığın yapısı"), :206 (onarım yolu üst→alt), :226 (media query kaldırıldı, iki-kolon SIFIR hit).
+- Süit Δ: ks-kart-kolon.mjs 48 → 55 vaka (+7; eski sol/sag adları üst/alt anlamına evrildi). Toplam: node test.mjs 2335/2335 OK, exit=0 (D19: 2332 → D20: +3 net; manifest/elle/donmuş/koşum Σ birebir).
+- D18 kilit: min-w-[280px] + overflow-x-hidden AYNEN korundu (app.js:657; ks-panel-secim.mjs:153 yeşil).
+
+### statik-eksiksizlik istisna-listesi güncellemesi (tek yazım)
+- ks-kart-kolon.mjs siteleri D20 revizyonuyla kaydı: eski siteNo 45/L198, 46/L205, 48/L208 → yeni siteNo 48/L210, 49/L217, 51/L220 (statik-eksiksizlik.mjs:96-98; eski→yeni + gerekçe korundu, silme/gevşetme YOK).
+- Sonuç: statik-eksiksizlik → TAMLIK KANITI 47/47, exit=0.
+
+### Mutasyon kanıtları (mutasyon-dongu20.mjs — yalnız tmp kopya; canonical app.js+index.html SHA birebir)
+5/5 PASS:
+  M1 eski iki-kolon CSS geri → "İki-kolon grid kuralı kaynakta SIFIR hit" kırmızı
+  M2 runtime onarım 3. çocuk katmanı → "Onarım sonrası üst→alt çocuk sırası" kırmızı
+  M3 plan/havuz sırası ters → "Üst panel ilk (plan üstte)" kırmızı
+  M4 wrapper tek panel → "kartKolonOnar wrapper silinince yeniden kurar (tek)" kırmızı
+  M5 çelişen media kuralı → "İki-kolon grid kuralı kaynakta SIFIR hit" kırmızı
+  Restore: tmp rmSync; canonical SHA önce/sonra BİREBİR; donmuş test tarafı 7/7 AYNI.
+
+### Geometri dürüstlük notu
+- Node/jsdom gerçek layout HESAPLAMAZ; clientWidth/scrollWidth kanıtı üretilmedi. Süitte yalnız kesin CSS metni, DOM sırası, çocuk sayısı, sahiplik ve runtime yeniden-kurma assert edilir; gerçek geometri (yatay taşma yok) tarayıcıda kullanıcıyla doğrulanır.
+
+### No-drift
+- app.js: 337.267 B · SHA 32015f4916d624509a6dac3a8ab26654cd7cfa9ca1cdcfe3ca8f3ba7ded2d376 (D19 final ile AYNI — app.js D20'de değişmedi)
+- index.html: 22.595 B · SHA bb599a09ee44122d4e444b4dbcf1ecde39ac0b68704abc138bb2b029b0ed945d
+- Backups: app.js.dongu20-panel-yiginlama-oncesi.bak (337.267 B · 32015f49…) · index.html.dongu20-panel-yiginlama-oncesi.bak (22.612 B · 7ee493ba…)
+- Değişen dosyalar: index.html (layout CSS) · ks-kart-kolon.mjs (sözleşme güncellemesi) · statik-eksiksizlik.mjs (istisna satır kayması) · mutasyon-dongu20.mjs (yeni) · CHECKPOINT.md (bu bölüm).
+- DB/seed · saveDB/localStorage.setItem · filtre/seçim/chip/grup mantığı · PNG · WhatsApp · ders/öğretmen tabloları · saatEtiket · DÖNGÜ-18/19 formatter ve tipografi DEĞİŞMEDİ.
+
+Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önbellek atlamalı yenileme) yapın.

@@ -93,9 +93,9 @@ for (const ad of Object.keys(manifest)) {
     { suit: "ks-sinif-prog-etiket.mjs", siteNo: 6,  satir: 69,  gerekce: "kaynak-yok else dalı; kalıcı fixture 'etiket fixture: kaynak-yok dal kapsaması' ile kapsanıyor" },
     { suit: "ks-sinif-prog-etiket.mjs", siteNo: 11, satir: 107, gerekce: "çoklu-slot-yok else dalı; kalıcı fixture 'etiket fixture: çoklu-slot dal kapsaması' ile kapsanıyor" },
     { suit: "ks-sinif-prog-etiket.mjs", siteNo: 14, satir: 123, gerekce: "kaynaksız-slot-yok else dalı; kalıcı fixture 'etiket fixture: kaynaksız-slot dal kapsaması' ile kapsanıyor" },
-    { suit: "ks-kart-kolon.mjs", siteNo: 45, satir: 198, gerekce: "İLK onarımın catch dalı (ilk onarım normal koşumda hatasız → catch 0 hit DOĞRU); aynı blokta İKİNCİ onarım GERÇEKTEN çökertilerek catch dalı kalıcı test ediliyor: 'kart-kolon fixture: onarım catch dalı GERÇEKTEN ateşlendi'" },
-    { suit: "ks-kart-kolon.mjs", siteNo: 46, satir: 205, gerekce: "İKİNCİ onarım çökertilmedi dalı (normal koşumda çökertilir → bu dal 0 hit DOĞRU); onu kapatan kalıcı fixture: 'kart-kolon fixture: onarım catch dalı GERÇEKTEN ateşlendi'" },
-    { suit: "ks-kart-kolon.mjs", siteNo: 48, satir: 208, gerekce: "dış-çökme dalı (normal koşumda girilmez); onu kapatan kalıcı fixture: aynı blokta 'kart-kolon fixture: onarım catch dalı GERÇEKTEN ateşlendi'" },
+    { suit: "ks-kart-kolon.mjs", siteNo: 48, satir: 210, gerekce: "DÖNGÜ-20 satır kayması (eski siteNo 45/L198 → 48/L210): İLK onarımın catch dalı — ilk onarım normal koşumda hatasız → catch 0 hit DOĞRU; aynı blokta İKİNCİ onarım GERÇEKTEN çökertilerek catch dalı kalıcı test ediliyor: 'kart-kolon fixture: onarım catch dalı GERÇEKTEN ateşlendi'" },
+    { suit: "ks-kart-kolon.mjs", siteNo: 49, satir: 217, gerekce: "DÖNGÜ-20 satır kayması (eski siteNo 46/L205 → 49/L217): İKİNCİ onarım çökertilmedi dalı (normal koşumda çökertilir → bu dal 0 hit DOĞRU); onu kapatan kalıcı fixture: 'kart-kolon fixture: onarım catch dalı GERÇEKTEN ateşlendi'" },
+    { suit: "ks-kart-kolon.mjs", siteNo: 51, satir: 220, gerekce: "DÖNGÜ-20 satır kayması (eski siteNo 48/L208 → 51/L220): dış-çökme dalı (normal koşumda girilmez); onu kapatan kalıcı fixture: aynı blokta 'kart-kolon fixture: onarım catch dalı GERÇEKTEN ateşlendi'" },
   ];
   /* İstisna bütünlüğü: listedeki her suit/site ikilisi GERÇEK bir hit=0 site olmalı —
      gereksiz giriş da FAIL sayılır (sessiz genişleme yok). */

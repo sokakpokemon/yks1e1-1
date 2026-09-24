@@ -5,10 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>deneme 1</title><!--probe-->
 <style>
-  /* DONGU-20 PANEL-YIGINLAMA: plan + istek havuzu kartları TÜM genişliklerde TEK KOLON, ALT ALTA.
-     Planlama (planKart) DOM sırasıyla ÜSTTE; havuz (havuzBolum) ALTTA. İki kolon kuralı tamamen kaldırıldı. */
-  #ks-kart-kolon { display: grid; grid-template-columns: minmax(0,1fr); gap: 1rem; align-items: start; }
+  /* KART-KOLON-YAMASI: plan + istek havuzu kartları masaüstü/tablet'te yan yana iki eşit kolon; dar ekranda tek kolon */
+  #ks-kart-kolon { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 1rem; align-items: start; }
   #ks-kart-kolon > div { min-width: 0; max-width: 100%; overflow-wrap: break-word; }
+  @media (max-width: 1023.98px) {
+    #ks-kart-kolon { grid-template-columns: minmax(0,1fr); }
+  }
   </style>
 <script src="ek-ders.js" defer></script>
 <meta name="description" content="YKS Kurs/Etüt merkezleri için birebir ders, istek havuzu ve öğrenci eksik takip otomasyonu. Tüm veriler bu bilgisayarda saklanır." />

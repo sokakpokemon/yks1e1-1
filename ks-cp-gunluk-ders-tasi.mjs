@@ -74,7 +74,7 @@ const bolum = [
   "",
   "**Kalan Riskler / notlar:**",
   "- Günlük tablo GÖRÜNÜM değişikliği: boş hücreler artık `dnd-bos` (görünür `+` ipucu) — haftalık drop-zone'larla tutarlı.",
-  "  `index.html` (`.dnd-bos`/`.dnd-uygun` CSS) DEĞİŞMEDİ; hash `7ee493bae3d1396cafd2e102dce2a10c6f70b6170a17ab35d699d3870e04c2d5`.",
+  "  `index.html` (`.dnd-bos`/`.dnd-uygun` CSS) DEĞİŞMEDİ; hash `bb599a09ee44122d4e444b4dbcf1ecde39ac0b68704abc138bb2b029b0ed945d`.",
   "- `ks-ders-tasi.mjs`'teki eski kapsam kararı (\"günlük tablo draggable DEĞİL\") bu TEK İŞ'in AÇIK KARARIYLA geçersiz kaldı;",
   "  2 assert güncellendi (kapsam yeni karara göre; assertion sayısı artmadı/azalmadı).",
   "- Günlük ve haftalık tablo aynı `istekBurak` yolunu paylaştığı için havuz istek kartı artık günlük boş hücreye de bırakılabilir",

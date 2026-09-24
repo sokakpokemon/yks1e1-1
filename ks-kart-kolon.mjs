@@ -1,8 +1,8 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 52) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-kart-kolon.mjs kosan=" + __kosan + " beklenen=52"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-kart-kolon.mjs:" + __kosan + ":52"); } });
-/* ks-kart-kolon.mjs — KART-KOLON-YAMASI süiti: planlama ekranındaki iki kart
-   (Birebir Ders Planla + Öğrenci Birebir İstek Havuzu) masaüstü/tablet'te yan yana
-   iki kolon (#ks-kart-kolon), dar ekranda tek kolon. Gerçek DOM semantiği:
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 55) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-kart-kolon.mjs kosan=" + __kosan + " beklenen=55"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-kart-kolon.mjs:" + __kosan + ":55"); } });
+/* ks-kart-kolon.mjs — PANEL-YIGINLAMA süiti (DÖNGÜ-20): planlama ekranındaki iki kart
+   (Birebir Ders Planla + Öğrenci Birebir İstek Havuzu) TÜM genişliklerde TEK KOLON, ALT ALTA;
+   planKart ÜSTTE, havuzBolum ALTTA (CSS order YOK; DOM sırası belirler). Gerçek DOM semantiği:
    bilinmeyen id → null, innerHTML yazımı eski çocukları siler, gerçek parent/çocuk yapısı. */
 import { readFileSync } from "node:fs";
 
@@ -121,12 +121,20 @@ function kartParentId(env, kid) {
     t("Wrapper DOM'da tam bir kez", (env.ALL_ELS.filter((e) => e.id === "ks-kart-kolon" && !e._koktenKopuk).length) === 1);
     t("Plan kartı tam bir kez", (env.ALL_ELS.filter((e) => e.id === "planKart" && !e._koktenKopuk).length) === 1);
     t("İstek havuzu tam bir kez", (env.ALL_ELS.filter((e) => e.id === "havuzBolum" && !e._koktenKopuk).length) === 1);
+    /* DÖNGÜ-20 güncellemesi (dosya:satır ks-kart-kolon.mjs:124-129): eski "iki kolon sol→sag" sözleşmesi →
+       "wrapper TAM 2 çocuk, tek kolon üst→alt; planKart üstte, havuzBolum altta". DOM sırası aynen korunur
+       (sol=üst, sag=alt); CSS order YOK; grid-template-columns: minmax(0,1fr) tek kolon. */
     const sir = planSolda && havuzSagda ? ["ks-kart-kolon-sol", "ks-kart-kolon-sag"] : null;
-    t("Wrapper iki kolon çocuklu (sol→sag, kaynak sırası)", !!sir, JSON.stringify(sir));
-    t("Plan kartı SOL kolonda (statik parent)", planSolda, "sol=" + idxSolAc + " plan=" + idxPlan + " sag=" + idxSagAc);
-    t("İstek havuzu SAĞ kolonda (statik parent)", havuzSagda, "sag=" + idxSagAc + " havuz=" + idxHavuz + " kapa=" + idxWrapKapa);
-    t("Sol kolon ilk (plan solda)", !!sir && sir[0] === "ks-kart-kolon-sol");
-    t("Sağ kolon ikinci (havuz sağda)", !!sir && sir[1] === "ks-kart-kolon-sag");
+    t("Wrapper TAM 2 çocuklu (üst→alt, kaynak sırası)", !!sir && sir.length === 2, JSON.stringify(sir));
+    t("Plan kartı ÜST panelde (statik parent)", planSolda, "sol=" + idxSolAc + " plan=" + idxPlan + " sag=" + idxSagAc);
+    t("İstek havuzu ALT panelde (statik parent)", havuzSagda, "sag=" + idxSagAc + " havuz=" + idxHavuz + " kapa=" + idxWrapKapa);
+    t("Üst panel ilk (plan üstte)", !!sir && sir[0] === "ks-kart-kolon-sol");
+    t("Alt panel ikinci (havuz altta)", !!sir && sir[1] === "ks-kart-kolon-sag");
+    /* DÖNGÜ-20 yeni: tek-kolon CSS sözleşmesi (kaynak metni — jsdom gerçek layout hesaplamaz, geometri tarayıcıda kullanıcı kanıtlar) */
+    t("Wrapper CSS TEK kolon (grid-template-columns: minmax(0,1fr) tek değer)", (() => { const m = html.match(/#ks-kart-kolon \{[^}]*\}/); return !!m && m[0].includes("grid-template-columns: minmax(0,1fr);") && !m[0].includes("minmax(0,1fr) minmax(0,1fr)"); })());
+    t("CSS order KULLANILMADI (sıra yalnız DOM'dan)", !/order\s*:/.test(html.slice(html.indexOf("#ks-kart-kolon"), html.indexOf("#ks-kart-kolon") + 300)));
+    /* DÖNGÜ-20: wrapper kaynak sırasında TAM 2 panel bölümü içerir (sol=üst, sag=alt; jsdom parent zinciri sim düz — kaynak sırasından kanıt) */
+    t("Wrapper kaynakta TAM 2 panel bölümü içerir (sol=üst + sag=alt)", idxSolAc !== -1 && idxSagAc !== -1 && idxSolAc < idxSagAc && html.indexOf('id="planKart"') > idxSolAc && html.indexOf('id="havuzBolum"') > idxSagAc && html.lastIndexOf("</div>\n</div>") > html.indexOf('id="havuzBolum"'));
 
     /* B) Form/panel/buton korunumu */
     t("Plan formu f-ogrenci DOM'da", !!env.REGISTRY["f-ogrenci"]);
@@ -156,7 +164,8 @@ function kartParentId(env, kid) {
     t("3× render sonrası wrapper tam bir kez", (env.ALL_ELS.filter((e) => e.id === "ks-kart-kolon" && !e._koktenKopuk).length) === 1);
     t("3× render sonrası plan kartı tam bir kez", (env.ALL_ELS.filter((e) => e.id === "planKart" && !e._koktenKopuk).length) === 1);
     t("3× render sonrası havuz tam bir kez", (env.ALL_ELS.filter((e) => e.id === "havuzBolum" && !e._koktenKopuk).length) === 1);
-    t("render sonrası kolon üyeliği korunur (statik + runtime teklik)", planSolda && havuzSagda);
+    /* DÖNGÜ-20: adı güncellendi — "kolon üyeliği" → "panel üyeliği" (sol/sağ yok; üst/alt tek kolon) */
+    t("render sonrası panel üyeliği korunur (statik + runtime teklik)", planSolda && havuzSagda);
     t("render sonrası panel hâlâ f-ogrenci altında (plan kartı içinde)", env.REGISTRY["ek-ogrenciler"] && env.REGISTRY["ek-ogrenciler"].parentNode && env.REGISTRY["ek-ogrenciler"].parentNode.id === "f-ogrenci");
 
     /* D) renderYonetim + sekme geçişleri sonrası kolon sırası korunur */
@@ -170,7 +179,8 @@ function kartParentId(env, kid) {
       if (!(env.ALL_ELS.filter((e) => (e.id === "planKart" || e.id === "havuzBolum") && !e._koktenKopuk).length === 2)) sirTamam = false;
     }
     t("Sekme geçişleri hatasız", tamam);
-    t("renderYonetim + sekme geçişleri sonrası iki kolon sırası korunuyor", sirTamam);
+    /* DÖNGÜ-20 güncellemesi: "iki kolon sırası" → "üst→alt yığın sırası" (aynı koşum, aynı koşul) */
+    t("renderYonetim + sekme geçişleri sonrası üst→alt yığın sırası korunuyor", sirTamam);
     t("Sekmelerden sonra da wrapper tek", (env.ALL_ELS.filter((e) => e.id === "ks-kart-kolon" && !e._koktenKopuk).length) === 1);
 
     /* E) kartKolonOnar idempotent + formaAktar/planla akışı */
@@ -183,7 +193,8 @@ function kartParentId(env, kid) {
     } catch (e) { akisHatasiz = false; }
     t("formaAktar + planla akışı hata vermiyor", akisHatasiz);
     t("Akış sonrası wrapper hâlâ tek ve yerinde", (env.ALL_ELS.filter((e) => e.id === "ks-kart-kolon" && !e._koktenKopuk).length) === 1);
-    t("Akış sonrası kartlar tekli ve kolon yapısı bozulmadı", (env.ALL_ELS.filter((e) => (e.id === "planKart" || e.id === "havuzBolum") && !e._koktenKopuk).length) === 2 && planSolda && havuzSagda);
+    /* DÖNGÜ-20 güncellemesi: "kolon yapısı" → "yığın yapısı (TAM 2 çocuk, plan üstte)" */
+    t("Akış sonrası kartlar tekli ve yığın yapısı bozulmadı", (env.ALL_ELS.filter((e) => (e.id === "planKart" || e.id === "havuzBolum") && !e._koktenKopuk).length) === 2 && planSolda && havuzSagda);
 
     /* E2) Runtime onarım: wrapper'ı sim DOM'dan sil → kartKolonOnar sol→sag yeniden kurar */
     try {
@@ -192,9 +203,10 @@ function kartParentId(env, kid) {
       api.kartKolonOnar();
       const sirY = (env.REGISTRY["ks-kart-kolon"] && env.REGISTRY["ks-kart-kolon"]._cocuk.map((c) => c.id).join(",")) || "";
       t("kartKolonOnar wrapper silinince yeniden kurar (tek)", !!env.REGISTRY["ks-kart-kolon"]);
-      t("Onarım sonrası sol→sag çocuk sırası", sirY === "ks-kart-kolon-sol,ks-kart-kolon-sag", sirY);
-      t("Onarım sonrası plan solda (parent)", env.REGISTRY["planKart"].parentNode && env.REGISTRY["planKart"].parentNode.id === "ks-kart-kolon-sol");
-      t("Onarım sonrası havuz sağda (parent)", env.REGISTRY["havuzBolum"].parentNode && env.REGISTRY["havuzBolum"].parentNode.id === "ks-kart-kolon-sag");
+      /* DÖNGÜ-20 güncellemesi: onarım yolu aynı sol→sag DOM sırasını kurar; CSS tek kolon olduğundan bu üst→alt olur */
+      t("Onarım sonrası üst→alt çocuk sırası", sirY === "ks-kart-kolon-sol,ks-kart-kolon-sag", sirY);
+      t("Onarım sonrası plan üstte (parent)", env.REGISTRY["planKart"].parentNode && env.REGISTRY["planKart"].parentNode.id === "ks-kart-kolon-sol");
+      t("Onarım sonrası havuz altta (parent)", env.REGISTRY["havuzBolum"].parentNode && env.REGISTRY["havuzBolum"].parentNode.id === "ks-kart-kolon-sag");
     } catch (e) { t("onarım catch dalı çalıştı ve beklenen çökme yakalandı", String(e && e.message).includes("GERÇEK-DAL-ZORLAMA")); globalThis.__kartKolonCatchGirdi = true; }
     /* GERÇEK-DAL FIXTURE (site #45): onarım İKİNCİ kez çökertilir → catch dalı GERÇEKTEN ateşlenir;
        dal-içi gözlemlenebilir sonuç: beklenen mesaj yakalanır. İlk onarım yukarıda hatasız koştu —
@@ -211,10 +223,10 @@ function kartParentId(env, kid) {
   /* F) Responsive CSS kuralları (kaynak semantiği) */
   {
     t("Wrapper CSS kuralı kaynakta (#ks-kart-kolon)", html.includes("#ks-kart-kolon"));
-    t("Dar ekran media query breakpoint tanımlı", /@media\s*\(max-width:\s*1023\.98px\)/.test(html));
-    const mq = html.slice(html.indexOf("@media (max-width: 1023.98px)"), html.indexOf("@media (max-width: 1023.98px)") + 400);
-    t("Dar ekran kuralında grid tek kolona düşüyor", mq.includes("grid-template-columns: minmax(0,1fr)") && !mq.includes("minmax(0,1fr) minmax(0,1fr)"));
-    t("Masaüstü kuralı iki eşit minmax kolon", html.includes("grid-template-columns: minmax(0,1fr) minmax(0,1fr)"));
+    /* DÖNGÜ-20 güncellemesi: media query kaldırıldı (tüm genişlikler tek kolon); iki-kolon kuralı SIFIR hit */
+    t("Dar ekran media query breakpoint KALDIRILDI (tüm genişlikler tek kolon)", !/@media\s*\(max-width:\s*1023\.98px\)/.test(html));
+    t("İki-kolon grid kuralı kaynakta SIFIR hit", !html.includes("minmax(0,1fr) minmax(0,1fr)"));
+    t("Tek-kolon grid kuralı kaynakta (minmax(0,1fr) tek değer)", /#ks-kart-kolon \{ display: grid; grid-template-columns: minmax\(0,1fr\);/.test(html));
     t("Dar kolonda min-width:0 koruması", html.includes("#ks-kart-kolon > div { min-width: 0"));
   }
 

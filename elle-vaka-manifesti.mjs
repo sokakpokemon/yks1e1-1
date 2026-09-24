@@ -37,7 +37,7 @@ export const elleManifest = {
   "ks-sinif-prog-uyum-onar.mjs": 36,
   "ks-sinif-prog-etiket.mjs": 24,
   "ks-kart-sirasi.mjs": 33,
-  "ks-kart-kolon.mjs": 52,
+  "ks-kart-kolon.mjs": 55,
   "ks-brans-ders-kurali.mjs": 54,
   "ks-excel-ui-kontrol.mjs": 34,
   "ks-wa-sablon.mjs": 47,

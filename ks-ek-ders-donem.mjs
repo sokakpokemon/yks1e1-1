@@ -210,7 +210,7 @@ for (const fn of ["function renderOzet() {", "function renderAnaliz() {", "funct
 
 /* ---- 11) Dosya bütünlüğü ---- */
 console.log("11) Dokunulmayan dosyaların SHA-256'sı:");
-const beklenen = { "index.html": "7ee493bae3d1396cafd2e102dce2a10c6f70b6170a17ab35d699d3870e04c2d5", "ek-ders.js": "3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f", "vendor/tailwind.js": "7afa0afd2536044695e7e674298bc0dda9af94475e4e07d0575feccfa796c74f", "vendor/fontawesome.css": "f69efe0fb3372fe8aca04af3664ec926cda67b34772246ae416fb4d1bf040ac8", "vendor/html2canvas.js": "669b68b0b6828272e5298a36f20a646b027b2cdf5b524ec05b2410009e75063e", "vendor/chart.js": "205400" === "x" ? "" : "19dfdc0ce3bd0e46eaf94db65617f7be79c1ba50fdeadd2b18c5989216617f9a" };
+const beklenen = { "index.html": "bb599a09ee44122d4e444b4dbcf1ecde39ac0b68704abc138bb2b029b0ed945d", "ek-ders.js": "3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f", "vendor/tailwind.js": "7afa0afd2536044695e7e674298bc0dda9af94475e4e07d0575feccfa796c74f", "vendor/fontawesome.css": "f69efe0fb3372fe8aca04af3664ec926cda67b34772246ae416fb4d1bf040ac8", "vendor/html2canvas.js": "669b68b0b6828272e5298a36f20a646b027b2cdf5b524ec05b2410009e75063e", "vendor/chart.js": "205400" === "x" ? "" : "19dfdc0ce3bd0e46eaf94db65617f7be79c1ba50fdeadd2b18c5989216617f9a" };
 /* chart.js hash'i aşağıda dosyadan doğrulanır (yukarıdaki satır yalnız yapı için) */
 beklenen["vendor/chart.js"] = "19dfdc0ce3bd0e46eaf94db65617f7be79c1ba50fdeadd2b18c5989216617f9a";
 for (const [f, h] of Object.entries(beklenen)) {

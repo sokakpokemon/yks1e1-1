@@ -242,7 +242,7 @@ function ksSugSatirHTML(ad, sinif, ogrenci) {
 function ksSugListeHTML(items, tip) {
   return '<div class="ks-sug-liste hidden absolute z-30 left-0 right-0 top-full mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg p-1">' +
     items.map(function (it) {
-      return '<button type="button" class="ks-sug-satir w-full min-w-0 text-left px-3 py-2 text-[13px] font-medium rounded-lg hover:bg-teal-50/70 cursor-pointer flex whitespace-normal break-words" data-ks-sug="' + esc(it.deger) + '" data-ks-sug-hedef="' + esc(tip) + '">' +
+      return '<button type="button" class="ks-sug-satir w-full text-left px-3 py-2 text-[13px] font-medium rounded-lg hover:bg-teal-50/70 cursor-pointer flex" data-ks-sug="' + esc(it.deger) + '" data-ks-sug-hedef="' + esc(tip) + '">' +
         it.html + '</button>';
     }).join("") +
     (items.length ? "" : '<div class="px-3 py-2 text-[13px] font-medium text-slate-300">Eşleşme yok</div>') + "</div>";

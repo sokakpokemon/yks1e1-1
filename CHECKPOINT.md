@@ -3098,4 +3098,55 @@ onayı ile olur — jsdom yeşilliği tek başına kapanış sayılmaz.
 
 Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önbellek atlamalı yenileme) yapın.
 
+## DÖNGÜ-23 — AUTOCOMPLETE ÖĞRENCİ ADI + SINIF EKSİĞİ (Uygulandı; son kabul Ctrl+Shift+R görsel kontrolü)
+
+### Keşif
+- Öğrenci öneri satırı kodu zaten birebirEtiketHTML kullanıyordu (app.js:3043) — kullanıcı ekranında
+  görünen kesik satır, formatter'ın flex-wrap içeriğinin button'un tek-satırlı flex düzeninde sağdan
+  kesilmesiydi; sınıf spanı kesilen bölgede kaldığı için "sınıfsız" da görünüyordu.
+- Öğretmen satırı (ksSugSatirHTML(t.ad, null, false), app.js:3048) ayrı üretim — DOKUNULMADI.
+
+### Uygulama (app.js tek satır; index.html DEĞİŞMEDİ)
+- app.js:245 öneri button class'ına "min-w-0 whitespace-normal break-words" eklendi → satır iki satıra
+  sarılır, sağdan kesilme kalmaz (birebirEtiketHTML'li Grup Öğrencileri satırıyla aynı biçim).
+- Dönüşüm yalnız GÖRÜNEN satırda: input'a yazılan değer data-ks-sug = o.ad (HAM ad) — planla()
+  eşleşme mantığı bozulmaz (mevcut davranış, korundu).
+- Öğretmen önerileri SINIFSIZ: D19 donmuş assertion'a dokunulmadı.
+
+### Test (gerçek koşumdan; silme/gevşetme YOK)
+- ks-grup-gorunum.mjs 47→50 (+3 YENİ, ks-grup-gorunum.mjs:214-219):
+  "D23 öğrenci öneri satırı formatter'dan (gorselAd + gerçek sınıf; ham ad değeri korunur)" ·
+  "D23 öneri satırı kesilmez (button min-w-0 whitespace-normal break-words)" ·
+  "D23 öğretmen öneri satırı SINIFSIZ kalır (D19 kilidi; öğrenci satırından ayrı üretim)".
+- old→new (dosya:satır): L214 "D21 öneri satırları 13px/500 (ks-sug-satir + Eşleşme yok)" →
+  "D21/D23 öneri satırları 13px/500 + kesme yok (ks-sug-satir + Eşleşme yok)" (gerekçe: button class
+  dizisine min-w-0 whitespace-normal break-words eklendi, assertion bunu kilitliyor).
+- Export bloğuna ksSugOgrenci/ksSugOgretmen eklendi (ks-grup-gorunum.mjs:55/68).
+- SUITE_DONE bek 47→50; suit-manifest + elle-vaka-manifesti ks-grup-gorunum=50; donmuş txt 50 satır
+  (koşumdan); elle-vaka-adlari 3 ad eklendi + D22 popup adı koşum sırasına taşındı (#50).
+- Final: node test.mjs **2345/2345 OK, exit=0** · HAM Σ beşli **2345 BİREBİR** ·
+  statik-eksiksizlik **47/47 TAMLIK exit=0** · node --check app.js + ek-ders.js OK.
+
+### Mutasyon kanıtları (mutasyon-dongu23.mjs — YENİ; tmp kopya; canonical SHA birebir)
+4/4 PASS:
+  M1 ham büyük ad (gorselAd→esc) → "D23 öğrenci öneri satırı formatter'dan" kırmızı
+  M2 sınıf silme (öneriye null sınıf) → aynı assertion kırmızı (kotu=2)
+  M3 öğretmen satırına sınıf+formatter ekleme → "D23 öğretmen öneri satırı SINIFSIZ" kırmızı
+  M4 kesik ad (wrap sınıfları silinir) → "D23 öneri satırı kesilmez" kırmızı
+  Restore: tmp rmSync; canonical SHA önce/sonra BİREBİR (6 dosya); donmuş test tarafı 2/2 AYNI.
+
+### No-drift
+- app.js: 338.967 B · SHA 480a436d7e8e3e502bf7ffdf99da42b0b17f9f5f581d3d76c7225661be514a55
+  (D22 final 86f21186… → D23 +38 B: yalnız öneri button class dizisi)
+- index.html: 22.708 B · SHA 244f61c87e84b3f43efc3326fcbf3b7950c981fa04fae077976b950318e6b403 — DEĞİŞMEDİ
+- Backups yazma öncesi: app.js.dongu23-oncesi.bak (338.929 B · 86f21186…) ·
+  ks-grup-gorunum.mjs.dongu23-oncesi.bak (3e710b7e…)
+- DB/seed/istek ham verisi · planla() eşleşme mantığı · PNG · WhatsApp · saveDB/localStorage DEĞİŞMEDİ.
+
+### Kabul
+jsdom geometri ölçmez; kesme/ankraj davranışının son kanıtı Ctrl+Shift+R sonrası kullanıcının görsel
+kontrolüdür — öneri satırında "Ad Soyad + sınıf" tam görünmeli, tıklayınca input'a HAM ad yazılmalı.
+
 Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önbellek atlamalı yenileme) yapın.
+
+

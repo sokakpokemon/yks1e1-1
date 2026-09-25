@@ -1,5 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 50) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-grup-gorunum.mjs kosan=" + __kosan + " beklenen=50"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-grup-gorunum.mjs:" + __kosan + ":50"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 47) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-grup-gorunum.mjs kosan=" + __kosan + " beklenen=47"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-grup-gorunum.mjs:" + __kosan + ":47"); } });
 /* DÖNGÜ-19: kosan=42 (28 + 7 D18/D19 havuz-kartı + 7 D19) · DÖNGÜ-21: kosan=47 (+5 D21 UI sözleşmesi) */
 /* ks-grup-gorunum.mjs — GRUP GÖRÜNÜM testleri:
    badge markup (+N özeti, aç/kapa), tablo hücreleri, WhatsApp/PNG metinleri, analiz dağıtımı,
@@ -54,7 +54,7 @@ try {
     yenile();
     return { DB, ui, renderDersler, gunlukTablo, haftalikOgrtTablo, ogrenciMesajMetni, pngAc, renderAnaliz,
       grupBadgeHTML, grupUyeEtiketleri, grupOgrenciAdlari, grupUyeToggle, dersOgrenciIds, renderOzet, renderHavuz, gorselAd,
-      birebirEtiketHTML, ksSugSatirHTML, ksSugListeHTML, ksSugOgrenci, ksSugOgretmen, istekGrupOzetHTML, grupPanelGovdeHTML, grupPanelListeHTML };
+      birebirEtiketHTML, ksSugSatirHTML, ksSugListeHTML, istekGrupOzetHTML, grupPanelGovdeHTML, grupPanelListeHTML };
   `)();
   t("boot hatasız", true);
 } catch (e) {
@@ -65,7 +65,7 @@ try {
 }
 const { DB, ui, renderDersler, gunlukTablo, haftalikOgrtTablo, ogrenciMesajMetni, pngAc, renderAnaliz,
   grupBadgeHTML, grupUyeEtiketleri, grupOgrenciAdlari, grupUyeToggle, dersOgrenciIds, renderOzet, renderHavuz, gorselAd,
-  birebirEtiketHTML, ksSugSatirHTML, ksSugListeHTML, ksSugOgrenci, ksSugOgretmen, istekGrupOzetHTML, grupPanelGovdeHTML, grupPanelListeHTML } = P;
+  birebirEtiketHTML, ksSugSatirHTML, ksSugListeHTML, istekGrupOzetHTML, grupPanelGovdeHTML, grupPanelListeHTML } = P;
 const appKaynak = scripts;
 
 /* Gelecek pazartesi: tüm pencere filtrelerinde görünür */
@@ -211,15 +211,11 @@ t("D22 chip+banner formatter'dan (ad+sınıf; serbest metinde sınıf uydurulmaz
    jsdom geometri ölçmez; font/kırpma kontrolleri string-düzeyi, gerçek taşma tarayıcıda doğrulanır. */
 t("D21 grup paneli satırında sınıf yalnız formatter'dan BİR kez (ikinci sinifTag yok)", (() => { const eskiBaglam = ui.grupPanelBaglam, eskiAcik = ui.panelSecim; ui.grupPanelBaglam = "plan"; ui.panelSecim = { acik: true, arama: "", sinif: "", anaId: ayse.id }; const lh = grupPanelListeHTML(); ui.panelSecim = eskiAcik; const satirSayisi = (lh.match(/birebir-etiket/g) || []).length; /* kod yorumundaki 'sinifTag' geçmiş açıklaması sayılmaz — tanım/üretim yok */ const sinifTagUretimi = (appKaynak.match(/sinifTag\s*=/g) || []).length + (appKaynak.match(/\+ sinifTag/g) || []).length; return !lh.includes("text-slate-300") && sinifTagUretimi === 0 && satirSayisi >= 1; })());
 t("D21 arama kontrolü kırpılmıyor (liste kapsayıcısı w-full + min-w-0, min-w-[280px] YOK)", (() => { const eskiAcik = ui.panelSecim; ui.panelSecim = { acik: true, arama: "", sinif: "", anaId: null }; const govde = grupPanelGovdeHTML(); ui.panelSecim = eskiAcik; return govde.includes('id="grup-panel-arama"') && govde.includes("relative flex-1 min-w-0") && govde.includes("min-w-[280px]") === false && govde.includes("w-full max-h-56"); })());
-t("D21/D23 öneri satırları 13px/500 + kesme yok (ks-sug-satir + Eşleşme yok)", (() => { const dolu = ksSugListeHTML([{ deger: "Ayşe Demir", html: birebirEtiketHTML("Ayşe Demir", "9-A") }], "ogrenci"); const bos = ksSugListeHTML([], "ogrenci"); return dolu.includes('ks-sug-satir w-full min-w-0 text-left px-3 py-2 text-[13px] font-medium rounded-lg') && bos.includes("Eşleşme yok"); })());
+t("D21 öneri satırları 13px/500 (ks-sug-satir + Eşleşme yok)", (() => { const dolu = ksSugListeHTML([{ deger: "Ayşe Demir", html: birebirEtiketHTML("Ayşe Demir", "9-A") }], "ogrenci"); const bos = ksSugListeHTML([], "ogrenci"); return dolu.includes('ks-sug-satir w-full text-left px-3 py-2 text-[13px] font-medium rounded-lg') && bos.includes("Eşleşme yok"); })());
 t("D21 havuz kartı adı gorselAd ile normal biçimde (ham büyük harf DB adı render'da düzelir)", (() => { const once=DB.ogrenciler.find(o=>o.id===ayse.id).ad; DB.ogrenciler.find(o=>o.id===ayse.id).ad="AYŞE DEMİR"; DB.istekler.push({ id: "d21-ham", ogrenciId: ayse.id, ogrenciAd: "AYŞE DEMİR", dersId: "mat", konu: "K", durum: "bekliyor", olusturma: "2026-09-20" }); renderHavuz(); const h=(reg["havuzBolum"]||{innerHTML:""}).innerHTML; const kart=h.split('data-istek="d21-ham"')[1]||""; const ok=kart.includes("Ayşe Demir") && !kart.includes("AYŞE DEMİR"); DB.istekler=DB.istekler.filter(r=>r.id!=="d21-ham"); DB.ogrenciler.find(o=>o.id===ayse.id).ad=once; renderHavuz(); return ok; })());
 /* DÖNGÜ-22 güncellemesi (L213 → L213): popup in-flow absolute (top-full) — relative host ile otomatik
    ankraj; scroll/resize JS konumlandırması KALDIRILDI (kayma kanıtı gerektirmez). Yeni sözleşme:
    ksSugAnkraj uyumluluk stub'u + ksSugListeHTML'de top-full + h-ogrenci kendi relative sarmalayıcısında */
-/* DÖNGÜ-23: iki satır tipi AYRI — öğrenci satırı birebirEtiketHTML (gorselAd + gerçek DB sınıfı; ham ad data-ks-sug'te), öğretmen satırı sınıfsız (D19 kilidi korunur). Öneri satırı kesme düzeltmesi (min-w-0 whitespace-normal break-words). */
-t("D23 öğrenci öneri satırı formatter'dan (gorselAd + gerçek sınıf; ham ad değeri korunur)", (() => { const l=ksSugOgrenci("ayşe"); return l.length===1 && l[0].deger==="Ayşe Demir" && l[0].html.includes("birebir-etiket") && l[0].html.includes("12 SAY 1") && l[0].html.includes("Ayşe Demir") && appKaynak.includes("birebirEtiketHTML(o.ad, o.sinif || \"\")"); })());
-t("D23 öneri satırı kesilmez (button min-w-0 whitespace-normal break-words)", (() => { const l=ksSugListeHTML([{deger:"X",html:"<span>Y</span>"}],"ogrenci"); return l.includes("ks-sug-satir w-full min-w-0 text-left px-3 py-2 text-[13px] font-medium rounded-lg hover:bg-teal-50/70 cursor-pointer flex whitespace-normal break-words"); })());
-t("D23 öğretmen öneri satırı SINIFSIZ kalır (D19 kilidi; öğrenci satırından ayrı üretim)", (() => { const t=ksSugOgretmen("soner"); const o=ksSugOgrenci("ayşe"); const snf="text-[10px] font-medium text-slate-400"; return t.length>=1 && !t[0].html.includes(snf) && !t[0].html.includes("birebir-etiket") && o[0].html.includes(snf) && appKaynak.includes("ksSugSatirHTML(t.ad, null, false)"); })());
 t("D22 öneri popup'ı input hostuna in-flow absolute bağlı (top-full + relative host)", (() => { return (appKaynak.match(/function ksSugAnkraj\(/g) || []).length === 1 && appKaynak.includes("ks-sug-liste hidden absolute z-30 left-0 right-0 top-full") && appKaynak.includes('<div class="relative min-w-0"><input id="h-ogrenci"') && appKaynak.indexOf("position: fixed") === -1 && appKaynak.indexOf("ksSugPortal") === -1; })());
 
 /* temizlik */

@@ -203,8 +203,11 @@ export const elleVakaAdlari = {
     "D22 chip+banner formatter'dan (ad+sınıf; serbest metinde sınıf uydurulmaz)",
     "D21 grup paneli satırında sınıf yalnız formatter'dan BİR kez (ikinci sinifTag yok)",
     "D21 arama kontrolü kırpılmıyor (liste kapsayıcısı w-full + min-w-0, min-w-[280px] YOK)",
-    "D21 öneri satırları 13px/500 (ks-sug-satir + Eşleşme yok)",
+    "D21/D23 öneri satırları 13px/500 + kesme yok (ks-sug-satir + Eşleşme yok)",
     "D21 havuz kartı adı gorselAd ile normal biçimde (ham büyük harf DB adı render'da düzelir)",
+    "D23 öğrenci öneri satırı formatter'dan (gorselAd + gerçek sınıf; ham ad değeri korunur)",
+    "D23 öneri satırı kesilmez (button min-w-0 whitespace-normal break-words)",
+    "D23 öğretmen öneri satırı SINIFSIZ kalır (D19 kilidi; öğrenci satırından ayrı üretim)",
     "D22 öneri popup'ı input hostuna in-flow absolute bağlı (top-full + relative host)",
   ],
   "ks-istekten-grup.mjs": [

@@ -4218,32 +4218,33 @@ function ogrenciMesajMetni(ogrenciId) {
       var og = DB.ogretmenler.find(function (x) { return x.id === l.ogretmenId; });
       if (og) ogrAd = og.ad;
     }
-    /* D25-SABLON-YAMASI: birebir öğrenci mesajı onaylı yeni şablon —
-       1. {DERS} ({OGRETMEN})
-       {TARİH} {GÜN}
-       {SAAT-BAS} - {SAAT-BİT}
-       Konu satırı, grup üye satırı ve ders-başı durum cümlesi bilinçli olarak KALDIRILDI;
-       kapanış tek paragraf bloğu + imza. Emoji YOK; slot numarası YOK — saat aralığı
-       KISA_KOD'dan gerçek başlangıç-bitiş olarak üretilir. saatEtiket() DEĞİŞMEDİ. */
-    var ogrAd = l.ogretmenAd;
-    if (!ogrAd && l.ogretmenId && DB.ogretmenler) {
-      var og = DB.ogretmenler.find(function (x) { return x.id === l.ogretmenId; });
-      if (og) ogrAd = og.ad;
-    }
-    var kk = KISA_KOD.filter(function (x) { return x.no === ksKodOf(l.saat); })[0];
-    var saatAralik = kk ? kk.b + " - " + kk.e : String(l.saat || "");
-    return (i + 1) + ". " + D.ad + (ogrAd ? " (" + ogrAd + ")" : "") +
-      "\n" + fmtTR(l.tarih) + " " + GUNLER[dowIdx(l.tarih)] +
-      "\n" + saatAralik;
+    var satir = (i + 1) + ") " + D.ad + (ogrAd ? " (" + ogrAd + ")" : "") + (l.konu ? " — " + l.konu : "");
+    /* GRUP: grup dersinde tüm üyeler mesajda listelenir (birebirde 👥 satırı yok) */
+    var uyeler = grupOgrenciAdlari(l);
+    var uyeSatiri = uyeler.length > 1 ? "\n   👥 " + uyeler.join(", ") : "";
+    var sab = (DB.ayarlar && DB.ayarlar.whatsappSablon && typeof DB.ayarlar.whatsappSablon === "object") ? DB.ayarlar.whatsappSablon : {};
+    function satirDeger(alan, varsayilan) { var v = sab[alan]; return (v == null ? "" : String(v)).trim() !== "" ? v : varsayilan; }
+    var durumCumlesi = l.durum === "tamamlandi"
+      ? satirDeger("tamamlandiSatir", "Bu tarih ve saatte birebir dersiniz yapıldı.")
+      : satirDeger("planliSatir", "Bu tarih ve saatte birebir dersiniz olacaktır.");
+    return satir + uyeSatiri + "\n   📅 " + fmtTR(l.tarih) + " " + GUNLER[dowIdx(l.tarih)] + " • " + saatEtiket(l.saat) + "\n" + durumCumlesi;
   });
-  /* D25: onaylı tek kapanış bloğu + imza; emoji yok. */
-  var kapanis =
-    "Bu dersler, eksiklerini tamamlaman ve hedeflerine biraz daha yaklaşman için planlandı.\n" +
-    "Ders saatinden birkaç dakika önce hazır olman yeterli. Anlamadığın veya zorlandığın konuları öğretmeninle paylaşmayı unutma.\n" +
-    "Sen çalışmaya devam et, biz de bu süreçte yanında olalım.\n" +
-    "Güzel çalışmalar, başarılar dileriz.\n" +
-    "— FORMÜL KURS REHBERLİK SERVİSİ";
-  return "Değerli öğrencimiz " + o.ad + ",\nBirebir ders programın aşağıdaki gibidir:\n\n" + satirlar.join("\n") + "\n\n" + kapanis;
+  /* WA-SABLON-YAMASI: metin parçaları DB.ayarlar.whatsappSablon'dan; boşsa bugünkü varsayılan byte-birebir. */
+  var sab = (DB.ayarlar && DB.ayarlar.whatsappSablon && typeof DB.ayarlar.whatsappSablon === "object") ? DB.ayarlar.whatsappSablon : {};
+  function sabDeger(alan, varsayilan) { var v = sab[alan]; return (v == null ? "" : String(v)).trim() !== "" ? v : varsayilan; }
+  var giris = sabDeger("giris", "Merhaba " + o.ad + "! 👋");
+  var baslik = sabDeger("baslik", "📚 " + pencereAdi() + " birebir ders programın:");
+  var kapanis = sabDeger("kapanis", "Derslerimize zamanında katılmayı unutma. İyi çalışmalar! 🎓");
+  var imza = sabDeger("imza", "— YKS Birebir Takip");
+  var dersSayisi = satirlar.length;
+  function yerTutucu(metin) {
+    return String(metin).replace(/\{(ogrenciAdi|pencereAdi|dersSayisi)\}/g, function (_, ad) {
+      if (ad === "ogrenciAdi") return o.ad;
+      if (ad === "pencereAdi") return pencereAdi();
+      return String(dersSayisi);
+    });
+  }
+  return yerTutucu(giris) + "\n\n" + yerTutucu(baslik) + "\n\n" + satirlar.join("\n") + "\n\n" + yerTutucu(kapanis) + "\n" + yerTutucu(imza);
 }
 /* WA-ALICI-YAMASI: modal-genel alici secici (bellek içi state — localStorage'a YAZILMAZ).
    Tek çözücü waAliciBilgisi: ogrenci → o.tel | anne → o.anneTel | baba → o.babaTel.

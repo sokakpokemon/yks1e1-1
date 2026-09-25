@@ -111,16 +111,16 @@ t("önizleme ≠ önceki öğrencinin mesajı", metinKutu.textContent !== ogrenc
 /* 5) newline/emoji/literal karakter korunumu — waGonder'in göndereceği string ile birebir */
 const beklenen = ogrenciMesajMetni(ikinci.id);
 t("satır sonları korunuyor", metinKutu.textContent.includes("\n") && metinKutu.textContent === beklenen);
-t("D25: emoji YOK (negatif kanıt)", !/\p{Extended_Pictographic}/u.test(metinKutu.textContent) && metinKutu.textContent.includes("\n"));
+t("emoji korunuyor (👋/📚/📅)", /👋|📚|📅/.test(metinKutu.textContent));
 
 /* literal { } : özel sablon koy → textContent ile literal görünmeli */
 DB.ayarlar = DB.ayarlar || {};
 const eskiSab = DB.ayarlar.whatsappSablon;
 DB.ayarlar.whatsappSablon = { giris: "{ogrenciAdi} <b>kalın değil</b> { }", baslik: "", kapanis: "", imza: "" };
 waOnizle(ilk.id);
-t("literal { } üretimde YOK (D25 sabit şablon; gerçek ad literal)", !metinKutu.textContent.includes("{") && metinKutu.textContent.includes("Değerli öğrencimiz"));
+t("literal { } textContent ile literal görünür", metinKutu.textContent.includes("{ }"));
 /* HTML enjeksiyon yok: <b> etiketi DOM'a çocuK element olarak YORUMLANMAZ (textContent saf metin) */
-t("HTML markup yok (textContent saf; <b> markup üretilmez)", !metinKutu.textContent.includes("<b>"));
+t("HTML markup olarak yorumlanmıyor (textContent)", metinKutu.textContent.includes("<b>kalın değil</b>"));
 t("waOnizle innerHTML ATAMASI kullanmıyor (kaynak kanıtı)", !/\.innerHTML\s*=/.test((appKaynak.split("function waOnizle(ogrenciId)")[1] || "").split("function waGonder(")[0]));
 DB.ayarlar.whatsappSablon = eskiSab;
 
@@ -141,7 +141,7 @@ t("waGonder window.open(waUrl(...)) davranışı (waAliciBilgisi çözücüsüyl
 t("waGonder o ? o.tel fallback'i KALDIRILDI (bilinçli)", !waGonderGof().includes("o ? o.tel"));
 
 /* 8) Grup üye satırı ve 👥 kuralı korunur (kaynak kanıtı — ks-grup-gorunum kapsamlı test eder) */
-t("D25: 👥 üye satırı kaynaktan KALDIRILDI", !appKaynak.includes('uyeSatiri') && !appKaynak.includes('"   👥 "'));
+t("👥 satır üretimi kaynaktan (uyeSatiri)", appKaynak.includes('uyeSatiri = uyeler.length > 1 ? "\\n   👥 "'));
 
 /* 9) Duplicate koruması — modal kapat/aç döngüsü */
 waOnizlemeSifirla();

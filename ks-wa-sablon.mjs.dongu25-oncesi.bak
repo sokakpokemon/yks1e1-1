@@ -1,11 +1,11 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 49) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-wa-sablon.mjs kosan=" + __kosan + " beklenen=49"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-wa-sablon.mjs:" + __kosan + ":49"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 47) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-wa-sablon.mjs kosan=" + __kosan + " beklenen=47"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-wa-sablon.mjs:" + __kosan + ":47"); } });
 /* ks-wa-sablon.mjs — WhatsApp Mesaj Şablonu süiti
    Doğruladıkları:
-    1) D25 sabit şablon: referans üreticiyle byte-birebir (whatsappSablon alanları yoksayılır).
-    2) Özel şablon alanları YOKSAYILIR (D25 bilinçli sözleşme değişikliği); yer tutucu üretimde YOK.
-    3) saveDB/loadDB + yedek round-trip sonrası mesaj stabil (şablon artık sabit).
-    4) Birebirde VE grupta 👥 yok (D25: üye satırı kaldırıldı); ders listesi koddan üretiliyor.
+    1) Boş ayarla mesaj bugünkü varsayılanla byte-birebir aynı.
+    2) Custom baslik/giris/kapanis/imza uygulanıyor; yer tutucular doğru; bilinmeyen yer tutucu literal.
+    3) saveDB/loadDB sonrası şablon kalıcı; yedek round-trip kayıpsız.
+    4) Birebir mesajda 👥 yok; grupta tüm üyeler + 👥 var; ders listesi koddan üretiliyor.
     5) Ayarlar arayüzü: bölüm + 4 alan + kaydet; tekrar render'da duplicate yok.
     6) Tek localStorage anahtarı (yeni anahtar yok); DB.ayarlar.whatsappSablon tek şablon nesnesi.
     7) Önceki süit sayılarında düşüş yok (test.mjs'te tam 1 kez). */
@@ -43,7 +43,7 @@ const t = (name, cond, extra) => { __kosan++;  console.log((cond ? "  ✓" : "  
 let P;
 let DB; /* normalize round-trip'lerde yeniden atanabilir */
 try {
-P = new Function(scripts + "\n  return { DB, ui, saveDB, loadDB, normalize, ogrenciMesajMetni, ayarTab, waSablonKaydet, waSablonKartHTML, waSablonVarsayilan, penceredeDersler, pencereAdi, dersMap: () => DERS, gunlerArr: () => GUNLER, fmtTRfn: () => fmtTR, dowIdxFn: () => dowIdx, saatEtiketfn: () => saatEtiket, grupOgrenciAdlarifn: () => grupOgrenciAdlari, kisaKodArr: () => KISA_KOD, ksKodOf: () => ksKodOf };")();
+P = new Function(scripts + "\n  return { DB, ui, saveDB, loadDB, normalize, ogrenciMesajMetni, ayarTab, waSablonKaydet, waSablonKartHTML, waSablonVarsayilan, penceredeDersler, pencereAdi, dersMap: () => DERS, gunlerArr: () => GUNLER, fmtTRfn: () => fmtTR, dowIdxFn: () => dowIdx, saatEtiketfn: () => saatEtiket, grupOgrenciAdlarifn: () => grupOgrenciAdlari };")();
 DB = P.DB;
   t("boot hatasız", true);
 } catch (e) {
@@ -64,16 +64,11 @@ const ogr = DB.ogrenciler.find((o) => o.ad === "Ayşe Demir");
 const ogr2 = DB.ogrenciler.find((o) => o.ad === "Zeynep Kaya");
 t("seed öğrenci var", !!ogr);
 
-/* D25-SABLON-YAMASI referans biçim (app.js ogrenciMesajMetni aynası):
-   Değerli öğrencimiz {AD},
-   Birebir ders programın aşağıdaki gibidir:
-
-   1. {DERS} ({OGRETMEN})
-   {TARİH} {GÜN}
-   {SAAT-BAS} - {SAAT-BİT}
-
-   <kapanış bloğu + — FORMÜL KURS REHBERLİK SERVİSİ>
-   Emoji YOK; slot numarası YOK; konu/üye/durum satırı YOK. */
+/* WA-DURUM-YAMASI sonrası yeni referans biçim:
+   1) {DERS} ({OGRETMEN}) — {KONU}   (konu boşsa bölüm gizlenir)
+      👥 {Ad1, Ad2}                  (yalnız grup)
+   📅 {tarih} {gün} • {saat}         (öğretmen adı YOK)
+   durum cümlesi (planliSatir/tamamlandiSatir opsiyonel; boşsa varsayılan) */
 const referansMetin = (ogrenciId) => {
   const o = DB.ogrenciler.find((s) => s.id === ogrenciId);
   const liste = P.penceredeDersler().filter((l) => (l.ogrenciId === o.id || l.ogrenciAd === o.ad) && l.durum !== "iptal");
@@ -82,25 +77,25 @@ const referansMetin = (ogrenciId) => {
   const GUNLER = P.gunlerArr();
   const fmtTR = P.fmtTRfn();
   const dowIdx = P.dowIdxFn();
-  const KISA = P.kisaKodArr();
-  const ksKodOf = P.ksKodOf();
+  const saatEtiket = P.saatEtiketfn();
+  const grupOgrenciAdlari = P.grupOgrenciAdlarifn();
+  const sab = (DB.ayarlar && DB.ayarlar.whatsappSablon && typeof DB.ayarlar.whatsappSablon === "object") ? DB.ayarlar.whatsappSablon : {};
+  const satirDeger = (alan, varsayilan) => { const v = sab[alan]; return (v == null ? "" : String(v)).trim() !== "" ? v : varsayilan; };
   const satirlar = liste.map((l, i) => {
     const D = DERS[l.dersId] || DERS.tur;
     let ogrAd = l.ogretmenAd;
     if (!ogrAd && l.ogretmenId && DB.ogretmenler) { const og = DB.ogretmenler.find((x) => x.id === l.ogretmenId); if (og) ogrAd = og.ad; }
-    const kk = KISA.filter((x) => x.no === ksKodOf(l.saat))[0];
-    const saatAralik = kk ? kk.b + " - " + kk.e : String(l.saat || "");
-    return (i + 1) + ". " + D.ad + (ogrAd ? " (" + ogrAd + ")" : "") + "\n" + fmtTR(l.tarih) + " " + GUNLER[dowIdx(l.tarih)] + "\n" + saatAralik;
+    let satir = (i + 1) + ") " + D.ad + (ogrAd ? " (" + ogrAd + ")" : "") + (l.konu ? " — " + l.konu : "");
+    const uyeler = grupOgrenciAdlari(l);
+    if (uyeler.length > 1) satir += "\n   👥 " + uyeler.join(", ");
+    satir += "\n   📅 " + fmtTR(l.tarih) + " " + GUNLER[dowIdx(l.tarih)] + " • " + saatEtiket(l.saat) + "\n";
+    satir += l.durum === "tamamlandi"
+      ? satirDeger("tamamlandiSatir", "Bu tarih ve saatte birebir dersiniz yapıldı.")
+      : satirDeger("planliSatir", "Bu tarih ve saatte birebir dersiniz olacaktır.");
+    return satir;
   });
-  return "Değerli öğrencimiz " + o.ad + ",\nBirebir ders programın aşağıdaki gibidir:\n\n" + satirlar.join("\n") + "\n\n" + D25_KAPANIS;
+  return "Merhaba " + o.ad + "! 👋\n\n📚 " + P.pencereAdi() + " birebir ders programın:\n\n" + satirlar.join("\n") + "\n\nDerslerimize zamanında katılmayı unutma. İyi çalışmalar! 🎓\n— YKS Birebir Takip";
 };
-
-const D25_KAPANIS =
-  "Bu dersler, eksiklerini tamamlaman ve hedeflerine biraz daha yaklaşman için planlandı.\n" +
-  "Ders saatinden birkaç dakika önce hazır olman yeterli. Anlamadığın veya zorlandığın konuları öğretmeninle paylaşmayı unutma.\n" +
-  "Sen çalışmaya devam et, biz de bu süreçte yanında olalım.\n" +
-  "Güzel çalışmalar, başarılar dileriz.\n" +
-  "— FORMÜL KURS REHBERLİK SERVİSİ";
 
 /* Ders bir hasar görmesin diye grup dersini kendi kayıtla kuracağız; önce birebir testleri */
 
@@ -113,10 +108,8 @@ const r0 = referansMetin(ogr.id);
 t("boş ayarla bugünkü default byte-birebir", m0 === r0, JSON.stringify({ m0: m0 && m0.slice(0, 60), r0: r0 && r0.slice(0, 60) }));
 const m1 = ogrenciMesajMetni(ogr.id);
 t("boş alanlı şablon nesnesi de varsayılan", m1 === r0);
-t("D25 tam şablon: giriş + numaralı ders + saat aralığı", m1.startsWith("Değerli öğrencimiz " + ogr.ad + ",\nBirebir ders programın aşağıdaki gibidir:\n\n1. ") && /\d{2}\.\d{2}\.\d{4} \w+\n\d{2}:\d{2} - \d{2}:\d{2}/.test(m1));
 DB.ayarlar = DB.ayarlar || {}; DB.ayarlar.whatsappSablon = { baslik: "", giris: null, kapanis: undefined, imza: "" };
 t("null/undefined alanlarda da varsayılan", ogrenciMesajMetni(ogr.id) === r0);
-t("D25 negatif: emoji YOK ve eski slot biçimi 'N) ' YOK", !/\p{Extended_Pictographic}/u.test(m1) && !m1.split("\n").some((l) => /^\d+\) /.test(l)));
 DB.ayarlar = waSablonVarsayilan();
 
 /* ---- 2) Custom alanlar + yer tutucular ---- */
@@ -129,26 +122,26 @@ DB.ayarlar = DB.ayarlar || {}; DB.ayarlar.whatsappSablon = {
   imza: "{ogrenciAdi} için — Kurum",
 };
 const m2 = ogrenciMesajMetni(ogr.id);
-t("özel baslik yoksayılır (D25 sabit şablon)", m2 === r0);
-t("özel giris yoksayılır", !m2.includes("Sevgili"));
-t("özel kapanış yoksayılır", !m2.includes("Görüşmek üzere"));
-t("özel imza yoksayılır", !m2.includes("Kurum"));
-t("imza = FORMÜL KURS REHBERLİK SERVİSİ", m2.trimEnd().endsWith("— FORMÜL KURS REHBERLİK SERVİSİ"));
-t("eski varsayılan metin parçaları yok", !m2.includes("Merhaba") && !m2.includes("İyi çalışmalar"));
+t("custom başlık uygulanıyor", m2.includes("Program (" + dersler.length + " ders) — " + P.pencereAdi()));
+t("custom giriş uygulanıyor", m2.includes("Sevgili " + ogr.ad + ","));
+t("custom kapanış uygulanıyor", m2.includes("Görüşmek üzere " + ogr.ad + "! ~ $ özel"));
+t("custom imza uygulanıyor", m2.includes("{ogrenciAdi} için — Kurum".replace("{ogrenciAdi}", ogr.ad)));
+t("imza satırı sonda", m2.trimEnd().endsWith(ogr.ad + " için — Kurum"));
+t("eski varsayılan metin parçaları yok", !m2.includes("Merhaba " + ogr.ad + "! 👋") && !m2.includes("İyi çalışmalar"));
 
 /* ---- 3) Bilinmeyen yer tutucu literal kalır ---- */
 console.log("3) Bilinmeyen yer tutucu:");
 DB.ayarlar = DB.ayarlar || {}; DB.ayarlar.whatsappSablon = { giris: "Merhaba {ogrenciAdSoyadi} {ogrenciAdi}!", baslik: "{bilinmeyen}", kapanis: "", imza: "" };
 const m3 = ogrenciMesajMetni(ogr.id);
-t("yer tutucu üretimde YOK (D25; çıktı gerçek ad içerir)", !m3.includes("{") && m3.includes(ogr.ad));
-t("yer tutucu şablonu çıktıyı değiştirmez (sabit şablon)", m3 === r0);
+t("bilinmeyen yer tutucu literal kalır", m3.includes("{ogrenciAdSoyadi}") && m3.includes("{bilinmeyen}"));
+t("bilinen yer tutucu değişir", m3.includes("Merhaba {ogrenciAdSoyadi} " + ogr.ad + "!"));
 
 /* ---- 4) Ders listesi koddan üretilir; 👥 kuralları ---- */
 console.log("4) Ders listesi + 👥 koruması:");
 DB.ayarlar = DB.ayarlar || {}; DB.ayarlar.whatsappSablon = { giris: "ŞABLON-GIRIS", baslik: "ŞABLON-BASLIK", kapanis: "ŞABLON-KAPANIS", imza: "ŞABLON-IMZA" };
 const m4 = ogrenciMesajMetni(ogr.id);
-t("ders listesi satırları var (1. )", m4.includes("\n1. "));
-t("ders listesi şablona ALINMIYOR", !m4.includes("ŞABLON") || (m4.indexOf("ŞABLON-GIRIS") < m4.indexOf("\n1. ") && m4.indexOf("\n1. ") < m4.indexOf("ŞABLON-KAPANIS")));
+t("ders listesi satırları var (1) …", m4.includes("1) "));
+t("ders listesi şablona ALINMIYOR", !m4.includes("ŞABLON") || (m4.indexOf("ŞABLON-GIRIS") < m4.indexOf("1) ") && m4.indexOf("1) ") < m4.indexOf("ŞABLON-KAPANIS")));
 t("birebir mesajda 👥 YOK", !m4.includes("👥"));
 /* Grup dersi kur (pencere içinde: Ayşe'nin mevcut dersinden tarih/saat al) */
 const mevcutDers = penceredeDersler().find((l) => (l.ogrenciId === ogr.id || l.ogrenciAd === ogr.ad) && l.durum !== "iptal");
@@ -156,14 +149,14 @@ t("referans birebir ders bulundu (pencere)", !!mevcutDers);
 const grp = { id: "ks-wa-grup-test", ogrenciId: ogr.id, ogrenciAd: ogr.ad, ogrenciIds: [ogr2.id], dersId: "mat", konu: "Türev", ogretmenId: "", ogretmenAd: "TEST Ö", tarih: mevcutDers.tarih, saat: mevcutDers.saat, kod: mevcutDers.kod || "8", durum: "planlandi", olusturma: "2026-09-01", donemId: mevcutDers.donemId || DB.aktifDonemId };
 DB.dersler.push(grp); P.DB = DB;
 const m5 = ogrenciMesajMetni(ogr.id);
-t("grupta da 👥 YOK (D25: üye satırı kaldırıldı)", !m5.includes("👥"));
-t("grup dersi mesajda ders bölümü olarak VAR", m5.split("MATEMATİK").length - 1 >= 2 && m5.includes("1. MATEMATİK"));
+t("grupta 👥 satırı var", m5.includes("   👥 Ayşe Demir, Zeynep Kaya"));
+t("grupta tüm üye adları mesajda", m5.includes(ogr.ad) && m5.includes(ogr2.ad));
 /* Grup üyesi (2. öğrenci) KENDİ pencere dersinde grup sahibi olursa 👥 var (eski davranış) */
 const zDers = penceredeDersler().find((l) => (l.ogrenciId === ogr2.id || l.ogrenciAd === ogr2.ad) && l.durum !== "iptal");
 const grp2 = { ...zDers, id: "ks-wa-grup-test-2", ogrenciId: ogr2.id, ogrenciAd: ogr2.ad, ogrenciIds: [ogr.id], konu: "Zeynep Grup" };
 DB.dersler.push(grp2); P.DB = DB;
 const m6 = ogrenciMesajMetni(ogr2.id);
-t("grup sahibi üye mesajında 👥 YOK (D25)", !m6.includes("👥"));
+t("grup sahibi üye mesajında 👥 var (mevcut davranış)", m6.includes("👥 Zeynep Kaya, Ayşe Demir"));
 DB.dersler = DB.dersler.filter((l) => l.id !== grp2.id);
 DB.dersler = DB.dersler.filter((l) => l.id !== grp.id);
 t("grup test dersi kaldırıldı (temizlik)", !ogrenciMesajMetni(ogr.id).includes("👥"));
@@ -179,13 +172,13 @@ t("DB.ayarlar.whatsappSablon saveDB'ye yazıldı", kayitli.ayarlar && kayitli.ay
 const yuklenen = loadDB();
 DB = yuklenen || DB; P.DB = DB;
 const m7 = ogrenciMesajMetni(DB.ogrenciler.find((o) => o.ad === "Ayşe Demir").id);
-t("loadDB sonrası mesaj stabil (D25: şablon alanları yoksayılır)", m7 === r0);
+t("loadDB sonrası şablon kalıcı", m7.includes("KALICI-GIRIS") && m7.includes("KALICI-IMZA"));
 
 /* ---- 6) Yedek round-trip ---- */
 console.log("6) Yedek round-trip:");
 yedekRoundTrip();
 const m8 = ogrenciMesajMetni(DB.ogrenciler.find((o) => o.ad === "Ayşe Demir").id);
-t("round-trip sonrası mesaj stabil (D25 sabit şablon)", m8 === r0);
+t("round-trip'te şablon kayıpsız", m8.includes("KALICI-GIRIS") && m8.includes("KALICI-BASLIK") && m8.includes("KALICI-KAPANIS") && m8.includes("KALICI-IMZA"));
 /* Eski yedek (ayarlar yok) → varsayılan */
 delete DB.ayarlar;
 yedekRoundTrip();
@@ -222,10 +215,10 @@ t("kaydet localStorage'a yazdı (kalıcı)", store["yksOto_arsiv_v1"].includes("
 
 /* ---- 9) Kaynak kanıtları + süit kaydı ---- */
 console.log("9) Kaynak kanıtları:");
-t("D25-SABLON-YAMASI işareti app.js'te", appKaynak.includes("D25-SABLON-YAMASI"));
+t("WA-SABLON-YAMASI işareti app.js'te", appKaynak.includes("WA-SABLON-YAMASI"));
 t("listeMetni kaynakta 1 kez (dokunulmadı)", appKaynak.split("function listeMetni(").length - 1 === 1);
 t("waUrl/waGonder/waSatir/waKopyalaMesaj tanımlı", ["function waUrl(", "function waGonder(", "function waSatir(", "function waKopyalaMesaj("].every((n) => appKaynak.includes(n)));
-t("D25 saat aralığı KISA_KOD'dan (kaynakta)", appKaynak.includes('kk.b + " - " + kk.e') && !appKaynak.includes('"   👥 "'));
+t("👥 satır üretimi koddan (kaynakta)", appKaynak.includes('"\\n   👥 " + uyeler.join(", ")'));
 const suiteSayisi = testKaynak.split('"ks-wa-sablon.mjs"').length - 1;
 t("ks-wa-sablon.mjs test.mjs'te tam 1 kez", suiteSayisi === 1, String(suiteSayisi));
 const suites = (testKaynak.match(/const suites = \[(.*)\];/) || [])[1];

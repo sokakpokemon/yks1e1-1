@@ -143,7 +143,8 @@ ui.haftalikOgrtId = null;
 /* 6) WhatsApp metni: tüm grup üyeleri listelenir */
 console.log("6) WhatsApp / PNG:");
 const waGrup = ogrenciMesajMetni(ayse.id);
-t("grup üyesi mesajda tüm adlar", waGrup.includes("👥") && waGrup.includes(ayse.ad) && waGrup.includes(zeynep.ad) && waGrup.includes(emir.ad), waGrup);
+/* D25: üye satırı şablondan bilinçli kaldırıldı; üye adları artık WhatsApp mesajında listelenmez. */
+t("grup mesajı D25 sabit şablonla üretilir (üye satırı YOK)", typeof waGrup === "string" && !waGrup.includes("👥") && waGrup.includes("1. MATEMATİK"), waGrup && waGrup.slice(0, 120));
 const waTek = ogrenciMesajMetni(zeynep.id);
 t("birebir mesajda 👥 yok (eski metin)", !waTek.includes("👥"), waTek);
 

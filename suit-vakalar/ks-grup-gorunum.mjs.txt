@@ -19,7 +19,7 @@ grup hücresinde üye baş harfleri (ZK · EA)
 grup ders hücresinde TAM AD var, ders adı YOK
 birebir hücresinde baş harf satırı yok (eski)
 tablo çizildi
-grup üyesi mesajda tüm adlar
+grup mesajı D25 sabit şablonla üretilir (üye satırı YOK)
 birebir mesajda 👥 yok (eski metin)
 PNG grup satırında tüm adlar
 PNG birebir satırında tek ad (virgülle birleşme yok)

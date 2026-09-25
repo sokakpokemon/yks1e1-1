@@ -88,4 +88,4 @@ D17-9c PNG tarih/gün satırı büyütüldü (font-size:14px;font-weight:700)
 D17-9d öğretmen TEK-DERS kartı footer + marka KORUNDU (kapsam dışı)
 D17-10 öğrenci PNG kartı değişmedi (footer YOK + bento zemini + saatKisa)
 D17-11 saatEtiket AYNI ('8 · 15:30-16:10' üretir)
-D17-12 WA mesajında '8 · ' HÂLÂ VAR
+D17-12/D25 WA mesajında '8 · ' YOK + gerçek aralık VAR (saatEtiket D17-11 kilitli)

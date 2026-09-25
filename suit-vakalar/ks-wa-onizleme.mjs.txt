@@ -14,9 +14,9 @@ en az 2 öğrenci
 2. önizlemede ikinci panel YOK
 önizleme ≠ önceki öğrencinin mesajı
 satır sonları korunuyor
-emoji korunuyor (👋/📚/📅)
-literal { } textContent ile literal görünür
-HTML markup olarak yorumlanmıyor (textContent)
+D25: emoji YOK (negatif kanıt)
+literal { } üretimde YOK (D25 sabit şablon; gerçek ad literal)
+HTML markup yok (textContent saf; <b> markup üretilmez)
 waOnizle innerHTML ATAMASI kullanmıyor (kaynak kanıtı)
 waUrl formatı korunmuş
 encodeURIComponent aynı davranış
@@ -25,7 +25,7 @@ waKopyalaMesaj ogrenciMesajMetni'ni çağırıyor (kaynak)
 geciciKopyala değişmedi (kaynak)
 waGonder window.open(waUrl(...)) davranışı (waAliciBilgisi çözücüsüyle)
 waGonder o ? o.tel fallback'i KALDIRILDI (bilinçli)
-👥 satır üretimi kaynaktan (uyeSatiri)
+D25: 👥 üye satırı kaynaktan KALDIRILDI
 tekrar açılışta panel tam 1
 tekrar açılışta placeholder geri
 app.js'te waOnizle tek tanım

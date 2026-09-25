@@ -290,6 +290,6 @@ t("D17-9d öğretmen TEK-DERS kartı footer + marka KORUNDU (kapsam dışı)", (
 /* Koruma: öğrenci PNG + WA + saatEtiket */
 t("D17-10 öğrenci PNG kartı değişmedi (footer YOK + bento zemini + saatKisa)", (() => { sifirGun(); ekleBirebir({ id: "d17-ogr", saat: "15:30" }); const d = DB.dersler[DB.dersler.length - 1]; const h = dersKartiHTML(d); const v = dersKartiVeri(d); sifirGun(); return !h.includes("Bu kart YKS") && h.includes("background:#f4f6fa") && v.saatKisa === "15:30-16:10"; })());
 t("D17-11 saatEtiket AYNI ('8 · 15:30-16:10' üretir)", saatEtiket("15:30") === "8 · 15:30-16:10");
-t("D17-12 WA mesajında '8 · ' HÂLÂ VAR", (() => { sifirGun(); ekleBirebir({ id: "d17-wa", saat: "15:30" }); const f = ui.filtre; ui.filtre = "tumu"; const m = ogrenciMesajMetni(ogr.id); ui.filtre = f; sifirGun(); return !!m && m.includes("8 · 15:30-16:10"); })());
+t("D17-12/D25 WA mesajında '8 · ' YOK + gerçek aralık VAR (saatEtiket D17-11 kilitli)", (() => { sifirGun(); ekleBirebir({ id: "d17-wa", saat: "15:30" }); const f = ui.filtre; ui.filtre = "tumu"; const m = ogrenciMesajMetni(ogr.id); ui.filtre = f; sifirGun(); return !!m && !m.includes("8 · ") && m.includes("15:30 - 16:10"); })());
 
 process.exit(fail ? 1 : 0);

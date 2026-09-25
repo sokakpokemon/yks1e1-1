@@ -3,27 +3,29 @@ seed öğrenci var
 ayarlar yokken mesaj üretiliyor (geriye dönük)
 boş ayarla bugünkü default byte-birebir
 boş alanlı şablon nesnesi de varsayılan
+D25 tam şablon: giriş + numaralı ders + saat aralığı
 null/undefined alanlarda da varsayılan
-custom başlık uygulanıyor
-custom giriş uygulanıyor
-custom kapanış uygulanıyor
-custom imza uygulanıyor
-imza satırı sonda
+D25 negatif: emoji YOK ve eski slot biçimi 'N) ' YOK
+özel baslik yoksayılır (D25 sabit şablon)
+özel giris yoksayılır
+özel kapanış yoksayılır
+özel imza yoksayılır
+imza = FORMÜL KURS REHBERLİK SERVİSİ
 eski varsayılan metin parçaları yok
-bilinmeyen yer tutucu literal kalır
-bilinen yer tutucu değişir
-ders listesi satırları var (1) …
+yer tutucu üretimde YOK (D25; çıktı gerçek ad içerir)
+yer tutucu şablonu çıktıyı değiştirmez (sabit şablon)
+ders listesi satırları var (1. )
 ders listesi şablona ALINMIYOR
 birebir mesajda 👥 YOK
 referans birebir ders bulundu (pencere)
-grupta 👥 satırı var
-grupta tüm üye adları mesajda
-grup sahibi üye mesajında 👥 var (mevcut davranış)
+grupta da 👥 YOK (D25: üye satırı kaldırıldı)
+grup dersi mesajda ders bölümü olarak VAR
+grup sahibi üye mesajında 👥 YOK (D25)
 grup test dersi kaldırıldı (temizlik)
 tek localStorage anahtarı (yeni anahtar YOK)
 DB.ayarlar.whatsappSablon saveDB'ye yazıldı
-loadDB sonrası şablon kalıcı
-round-trip'te şablon kayıpsız
+loadDB sonrası mesaj stabil (D25: şablon alanları yoksayılır)
+round-trip sonrası mesaj stabil (D25 sabit şablon)
 eski yedek (ayarlar yok) → varsayılan çalışır
 'WhatsApp Mesaj Şablonu' bölümü var
 bölüm tam 1 kez (duplicate yok)
@@ -39,9 +41,9 @@ ayarTab 2. render'da NaN yok
 kaydet DB.ayarlar.whatsappSablon'a yazar
 kaydet diğer DB alanlarına dokunmaz (öğretmen/öğrenci/ders sayısı)
 kaydet localStorage'a yazdı (kalıcı)
-WA-SABLON-YAMASI işareti app.js'te
+D25-SABLON-YAMASI işareti app.js'te
 listeMetni kaynakta 1 kez (dokunulmadı)
 waUrl/waGonder/waSatir/waKopyalaMesaj tanımlı
-👥 satır üretimi koddan (kaynakta)
+D25 saat aralığı KISA_KOD'dan (kaynakta)
 ks-wa-sablon.mjs test.mjs'te tam 1 kez
 mevcut 34 süit listede korundu

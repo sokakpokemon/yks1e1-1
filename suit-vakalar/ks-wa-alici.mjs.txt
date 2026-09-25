@@ -32,11 +32,10 @@ waGonder kaynakta a.telefon çözücüsü var
 waSatir gövdesi değişmedi (tel/anneTel/babaTel referansı yok)
 kopyala gövdesinde telefon/etiket YOK
 kopyala yalnız ogrenciMesajMetni + kopyalaMetin
-planlı varsayılan cümle kaynakta
-tamamlandı varsayılan cümle kaynakta
-👥 grup satırı kaynakta
+D25: durum cümlesi kaynaktan KALDIRILDI
+D25: üye satırı kaynaktan KALDIRILDI
 waAc iptal filtresi korunur
-parantezli öğretmen adı korunur
+D25 numaralı başlık + saat aralığı korunur
 yeni localStorage key eklenmedi
 alıcı değişimlerinde localStorage hâlâ aynı
 anneTel değerleri değişmedi

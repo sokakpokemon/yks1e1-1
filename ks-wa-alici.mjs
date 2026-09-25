@@ -1,5 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 47) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-wa-alici.mjs kosan=" + __kosan + " beklenen=47"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-wa-alici.mjs:" + __kosan + ":47"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 46) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-wa-alici.mjs kosan=" + __kosan + " beklenen=46"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-wa-alici.mjs:" + __kosan + ":46"); } });
 /* ks-wa-alici.mjs — WA-ALICI-YAMASI süiti
    Doğruladıkları:
     1) #waAlici select modal-genel TEK (id tam 1 kez; waSatir/Öğrenciler sekmesi onu KULLANMAZ).
@@ -176,11 +176,11 @@ t("kopyala yalnız ogrenciMesajMetni + kopyalaMetin", kopyaG.includes("ogrenciMe
 
 /* 10) Mesaj formatı / durum cümleleri / grup / iptal */
 console.log("10) Geriye dönüklük:");
-t("planlı varsayılan cümle kaynakta", appKaynak.includes('satirDeger("planliSatir", "Bu tarih ve saatte birebir dersiniz olacaktır.")'));
-t("tamamlandı varsayılan cümle kaynakta", appKaynak.includes('satirDeger("tamamlandiSatir", "Bu tarih ve saatte birebir dersiniz yapıldı.")'));
-t("👥 grup satırı kaynakta", appKaynak.includes('"\\n   👥 " + uyeler.join(", ")'));
+/* D25: durum cümleleri ve üye satırı bilinçli kaldırıldı; numaralı başlık + saat aralığı kaynakta */
+t("D25: durum cümlesi kaynaktan KALDIRILDI", !appKaynak.includes('satirDeger("planliSatir"') && !appKaynak.includes('satirDeger("tamamlandiSatir"'));
+t("D25: üye satırı kaynaktan KALDIRILDI", !appKaynak.includes('"   👥 "'));
 t("waAc iptal filtresi korunur", /penceredeDersler\(\)\.filter\(function \(l\) \{ return l\.durum !== "iptal"; \}\)/.test(appKaynak));
-t("parantezli öğretmen adı korunur", appKaynak.includes('var satir = (i + 1) + ") " + D.ad + (ogrAd ? " (" + ogrAd + ")" : "")'));
+t("D25 numaralı başlık + saat aralığı korunur", appKaynak.includes('(i + 1) + ". " + D.ad + (ogrAd ? " (" + ogrAd + ")" : "")') && appKaynak.includes('kk.b + " - " + kk.e'));
 
 /* 11) localStorage: yeni key YOK, anne/baba tel değişmez */
 console.log("11) localStorage + DB alanları:");

@@ -1,35 +1,38 @@
 boot hatasız
 seed öğrenciler var
 mesaj üretildi
-parantezli öğretmen adı
-satır biçimi: DERS (OGRT) — KONU
+numaralı ders başlığı: 1. KİMYA (OGRT)
+D25: konu satırı YOK
 1) tarih satırında öğretmen adı YOK
-1) tarih satırında gün + saat etiketi
-planlı cümle (2 kez: wd-1 + wd-3 grup)
-tamamlandı cümle (1 kez: wd-2)
-eski '✓ Tamamlandı' işareti YOK
-2) tamamlandı: tarih → cümle sırası
-3) grup dersi parantezli öğretmen (KİMYA)
-grup 👥 satırı + tüm üyeler
+1) tarih satırı GÜN içerir + saat satırı gerçek aralık
+kapanış bloğu tam 1 kez (D25: durum cümlesi YOK)
+imza son satır
+D25: 'Bu tarih ve saatte' cümlesi YOK
+2) blok düzeni: tarih + saat; cümle yok
+3) grup dersi numaralı başlık (KİMYA)
+D25: grupta da 👥 YOK
 birebir derslerde 👥 YOK
 grupta öğretmen tarih satırında YOK
 iptal ders öğrencinin mesajında YOK → null
-Ayşe mesajında iptal konusu YOK
+Ayşe mesajında iptal dersi YOK (BİYOLOJİ yok)
+D25: emoji YOK (negatif kanıt)
+D25: iptal filtresi kaynakta korunur (durum !== 'iptal')
 grup üyesi listede ama iptal dersi gösterilmiyor
 önizleme metni = ogrenciMesajMetni çıktısı (birebir)
 boş telefonda waGonder engellenir (window.open yok)
-waGonder waUrl metni = ogrenciMesajMetni
+waGonder waUrl metni = ogrenciMesajMetni (TEK-KAYNAK şablonu yoksayıldı)
 waKopyalaMesaj metni = ogrenciMesajMetni
 önizleme=gonderme (waUrl query birebir)
-boş ayar → varsayılan planlı cümle
-boş ayar → varsayılan tamamlandı cümle
-özel planliSatir uygulanır
-özel tamamlandiSatir uygulanır
-özel ayarla varsayılan cümleler YOK
-planliSatir/tamamlandiSatir yer tutucu desteği (kaynakta satirDeger yolu)
-konu boş → bölüm gizlenir (— yok)
-konu boş → parantezli öğretmen kalır
+boş ayar → D25 kapanış bloğu
+boş ayar → durum cümlesi YOK
+özel planliSatir yoksayılır
+özel tamamlandiSatir yoksayılır
+özel ayar mesajı boş ayarla birebir aynı
+D25 saat aralığı kaynağı (KISA_KOD b - e) app.js'te
+konu mesajda YOK (Kronoloji)
+parantezli öğretmen kalır (konu olsa da olmasa da)
+konulu ders D25 blok düzeninde (başlık+tarih+saat)
 tek localStorage anahtarı yksOto_arsiv_v1
-WA-DURUM-YAMASI işareti app.js'te
+D25-SABLON-YAMASI işareti app.js'te
 ks-wa-durum.mjs test.mjs'te tam 1 kez
 süit sayısı düşmüyor (≥38)

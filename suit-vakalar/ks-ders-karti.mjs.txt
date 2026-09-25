@@ -13,7 +13,7 @@ D16 kart SAAT alanı slot-numarasız: '15:30-16:10' VAR
 D16 kart SAAT alanında '8 · ' öneki YOK
 D16 öğrenci kartı HTML'inde footer metni YOK
 D16 öğrenci kartı SAAT kutusunda '8 · ' YOK ve '15:30-16:10' VAR
-D16 WA mesajında '8 · 15:30-16:10' HÂLÂ VAR
+D16/D25 WA mesajında slot numarası YOK + gerçek aralık VAR
 D16 öğretmen tek-ders kartında footer + '8 · ' HÂLÂ VAR
 D17 öğretmen günlük PNG: footer YOK + Mola VAR + 12 kolon; TEK-DERS kartı footer + '8 · ' KORUNDU
 D16 fallback: KISA_KOD dışı saat → String(saat)

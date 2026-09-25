@@ -3200,6 +3200,83 @@ kontrolüdür — havuz/istek kartlarında ad-soyad + sınıf sade chip içinde,
 
 Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önbellek atlamalı yenileme) yapın.
 
+## DÖNGÜ-25 — BİREBİR ÖĞRENCİ WHATSAPP ŞABLONU (Uygulandı; son kabul Ctrl+Shift+R görsel kontrolü)
 
+### Keşif (salt-okuma kanıtları)
+- Birebir mesaj üreticisi TEK nokta: ogrenciMesajMetni (app.js:4200). İptal filtresi app.js:4204
+  (`l.durum !== "iptal"`); saat kaynağı eski şablonda saatEtiket(l.saat) (app.js:101-105) idi.
+- waOnizle (app.js:4352, metin üretimi :4360) · waGonder (:4376-4377) · waKopyalaMesaj (:4393-4394)
+  ÜÇÜ de aynı üreticiyi çağırır → yeni şablon otomatik üç akışta göründü; ikinci metin kaynağı yok.
+- Öğretmen/grup mesajları AYRI akış (waAliciBilgisi "ogretmen" yolları app.js:4615/4838; grup durumu
+  :4505) — bu üreticiyi KULLANMAZ, DEĞİŞMEDİ. PNG kartları (app.js:4411+) DEĞİŞMEDİ.
 
+### Uygulama (app.js yalnız ogrenciMesajMetni gövdesi; saatEtiket() DEĞİŞMEDİ)
+- Yeni şablon (D25-SABLON-YAMASI, app.js:4211-4247): "Değerli öğrencimiz {AD},\nBirebir ders programın
+  aşağıdaki gibidir:\n\n" + her ders "N. DERS (ÖĞRETMEN)\nTARİH GÜN\nSAAT-BAS - SAAT-BİT" +
+  kapanış bloğu (4 cümle) + "\n— FORMÜL KURS REHBERLİK SERVİSİ".
+- Saat aralığı KISA_KOD'dan gerçek başlangıç-bitiş: `kk.b + " - " + kk.e` (app.js:4243-4244);
+  slot numarası YOK, emoji YOK, konu satırı/üye satırı/durum cümlesi bilinçli KALDIRILDI.
+- whatsappSablon ayar alanları (giris/baslik/kapanis/imza/planliSatir/tamamlandiSatir) artık
+  YOKSAYILIR (sabit şablon) — bilinçli sözleşme değişikliği; DB alanı ve saveDB/localStorage
+  davranışı DOKUNULMADI (salt okunur bırakıldı).
+- İptal filtresi, ad/ders/öğretmen/tarih/gün bilgileri KORUNDU. saatEtiket() ve diğer tüm çağrıları
+  (PNG tablosu :4920 vb.) birebir aynı.
 
+### Test (gerçek koşumdan; silme/gevşetme YOK; her değişiklik dosya:satır + gerekçe)
+| Dosya:satır | Eski ad → Yeni ad | Gerekçe |
+|---|---|---|
+| ks-wa-sablon.mjs:68-97 | WA-DURUM referans üretici (kişisel şablonlu) → D25 sabit şablon aynası | üretici app.js ile byte-birebir doğrulamaya devam eder |
+| ks-wa-sablon.mjs:120-129 | "boş alanlı şablon nesnesi" bloğu → +2 yeni: "D25 tam şablon (giriş+numara+saat aralığı)" ve "D25 negatif: emoji YOK + eski slot biçimi YOK" | tam şablon + emoji-yok yasası assertion'ı (talimat) |
+| ks-wa-sablon.mjs:130-136 | "custom başlık/giriş/kapanış/imza uygulanıyor" (4) → "özel alanlar yoksayılır (4) + imza=FORMÜL… + eski parçalar yok" | D25 bilinçli sözleşme: şablon alanları yoksayılır |
+| ks-wa-sablon.mjs:139-141 | "bilinmeyen/bilinen yer tutucu" (2) → "yer tutucu üretimde YOK + şablon çıktıyı değiştirmez" | sabit şablonda yer tutucu yolu kaldırıldı |
+| ks-wa-sablon.mjs:145-147 | "ders listesi (1) " → "(1. )" | numaralandırma biçimi "N. " |
+| ks-wa-sablon.mjs:152-159 | "grupta 👥 satırı var / grup sahibinde 👥 var" → "grupta da 👥 YOK / ders bölümü VAR" | D25: üye satırı kaldırıldı (birebirde ve grupta) |
+| ks-wa-sablon.mjs:169-171 | "loadDB sonrası şablon kalıcı / round-trip kayıpsız" → "mesaj stabil (şablon alanları yoksayılır)" | şablon sabit; kalıcılık mesaj stabilitesiyle doğrulanır |
+| ks-wa-sablon.mjs:221-222 | "WA-SABLON-YAMASI işareti" → "D25-SABLON-YAMASI işareti"; "👥 satır üretimi koddan" → "D25 saat aralığı KISA_KOD'dan (kk.b - kk.e)" | kaynak kanıtları yeni gerçekliğe |
+| ks-wa-durum.mjs:96-107 | "parantezli öğretmen / DERS(OGRT) — KONU" → "1. KİMYA (OGRT) numaralı başlık + konu YOK" | D25 başlık düzeni |
+| ks-wa-durum.mjs:109-117 | tarihSatiri: "📅 satırı" → "başlık→tarih→saat bloğu; gerçek aralık regex'i" | saat artık gerçek aralık |
+| ks-wa-durum.mjs:120-126 | "planlı cümle 2 kez / tamamlandı 1 kez / tarih→cümle sırası" → "kapanış bloğu tam 1 / imza son / Bu-tarih-ve-saatte YOK / blok düzeni" | durum cümlesi kaldırıldı; tek kapanış |
+| ks-wa-durum.mjs:128-135 | "grup 👥 satırı" → "grupta da 👥 YOK (D25)" | üye satırı kaldırıldı |
+| ks-wa-durum.mjs:139-142 | iptal: "Hücre konusu" → "BİYOLOJİ dersi" | mesajda konu hiç görünmediği için iptal kanıtı ders adıyla |
+| ks-wa-durum.mjs:6-bölüm | "planliSatir/tamamlandiSatir uygulanır (4)" → "yoksayılır (4) + iptal filtresi kaynakta + emoji YOK" | D25 sabit şablon; yeni negatif kanıtlar |
+| ks-wa-durum.mjs:7-bölüm | "konu boş → gizlenir (2)" → "konu hiç YOK (Kronoloji) + parantezli öğretmen kalır + blok düzeni" | konu tamamen kaldırıldı |
+| ks-wa-onizleme.mjs:114-118 | "emoji korunuyor" → "D25: emoji YOK (negatif)"; "literal { }" → "literal { } üretimde YOK"; "<b>" → "HTML markup yok" | D25 negatif kanıtları; textContent davranışı korundu |
+| ks-wa-onizleme.mjs:144 | "👥 satır üretimi kaynaktan" → "D25: üye satırı kaynaktan KALDIRILDI" | kaynak gerçekliği |
+| ks-wa-alici.mjs:179-183 | "planlı/tamamlandı cümle kaynakta / 👥 kaynakta / parantezli öğretmen korunur" → "D25: cümle+üye kaynaktan kaldırıldı / numaralı başlık+saat aralığı korunur" | kaynak kanıtları D25'e |
+| ks-ders-karti.mjs:127 | "D16 WA'da '8 · 15:30-16:10' HÂLÂ VAR" → "D16/D25 WA'da slot YOK + gerçek aralık VAR" | D25 saat biçimi (kart tarafı aynı kaldı) |
+| ks-ogrt-ders-karti.mjs:293 | "D17-12 WA'da '8 · ' HÂLÂ VAR" → "D17-12/D25 WA'da '8 · ' YOK + gerçek aralık VAR" | D25 saat biçimi; D17-11 saatEtiket kilidi KORUNDU |
+| ks-grup-gorunum.mjs:146 | "grup üyesi mesajda tüm adlar (👥)" → "grup mesajı D25 sabit şablonla üretilir (üye satırı YOK)" | D25 bilinçli kaldırım; PNG tarafı (:154) DEĞİŞMEDİ |
+- Süit Δ: ks-wa-sablon 47→49 (+2) · ks-wa-durum 35→38 (+3) · ks-wa-alici 47→46 (−1; 5 kaynak
+  kanıtı 4'e indi — bilinçli) · ks-wa-onizleme 36→36 (ad değişimi) · ks-grup-gorunum 51 (ad değişimi) ·
+  ks-ders-karti 101 (ad değişimi) · ks-ogrt-ders-karti 91 (ad değişimi).
+- Manifest beşlisi elle güncellendi: suit-manifest + elle-vaka-manifesti (sablon 49, durum 38,
+  alici 46) + donmuş suit-vakalar/*.txt (7 süit, koşum sırasıyla) + elle-vaka-adlari.mjs (aynı
+  sırayla). Toplam Σ 2346→2350.
+- Final: node test.mjs **2350/2350 OK, exit=0** · HAM Σ beşli **2350 BİREBİR** ·
+  statik-eksiksizlik **47/47 TAMLIK exit=0** · node --check app.js + ek-ders.js OK.
+
+### Mutasyon kanıtları (mutasyon-dongu25.mjs — YENİ; yalnız tmp kopya; canonical SHA birebir)
+5/5 PASS (kontrol süiti: ks-wa-durum; M4: ks-ogrt-ders-karti):
+  M1 eski slot-numaralı saatEtiket biçimi geri (saatAralik = saatEtiket(l.saat)) → kırmızı
+  M2 emoji ekleme (girişe 👋) → "D25: emoji YOK" kırmızı
+  M3 numaralandırma geri ("1. " → "1) ") → kırmızı
+  M4 saatEtiket() gövdesi değişir → D17-11 kırmızı (saatEtiket dışarıdan kilitli; kanıt ayrı süitte)
+  M5 iptal filtresi gevşetilir → "iptal filtresi kaynakta korunur" + davranış kırmızı
+  Restore: tmp rmSync; canonical app.js SHA önce/sonra BİREBİR (e89334a6…).
+
+### No-drift
+- app.js: 338.571 B · SHA e89334a6f6246e239b01426a6b51c01e4130243b5a724b5ee63bfdbe326e461f
+  (D24 final 9f9d3093… → D25 −500 B: şablon gövdesi; saatEtiket/PNG/öğretmen akışları aynı)
+- index.html: 22.708 B · SHA 244f61c87e84b3f43efc3326fcbf3b7950c981fa04fae077976b950318e6b403 — DEĞİŞMEDİ
+- Backups YAZMA ÖNCESİ alındı: app.js.dongu25-oncesi.bak (339.071 B · 9f9d3093…) ·
+  ks-wa-sablon.mjs.dongu25-oncesi.bak (15.435 B · db359273…) ·
+  ks-wa-onizleme.mjs.dongu25-oncesi.bak (10.496 B · 747515f7…) ·
+  ks-wa-durum.mjs.dongu25-oncesi.bak (12.982 B · cb759c1a…).
+- DB/seed · saveDB/localStorage anahtarları · öğretmen/grup mesaj akışları · PNG kartları ·
+  saatEtiket() · D19-D24 UI düzeltmeleri DEĞİŞMEDİ.
+
+### Kabul
+Son kabul WhatsApp önizlemesinin KULLANICI görsel kontrolü ile yapılır (Ctrl+Shift+R):
+önizleme + kopyalama + gönderme üçünde de yeni şablon; emoji yok; saat "13:00 - 13:40" biçiminde.
+
+Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önbellek atlamalı yenileme) yapın.

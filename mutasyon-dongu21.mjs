@@ -45,35 +45,36 @@ kos("ks-panel-secim.mjs",
                               '\'<div id="grup-panel-liste" class="mt-2 max-h-56 overflow-y-auto overflow-x-hidden rounded-xl border border-slate-200/70 bg-white divide-y divide-slate-100 min-w-[280px]">\'') },
   "kapsayıcı w-full min-w-0");
 
-/* M2: sınıf ikinci kez gösterilir (eski sinifTag geri eklenir) — ks-grup-gorunum formatter gövde mutasyonuyla "sınıf BİR kez" kirilir: formatter'a 2. sınıf spanı eklenir */
-kos("ks-panel-secim.mjs",
-  { "app.js": (s) => s.replace('return \'<span class="birebir-etiket inline-flex items-baseline gap-2 min-w-0 flex-wrap"><span class="text-[12px] font-semibold normal-case tracking-normal text-slate-800 whitespace-normal break-words leading-snug">\' + esc(gorselAd(ad)) + "</span>" + snfSpan + "</span>";',
-                              'return \'<span class="birebir-etiket inline-flex items-baseline gap-2 min-w-0 flex-wrap"><span class="text-[12px] font-semibold normal-case tracking-normal text-slate-800 whitespace-normal break-words leading-snug">\' + esc(gorselAd(ad)) + "</span>" + snfSpan + \'<span class="text-[10px] font-bold text-slate-300 shrink-0">\' + esc(sinif || "") + "</span>" + "</span>";') },
-  "liste satırı tam ad + sınıf");
-
-/* M3: havuz kartı adı ham büyük harfe döner (formatter yerine ham esc) */
+/* M2: sınıf ikinci kez gösterilir — grup paneli satırına eski ikinci sinifTag geri eklenir;
+   D21 'sınıf yalnız BİR kez' assertion'ı (gerçek grupPanelListeHTML DOM) kırmızıya düşer */
 kos("ks-grup-gorunum.mjs",
-  { "app.js": (s) => s.replace("return '<span class=\"birebir-etiket inline-flex items-baseline gap-2 min-w-0 flex-wrap\"><span class=\"text-[12px] font-semibold normal-case tracking-normal text-slate-800 whitespace-normal break-words leading-snug\">' + esc(gorselAd(ad)) + \"</span>\" + snfSpan + \"</span>\";",
-                              "return '<span class=\"birebir-etiket inline-flex items-baseline gap-2 min-w-0 flex-wrap\"><span class=\"text-[12px] font-semibold normal-case tracking-normal text-slate-800 whitespace-normal break-words leading-snug\">' + esc(ad) + \"</span>\" + snfSpan + \"</span>\";") },
-  "gorselAd('SONER AÇIKGÖZ')");
+  { "app.js": (s) => s.replace('birebirEtiketHTML(e.o.ad, e.o.sinif || "") + anaTag + "</label>";',
+                              'birebirEtiketHTML(e.o.ad, e.o.sinif || "") + anaTag + (e.o.sinif ? \'<span class="text-[10px] font-bold text-slate-300 shrink-0">\' + esc(e.o.sinif) + "</span>" : "") + "</label>";') },
+  "sınıf yalnız formatter'dan BİR kez");
+
+/* M3: havuz kartı adı ham büyük harfe döner — formatter'ın içindeki gorselAd ham esc'e çevrilir.
+   D21 havuz ham-ad assertion'ı (gerçek renderHavuz DOM) kırmızıya düşer. */
+kos("ks-grup-gorunum.mjs",
+  { "app.js": (s) => s.replace("' + esc(gorselAd(ad)) + \"</span>\" + snfSpan", "' + esc(ad) + \"</span>\" + snfSpan") },
+  "ham büyük harf DB adı render'da düzelir");
 
 /* M4: grup-panel-sinif fontu 13px/500'den farklılaştırılır (eski 12.5px/600) */
 kos("ks-panel-secim.mjs",
   { "app.js": (s) => s.replace('\'<select id="grup-panel-sinif" onchange="grupPanelSinifSec(this.value)" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-400/40">\'',
                               '\'<select id="grup-panel-sinif" onchange="grupPanelSinifSec(this.value)" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[12.5px] font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-400/40">\'') },
-  "liste satırı tam ad + sınıf");
+  "13px/500 (tek tip kontrol)");
 
 /* M5: öneri satırı boyutu farklılaştırılır (13px/500 → 12px/600) */
 kos("ks-grup-gorunum.mjs",
   { "app.js": (s) => s.replace("class=\"ks-sug-satir w-full text-left px-3 py-2 text-[13px] font-medium rounded-lg hover:bg-teal-50/70 cursor-pointer flex\"",
                               "class=\"ks-sug-satir w-full text-left px-3 py-2 text-[12px] font-semibold rounded-lg hover:bg-teal-50/70 cursor-pointer flex\"") },
-  "TEK renderer");
+  "öneri satırları 13px/500");
 
-/* M6: özel dropdown ankrajı kaldırılır (focus/input'tan ksSugAnkraj çağrıları silinir) */
+/* M6: özel dropdown ankrajı kaldırılır (focus listener'dan ksSugAnkraj çağrısı silinir; D21 ankraj assertion'ı kırmızı) */
 kos("ks-grup-gorunum.mjs",
   { "app.js": (s) => s.replace('inp.addEventListener("focus", function () { ksSugCiz(inpId, tip); if (el) el.classList.remove("hidden"); ksSugAnkraj(inpId, tip); });',
                               'inp.addEventListener("focus", function () { ksSugCiz(inpId, tip); if (el) el.classList.remove("hidden"); });') },
-  "TEK renderer");
+  "ANKRAJI kurulu");
 
 rmSync(calisma, { recursive: true, force: true });
 let donmusOk = true;

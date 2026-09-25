@@ -2950,3 +2950,56 @@ Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önb
 - DB/seed · saveDB/localStorage.setItem · filtre/seçim/chip/grup mantığı · PNG · WhatsApp · ders/öğretmen tabloları · saatEtiket · DÖNGÜ-18/19 formatter ve tipografi DEĞİŞMEDİ.
 
 Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önbellek atlamalı yenileme) yapın.
+
+## DÖNGÜ-21 — BİREBİR PLANLAMA / İSTEK HAVUZU UI DÜZELTMESİ (TAMAMLANDI)
+
+### Kapsam (app.js + test tarafı; index.html DOKUNULMADI)
+1. Arama kontrolü kırpma zinciri çözüldü (app.js:650-661): `#grup-panel-liste` `min-w-[280px]` →
+   `w-full` (min-width kırpıcı kaldırıldı); arama satırı `relative flex-1 min-w-0` + input `w-full min-w-0`;
+   ikon `pointer-events-none`. DÖNGÜ-18 kırpmasız liste düzeni (whitespace-normal/break-words) KORUNDU.
+2. Sınıf TEK gösterim (app.js:672-676): grup paneli satırındaki ikinci `sinifTag`
+   (`text-[10px] font-bold text-slate-300`) KALDIRILDI; sınıf yalnız `birebirEtiketHTML`'den
+   (text-[10px] font-medium text-slate-400) BİR kez. Ana rozeti ml-auto düzeni korundu.
+3. Havuz adları: tüm yüzeyler gorselAd()/ortak formatter'dan (mevcut D19 düzeni korundu,
+   app.js:232; DB/seed ham adları DEĞİŞMEDİ).
+4. Tek tip kontrol: 13px/500 — grup-panel-arama + grup-panel-sinif (12.5px/600'dan çevrildi,
+   app.js:656/659) + h-ogrenci/h-ders/h-konu (font-medium eklendi, app.js:2942-2944) +
+   ks-sug-satir/Eşleşme-yok (app.js:245/248). Native select popup'ı tarayıcıya aittir (sınır).
+5. Özel dropdown ANKRAJ (app.js:3049-3069, YENİ ksSugAnkraj): host rect'ten genişlik/top;
+   scroll(capture)/resize listener + focus/input yeniden konum; yatay kayma yok (left/right 0 + width).
+
+### Test (gerçek koşumdan; silme/gevşetme YOK)
+- ks-panel-secim.mjs 33→34 (+1): D18/D21 liste satırı (min-w-[280px] sözleşmesi w-full+min-w-0'a evrim,
+  L151-156) + YENİ "D21 arama inputu + sınıf select'i 13px/500" (L158).
+- ks-grup-gorunum.mjs 42→47 (+5): D21 sınıf-bir-kez (L209) · kırpılmıyor (L210) · 13px/500 öneri (L211) ·
+  havuz ham-ad gorselAd düzeltmesi gerçek renderHavuz DOM (L212) · ankraj kurulu/TAM 2 çağrı (L213).
+- ks-kart-sirasi.mjs #2 ve ks-kart-kolon.mjs #7/#8: extra-ofset farkları (statik id konumları) koşumdan yenilendi.
+- Sayım kapıları: suit-manifest (panel-secim 34, grup-gorunum 47) = elle-vaka-manifesti = donmuş txt =
+  elle-ad; SUITE_DONE beklenen güncellendi (L2).
+- Final: node test.mjs **2341/2341 OK, exit=0** · HAM Σ beşli **2341 BİREBİR** ·
+  statik-eksiksizlik **TAMLIK 47/47 exit=0** · node --check app.js + ek-ders.js OK.
+
+### Mutasyon kanıtları (mutasyon-dongu21.mjs — YENİ; yalnız tmp kopya; canonical SHA birebir)
+6/6 PASS:
+  M1 kapsayıcı min-w-[280px]'e döner → "kapsayıcı w-full min-w-0" kırmızı (kotu=1)
+  M2 grup satırına 2. sinifTag geri → "sınıf yalnız formatter'dan BİR kez" kırmızı
+  M3 formatter gorselAd→ham esc → "ham büyük harf DB adı render'da düzelir" kırmızı (gerçek DOM)
+  M4 grup-panel-sinif 12.5px/600'e döner → "13px/500 (tek tip kontrol)" kırmızı
+  M5 ks-sug-satir 12px/600'e döner → "öneri satırları 13px/500" kırmızı
+  M6 focus listener'dan ksSugAnkraj silinir → "ANKRAJI kurulu" kırmızı
+  Restore: tmp rmSync; canonical SHA önce/sonra BİREBİR (8 dosya); donmuş test tarafı 4/4 AYNI.
+
+### No-drift
+- app.js: 339.150 B · SHA 37f8188b87c02b02e4713c80951ea8e51bf3e107ff7289cdaea616509b0bfb80
+  (D20 final 32015f49… → D21 +1.883 B; yalnız grup-panel/govde + ksSugAnkraj + havuz font sınıfları)
+- index.html: 22.699 B · SHA 1dad38661cf7bd5be2828feffd23a4b320324b4ba0a51b67b502c37cb5f0883b (D20 final ile AYNI — değişmedi)
+- Backups: app.js.dongu21-ui-oncesi.bak (339.150 B · 37f8188b…) · index.html.dongu21-ui-oncesi.bak ·
+  ks-panel-secim.mjs.dongu21-ui-oncesi.bak · ks-grup-gorunum.mjs.dongu21-ui-oncesi.bak
+- DB/seed · saveDB/localStorage.setItem · D18 min-w kırpmasız liste · D19 formatter tek tanım
+  (grep function birebirEtiketHTML = 1) · WhatsApp · PNG · ek-ders.js DEĞİŞMEDİ.
+
+### Geometri dürüstlük notu
+Node/jsdom gerçek layout HESAPLAMAZ; kırpma/ankraj/font assertion'ları string-düzeyi + DOM yapısı
+kanıttır. Gerçek yatay taşma/ankraj davranışı tarayıcıda Ctrl+Shift+R ile kullanıcı doğrulamasına aittir.
+
+Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önbellek atlamalı yenileme) yapın.

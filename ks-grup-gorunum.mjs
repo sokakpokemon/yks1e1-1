@@ -1,6 +1,6 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 42) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-grup-gorunum.mjs kosan=" + __kosan + " beklenen=42"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-grup-gorunum.mjs:" + __kosan + ":42"); } });
-/* DÖNGÜ-19: kosan=42 (28 + 7 D18/D19 havuz-kartı + 7 yeni D19 ortak-formatter assertion'ı) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 47) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-grup-gorunum.mjs kosan=" + __kosan + " beklenen=47"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-grup-gorunum.mjs:" + __kosan + ":47"); } });
+/* DÖNGÜ-19: kosan=42 (28 + 7 D18/D19 havuz-kartı + 7 D19) · DÖNGÜ-21: kosan=47 (+5 D21 UI sözleşmesi) */
 /* ks-grup-gorunum.mjs — GRUP GÖRÜNÜM testleri:
    badge markup (+N özeti, aç/kapa), tablo hücreleri, WhatsApp/PNG metinleri, analiz dağıtımı,
    birebir derslerde eski görünüm. Tek boot + gerçek id kayıt defteri (stub DOM). */
@@ -54,7 +54,7 @@ try {
     yenile();
     return { DB, ui, renderDersler, gunlukTablo, haftalikOgrtTablo, ogrenciMesajMetni, pngAc, renderAnaliz,
       grupBadgeHTML, grupUyeEtiketleri, grupOgrenciAdlari, grupUyeToggle, dersOgrenciIds, renderOzet, renderHavuz, gorselAd,
-      birebirEtiketHTML, ksSugSatirHTML, ksSugListeHTML, istekGrupOzetHTML };
+      birebirEtiketHTML, ksSugSatirHTML, ksSugListeHTML, istekGrupOzetHTML, grupPanelGovdeHTML, grupPanelListeHTML };
   `)();
   t("boot hatasız", true);
 } catch (e) {
@@ -65,7 +65,7 @@ try {
 }
 const { DB, ui, renderDersler, gunlukTablo, haftalikOgrtTablo, ogrenciMesajMetni, pngAc, renderAnaliz,
   grupBadgeHTML, grupUyeEtiketleri, grupOgrenciAdlari, grupUyeToggle, dersOgrenciIds, renderOzet, renderHavuz, gorselAd,
-  birebirEtiketHTML, ksSugSatirHTML, ksSugListeHTML, istekGrupOzetHTML } = P;
+  birebirEtiketHTML, ksSugSatirHTML, ksSugListeHTML, istekGrupOzetHTML, grupPanelGovdeHTML, grupPanelListeHTML } = P;
 const appKaynak = scripts;
 
 /* Gelecek pazartesi: tüm pencere filtrelerinde görünür */
@@ -203,6 +203,14 @@ t("D19 sinif dolu → sınıf adın yanında (gap-2 wrapper)", birebirEtiketHTML
 t("D19 serbest metin havuz isteğinde sınıf EKLENMEZ (gerçek DOM)", (() => { DB.istekler.push({ id: "d19-serbest", ogrenciId: null, ogrenciAd: "Serbest Metin Öğrenci", dersId: "mat", konu: "K", durum: "bekliyor", olusturma: "2026-09-20" }); renderHavuz(); const h = (reg["havuzBolum"] || { innerHTML: "" }).innerHTML; const kart = h.split("data-istek=\"d19-serbest\"")[1] || ""; const ok = kart.includes("birebir-etiket") && kart.includes("Serbest Metin Öğrenci") && !kart.includes("Sınıf belirtilmemiş"); DB.istekler = DB.istekler.filter(r => r.id !== "d19-serbest"); renderHavuz(); return ok; })());
 t("D19 tüm autocomplete hostları TEK renderer (ksSugListeHTML · 3 host · ks-sug-liste)", (() => { const liste = ksSugListeHTML([{ deger: "Ayşe Demir", html: birebirEtiketHTML("Ayşe Demir", "9-A") }], "ogrenci"); return liste.includes("ks-sug-liste") && liste.includes("hidden") && liste.includes("ks-sug-satir") && (appKaynak.match(/function ksSugListeHTML\(/g) || []).length === 1 && appKaynak.includes('"f-ogrenci:ogrenci", "h-ogrenci:ogrenci", "f-ogretmen:ogretmen"'); })());
 t("D19 öğretmen suggestion satırı 12px/600 + sınıf spanı YOK; chip+banner gorselAd (sınıfsız)", (() => { const ogrt = ksSugSatirHTML("Ahmet Yılmaz", null, false); const eskiBaglam = ui.grupPanelBaglam, eskiAna = ui.havuzAnaId, eskiEk = ui.ekOgrenciIds; ui.grupPanelBaglam = "havuz"; ui.havuzAnaId = ayse.id; ui.ekOgrenciIds = [zeynep.id]; const ozet = istekGrupOzetHTML(); ui.grupPanelBaglam = eskiBaglam; ui.havuzAnaId = eskiAna; ui.ekOgrenciIds = eskiEk; const sinifSpan = "text-[10px] font-medium text-slate-400"; return ogrt.includes("text-[12px] font-semibold normal-case") && !ogrt.includes(sinifSpan) && ozet.includes("Ayşe Demir") && ozet.includes("Zeynep Kaya") && !ozet.includes(sinifSpan) && appKaynak.includes('esc(gorselAd(l.ogrenciAd))') && appKaynak.includes("birebirEtiketHTML(o.ad, o.sinif") ; })());
+/* DÖNGÜ-21: UI sözleşmesi — sınıf TEK gösterim (grup paneli satırında ikinci sinifTag YOK) ·
+   arama kontrolü kırpılmıyor (kapsayıcı w-full min-w-0) · öneri satırları 13px/500 · ankraj VAR.
+   jsdom geometri ölçmez; font/kırpma kontrolleri string-düzeyi, gerçek taşma tarayıcıda doğrulanır. */
+t("D21 grup paneli satırında sınıf yalnız formatter'dan BİR kez (ikinci sinifTag yok)", (() => { const eskiBaglam = ui.grupPanelBaglam, eskiAcik = ui.panelSecim; ui.grupPanelBaglam = "plan"; ui.panelSecim = { acik: true, arama: "", sinif: "", anaId: ayse.id }; const lh = grupPanelListeHTML(); ui.panelSecim = eskiAcik; const satirSayisi = (lh.match(/birebir-etiket/g) || []).length; /* kod yorumundaki 'sinifTag' geçmiş açıklaması sayılmaz — tanım/üretim yok */ const sinifTagUretimi = (appKaynak.match(/sinifTag\s*=/g) || []).length + (appKaynak.match(/\+ sinifTag/g) || []).length; return !lh.includes("text-slate-300") && sinifTagUretimi === 0 && satirSayisi >= 1; })());
+t("D21 arama kontrolü kırpılmıyor (liste kapsayıcısı w-full + min-w-0, min-w-[280px] YOK)", (() => { const eskiAcik = ui.panelSecim; ui.panelSecim = { acik: true, arama: "", sinif: "", anaId: null }; const govde = grupPanelGovdeHTML(); ui.panelSecim = eskiAcik; return govde.includes('id="grup-panel-arama"') && govde.includes("relative flex-1 min-w-0") && govde.includes("min-w-[280px]") === false && govde.includes("w-full max-h-56"); })());
+t("D21 öneri satırları 13px/500 (ks-sug-satir + Eşleşme yok)", (() => { const dolu = ksSugListeHTML([{ deger: "Ayşe Demir", html: birebirEtiketHTML("Ayşe Demir", "9-A") }], "ogrenci"); const bos = ksSugListeHTML([], "ogrenci"); return dolu.includes('ks-sug-satir w-full text-left px-3 py-2 text-[13px] font-medium rounded-lg') && bos.includes("Eşleşme yok"); })());
+t("D21 havuz kartı adı gorselAd ile normal biçimde (ham büyük harf DB adı render'da düzelir)", (() => { const once=DB.ogrenciler.find(o=>o.id===ayse.id).ad; DB.ogrenciler.find(o=>o.id===ayse.id).ad="AYŞE DEMİR"; DB.istekler.push({ id: "d21-ham", ogrenciId: ayse.id, ogrenciAd: "AYŞE DEMİR", dersId: "mat", konu: "K", durum: "bekliyor", olusturma: "2026-09-20" }); renderHavuz(); const h=(reg["havuzBolum"]||{innerHTML:""}).innerHTML; const kart=h.split('data-istek="d21-ham"')[1]||""; const ok=kart.includes("Ayşe Demir") && !kart.includes("AYŞE DEMİR"); DB.istekler=DB.istekler.filter(r=>r.id!=="d21-ham"); DB.ogrenciler.find(o=>o.id===ayse.id).ad=once; renderHavuz(); return ok; })());
+t("D21 özel dropdown scroll/resize ANKRAJI kurulu (ksSugAnkraj + listener + kod yapısı)", (() => { const cagrilar=(appKaynak.match(/remove\("hidden"\); ksSugAnkraj\(inpId, tip\)/g)||[]).length; return (appKaynak.match(/function ksSugAnkraj\(/g) || []).length === 1 && appKaynak.includes('w.addEventListener("scroll", yenile, true)') && appKaynak.includes('w.addEventListener("resize", yenile)') && appKaynak.includes('inp.dataset.ksSugAnkraj') && cagrilar === 2; })());
 
 /* temizlik */
 DB.dersler = DB.dersler.filter(l => l.id !== "gtest-1" && l.id !== "gtest-2" && l.id !== "gtest-4");

@@ -126,8 +126,10 @@ t("birebir satırında grup-badges YOK", !reg["derslerBolum"].innerHTML.split("<
 console.log("4) Günlük tablo:");
 ui.gunSecim = gelecekPzt;
 const gunHTML = gunlukTablo();
-t("grup hücresinde üye baş harfleri (ZK · EA)", gunHTML.includes("ZK · EA"), "ZK · EA bulunamadı");
-const grpSatir = gunHTML.split("</td>").find(r => r.includes("ZK · EA"));
+/* DÖNGÜ-26: eski→yeni ad + gerekçe — "grup hücresinde üye baş harfleri (ZK · EA)" → "grup hücresinde üye TAM ADLARI";
+   gerekçe: öğretmenin üyeleri ayırt edebilmesi için baş harf yetmez, tam ad satır sarımlı gösterilir (kullanıcı onayı). */
+t("grup hücresinde üye TAM ADLARI (DÖNGÜ-26: baş harf → tam ad)", gunHTML.includes(zeynep.ad) && gunHTML.includes(emir.ad), "tam adlar bulunamadı");
+const grpSatir = gunHTML.split("</td>").find(r => r.includes(zeynep.ad) && r.includes(emir.ad));
 t("grup ders hücresinde TAM AD var, ders adı YOK", !!grpSatir && grpSatir.includes(ayse.ad) && !grpSatir.includes("MATEMATİK"), grpSatir ? grpSatir.slice(0, 200) : "yok");
 const tekSatir = gunHTML.split("</td>").find(r => r.includes("FİZİK") || r.includes("Enerji"));
 t("birebir hücresinde baş harf satırı yok (eski)", !!tekSatir && !tekSatir.includes("·"), tekSatir ? tekSatir.slice(0, 200) : "yok");

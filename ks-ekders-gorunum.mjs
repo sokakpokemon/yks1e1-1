@@ -179,7 +179,9 @@ t("gunlukTablo ortak hücre yardımcısını kullanıyor (birebirHucreHTML)", gu
 t("gunlukTablo grup satırı (grupUyelerG) aynen", gunlukBolge.includes("var grupUyelerG = grupUyeEtiketleri(ders);"));
 t("gunlukTablo hücresinde ders adı üretilmiyor", !gunlukBolge.includes('hucreIcerik') && !/dersBilgi\s*\?\s*['"]\s*·/.test(gunlukBolge));
 t("haftalik grup satırı (grupUyeler) aynen", haftalikBolge.includes("var grupUyeler = grupUyeEtiketleri(ders);"));
-t("haftalik birebir hücre bloğu (hucreUst) aynen", haftalikBolge.includes("var hucreUst = grupUyeler.length ?"));
+/* DÖNGÜ-26: eski→yeni ad + gerekçe — "hucreUst aynen" → "grup üye satırı hücrede GERÇEKTEN kullanılıyor";
+   gerekçe: eski hucreUst ölü değişkendi (hücreye hiç eklenmiyordu) → öğretmen tablosunda grup üyeleri görünmüyordu. */
+t("haftalik grup üye satırı hücrede kullanılıyor (DÖNGÜ-26: ölü hucreUst kaldırıldı)", !haftalikBolge.includes("var hucreUst = grupUyeler.length ?") && haftalikBolge.includes("grupUyeler.length ? '<div"));
 t("durumRenk satırı aynen (birebir mavi/emerald)", haftalikBolge.includes('var durumRenk = ders.durum === "tamamlandi" ? "bg-emerald-50 border-emerald-200" : "bg-blue-50 border-blue-200";'));
 /* runtime: mevcut seed dersleri ile birebir hücre amber DEĞİL */
 DB.ekDersler = [];

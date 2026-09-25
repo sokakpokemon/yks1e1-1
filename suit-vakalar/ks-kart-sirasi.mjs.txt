@@ -30,4 +30,4 @@ planlama + yenileme sonrası da iki kart yerinde
 test.mjs suites listesi bulunuyor
 ks-kart-sirasi.mjs test.mjs'te tam 1 kez
 mevcut 30 süit listede korundu
-süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 47
+süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 48

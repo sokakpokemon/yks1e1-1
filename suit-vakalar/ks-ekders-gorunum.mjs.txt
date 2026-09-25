@@ -34,7 +34,7 @@ gunlukTablo ortak hücre yardımcısını kullanıyor (birebirHucreHTML)
 gunlukTablo grup satırı (grupUyelerG) aynen
 gunlukTablo hücresinde ders adı üretilmiyor
 haftalik grup satırı (grupUyeler) aynen
-haftalik birebir hücre bloğu (hucreUst) aynen
+haftalik grup üye satırı hücrede kullanılıyor (DÖNGÜ-26: ölü hucreUst kaldırıldı)
 durumRenk satırı aynen (birebir mavi/emerald)
 seed birebir dersi amber DEĞİL (eski görünüm)
 seed birebir dersi hücrede görünüyor

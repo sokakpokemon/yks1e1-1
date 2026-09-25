@@ -53,4 +53,5 @@ export const elleManifest = {
   "ks-ders-karti-tasima.mjs": 56,
   "ks-ogrt-ders-karti.mjs": 91,
   "ks-ogrt-denetim.mjs": 42, /* OGRT-TAMGUN-KART: elle sayım */
+  "ks-dongu26.mjs": 26, /* DÖNGÜ-26: elle sayım */
 };

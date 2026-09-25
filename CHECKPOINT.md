@@ -3280,3 +3280,44 @@ Son kabul WhatsApp önizlemesinin KULLANICI görsel kontrolü ile yapılır (Ctr
 önizleme + kopyalama + gönderme üçünde de yeni şablon; emoji yok; saat "13:00 - 13:40" biçiminde.
 
 Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önbellek atlamalı yenileme) yapın.
+
+---
+
+# ✅ CHECKPOINT: DÖNGÜ-26 — Grup Birebir Veri Akışı Düzeltmesi
+
+**Tarih:** 25 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **2376/2376 OK** (2350 eski + 26 yeni) · statik-eksiksizlik **48/48** · mutasyon **4/4 FAIL** ✓
+
+## Kök Nedenler (keşif, kanıtlı)
+
+1. **Öğretmen tablosunda yalnız ana öğrenci:** `haftalikOgrtTablo` app.js:3685'te `hucreUst` (üye baş harfleri) üretiliyor ama hücre yazımına HİÇ eklenmiyordu (ölü değişken) → grup hücresinde yalnız ana öğrenci görünüyordu.
+2. **Havuz → drop'ta üyeler kayboluyor:** `istekBurak` (app.js:3778) grup isteğindeki `r.ogrenciIds`'i ders kaydına taşımıyordu → grup isteği tek öğrencili birebir dergibi kaydediliyordu (istek tüketiliyordu, ama 2 üye kayboluyordu).
+3. **Havuzda takılı kalma görüntüsü:** `formaAktar` (app.js:2974) havuz render etmiyordu → "Eşleştir & Planla" sonrası kart eski hâliyle duruyordu (tüketim `planla`/`istekBurak`'ta; veri tarafında yetim istek yoktu).
+
+## Yapılan İş (app.js — 3 bölge, baştan yazma YOK; ks-yama-dongu26.mjs + ks-yama-dongu26b.mjs idempotent yamalar)
+
+1. **Yama 1 (haftalikOgrtTablo):** ölü `hucreUst` kaldırıldı; grup dersinde TÜM üyeler TAM AD olarak hücre alt satırında (`break-words`, title="Grup üyeleri"); birebirde eklenmez → eski görünüm birebir.
+2. **Yama 2 (istekBurak):** grup istekte `ogrenciIds` ders kaydına taşınır (`_d26Ekler`); tekli istekte YAZILMAZ (eski şema birebir). İstek tüketimi (silme) aynen app.js:3793'te.
+3. **Yama 3 (formaAktar):** `renderHavuz()` eklendi → havuz kartı anında tazelenir.
+4. **Yama 4 (gunlukTablo, dongu26b):** üye satırı baş harften TAM AD'a çevrildi (A kullanıcısı onaylı desen: hover gerektirmeyen tam ad).
+5. **ÇIKARILDI:** `istekBurak`'a donemId eklenmesi (kanıtsız; normalize backfill kapatıyor). PNG, DÖNGÜ-25 WhatsApp, saatEtiket, dersDrag/dersBurak/dersDropHedef tek tanımları DEĞİŞMEDİ.
+
+## Testler
+
+- Yeni: `ks-dongu26.mjs` — **26 test** (3 üyeli gerçek fixture: drop → TEK ders, ogrenciId ana + ogrenciIds ekler sıralı, istek tüketildi; haftalık+günlük hücrede 3 üye TAM AD; tekli regresyon: ogrenciIds YAZILMAZ + draggable korundu; formaAktar renderHavuz kaynak + aktifIstekId; alan korunumu).
+- `test.mjs` 48 süit; `suit-manifest.mjs` / `elle-vaka-manifesti.mjs` / `elle-vaka-adlari.mjs` / `suit-vakalar/ks-dongu26.mjs.txt` ELLE güncellendi (otomatik üretim YOK).
+- Assertion ad değişiklikleri (eski→yeni + gerekçe, donmuş listeler elle): `ks-grup-gorunum.mjs` "baş harfleri (ZK · EA)" → "TAM ADLARI"; `ks-ekders-gorunum.mjs` "hucreUst aynen" → "üye satırı hücrede kullanılıyor"; `ks-ekders-ozet-csv.mjs` yasal-diff kelime listesine "DÖNGÜ-26/ölü hucreUst/grupUyeler.length" eklendi; `ks-gunluk-ders-tasi.mjs` grup marker'ı "8.5px baş harf" → "title=Grup üyeleri". Gerekçe hepsinde aynı: DÖNGÜ-26 bilinçli davranış değişikliği (tam ad gösterimi).
+- **Mutasyonlar (mutasyon-dongu26.mjs):** M1 üye yazımı kaldır · M2 istek tüketimi kaldır · M3 haftalık üye satırı çıkar · M4 renderHavuz kaldır → **4/4 FAIL etti** ✓
+
+## Yedek / SHA
+
+| Dosya | SHA-256 |
+|---|---|
+| app.js (önce = yedek) | `e89334a6f6246e239b01426a6b51c01e4130243b5a724b5ee63bfdbe326e461f` |
+| app.js (sonra) | `888c0356a11476e11c6360b40dc25f21ac9b71ec01affbea1df432c4c5d3c290` |
+| index.html | `244f61c87e84b3f43efc3326fcbf3b7950c981fa04fae077976b950318e6b403` (DEĞİŞMEDİ) |
+| ek-ders.js | `3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f` (DEĞİŞMEDİ) |
+| yedek | `app.js.dongu26-oncesi.bak` |
+
+## Son Kabul
+
+Öğretmen haftalık+günlük tablosunda grup üyeleri TAM ADLARIYLA görünmeli; havuz kartı eşleştirme sonrası anında tazelenmeli — **kullanıcı görsel kontrolü ile (Ctrl+Shift+R)**.

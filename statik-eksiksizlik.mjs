@@ -119,5 +119,5 @@ for (const ad of Object.keys(manifest)) {
   rapor.push(`${ok ? "OK " : "KALDI"} ${ad} site=${siteler.length} hit=${hitSet.size} vaka=${vaka} koşum=${kosumSatirlari} doğalSon=${dogalSon} exit=${r.status}`);
 }
 console.log(rapor.join("\n"));
-console.log(hepsiOk ? "\nTAMLIK KANITI: 47/47 süitte her statik t( noktası koştu; vaka listesi tam." : "\nEKSİK VAR — yukarıda.");
+console.log(hepsiOk ? "\nTAMLIK KANITI: 48/48 süitte her statik t( noktası koştu; vaka listesi tam." : "\nEKSİK VAR — yukarıda.");
 process.exit(hepsiOk ? 0 : 1);

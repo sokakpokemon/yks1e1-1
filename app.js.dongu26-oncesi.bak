@@ -2993,7 +2993,6 @@ function formaAktar(id) {
   setTimeout(function () { $("planKart").classList.add("ring-2", "ring-teal-300"); }, 500);
   setTimeout(function () { $("planKart").classList.remove("ring-2", "ring-teal-300"); }, 2600);
   toast("İstek planlama formuna aktarıldı. Tarih ve saati seçip kaydedin.");
-  renderHavuz(); /* DÖNGÜ-26: havuz kartı anında tazelenir — eski hâliyle takılı kalmaz */
 }
 function istekSil(id) {
   DB.istekler = DB.istekler.filter(function (r) { return r.id !== id; });
@@ -3690,9 +3689,9 @@ function haftalikOgrtTablo() {
         var sinif = ogrenci ? ogrenci.sinif : "";
         var dersBilgi = DERS[ders.dersId];
         var durumRenk = ders.durum === "tamamlandi" ? "bg-emerald-50 border-emerald-200" : "bg-blue-50 border-blue-200";
-        /* DÖNGÜ-26: grup dersinde TÜM üye tam adları hücrede okunur (hover gerektirmez);
-           birebirde eski görünüm birebir korunur. Eski ölü hucreUst (baş harf, hiç kullanılmıyordu) kaldırıldı. */
+        /* GRUP: grid hücresi dar → grup dersinde üye baş harfleri satırı (birebirde eski görünüm) */
         var grupUyeler = grupUyeEtiketleri(ders);
+        var hucreUst = grupUyeler.length ? '<span class="text-[8.5px] font-bold text-slate-400">' + grupUyeler.map(function (a) { return esc(ilkHarfler(a)); }).join(" · ") + "</span>" : (sinif ? esc(sinif) : '');
         /* PAZAR-BIREBIR-GORUNUM-YAMASI: birebir hücresi = TAM AD + KONU + SINIF (3 ayrı satır);
            null-on-miss: ogrenci bulunamazsa DB.ogrenciler ad eşlemesiyle fallback, o da yoksa boş.
            Uzun metin taşması: truncate + min-w-0 + orantılı padding/font/leading korunur. */
@@ -3700,8 +3699,7 @@ function haftalikOgrtTablo() {
         /* DERS-TASI-YAMASI: dnd-kilit hücresi — yalnız AKTİF TEK ÖĞRENCİLİ birebir ders sürüklenebilir; grup ve rose Sınıf Dersi / amber Ek Ders / gri Kapalı sürüklenemez. */
         satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100"' +
           (ders.durum !== "iptal" && dersOgrenciIds(ders).length === 1 ? ' draggable="true" style="cursor:grab" ondragstart="dersDrag(event, \'' + esc(ders.id) + '\'); this.style.opacity=\'0.45\'" ondragend="dersDropHedef=null; this.style.opacity=\'\'"' : '') + '>' +
-          birebirHucreHTML(ders, ogrenci, ogrenciAd, sinif, durumRenk) +
-          (grupUyeler.length ? '<div class="text-[9px] font-semibold text-slate-500 leading-snug break-words mt-0.5" title="Grup üyeleri">' + grupUyeler.map(function (a) { return esc(a); }).join(", ") + '</div>' : '') + '</td>'; /* DÖNGÜ-26: grup üyeleri TAM AD, alt satır sarımlı; birebirde eklenmez. DERS-KARTI-TASIMA-YAMASI: haftalik hücreden kart butonu kaldırıldı — ders listesi ISLEM alanına taşındı */
+          birebirHucreHTML(ders, ogrenci, ogrenciAd, sinif, durumRenk) + '</td>'; /* DERS-KARTI-TASIMA-YAMASI: haftalik hücreden kart butonu kaldırıldı — ders listesi ISLEM alanına taşındı */
       } else {
         // BOŞ HÜCRE → DROP ZONE (havuzdaki istek kartı buraya bırakılabilir)
         var hk = slotH.b;
@@ -3768,16 +3766,11 @@ function istekBurak(ev, el, ogrtId, tarih, saat) {
   }
 
   // Dersi planla
-  /* DÖNGÜ-26: GRUP istekte tüm üyeler ders kaydına taşınır (ogrenciIds = ana dışı ek üyeler);
-     tekli istekte akış birebir eski hâl — ogrenciIds YAZILMAZ. İstek sahibi (ogrenciId) ve diğer alanlar aynen. */
-  var _d26Ekler = (Array.isArray(r.ogrenciIds) ? r.ogrenciIds.slice() : []);
-  var _d26Yeni = {
+  DB.dersler.push({
     id: uid(), ogrenciId: o.id, ogrenciAd: o.ad, dersId: r.dersId, konu: r.konu || "",
     ogretmenId: t.id, ogretmenAd: t.ad, tarih: tarih, saat: saat, kod: ksKodOf(saat),
     durum: "planlandi", olusturma: todayKey()
-  };
-  if (_d26Ekler.length) _d26Yeni.ogrenciIds = _d26Ekler;
-  DB.dersler.push(_d26Yeni);
+  });
 
   // İsteği havuzdan kaldır
   DB.istekler = DB.istekler.filter(function (x) { return x.id !== istekId; });
@@ -3985,7 +3978,7 @@ function gunlukTablo() {
             (ders.durum !== "iptal" && dersOgrenciIds(ders).length === 1 ? ' draggable="true" style="cursor:grab" ondragstart="dersDrag(event, \'' + esc(ders.id) + '\'); this.style.opacity=\'0.45\'" ondragend="dersDropHedef=null; this.style.opacity=\'\'"' : '') + '>' +
             birebirHucreHTML(ders, ogrenci, ders.ogrenciAd || "", sinif, durumRenkG); /* DERS-KARTI-TASIMA-YAMASI: gunluk hücreden kart butonu kaldırıldı */
 
-          if (grupUyelerG.length) html += '<div class="text-[9px] font-semibold text-slate-500 leading-snug break-words mt-0.5" title="Grup üyeleri">' + grupUyelerG.map(function (a) { return esc(a); }).join(", ") + '</div>'; /* DÖNGÜ-26: üyeler TAM AD (baş harf yerine) */
+          if (grupUyelerG.length) html += '<div class="text-[8.5px] text-slate-400 mt-0.5">' + grupUyelerG.map(function (a) { return ilkHarfler(a); }).join(" · ") + '</div>';
           html += '</td>';
         } else if (ogrtId) {
           /* GUNLUK-DERS-TASI-YAMASI: boş hücre = MEVCUT drop-zone yolu (aynı dnd-bos + istekDragOver/istekDragLeave +

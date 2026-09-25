@@ -1,0 +1,26 @@
+boot hatasız
+drop sonrası ders kaydı oluştu
+ders TEK kayıt (kopya yok)
+ders.ogrenciId = ana öğrenci
+ders.ogrenciIds = 2 ek üye (sıra korunur)
+dersOgrenciIds(ders) = 3 üye (ana ilk)
+istek havuzdan TÜKETİLDİ (silindi)
+haftalık tablo render edildi
+haftalık hücrede ANA ad tam görünür
+haftalık hücrede ÜYE 1 tam ad görünür
+haftalık hücrede ÜYE 2 tam ad görünür
+grup hücresi draggable DEĞİL
+günlük hücrede ana ad
+günlük hücrede üye 1 tam ad
+günlük hücrede üye 2 tam ad
+grup hücresi draggable DEĞİL (gunluk)
+tekli istek drop → ders oluştu
+tekli ders ogrenciIds YAZILMAZ (eski şema)
+tekli istek tüketildi
+tekli ders draggable KORUNDU (haftalık)
+tekli ders draggable KORUNDU (günlük)
+formaAktar kaynağında renderHavuz() çağrısı VAR (DÖNGÜ-26 Yama 3)
+form aktarımda aktifIstekId set
+havuzda istek hâlâ VAR (tüketilmez — yalnız planla/drop tüketir)
+başka ders kaydı değişmedi
+grup ders istek sahipliği: ogrenciId + ogrenciAd ana öğrenci aynen

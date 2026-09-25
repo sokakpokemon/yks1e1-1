@@ -226,7 +226,9 @@ const kBirebirBlok = tdBlok(satirT, 'title="Dolu');
 t("birebir ders hücresi draggable + dersDrag taşıyor",
   kBirebirBlok.includes('<td class="px-1.5 py-2 border-r border-slate-200 hover:bg-blue-50 transition-colors" draggable="true" style="cursor:grab" ondragstart="dersDrag(event, \'' + kBir.id + '\'); this.style.opacity=\'0.45\'" ondragend="dersDropHedef=null; this.style.opacity=\'\'">'), kBirebirBlok.slice(0, 260));
 t("birebir hücre içeriği değişmedi (tam ad)", satirT.includes('title="' + O1.ad + '"'));
-const kGrupBlok = tdBlok(satirT, "text-[8.5px] text-slate-400 mt-0.5");
+/* DÖNGÜ-26: eski→yeni ad + gerekçe — marker "text-[8.5px] text-slate-400 mt-0.5" (baş harf) → "title=\"Grup üyeleri\"" (tam ad satırı);
+   gerekçe: grup üyeleri artık TAM AD olarak gösterilir (kullanıcı onayı; baş harf yeterli değildi). */
+const kGrupBlok = tdBlok(satirT, "title=\"Grup üyeleri\"");
 t("GRUP dersi hücresi draggable DEĞİL", kGrupBlok.length > 0 && !kGrupBlok.includes("draggable"));
 t("grup dersinde ana öğrenci tam adı görünür", satirT.includes('title="' + O1.ad + '"'));
 t("amber Ek Ders hücresi draggable DEĞİL", !tdBlok(satirT, "Ek Ders").includes("draggable"));

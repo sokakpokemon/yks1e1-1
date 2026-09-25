@@ -3147,6 +3147,59 @@ Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önb
 jsdom geometri ölçmez; kesme/ankraj davranışının son kanıtı Ctrl+Shift+R sonrası kullanıcının görsel
 kontrolüdür — öneri satırında "Ad Soyad + sınıf" tam görünmeli, tıklayınca input'a HAM ad yazılmalı.
 
+## DÖNGÜ-24 — HAVUZ / İSTEK KARTLARINDA AD-SOYAD CHIP GÖRÜNÜMÜ (Uygulandı; son kabul Ctrl+Shift+R görsel kontrolü)
+
+### D23 açık kanıt kapanışı (salt-okuma)
+- Gerçek öğrenci öneri satırı (app.js:3040-3043): ksSugOgrenci → birebirEtiketHTML(o.ad, o.sinif || "")
+  — formatter/gorselAd KULLANIYOR; ALL CAPS nedeni yok (gorselAd Türkçe güvenli normalleştirir,
+  koşum kanıtı: gorselAd("SONER AÇIKGÖZ") → "Soner Açıkgöz" ✓); kullanıcı ekranındaki görüntü D23'ün
+  düzelttiği sağdan kesmeden kaynaklanıyordu (sınıf spanı kesilen bölgede kalıyordu).
+- D23'ün 3 assertion'ı (ks-grup-gorunum.mjs:220-222): öğrenci satırı formatter'dan + ham ad korunur ·
+  satır kesilmez (min-w-0 whitespace-normal break-words) · öğretmen satırı SINIFSIZ — üçü de koşumda ✓.
+  D23 iddiası doğru; D24'e geçildi.
+
+### D24 keşif envanteri (havuz kartı + istek kartları ad-soyad yüzeyleri)
+- app.js:2923 (tek yüzey): havuz/istek kartı ad-soyad — birebirEtiketHTML VARDI (formatter, sınıf
+  gerçek DB/null-uydurmaz) ama chip sarmalayıcı YOKTU (düz satır). Kapsam dışı: grup listesi (675),
+  autocomplete (3043/3048), üye badge (2917), banner (3313) — dokunulmadı.
+
+### Uygulama
+- app.js:2923: formatter çıktısı sade chip sarmalayıcıya sarıldı —
+  '<span class="inline-flex rounded-full bg-slate-50 border border-slate-200 px-2.5 py-1">' + birebirEtiketHTML(...) + '</span>'.
+  birebirEtiketHTML tek kaynak (grep function = 1); ad+gerçek sınıf, 12px/600, iki satıra sarar,
+  kırpmasız. İkinci sarmalama YOK; sahte X butonu YOK; silinebilir grup seçim chipleri
+  (app.js:733/3266) değişmedi. Grup listesi ve autocomplete satırlarına dokunulmadı.
+- DB, grup/istek mantığı, PNG, WhatsApp, saveDB/localStorage, saatEtiket DEĞİŞMEDİ.
+
+### Test (gerçek koşumdan; silme/gevşetme YOK)
+- ks-grup-gorunum.mjs 50→51 (+1 YENİ, ks-grup-gorunum.mjs:223):
+  "D24 havuz kartı ad-soyad sade chip sarmalayıcıda (formatter tek kaynak; X butonu yok)" —
+  gerçek renderHavuz DOM: chip class VAR + birebir-etiket VAR + 12 SAY 1 VAR + fa-xmark YOK.
+  D22/D23 assertion'ları DEĞİŞMEDİ (old→new tablo boş; delta yalnız +1 yeni).
+- Süit Δ: ks-grup-gorunum 50 → 51 (+1). Toplam: node test.mjs **2346/2346 OK, exit=0** ·
+  HAM Σ beşli **2346 BİREBİR** · statik-eksiksizlik **47/47 TAMLIK exit=0** · syntax OK.
+
+### Mutasyon kanıtları (mutasyon-dongu24.mjs — YENİ; tmp kopya; canonical SHA birebir)
+4/4 PASS:
+  M1 chip sarmalayıcı kaldırılır → "sade chip sarmalayıcıda" kırmızı
+  M2 sahte X butonu eklenir → "X butonu yok" kırmızı
+  M3 chip'e truncate eklenir → "sade chip sarmalayıcıda" kırmızı
+  M4 formatter atlanır (ham esc ad) → "formatter tek kaynak" kırmızı (kotu=5)
+  Restore: tmp rmSync; canonical SHA önce/sonra BİREBİR (6 dosya); donmuş test tarafı 2/2 AYNI.
+
+### No-drift
+- app.js: 339.071 B · SHA 9f9d3093e30806ac967dcec35554214113bf2b6353f50aebe79bbfdc28fdce79
+  (D23 final 480a436d… → D24 +104 B: yalnız chip sarmalayıcı span'ı)
+- index.html: 22.708 B · SHA 244f61c87e84b3f43efc3326fcbf3b7950c981fa04fae077976b950318e6b403 — DEĞİŞMEDİ
+- Backups yazma öncesi: app.js.dongu24-oncesi.bak (338.967 B · 480a436d…) ·
+  ks-grup-gorunum.mjs.dongu24-oncesi.bak (fe413cce…).
+
+### Kabul
+jsdom geometri ölçmez; chip görünümünün son kanıtı Ctrl+Shift+R sonrası kullanıcının görsel
+kontrolüdür — havuz/istek kartlarında ad-soyad + sınıf sade chip içinde, kırpmasız.
+
 Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önbellek atlamalı yenileme) yapın.
+
+
 
 

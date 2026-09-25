@@ -2920,7 +2920,7 @@ function renderHavuz() {
     liste += '<div draggable="' + bekliyor + '" data-istek="' + r.id + '" class="istek-kart flex items-center gap-3 rounded-xl border px-3.5 py-2.5 ' + (bekliyor ? "border-slate-100 hover:border-teal-300 transition-colors cursor-grab active:cursor-grabbing" : "border-green-100 bg-green-50/40") + '"' +
       (bekliyor ? ' ondragstart="istekDrag(event, \'' + r.id + '\'); this.style.opacity=\'0.45\'" ondragend="istekDropHedef=null; this.style.opacity=\'\'"' : "") + ">" +
       avatar((o ? o.ad : r.ogrenciAd), i) +
-      '<div class="flex-1 min-w-0"><div class="flex items-center gap-2 flex-wrap">' + '<span class="inline-flex rounded-full bg-slate-50 border border-slate-200 px-2.5 py-1">' + (o ? birebirEtiketHTML(o.ad, o.sinif || "") : birebirEtiketHTML(r.ogrenciAd, null)) + '</span>' + uyeHtml +
+      '<div class="flex-1 min-w-0"><div class="flex items-center gap-2 flex-wrap">' + (o ? birebirEtiketHTML(o.ad, o.sinif || "") : birebirEtiketHTML(r.ogrenciAd, null)) + uyeHtml +
       (D2 ? '<span class="rounded-full px-2 py-0.5 text-[11px] font-semibold ' + D2.bg + " " + D2.tx + '">' + D2.ad + "</span>" : "") +
       '<span class="text-[10px] font-medium rounded-full px-2 py-0.5 ' + (bekliyor ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700") + '">' + (bekliyor ? "Bekliyor" : "Planlandı") + "</span></div>" +
       '<div class="text-[10px] font-medium text-slate-500 whitespace-normal break-words mt-0.5">' + (r.konu ? "<i>Eksik konu:</i> " + esc(r.konu) : '<span class="italic text-slate-300">Konu belirtilmedi</span>') + "</div>" +

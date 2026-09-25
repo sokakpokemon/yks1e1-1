@@ -2992,7 +2992,7 @@ Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önb
 ### No-drift
 - app.js: 339.150 B · SHA 37f8188b87c02b02e4713c80951ea8e51bf3e107ff7289cdaea616509b0bfb80
   (D20 final 32015f49… → D21 +1.883 B; yalnız grup-panel/govde + ksSugAnkraj + havuz font sınıfları)
-- index.html: 22.699 B · SHA 1dad38661cf7bd5be2828feffd23a4b320324b4ba0a51b67b502c37cb5f0883b (D20 final ile AYNI — değişmedi)
+- index.html: 22.699 B · SHA 1dad38661cf7bd5be2828feffd23a4b320324b4ba0a51b67b502c37cb5f0883b — DÜZELTME: D21 index.html'i de değiştirdi: bb599a09… (22.595 B, D20 final) → 1dad3866… (22.699 B, +104 B: plan kartı + hero butonu text-sm → 13px/500 satırları).
 - Backups: app.js.dongu21-ui-oncesi.bak (339.150 B · 37f8188b…) · index.html.dongu21-ui-oncesi.bak ·
   ks-panel-secim.mjs.dongu21-ui-oncesi.bak · ks-grup-gorunum.mjs.dongu21-ui-oncesi.bak
 - DB/seed · saveDB/localStorage.setItem · D18 min-w kırpmasız liste · D19 formatter tek tanım
@@ -3001,5 +3001,34 @@ Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önb
 ### Geometri dürüstlük notu
 Node/jsdom gerçek layout HESAPLAMAZ; kırpma/ankraj/font assertion'ları string-düzeyi + DOM yapısı
 kanıttır. Gerçek yatay taşma/ankraj davranışı tarayıcıda Ctrl+Shift+R ile kullanıcı doğrulamasına aittir.
+
+
+### DÖNGÜ-21 KAPANIŞ EKİ — 5 KANIT RAPORU ÖZETİ + DÜRÜSTLÜK KAYITLARI
+
+#### 1) Backup hatası kaydı (kalıcı ders)
+- app.js.dongu21-ui-oncesi.bak (37f8188b…) ve index.html.dongu21-ui-oncesi.bak (1dad3866…) uygulama
+  SONRASI alındığı için canonical kopyasıdır — gerçek D21-öncesi snapshot DEĞİLDİR.
+- Gerçek D21-öncesi kanıt: app.js.dongu20-panel-yiginlama-oncesi.bak (32015f49…) ve
+  index.html.dongu20-panel-yiginlama-oncesi.bak (7ee493ba…) ile diff üzerinden doğrulanır
+  (app.js diff: grup-panel/govde + ksSugAnkraj + havuz font sınıfları; index.html diff: 13px/500 satırları).
+- DERS: backup YAZMA ÖNCESİ alınır; bundan sonraki tüm turlarda zorunlu. Süit backup'ları
+  (ks-panel-secim bd3e57fd…, ks-grup-gorunum f8a5b256…) geçerlidir.
+
+#### 2) ks-kart-sirasi / ks-kart-kolon donmuş satır istisna kaydı
+Assertion adları ve koşulları DEĞİŞMEDİ; yalnız donmuş suit-vakalar satırlarındaki extra-ofset
+değerleri index.html 13px satırlarının statik id konumlarını kaydırmasıyla güncellendi:
+| Süit | Vaka | Eski (donmuş) | Yeni (koşum) |
+|---|---|---|---|
+| ks-kart-sirasi #2 | planKart havuzBolum'den ÖNCE | havuz=15289 | havuz=15393 |
+| ks-kart-kolon #7 | Plan kartı ÜST panelde | sag=15180 | sag=15284 |
+| ks-kart-kolon #8 | İstek havuzu ALT panelde | sag=15180 havuz=15289 kapa=19677 | sag=15284 havuz=15393 kapa=19781 |
+Bu bir sözleşme değişikliği değil, koşumdan türetilen extra-ofset yenilemesidir; ad/koşul birebir korundu.
+
+#### 3) Kapanış ibaresi
+DÖNGÜ-21'in 5 kapanış kanıtı (old→new vaka tablosu · min-w sözleşme evrimi savunması [M1 ile kanıtlı] ·
+index.html SHA zinciri düzeltmesi · D20 "48→55" yazım hatasının 52→55 olarak onarımı · M3 gerçek-DOM
+hedef kanıtı) bu ek ile birlikte tamamlanmıştır. Final: node test.mjs 2341/2341 OK exit=0 ·
+HAM Σ beşli 2341 birebir · statik-eksiksizlik 47/47 TAMLIK exit=0 · node --check app.js + ek-ders.js OK.
+min-w sözleşme evrimi kullanıcı onaylıdır (M1 mutasyonu korumayı kanıtlar).
 
 Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önbellek atlamalı yenileme) yapın.

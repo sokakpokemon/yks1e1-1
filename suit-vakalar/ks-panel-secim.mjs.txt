@@ -28,6 +28,7 @@ form ana öğrenci adını taşıyor
 liste çizildi ve Zeynep checked
 D18/D21 liste satırı tam ad + sınıf + kırpmasız düzen + kapsayıcı w-full min-w-0
 D21 arama inputu + sınıf select'i 13px/500 (tek tip kontrol)
+D22 arama kolonu kırpmıyor (lg:col-span-2 + relative; overflow-hidden YOK)
 ana değişince eski ana ek listede en fazla 1 kez (kopya oluşmaz)
 kayıt oluştu
 ogrenciIds YOK (birebir)

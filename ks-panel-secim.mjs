@@ -1,5 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 34) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-panel-secim.mjs kosan=" + __kosan + " beklenen=34"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-panel-secim.mjs:" + __kosan + ":34"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 35) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-panel-secim.mjs kosan=" + __kosan + " beklenen=35"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-panel-secim.mjs:" + __kosan + ":35"); } });
 /* ks-panel-secim.mjs — GRUP PANEL v2 testleri:
    arama, sınıf filtresi (Tüm sınıflar dahil), düzenlemede yükleme, 10+ uyarı, tek seçimde birebir akış
    ÖNEMLİ: tek boot — gerçek DOM kayıt defteriyle; tüm erişimler P.* üzerinden (çift-boot tuzakları yok) */
@@ -156,6 +156,8 @@ console.log("6) Düzenleme yükleme:");
   t("D18/D21 liste satırı tam ad + sınıf + kırpmasız düzen + kapsayıcı w-full min-w-0", lh.includes("Zeynep Kaya") && lh.includes("12 SAY 2") && lh.includes("whitespace-normal") && lh.includes("break-words") && !lh.includes("truncate") && !lh.includes("ellipsis") && govdeHtml.includes("w-full") && govdeHtml.includes("min-w-0") && !govdeHtml.includes("min-w-[280px]") && lh.includes("items-start") && lh.includes("mt-0.5 w-4 h-4 shrink-0"), lh.slice(0, 200));
   /* DÖNGÜ-21: arama inputu 13px/500 (tek tip kontrol sözleşmesi) + sınıf filtresi select'i de 13px/500 */
   t("D21 arama inputu + sınıf select'i 13px/500 (tek tip kontrol)", govdeHtml.includes('id="grup-panel-arama"') && govdeHtml.includes("py-2 text-[13px] font-medium") && !govdeHtml.includes("text-[12.5px]") && !govdeHtml.includes("font-semibold text-slate-600"), govdeHtml.slice(0, 160));
+  /* DÖNGÜ-22: kırpmayı çözen gerçek layout — f-ogrenci kolonu lg:col-span-2 + relative (overflow-hidden KIRPICISI kaldırıldı; index.html kaynak düzeyinde kanıt) */
+  t("D22 arama kolonu kırpmıyor (lg:col-span-2 + relative; overflow-hidden YOK)", html.includes('<div class="lg:col-span-2 relative">') && !html.includes('lg:col-span-1 overflow-hidden') && html.includes("lg:grid-cols-7"), html.slice(html.indexOf('lg:grid-cols'), html.indexOf('lg:grid-cols') + 60));
   /* Ana öğrenci değişimi: eski ana EK LİSTEDE tekrar oluşmaz (en fazla 1 kez) */
   reg["f-ogrenci"].value = "Zeynep Kaya";
   grupPanelOzetCiz();

@@ -3031,4 +3031,71 @@ hedef kanıtı) bu ek ile birlikte tamamlanmıştır. Final: node test.mjs 2341/
 HAM Σ beşli 2341 birebir · statik-eksiksizlik 47/47 TAMLIK exit=0 · node --check app.js + ek-ders.js OK.
 min-w sözleşme evrimi kullanıcı onaylıdır (M1 mutasyonu korumayı kanıtlar).
 
+## DÖNGÜ-22 — GERÇEK TARAYICI DÜZELTMESİ (Uygulandı; kapanış kullanıcının görsel onayı ile)
+
+### Keşif kök nedenleri (salt-okuma kanıtları)
+1. KIRPMA: grup paneli, f-ogrenci'nin index.html'deki lg:grid-cols-6 → lg:col-span-1 DAR kolonuna
+   inject ediliyordu (app.js:3154); sm:flex-row'da select minimum genişliği + kolon darlığı arama
+   inputunu "Öğ…" diye kırpıyordu. D21'in w-full+min-w-0'ı kapsayıcı içi sıkışmayı çözer ama kolon
+   genişliğini çözemezdi.
+2. POPUP KAYMASI: h-ogrenci doğrudan havuz GRID konteynerinin çocuğuydu (app.js:2942); renderFormDestek
+   host'a "relative" ekleyince popup grid'in sol üstüne absolute oluyordu (D21 ksSugAnkraj el.style.top
+   = host.height ile grid yüksekliğini hedefliyordu — input değil).
+3. AD FORMATI: D19 kompakt-chip kararı kullanıcı kararıyla geçersiz kılındı (chipler dahil ad+sınıf).
+
+### Uygulama
+- index.html: planlama formu grid lg:grid-cols-6 → lg:grid-cols-7; f-ogrenci kolonu lg:col-span-1 →
+  lg:col-span-2 + relative (kırpan overflow-hidden yok; layout düzeltmesi, gizleme değil).
+- app.js:2942-2944: h-ogrenci KENDİ '<div class="relative min-w-0">' sarmalayıcısında (popup grid'e
+  değil input'a ankrajlı); h-ders/h-konu etkilenmez.
+- app.js:243: ksSugListeHTML in-flow absolute top-full + left-0 right-0 z-30 (scroll/resize JS
+  konumlandırması KALDIRILDI — relative host ile otomatik ankraj; kayma kanıtı gerektirmez).
+  ksSugAnkraj uyumluluk stub'una indirildi (app.js:3049-3056).
+- AD YÜZEYLERİ formatter'a (birebirEtiketHTML: gorselAd + gerçek DB sınıfı): havuz üye chipleri
+  (app.js:733) · üye badge (app.js:2917) · plan chipleri (app.js:3266) · banner (app.js:3313,
+  serbest metinde sınıf null — UYDURMA YOK). Zaten formatter'da olanlar: grup listesi (675) ·
+  havuz kartı (2923) · öneri öğrenci (3043). Düz metin uyarılar (3388) çip olmadığından gorselAd kaldı.
+- DB/seed/istek ham verisi · seçim/grup mantığı · PNG · WhatsApp · saveDB/localStorage DEĞİŞMEDİ.
+
+### Test (gerçek koşumdan; silme/gevşetme YOK)
+- ks-panel-secim.mjs 34→35 (+1): YENİ "D22 arama kolonu kırpmıyor (lg:col-span-2 + relative;
+  overflow-hidden YOK)" (L159-161) — index.html kaynak düzeyi kanıt.
+- ks-grup-gorunum.mjs 47→47: L205 assertion güncellendi "D19 öğretmen suggestion satırı …
+  chip+banner gorselAd (sınıfsız)" → "D22 chip+banner formatter'dan (ad+sınıf; serbest metinde sınıf
+  uydurulmaz)" (gerekçe: kullanıcı kararı D19 sınıfsız-chip kararını geçersiz kılar); L213 güncellendi
+  "D21 özel dropdown scroll/resize ANKRAJI…" → "D22 öneri popup'ı input hostuna in-flow absolute bağlı
+  (top-full + relative host)" (gerekçe: in-flow absolute kayma kanıtı gerektirmez; fixed/portal YOK).
+- 8 süitte donmuş index.html hash'i 1dad3866… → 244f61c8… (22.708 B) güncellendi (değişmez-hash
+  assertion'ları; dosya:satır: ks-birebir-gorunum:196 · ks-ders-tasi:416 · ks-donem-ilk:158 ·
+  ks-donem-olusturma:292 · ks-ek-ders-donem:213 · ks-ekders-ozet-csv:188 · ks-gunluk-ders-tasi:397 ·
+  ks-sinif-ogretmen-uyum:13).
+- kart-sirasi #2 / kart-kolon #7-8 extra-ofset yenilemeleri (havuz=15402, sag=15293).
+- Final: node test.mjs **2342/2342 OK, exit=0** · HAM Σ beşli **2342 BİREBİR** ·
+  statik-eksiksizlik **47/47 TAMLIK exit=0** · node --check app.js + ek-ders.js OK.
+
+### Mutasyon kanıtları (mutasyon-dongu22.mjs — YENİ; tmp kopya; canonical SHA birebir)
+5/5 PASS:
+  M1 kırpan parent geri (lg:col-span-1 overflow-hidden) → "kırpmasız düzen" kırmızı
+  M2 popup hosttan ayrılma (top-full/left/right CSS silinir) → "in-flow absolute bağlı" kırmızı
+  M3 chipten sınıf silme (chip → gorselAd sınıfsız) → "formatter'dan (ad+sınıf" kırmızı
+  M4 ham büyük ad (formatter gorselAd → esc) → "ham büyük harf DB adı render'da düzelir" kırmızı
+  M5 sınıf iki kez basma (2. sinifTag) → "sınıf yalnız formatter'dan BİR kez" kırmızı
+  Restore: tmp rmSync; canonical SHA önce/sonra BİREBİR (9 dosya); donmuş test tarafı 3/3 AYNI.
+
+### No-drift
+- app.js: 338.929 B · SHA 86f211861869d09a71090265d7834d2dc849c158aaa16494cc798a26990ac5ff
+  (D21 final 37f8188b… → D22; -221 B net: sinifTag silme + chip formatter taşıma + ankraj sadeleşme)
+- index.html: 22.708 B · SHA 244f61c87e84b3f43efc3326fcbf3b7950c981fa04fae077976b950318e6b403
+  (D21 final 1dad3866… → D22 +9 B: grid-cols-7 + col-span-2 relative)
+- Backups YAZMA ÖNCESİ alındı (kalıcı kural; D21 dersi): app.js.dongu22-oncesi.bak (339.150 B ·
+  37f8188b…) · index.html.dongu22-oncesi.bak (22.699 B · 1dad3866…) · ks-grup-gorunum.mjs.dongu22-oncesi.bak
+  (f9a4eed9…) · ks-panel-secim.mjs.dongu22-oncesi.bak (1c0cdc7d…).
+
+### Geometri dürüstlük + KABUL
+jsdom gerçek layout HESAPLAMAZ; bu turdaki assertion'lar DOM yapısı/kaynak düzeyi kanıttır. Gerçek
+geometri kanıtı Ctrl+Shift+R sonrası KULLANICI kontrolüdür; turun kapanışı kullanıcının görsel
+onayı ile olur — jsdom yeşilliği tek başına kapanış sayılmaz.
+
+Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önbellek atlamalı yenileme) yapın.
+
 Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önbellek atlamalı yenileme) yapın.

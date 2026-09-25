@@ -2923,7 +2923,7 @@ Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önb
 
 ### Test (ks-kart-kolon.mjs — D20 revizyonu; 55 assertion)
 - D18→D20 assertion güncellemeleri (dosya:satır): ks-kart-kolon.mjs:124-129 ("iki kolon sol→sag" → "TAM 2 çocuk, tek kolon üst→alt"), :133 (yeni tek-kolon CSS sözleşmesi), :136 (2 panel bölümü), :167 ("kolon üyeliği"→"panel üyeliği"), :182 ("iki kolon sırası"→"üst→alt yığın sırası"), :196 ("kolon yapısı"→"yığın yapısı"), :206 (onarım yolu üst→alt), :226 (media query kaldırıldı, iki-kolon SIFIR hit).
-- Süit Δ: ks-kart-kolon.mjs 48 → 55 vaka (+7; eski sol/sag adları üst/alt anlamına evrildi). Toplam: node test.mjs 2335/2335 OK, exit=0 (D19: 2332 → D20: +3 net; manifest/elle/donmuş/koşum Σ birebir).
+- Süit Δ: ks-kart-kolon.mjs 52 → 55 vaka (eski taban 2280+52=2332 → yeni 2280+55=2335; önceki turdaki "48 → 55 (+7)" yazımı hataydı — donmuş gercek-dal-oncesi.ks-kart-kolon.mjs.bak: 53 t(, 1 catch-only → 52 koşan ile kanıtlı; +3 gerçek yeni + 15 yeniden adlandırma); eski sol/sag adları üst/alt anlamına evrildi). Toplam: node test.mjs 2335/2335 OK, exit=0 (D19: 2332 → D20: +3 net; manifest/elle/donmuş/koşum Σ birebir).
 - D18 kilit: min-w-[280px] + overflow-x-hidden AYNEN korundu (app.js:657; ks-panel-secim.mjs:153 yeşil).
 
 ### statik-eksiksizlik istisna-listesi güncellemesi (tek yazım)

@@ -289,7 +289,7 @@ console.log("12) saveDB / yedek yükleme döngüsünde dönemli programların ka
 console.log("13) index.html, ek-ders.js ve vendor hash'leri:");
 {
   const sha = (s) => createHash("sha256").update(s).digest("hex");
-  t("index.html SHA-256 değişmedi", sha(html) === "1dad38661cf7bd5be2828feffd23a4b320324b4ba0a51b67b502c37cb5f0883b", sha(html));
+  t("index.html SHA-256 değişmedi", sha(html) === "244f61c87e84b3f43efc3326fcbf3b7950c981fa04fae077976b950318e6b403", sha(html));
   t("ek-ders.js SHA-256 değişmedi", sha(readFileSync("ek-ders.js", "utf8")) === "3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f", sha(readFileSync("ek-ders.js", "utf8")));
   const vendor = ["tailwind.js", "fontawesome.css", "chart.js", "html2canvas.js", "fonts.css"];
   let ok = 0;

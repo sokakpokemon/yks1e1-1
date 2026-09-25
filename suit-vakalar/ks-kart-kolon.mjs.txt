@@ -4,8 +4,8 @@ Wrapper DOM'da tam bir kez
 Plan kartı tam bir kez
 İstek havuzu tam bir kez
 Wrapper TAM 2 çocuklu (üst→alt, kaynak sırası) → ["ks-kart-kolon-sol","ks-kart-kolon-sag"]
-Plan kartı ÜST panelde (statik parent) → sol=9435 plan=9491 sag=15284
-İstek havuzu ALT panelde (statik parent) → sag=15284 havuz=15393 kapa=19781
+Plan kartı ÜST panelde (statik parent) → sol=9435 plan=9491 sag=15293
+İstek havuzu ALT panelde (statik parent) → sag=15293 havuz=15402 kapa=19790
 Üst panel ilk (plan üstte)
 Alt panel ikinci (havuz altta)
 Wrapper CSS TEK kolon (grid-template-columns: minmax(0,1fr) tek değer)

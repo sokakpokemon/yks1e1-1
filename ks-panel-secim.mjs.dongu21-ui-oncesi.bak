@@ -148,9 +148,12 @@ console.log("6) Düzenleme yükleme:");
   grupPanelCiz();
   const lh = (reg["grup-panel-liste"] || { innerHTML: "" }).innerHTML;
   t("liste çizildi ve Zeynep checked", lh.includes("Zeynep Kaya") && lh.includes("checked"), lh.slice(0, 200));
-  /* DÖNGÜ-18: seçim listesi satırı tam ad + sınıf; kırpmasız; checkbox ilk satır hizalı */
+  /* DÖNGÜ-18: seçim listesi satırı tam ad + sınıf; kırpmasız; checkbox ilk satır hizalı.
+     DÖNGÜ-21 güncellemesi (dosya:satır ks-panel-secim.mjs:153 → 153): min-w-[280px] sözleşmesi
+     w-full + min-w-0'a evrildi — sabit minimum genişlik dar host'ta yatay taşma/klipping üretiyordu
+     (arama kontrolü kırpılıyordu); kırpmasız liste düzeni (whitespace-normal/break-words) AYNEN korunur. */
   const govdeHtml = (reg["grup-panel-govde"] || { innerHTML: "" }).innerHTML;
-  t("D18 liste satırı tam ad + sınıf + kırpmasız düzen", lh.includes("Zeynep Kaya") && lh.includes("12 SAY 2") && lh.includes("whitespace-normal") && lh.includes("break-words") && !lh.includes("truncate") && !lh.includes("ellipsis") && govdeHtml.includes("min-w-[280px]") && lh.includes("items-start") && lh.includes("mt-0.5 w-4 h-4 shrink-0"), lh.slice(0, 200));
+  t("D18/D21 liste satırı tam ad + sınıf + kırpmasız düzen + kapsayıcı w-full min-w-0", lh.includes("Zeynep Kaya") && lh.includes("12 SAY 2") && lh.includes("whitespace-normal") && lh.includes("break-words") && !lh.includes("truncate") && !lh.includes("ellipsis") && govdeHtml.includes("w-full") && govdeHtml.includes("min-w-0") && !govdeHtml.includes("min-w-[280px]") && lh.includes("items-start") && lh.includes("mt-0.5 w-4 h-4 shrink-0"), lh.slice(0, 200));
   /* Ana öğrenci değişimi: eski ana EK LİSTEDE tekrar oluşmaz (en fazla 1 kez) */
   reg["f-ogrenci"].value = "Zeynep Kaya";
   grupPanelOzetCiz();

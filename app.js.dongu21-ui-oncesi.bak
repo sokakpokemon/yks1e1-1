@@ -242,10 +242,10 @@ function ksSugSatirHTML(ad, sinif, ogrenci) {
 function ksSugListeHTML(items, tip) {
   return '<div class="ks-sug-liste hidden absolute z-30 left-0 right-0 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg p-1">' +
     items.map(function (it) {
-      return '<button type="button" class="ks-sug-satir w-full text-left px-3 py-2 rounded-lg hover:bg-teal-50/70 cursor-pointer flex" data-ks-sug="' + esc(it.deger) + '" data-ks-sug-hedef="' + esc(tip) + '">' +
+      return '<button type="button" class="ks-sug-satir w-full text-left px-3 py-2 text-[13px] font-medium rounded-lg hover:bg-teal-50/70 cursor-pointer flex" data-ks-sug="' + esc(it.deger) + '" data-ks-sug-hedef="' + esc(tip) + '">' +
         it.html + '</button>';
     }).join("") +
-    (items.length ? "" : '<div class="px-3 py-2 text-[10px] font-medium text-slate-300">Eşleşme yok</div>') + "</div>";
+    (items.length ? "" : '<div class="px-3 py-2 text-[13px] font-medium text-slate-300">Eşleşme yok</div>') + "</div>";
 }
 /* DÖNGÜ-19: gorselAd — DB'deki ham adı render anında Türkçe güvenli normal harf düzenine çevirir.
    "SONER AÇIKGÖZ" → "Soner Açıkgöz"; İ/ı bozulmaz; DB ASLA değişmez. */
@@ -647,14 +647,18 @@ function grupPanelGovdeHTML() {
   });
   /* ISTEK-GRUP-ISTEGI-YAMASI-v3 (F): ASI düzeltmesi — return'den sonraki satır sonu ifadenin parçası
      olamaz; grupPanelGovdeHTML() undefined döndürüyordu, panel filtre markup'ı hiç çizilmiyordu */
+  /* DÖNGÜ-21: arama kontrolü tam görünür — kapsayıcı kırpılma zinciri çözüldü: liste kapsayıcısındaki
+     min-w-[280px] sabit genişlik dar host'ta yatay taşma üretip overflow-x-hidden ile arama satırını
+     kırpıyordu; min-w-[280px] → w-full min-w-0 + input satırına min-w-0 eklendi (flex-1 + min-w-0 şartı).
+     DÖNGÜ-18 kırpmasız liste düzeni korunur; gerçek taşma doğrulaması tarayıcıdadır (jsdom ölçmez). */
   return '<div class="flex flex-col sm:flex-row gap-2">' +
-      '<div class="relative flex-1">' +
-        '<input id="grup-panel-arama" type="text" autocomplete="off" placeholder="Öğrenci ara..." value="' + esc(ui.panelSecim.arama) + '" oninput="grupPanelAra(this.value)" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
-        '<i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-300"></i>' +
+      '<div class="relative flex-1 min-w-0">' +
+        '<input id="grup-panel-arama" type="text" autocomplete="off" placeholder="Öğrenci ara..." value="' + esc(ui.panelSecim.arama) + '" oninput="grupPanelAra(this.value)" class="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
+        '<i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-300 pointer-events-none"></i>' +
       "</div>" +
-      '<select id="grup-panel-sinif" onchange="grupPanelSinifSec(this.value)" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[12.5px] font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-400/40">' + sinifOps + "</select>" +
+      '<select id="grup-panel-sinif" onchange="grupPanelSinifSec(this.value)" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-400/40">' + sinifOps + "</select>" +
     "</div>" +
-    '<div id="grup-panel-liste" class="mt-2 max-h-56 overflow-y-auto overflow-x-hidden rounded-xl border border-slate-200/70 bg-white divide-y divide-slate-100 min-w-[280px]">' + grupPanelListeHTML() + '</div>';
+    '<div id="grup-panel-liste" class="mt-2 w-full max-h-56 overflow-y-auto overflow-x-hidden rounded-xl border border-slate-200/70 bg-white divide-y divide-slate-100">' + grupPanelListeHTML() + '</div>';
 }
 /* ISTEK-GRUP-ISTEGI-YAMASI-v5 (B2): liste markup'ı TEK kaynaktan — grupPanelGovdeHTML ve
    grupPanelListeCiz aynı üreticiyi kullanır; govde innerHTML'i Ana/checked içerir. */
@@ -665,9 +669,10 @@ function grupPanelListeHTML() {
     var kutu = '<input type="checkbox"' + (e.secili || e.ana ? " checked" : "") + (e.ana && grupPanelBaglami() !== "havuz" ? " disabled" : "") +
       ' onchange="grupPanelSec(\'' + esc(e.o.id) + '\')" class="mt-0.5 w-4 h-4 shrink-0 rounded border-slate-300 accent-teal-600 cursor-pointer' + (e.ana ? " opacity-50 cursor-not-allowed" : "") + '" />';
     var anaTag = e.ana ? '<span class="text-[10px] font-extrabold text-teal-600 bg-teal-50 border border-teal-200 rounded-full px-2 py-0.5 ml-auto">Ana</span>' : "";
-    var sinifTag = e.o.sinif ? '<span class="text-[10px] font-bold text-slate-300 ' + (e.ana ? "" : "ml-auto") + ' shrink-0">' + esc(e.o.sinif) + "</span>" : "";
+    /* DÖNGÜ-21: sınıf artık yalnız birebirEtiketHTML'den BİR kez gösterilir — eski ikinci sinifTag
+       (text-[10px] font-bold text-slate-300) KALDIRILDI (çift gösterim); Ana rozeti ml-auto düzeni korunur. */
     return '<label class="flex items-start gap-3 px-3 py-2 hover:bg-teal-50/50 cursor-pointer' + (e.ana ? " bg-slate-50/80" : "") + '">' + kutu +
-      birebirEtiketHTML(e.o.ad, e.o.sinif || "") + anaTag + sinifTag + "</label>";
+      birebirEtiketHTML(e.o.ad, e.o.sinif || "") + anaTag + "</label>";
   }).join("");
 }
 function istekOgrenciIds(istek) {
@@ -2934,9 +2939,9 @@ function renderHavuz() {
         '<p class="text-[11.5px] text-slate-400 font-medium">Kronolojik sıralı · Kartları sürükleyip planlama formuna bırakabilirsiniz</p></div>' +
         '<span class="rounded-full px-3 py-1.5 text-[11.5px] font-bold ' + (bekleyen ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-400") + '">' + bekleyen + " bekleyen istek</span></div>" +
       '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-4">' +
-        '<input id="h-ogrenci" list="dl-ogrenci" placeholder="Öğrenci adı" autocomplete="off" class="rounded-xl border border-slate-200 px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
-        '<select id="h-ders" class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40">' + dersOps + "</select>" +
-        '<input id="h-konu" placeholder="Eksik konu (örn. Paragraf)" autocomplete="off" class="lg:col-span-2 rounded-xl border border-slate-200 px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
+        '<input id="h-ogrenci" list="dl-ogrenci" placeholder="Öğrenci adı" autocomplete="off" class="rounded-xl border border-slate-200 px-3 py-2.5 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
+        '<select id="h-ders" class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-teal-400/40">' + dersOps + "</select>" +
+        '<input id="h-konu" placeholder="Eksik konu (örn. Paragraf)" autocomplete="off" class="lg:col-span-2 rounded-xl border border-slate-200 px-3 py-2.5 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
         '<button onclick="istekEkle()" class="rounded-full border-2 border-teal-200 text-teal-600 hover:bg-teal-50 text-[13px] font-bold px-4 py-2 transition-colors"><i class="fa-solid fa-plus mr-1.5"></i>İsteği Havuza Ekle</button>' +
         '<button onclick="istekGrupPanelAc()" class="rounded-full border-2 border-slate-200 text-slate-500 hover:border-teal-300 hover:text-teal-600 hover:bg-teal-50 text-[13px] font-bold px-4 py-2 transition-colors"><i class="fa-solid fa-user-group mr-1.5"></i>Ortak Grup İsteği</button>' +
       "</div>" +
@@ -3041,6 +3046,29 @@ function ksSugOgretmen(q) {
   return DB.ogretmenler.filter(function (t) { return !s || kucuk(t.ad).indexOf(s) !== -1; })
     .map(function (t) { return { deger: t.ad, html: ksSugSatirHTML(t.ad, null, false) }; });
 }
+/* DÖNGÜ-21: özel öneri listesi scroll/resize ANKRAJI — liste input'a sabitlenir; scroll/resize'da
+   yeniden konumlanır; yatay kayma yok (genişlik host rect'ten hesaplanır). jsdom gerçek layout
+   ölçmediğinden geometri doğrulaması tarayıcıdadır; assertion'lar listener/kod yapısı üzerinden. */
+function ksSugAnkraj(inpId, tip) {
+  var inp = $(inpId), el = document.getElementById("ks-sug-" + tip);
+  if (!inp || !el) return;
+  var konumla = function () {
+    if (el.classList && el.classList.contains("hidden")) return;
+    var host = inp.parentNode;
+    if (host && host.getBoundingClientRect) {
+      var r = host.getBoundingClientRect();
+      el.style.left = "0px"; el.style.right = "0px"; el.style.width = Math.max(0, r.width) + "px";
+      el.style.top = (r.height || 0) + "px";
+    }
+  };
+  konumla();
+  if (!inp.dataset.ksSugAnkraj) {
+    inp.dataset.ksSugAnkraj = "1";
+    var yenile = function () { ksSugAnkraj(inpId, tip); };
+    var w = (typeof window !== "undefined" && window.addEventListener) ? window : (typeof global !== "undefined" && global.addEventListener ? global : null);
+    if (w) { w.addEventListener("scroll", yenile, true); w.addEventListener("resize", yenile); }
+  }
+}
 function ksSugCiz(inpId, tip) {
   var inp = $(inpId); if (!inp) return;
   var liste = tip === "ogretmen" ? ksSugOgretmen(inp.value) : ksSugOgrenci(inp.value);
@@ -3052,8 +3080,8 @@ function ksSugCiz(inpId, tip) {
     el = document.getElementById("ks-sug-" + tip);
     if (el && !inp.dataset.ksSug) {
       inp.dataset.ksSug = "1";
-      inp.addEventListener("focus", function () { ksSugCiz(inpId, tip); if (el) el.classList.remove("hidden"); });
-      inp.addEventListener("input", function () { ksSugCiz(inpId, tip); if (el) el.classList.remove("hidden"); });
+      inp.addEventListener("focus", function () { ksSugCiz(inpId, tip); if (el) el.classList.remove("hidden"); ksSugAnkraj(inpId, tip); });
+      inp.addEventListener("input", function () { ksSugCiz(inpId, tip); if (el) el.classList.remove("hidden"); ksSugAnkraj(inpId, tip); });
       inp.addEventListener("blur", function () { setTimeout(function () { if (el) el.classList.add("hidden"); }, 160); });
     }
     if (el) el.addEventListener("mousedown", function (e) {

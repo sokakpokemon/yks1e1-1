@@ -202,14 +202,14 @@
           <i class="fa-solid fa-user-graduate text-teal-500"></i> Öğrenci
         </label>
         <input id="f-ogrenci" list="dl-ogrenci" placeholder="Ad Soyad" autocomplete="off"
-          class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400/40 focus:border-teal-400" />
+          class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-teal-400/40 focus:border-teal-400" />
         <datalist id="dl-ogrenci"></datalist>
       </div>
       <div class="lg:col-span-1">
         <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1.5 mb-1.5">
           <i class="fa-solid fa-book-open text-blue-500"></i> Ders
         </label>
-        <select id="f-ders" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400/40 focus:border-teal-400">
+        <select id="f-ders" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-teal-400/40 focus:border-teal-400">
         </select>
       </div>
       <div class="lg:col-span-1">
@@ -217,14 +217,14 @@
           <i class="fa-solid fa-file-lines text-amber-500"></i> Eksik Konu
         </label>
         <input id="f-konu" placeholder="Konu başlığı (opsiyonel)" autocomplete="off"
-          class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400/40 focus:border-teal-400" />
+          class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-teal-400/40 focus:border-teal-400" />
       </div>
       <div class="lg:col-span-1">
         <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1.5 mb-1.5">
           <i class="fa-solid fa-chalkboard-user text-violet-500"></i> Öğretmen
         </label>
         <input id="f-ogretmen" list="dl-ogretmen" placeholder="Öğretmen adı" autocomplete="off"
-          class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400/40 focus:border-teal-400" />
+          class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-teal-400/40 focus:border-teal-400" />
         <datalist id="dl-ogretmen"></datalist>
       </div>
       <div class="lg:col-span-1">
@@ -233,7 +233,7 @@
         </label>
         <div class="flex gap-1.5">
           <input id="f-tarih" type="date"
-            class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400/40 focus:border-teal-400" />
+            class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-teal-400/40 focus:border-teal-400" />
         </div>
         <div class="flex gap-1 mt-1.5">
           <button onclick="bugunTarih()" class="text-[10px] font-semibold text-teal-600 hover:bg-teal-50 border border-teal-200 rounded-full px-2 py-0.5 transition-colors">Bugün</button>
@@ -245,7 +245,7 @@
           <i class="fa-regular fa-clock text-cyan-500"></i> DERS SAATİ
         </label>
         <select id="f-saat"
-          class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400/40 focus:border-teal-400"></select>
+          class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-teal-400/40 focus:border-teal-400"></select>
       </div>
     </div>
 
@@ -262,9 +262,9 @@
 
     <div class="flex items-end justify-end mt-4 gap-2">
       <button id="btnVazgec" onclick="vazgec()"
-        class="hidden rounded-full border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors">Vazgeç</button>
+        class="hidden rounded-full border border-slate-200 px-5 py-2.5 text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors">Vazgeç</button>
       <button onclick="planla()" id="btnPlan"
-        class="inline-flex items-center gap-2 text-white text-sm font-bold rounded-full px-6 py-3 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 shadow-md shadow-teal-500/30 transition-all hover:shadow-lg hover:-translate-y-px">
+        class="inline-flex items-center gap-2 text-white text-[13px] font-medium rounded-full px-6 py-3 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 shadow-md shadow-teal-500/30 transition-all hover:shadow-lg hover:-translate-y-px">
         <i class="fa-solid fa-calendar-plus"></i> <span id="btnPlanYazi">Birebir Dersi Planla</span>
       </button>
     </div>

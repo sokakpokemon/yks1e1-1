@@ -3376,6 +3376,10 @@ Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önb
 
 WhatsApp alıcı listesinde grup üyeleri AYRI satırlarda doğru ders sayısıyla görünmeli; her üyenin önizleme/gönder/kopyala mesajında kendi dersleri + grup dersi olmalı — **kullanıcı görsel kontrolü ile (Ctrl+Shift+R)**.
 
+## Kapanış — DÖNGÜ-27 (görsel doğrulama + geriye dönük onay)
+- Kullanıcı grup WhatsApp alıcı listesini ve kişiye özel mesajları **görsel olarak doğruladı** (Ctrl+Shift+R) — bu kayıtla DÖNGÜ-27 KAPANDI.
+- **Geriye dönük onay:** D27 davranışı (waAc alıcı dağıtımı + ogrenciMesajMetni grup-ders filtresi) sonraki DÖNGÜ-28 (havuz zigzag + günlük "Boş" satırları) ve DÖNGÜ-29 (çizelgeden havuza geri sürükleme) değişikliklerinin bulunduğu mevcut sürümde (app.js `009d03d7…`) de DOĞRULANDI; D27 süiti `ks-dongu27.mjs` 31/31 yeşil, test.mjs tam koşumlarında düşüş yok.
+
 ---
 
 # ✅ CHECKPOINT: DÖNGÜ-28 — Havuz İki Sütun Zigzag + Günlük "Boş" Öğretmen Satırları
@@ -3460,3 +3464,8 @@ Havuz kartları geniş ekranda iki sütun zigzag dizilmeli (1 sol, 2 sağ, 3 sol
 ## Son Kabul
 
 Çizelgeden (haftalık/günlük) bir birebir ders kartı havuza sürüklenip bırakıldığında: onay penceresinde ders + tüm üyeler + sıfırlanma bildirimi görünmeli; onayda ders çizelgeden kalkıp tüm üyeleri/ders/konu ile TEK bekleyen istek havuza düşmeli; iptal/tamamlanmış/Ek Ders/Sınıf Dersi bırakılamamalı; grup dersleri çizelge içinde taşınamamalı — **kullanıcı görsel kontrolü ile (Ctrl+Shift+R)**.
+
+## Kapanış — DÖNGÜ-29 (görsel doğrulama)
+- Kullanıcı haftalık/günlük çizelgeden havuza geri sürükleme, onay penceresi, grup üyelerinin korunması ve reddedilen durumları **görsel olarak doğruladı** (Ctrl+Shift+R) — bu kayıtla DÖNGÜ-29 KAPANDI.
+- **Eski "grup hücresi sürüklenemez" assertion kontrolü:** EVET, vardı — D29 öncesi donmuş testlerde 5 adet grup-sürüklemez assertion vardı: `ks-ders-tasi.mjs` (#17 "GRUP dersi hücresi draggable DEĞİL", #20 "iptal guard'ı kaynakta"), `ks-gunluk-ders-tasi.mjs` (#11 "günlük draggable yalnız tek öğrencili birebir", #27 "GRUP dersi hücresi draggable DEĞİL", #31 "T satırında draggable sayısı = birebir ders sayısı (1)") ve `ks-dongu26.mjs` (#12/#16 "grup hücresi draggable DEĞİL" haftalık/günlük).
+- **Eski→yeni gerekçe (kesin kayıt):** D29 ile grup birebir dersler HAVUZ hedefi için draggable yapıldı (kullanıcı onayı: "grup dersleri de geri alınabilsin"); çizelge-içi grup taşıma YİNE reddedilir (dersBurak guard'ı korunur). Bu nedenle 5 eski assertion'ın adı/beklentisi şu şekilde güncellendi (gevşetme DEĞİL — davranış kasıtlı değişti): "GRUP dersi hücresi draggable DEĞİL" → "GRUP dersi hücresi draggable (DÖNGÜ-29: yalnız havuz hedefi kabul eder — dersBurak reddeder)" (ks-ders-tasi #17); "grup hücresi draggable DEĞİL" → "grup hücresi draggable (DÖNGÜ-29: havuz hedefi)" (ks-dongu26 #12, haftalık) ve "(gunluk, DÖNGÜ-29)" (ks-dongu26 #16); "günlük draggable yalnız tek öğrencili birebir" → "günlük draggable planlı birebir (DÖNGÜ-29: grup dahil; iptal+tamamlanmış hariç)" (ks-gunluk-ders-tasi #11); "GRUP dersi hücresi draggable DEĞİL" → "GRUP dersi hücresi draggable (DÖNGÜ-29: havuz hedefi; çizelge-içi taşıma reddedilir)" (ks-gunluk-ders-tasi #27); "T satırında draggable sayısı = birebir ders sayısı (1)" → "= ders sayısı (2: birebir + grup)" (ks-gunluk-ders-tasi #31). İptal guard'ı (ks-ders-tasi #20) "draggable guard'ı kaynakta (DÖNGÜ-29: iptal+tamamlanmış hariç; grup dahil)" olarak güncellendi — guard'ın kendisi genişletildi. Gerekçe CHECKPOINT D29 tablosunda ve donmuş beşlide (suit-vakalar txt + elle-vaka-adlari) elle kayıtlı; koşumdan otomatik üretim YOK.

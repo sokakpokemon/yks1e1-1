@@ -164,7 +164,7 @@ t("haftalikOgrtTablo diff'i yalnız PAZAR-BIREBIR işaretli bölgede", (() => {
   const satirlarYeni = hotBlok.split("\n");
   const farkli = satirlarYeni.filter((s) => !satirlarEski.includes(s));
   /* DÖNGÜ-26: "DÖNGÜ-26" işaretli satırlar (grup üye satırı TAM AD + hucreUst ölü kod kaldırma) yasal değişiklik bölgesi */
-  const KELIMELER = ["PAZAR-BIREBIR-GORUNUM-YAMASI", "BIREBIR-GORUNUM-ORTAK-YAMASI", "DÖNGÜ-17", "DÖNGÜ-26", "ölü hucreUst", "grupUyeler.length ? '<div", "HAFTA_SLOTLARI", "slotH.mola", "slotH.no", "slotH.b", "emerald", "k.no", "k.b", "k.e", "if (k.mola)", "mola dalı", "} else {", "continue;", "saatBaslik +=", "birebirHucreHTML", "tamAd", "hucreKonu", "min-w-0", "truncate", "dnd-kilit", "esc(", "ogrenciAd", "ogrenci.", "ders.ogrenciId", "ogrenci bulunamazsa", "})();"]; /* DÖNGÜ-17: saat başlığı 3 satır + Mola kolonu yasal değişiklik bölgesi */
+  const KELIMELER = ["PAZAR-BIREBIR-GORUNUM-YAMASI", "BIREBIR-GORUNUM-ORTAK-YAMASI", "DÖNGÜ-17", "DÖNGÜ-26", "DÖNGÜ-29", "ölü hucreUst", "grupUyeler.length ? '<div", "HAFTA_SLOTLARI", "slotH.mola", "slotH.no", "slotH.b", "emerald", "k.no", "k.b", "k.e", "if (k.mola)", "mola dalı", "} else {", "continue;", "saatBaslik +=", "birebirHucreHTML", "tamAd", "hucreKonu", "min-w-0", "truncate", "dnd-kilit", "esc(", "ogrenciAd", "ogrenci.", "ders.ogrenciId", "ogrenci bulunamazsa", "})();"]; /* DÖNGÜ-17: saat başlığı 3 satır + Mola kolonu yasal değişiklik bölgesi */
   return farkli.every((s) => KELIMELER.some((k) => s.includes(k)));
 })());
 t("csvHucre değişmedi", sha(blok("function csvHucre(v) {")) === sha(bakBlok(bakKaynak, "function csvHucre(v) {")));

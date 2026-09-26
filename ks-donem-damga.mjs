@@ -291,7 +291,7 @@ console.log("10) Helper: güvenli dönem değeri sözleşmesi:");
   const kayitli = aktifDonemId();
   t("dönen değer her koşulda dolu string", typeof kayitli === "string" && kayitli.length > 0);
   t("fallback değeri 'donem-2026-2027' sözleşmesi kaynakta", readFileSync("app.js", "utf8").includes('DB.aktifDonemId : "donem-2026-2027"'));
-  t("4 kayıt noktasında donemId: aktifDonemId() damgası var", (readFileSync("app.js", "utf8").match(/donemId: aktifDonemId\(\)/g) || []).length === 4);
+  t("5 kayıt noktasında donemId: aktifDonemId() damgası var (4 + DÖNGÜ-29 geri-alma isteği)", (readFileSync("app.js", "utf8").match(/donemId: aktifDonemId\(\)/g) || []).length === 5);
 }
 
 /* ---- 11) 2. DB bağlamı: istek/plan akışı taze DB'de de damgalı ---- */

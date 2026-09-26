@@ -1,0 +1,25 @@
+boot hatasız
+onay açıldı (modal görünür)
+onay metninde öğrenci + konu VAR
+onay metninde sıfırlanma bildirimi VAR
+ders SİLİNDİ
+TEK istek oluştu (+1)
+istek bekliyor + ders/konu korundu
+olusturma korundu (kronoloji bozulmaz)
+donemId damgalı
+ui.aktifIstekId temizlendi
+grup dersi silindi, TEK istek oluştu
+üye korundu: ogrenciId=ana, ogrenciIds=[u1,u2]
+istekOgrenciIds 3 üye
+grup istek bekliyor + ders/konu korundu
+iptal ders RED (onay açılmaz, veri değişmez)
+tamamlanmış ders RED
+Ek Ders RED
+Sınıf Dersi kaydı RED (birebir değil)
+silinen ders tekrar bırakılamaz (istek +0)
+grup çizelge-içi taşıma RED (localStorage değişmedi)
+grup ders hâlâ yerinde (tarih/saat aynı)
+havuzBolum drop listener VAR (__geriAlmaBagli idempotent guard, 2 nokta)
+dersHavuzaGeriBurak tanımı tam 1
+onayAc ile açılıyor (mevcut onay mekanizması)
+sıfırlanma bildirimi kaynakta

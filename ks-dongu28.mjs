@@ -129,7 +129,7 @@ t("istekBurak tanımı tam 1 (paralel sistem YOK)", kez("function istekBurak(") 
 t("dersBurak tanımı tam 1 (grup dahil mevcut yol)", kez("function dersBurak(ogrtId, tarih, saat) {") === 1);
 t("dersDrag tanımı tam 1", kez("function dersDrag(ev, id) {") === 1);
 t("istekBurak → dersBurak devri tam 1", kez("if (dersDropHedef) { dersBurak(ogrtId, tarih, saat); return; }") === 1);
-t("grup guard: dersOgrenciIds(ders).length === 1 draggable koşulu aynen", gunlukBolge28(appKaynak).includes('(ders.durum !== "iptal" && dersOgrenciIds(ders).length === 1 ?'));
+t("draggable guard: planlı birebir (DÖNGÜ-29: grup dahil; iptal+tamamlanmış hariç)", gunlukBolge28(appKaynak).includes('(ders.durum !== "iptal" && ders.durum !== "tamamlandi" ?'));
 t("Boş satır drop hedefi SADECE uygun slotlarda (kilitli hücre dnd-bos değil)", (() => {
   /* boş satırlarda dnd-bos sayısı ≤ 11 (mola hariç); kilitli hücreler plain td */
   const bosBolum = gunHTML.slice(gunHTML.indexOf(">Boş</span>") - 500);

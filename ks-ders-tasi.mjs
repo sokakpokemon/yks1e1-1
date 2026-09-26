@@ -189,9 +189,8 @@ temizle();
 const dGrup = dersYap({ id: "kd-d-grup", ogrenciIds: [O2.id], tarih: gelecekPzt, saat: KISA_KOD[8].b, kod: ksKodOf(KISA_KOD[8].b) });
 DB.dersler.push(dGrup);
 h = haftaGorunum();
-t("GRUP dersi hücresi draggable DEĞİL",
-  h.includes('<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100"><div class="rounded-lg border bg-blue-50') &&
-  !tdBlok(h, 'title="' + O1.ad + '"').includes("draggable"));
+t("GRUP dersi hücresi draggable (DÖNGÜ-29: yalnız havuz hedefi kabul eder — dersBurak reddeder)",
+  tdBlok(h, 'title="' + O1.ad + '"').includes("draggable=\"true\"") && tdBlok(h, 'title="' + O1.ad + '"').includes('dersDrag(event, \'' + dGrup.id + '\'')); /* DÖNGÜ-29: grup birebir draggable — havuza geri bırakma hedefi; çizelge-içi taşıma dersBurak'ta reddedilir */
 t("grup dersinde ana öğrenci adı hâlâ görünür", h.includes('title="' + O1.ad + '"'));
 
 /* iptal ders → haftalık tabloda hiç görünmez (bu yüzden kaynak olamaz) */
@@ -201,7 +200,7 @@ h = haftaGorunum();
 t("İPTAL ders haftalık tabloda YOK (draggable kaynak olamaz)",
   !h.includes('<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100" draggable="true" style="cursor:grab" ondragstart="dersDrag(event, \'' + dIptal.id + '\'') &&
   h.includes('data-drop-saat="' + KISA_KOD[9].b + '"'));
-t("iptal guard'ı kaynakta (ders.durum !== \"iptal\")", appKaynak.includes('(ders.durum !== "iptal" && dersOgrenciIds(ders).length === 1 ?'));
+t("draggable guard'ı kaynakta (DÖNGÜ-29: iptal+tamamlanmış hariç; grup dahil)", appKaynak.includes('(ders.durum !== "iptal" && ders.durum !== "tamamlandi" ?'));
 
 /* Sınıf Dersi (rose) → draggable DEĞİL */
 temizle(); DB.dersler.push(dersYap({ id: "kd-d-rose" }));

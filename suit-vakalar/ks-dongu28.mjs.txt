@@ -16,5 +16,5 @@ istekBurak tanımı tam 1 (paralel sistem YOK)
 dersBurak tanımı tam 1 (grup dahil mevcut yol)
 dersDrag tanımı tam 1
 istekBurak → dersBurak devri tam 1
-grup guard: dersOgrenciIds(ders).length === 1 draggable koşulu aynen
+draggable guard: planlı birebir (DÖNGÜ-29: grup dahil; iptal+tamamlanmış hariç)
 Boş satır drop hedefi SADECE uygun slotlarda (kilitli hücre dnd-bos değil)

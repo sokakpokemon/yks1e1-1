@@ -97,7 +97,7 @@ t("haftalık tablo render edildi", haftalikHTML.length > 0);
 t("haftalık hücrede ANA ad tam görünür", haftalikHTML.includes(ana.ad));
 t("haftalık hücrede ÜYE 1 tam ad görünür", haftalikHTML.includes(u1.ad));
 t("haftalık hücrede ÜYE 2 tam ad görünür", haftalikHTML.includes(u2.ad));
-t("grup hücresi draggable DEĞİL", !!yeniDers && !haftalikHTML.includes(dragAttr(yeniDers.id)));
+t("grup hücresi draggable (DÖNGÜ-29: havuz hedefi)", !!yeniDers && haftalikHTML.includes(dragAttr(yeniDers.id)));
 
 /* ================= B) Gunluk tablo grup görünümü ================= */
 console.log("B) gunlukTablo grup görünümü:");
@@ -106,7 +106,7 @@ const gunlukHTML = gunlukTablo();
 t("günlük hücrede ana ad", gunlukHTML.includes(ana.ad));
 t("günlük hücrede üye 1 tam ad", gunlukHTML.includes(u1.ad));
 t("günlük hücrede üye 2 tam ad", gunlukHTML.includes(u2.ad));
-t("grup hücresi draggable DEĞİL (gunluk)", !!yeniDers && !gunlukHTML.includes(dragAttr(yeniDers.id)));
+t("grup hücresi draggable (gunluk, DÖNGÜ-29)", !!yeniDers && gunlukHTML.includes(dragAttr(yeniDers.id)));
 
 /* ================= C) Tek öğrencili regresyon ================= */
 console.log("C) Tek öğrencili birebir regresyon:");

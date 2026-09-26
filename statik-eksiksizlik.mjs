@@ -97,6 +97,7 @@ for (const ad of Object.keys(manifest)) {
     { suit: "ks-kart-kolon.mjs", siteNo: 49, satir: 217, gerekce: "DÖNGÜ-20 satır kayması (eski siteNo 46/L205 → 49/L217): İKİNCİ onarım çökertilmedi dalı (normal koşumda çökertilir → bu dal 0 hit DOĞRU); onu kapatan kalıcı fixture: 'kart-kolon fixture: onarım catch dalı GERÇEKTEN ateşlendi'" },
     { suit: "ks-kart-kolon.mjs", siteNo: 51, satir: 220, gerekce: "DÖNGÜ-20 satır kayması (eski siteNo 48/L208 → 51/L220): dış-çökme dalı (normal koşumda girilmez); onu kapatan kalıcı fixture: aynı blokta 'kart-kolon fixture: onarım catch dalı GERÇEKTEN ateşlendi'" },
     { suit: "ks-dongu28.mjs", siteNo: 2, satir: 62, gerekce: "DÖNGÜ-28: boot hatası catch dalı — normal koşumda boot hatasız → catch 0 hit DOĞRU (catch-içi t( THROW'a çevrildiği için gizli test yok; onu kapatan test koşumun kendisidir)" },
+    { suit: "ks-dongu29.mjs", siteNo: 2, satir: 59, gerekce: "DÖNGÜ-29: boot hatası catch dalı — normal koşumda boot hatasız → catch 0 hit DOĞRU (catch-içi t( THROW'a çevrildiği için gizli test yok; onu kapatan test koşumun kendisidir)" },
   ];
   /* İstisna bütünlüğü: listedeki her suit/site ikilisi GERÇEK bir hit=0 site olmalı —
      gereksiz giriş da FAIL sayılır (sessiz genişleme yok). */

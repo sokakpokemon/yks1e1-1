@@ -3026,26 +3026,6 @@ document.addEventListener("DOMContentLoaded", function () {
     formaAktar(istekDropHedef);
     istekDropHedef = null;
   });
-  /* DÖNGÜ-29-YAMASI: havuzBolum drop-zone — çizelgeden sürüklenen birebir dersi geri alır.
-     Yalnız dersDropHedef doluysa aktifleşir; havuz isteği akışına DOKUNMAZ. Geçersiz/boş
-     drop'ta veri DEĞİŞMEZ (dersHavuzaGeriBurak guard'ları + onay mekanizması). */
-  var hv = $("havuzBolum");
-  if (hv && !hv.__geriAlmaBagli) {
-    hv.__geriAlmaBagli = true;
-    hv.addEventListener("dragover", function (e) {
-      if (!dersDropHedef) return;
-      e.preventDefault();
-      if (ev_dnd) ev_dnd.dataTransfer.dropEffect = "move";
-      hv.classList.add("ring-2", "ring-teal-300");
-    });
-    hv.addEventListener("dragleave", function () { hv.classList.remove("ring-2", "ring-teal-300"); });
-    hv.addEventListener("drop", function (e) {
-      hv.classList.remove("ring-2", "ring-teal-300");
-      if (!dersDropHedef) return;
-      e.preventDefault();
-      dersHavuzaGeriBurak(dersDropHedef);
-    });
-  }
 });
 var ev_dnd = null, istekDropHedef = null;
 var dersDropHedef = null; /* DERS-TASI-YAMASI: haftalık tablo birebir ders kartının kaynak ID'si — aynı drop yolu, paralel sistem yok */
@@ -3724,8 +3704,7 @@ function haftalikOgrtTablo() {
         /* BIREBIR-GORUNUM-ORTAK-YAMASI: ortak yardımcıyla günlük tablo ile AYNI hücre (ders adı yok) */
         /* DERS-TASI-YAMASI: dnd-kilit hücresi — yalnız AKTİF TEK ÖĞRENCİLİ birebir ders sürüklenebilir; grup ve rose Sınıf Dersi / amber Ek Ders / gri Kapalı sürüklenemez. */
         satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100"' +
-          /* DÖNGÜ-29-YAMASI: grup birebir dersler de draggable — yalnız havuz hedefi kabul eder (dersBurak reddeder); iptal/tamamlanmış draggable değil */
-          (ders.durum !== "iptal" && ders.durum !== "tamamlandi" ? ' draggable="true" style="cursor:grab" ondragstart="dersDrag(event, \'' + esc(ders.id) + '\'); this.style.opacity=\'0.45\'" ondragend="dersDropHedef=null; this.style.opacity=\'\'"' : '') + '>' +
+          (ders.durum !== "iptal" && dersOgrenciIds(ders).length === 1 ? ' draggable="true" style="cursor:grab" ondragstart="dersDrag(event, \'' + esc(ders.id) + '\'); this.style.opacity=\'0.45\'" ondragend="dersDropHedef=null; this.style.opacity=\'\'"' : '') + '>' +
           birebirHucreHTML(ders, ogrenci, ogrenciAd, sinif, durumRenk) +
           (grupUyeler.length ? '<div class="text-[9px] font-semibold text-slate-500 leading-snug break-words mt-0.5" title="Grup üyeleri">' + grupUyeler.map(function (a) { return esc(a); }).join(", ") + '</div>' : '') + '</td>'; /* DÖNGÜ-26: grup üyeleri TAM AD, alt satır sarımlı; birebirde eklenmez. DERS-KARTI-TASIMA-YAMASI: haftalik hücreden kart butonu kaldırıldı — ders listesi ISLEM alanına taşındı */
       } else {
@@ -3824,69 +3803,6 @@ function istekBurak(ev, el, ogrtId, tarih, saat) {
    aynı istekDragOver/istekDragLeave ve aynı ondrop="istekBurak(...)" yolu.
    Paralel/ayrı bir drag&drop sistemi KURULMAZ. Yalnız AKTİF TEK ÖĞRENCİLİ birebir ders taşınır.
    ═══════════════════════════════════════════════════════════════ */
-/* DÖNGÜ-29-YAMASI — ÇİZELGEDEN HAVUZA GERİ BIRAKMA (onaylı)
-   Kapsam: planlı birebir dersler (tekli + grup). İptal/tamamlanmış, Ek Ders, Sınıf Dersi RED.
-   Akış: havuzBolum drop → onayAc (ders + üyeler + tarih/saat/öğretmen sıfırlanma bildirimi)
-   → onaylıysa ders SİLİNİR + tüm üyeleri/ders/konu ile TEK "bekliyor" istek oluşur.
-   ui.aktifIstekId ve ui.editId temizlenir; düzenleme formu sıfırlanır. */
-function dersHavuzaGeriBurak(dersId) {
-  dersDropHedef = null;
-  var l = DB.dersler.find(function (x) { return x.id === dersId; });
-  if (!l) { toast("Ders bulunamadı — geri bırakma iptal.", "hata"); return; }
-  /* RED: iptal / tamamlanmış */
-  if (l.durum === "iptal") { toast("İptal edilmiş ders havuza geri bırakılamaz.", "hata"); return; }
-  if (l.durum === "tamamlandi") { toast("Tamamlanmış ders havuza geri bırakılamaz.", "hata"); return; }
-  /* Ek Ders / Sınıf Dersi guard: birebir ders kaydı olmalı (ogrenciId'li) */
-  var uyeIdler = dersOgrenciIds(l);
-  if (!l.ogrenciId || !uyeIdler.length) { toast("Bu kayıt birebir ders değil — havuza geri bırakılamaz.", "hata"); return; }
-  /* Ek Ders kontrolü: ders ekDersler'de İSE reddet (aynı id'li birebir kaydı olamaz ama savunma katmanı) */
-  var ekMi = (Array.isArray(DB.ekDersler) ? DB.ekDersler : []).some(function (x) { return x.id === l.id; });
-  if (ekMi) { toast("Ek Ders kaydı havuza geri bırakılamaz.", "hata"); return; }
-  /* Sınıf Dersi guard: ogrenciId yoksa zaten yukarıda reddedilir; ayrıca ders.sinif dolu + ogrenciAd boş kombinasyonu engellenir */
-  if (!l.ogrenciAd && l.sinif) { toast("Sınıf dersi havuza geri bırakılamaz.", "hata"); return; }
-
-  var anaO = DB.ogrenciler.find(function (x) { return x.id === l.ogrenciId; });
-  var ekler = (Array.isArray(l.ogrenciIds) ? l.ogrenciIds.slice() : []);
-  var uyeSatir = uyeIdler.map(function (oid) {
-    var o = DB.ogrenciler.find(function (x) { return x.id === oid; });
-    return o ? o.ad : "Bilinmeyen";
-  }).join(", ");
-  var D = DERS[l.dersId] || { ad: String(l.dersId) };
-  onayAc({
-    baslik: "Ders havuza geri alınsın mı?",
-    metin: "<b>" + esc(uyeSatir) + "</b>" +
-      (uyeIdler.length > 1 ? " <span class='text-[11px] text-slate-400'>(" + uyeIdler.length + " öğrenci — grup)</span>" : "") +
-      "<br>" + esc(D.ad) + (l.konu ? " — " + esc(l.konu) : "") +
-      "<br><span class='text-[11px] text-amber-600 font-semibold'>Planlama detayları (tarih, saat, öğretmen) sıfırlanır; istek yeniden planlamanız için havuza bekler.</span>",
-    onay: "Havuza Geri Al"
-  }, function () {
-    /* Onaylı: ders silinir → TEK bekleyen istek */
-    DB.dersler = DB.dersler.filter(function (x) { return x.id !== l.id; });
-    var yeniIstek = {
-      id: uid(), ogrenciId: l.ogrenciId, ogrenciAd: (anaO ? anaO.ad : (l.ogrenciAd || "")),
-      dersId: l.dersId, konu: l.konu || "", durum: "bekliyor",
-      olusturma: l.olusturma || todayKey(), donemId: aktifDonemId()
-    };
-    if (ekler.length) yeniIstek.ogrenciIds = ekler; /* üyelik aynen korunur */
-    DB.istekler.push(yeniIstek);
-    /* State temizliği: düzenleme/istek bağlantıları düşürülür */
-    ui.aktifIstekId = null;
-    if (ui.editId === l.id) {
-      ui.editId = null;
-      ["f-ogrenci", "f-ders", "f-konu", "f-ogretmen", "f-tarih", "f-saat"].forEach(function (id) { try { var el2 = $(id); if (el2) el2.value = ""; } catch (e) {} });
-      try { var yk2 = $("f-yoksay"); if (yk2) yk2.checked = false; } catch (e2) {}
-      try { duzenleBannerGuncelle(); } catch (e3) {}
-    }
-    toast("Ders havuza geri alındı ✓ " + uyeSatir);
-    saveDB();
-    renderHavuz();
-    renderFormDestek();
-    renderDersler();
-    renderOzet();
-    renderAnaliz();
-  });
-}
-
 function dersDrag(ev, id) {
   dersDropHedef = id;                       // kaynak ders ID'si drag boyunca taşınır
   istekDropHedef = null;                    // havuz kartı akışıyla karışmaz
@@ -3899,11 +3815,8 @@ function dersBurak(ogrtId, tarih, saat) {
   if (!l) return;
 
   /* Yalnız AKTİF TEK ÖĞRENCİLİ birebir: grup / Sınıf Dersi (rose) / Ek Ders (amber) RED */
-  /* DÖNGÜ-29-YAMASI: grup birebir dersler draggable olduktan sonra çizelge-içi taşıma YİNE reddedilir;
-     grup dersleri yalnız HAVUZ hedefine geri bırakılabilir (dersHavuzaGeriBurak). */
   if (l.durum === "iptal") { toast("İptal edilmiş ders taşınamaz.", "hata"); renderDersler(); return; }
-  if (l.durum === "tamamlandi") { toast("Tamamlanmış ders taşınamaz.", "hata"); renderDersler(); return; }
-  if (dersOgrenciIds(l).length !== 1) { toast("Grup dersleri çizelgede taşınamaz — havuza geri bırakın.", "hata"); renderDersler(); return; }
+  if (dersOgrenciIds(l).length !== 1) { toast("Yalnız tek öğrencili birebir ders taşınabilir.", "hata"); renderDersler(); return; }
 
   var t = DB.ogretmenler.find(function (x) { return x.id === ogrtId; });
   if (!t) { toast("Öğretmen bulunamadı.", "hata"); renderDersler(); return; }
@@ -4099,8 +4012,7 @@ function gunlukTablo() {
              grup / iptal / Sınıf Dersi (rose) / Ek Ders (amber) / Kapalı (gri) sürüklenemez.
              Taşıma MEVCUT dersDrag/dersBurak yoluyla yapılır — paralel DnD sistemi kurulmaz. */
           html += '<td class="px-1.5 py-2 border-r border-slate-200 hover:bg-blue-50 transition-colors"' +
-            /* DÖNGÜ-29-YAMASI: grup birebir dersler de draggable — yalnız havuz hedefi kabul eder (dersBurak reddeder); iptal/tamamlanmış draggable değil */
-          (ders.durum !== "iptal" && ders.durum !== "tamamlandi" ? ' draggable="true" style="cursor:grab" ondragstart="dersDrag(event, \'' + esc(ders.id) + '\'); this.style.opacity=\'0.45\'" ondragend="dersDropHedef=null; this.style.opacity=\'\'"' : '') + '>' +
+            (ders.durum !== "iptal" && dersOgrenciIds(ders).length === 1 ? ' draggable="true" style="cursor:grab" ondragstart="dersDrag(event, \'' + esc(ders.id) + '\'); this.style.opacity=\'0.45\'" ondragend="dersDropHedef=null; this.style.opacity=\'\'"' : '') + '>' +
             birebirHucreHTML(ders, ogrenci, ders.ogrenciAd || "", sinif, durumRenkG); /* DERS-KARTI-TASIMA-YAMASI: gunluk hücreden kart butonu kaldırıldı */
 
           if (grupUyelerG.length) html += '<div class="text-[9px] font-semibold text-slate-500 leading-snug break-words mt-0.5" title="Grup üyeleri">' + grupUyelerG.map(function (a) { return esc(a); }).join(", ") + '</div>'; /* DÖNGÜ-26: üyeler TAM AD (baş harf yerine) */

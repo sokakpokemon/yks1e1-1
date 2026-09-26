@@ -178,7 +178,7 @@ t("günlük yama işareti var (GUNLUK-DERS-TASI-YAMASI)", kez("GUNLUK-DERS-TASI-
 t("günlük hücre MEVCUT dersDrag'i çağırıyor (yeni fonksiyon değil)", gunlukBolge.includes('ondragstart="dersDrag(event,'));
 t("günlük boş hücre MEVCUT istekDragOver/istekDragLeave/istekBurak yolunu kullanıyor",
   gunlukBolge.includes('ondragover="istekDragOver(event, this)"') && gunlukBolge.includes('ondragleave="istekDragLeave(this)"') && gunlukBolge.includes('ondrop="istekBurak(event, this,'));
-t("günlük draggable yalnız tek öğrencili birebir (grup/iptal guard'ı)", gunlukBolge.includes('(ders.durum !== "iptal" && dersOgrenciIds(ders).length === 1 ?'));
+t("günlük draggable planlı birebir (DÖNGÜ-29: grup dahil; iptal+tamamlanmış hariç)", gunlukBolge.includes('(ders.durum !== "iptal" && ders.durum !== "tamamlandi" ?'));
 t("hedef saat MEVCUT SAAT_SLOTLARI yardımcısından (slot.b) — index varsayımı YOK", gunlukBolge.includes("slot.b"));
 t("hedef gün MEVCUT dowIdx(gunKey) ile — gün değişmez", gunlukBolge.includes("dowIdx(gunKey)"));
 t("dersBurak mevcut duzeltmeBul kontrolünü kullanıyor (kaynak hariç: staged.id)", bolge("function dersBurak(ogrtId, tarih, saat) {").includes("duzeltmeBul({ id: staged.id,"));
@@ -229,11 +229,11 @@ t("birebir hücre içeriği değişmedi (tam ad)", satirT.includes('title="' + O
 /* DÖNGÜ-26: eski→yeni ad + gerekçe — marker "text-[8.5px] text-slate-400 mt-0.5" (baş harf) → "title=\"Grup üyeleri\"" (tam ad satırı);
    gerekçe: grup üyeleri artık TAM AD olarak gösterilir (kullanıcı onayı; baş harf yeterli değildi). */
 const kGrupBlok = tdBlok(satirT, "title=\"Grup üyeleri\"");
-t("GRUP dersi hücresi draggable DEĞİL", kGrupBlok.length > 0 && !kGrupBlok.includes("draggable"));
+t("GRUP dersi hücresi draggable (DÖNGÜ-29: havuz hedefi; çizelge-içi taşıma reddedilir)", kGrupBlok.length > 0 && kGrupBlok.includes("draggable"));
 t("grup dersinde ana öğrenci tam adı görünür", satirT.includes('title="' + O1.ad + '"'));
 t("amber Ek Ders hücresi draggable DEĞİL", !tdBlok(satirT, "Ek Ders").includes("draggable"));
 t("amber Ek Ders hücresi eski markup'ta (bg-amber-50 + 'Ek Ders')", satirT.includes("bg-amber-50") && satirT.includes("Ek Ders"));
-t("T satırında draggable sayısı = birebir ders sayısı (1)", satirT.length > 0 && (satirT.match(/draggable="true"/g) || []).length === 1);
+t("T satırında draggable sayısı = ders sayısı (2: birebir + grup)", satirT.length > 0 && (satirT.match(/draggable="true"/g) || []).length === 2); /* DÖNGÜ-29: grup da draggable */
 /* iptal ders → günlük tabloda YOK (kaynak olamaz) */
 const kIptal = dersYap({ id: "kg-d-iptal", saat: KOD8, kod: ksKodOf(KOD8), durum: "iptal" });
 DB.dersler.push(kIptal);

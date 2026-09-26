@@ -44,7 +44,7 @@ yeni ders yalnızca donemId ile farklı değil — diğer alanlar da doğru
 helper DB.aktifDonemId doluysa ONU kullanır (yeni kayıt dönemi)
 dönen değer her koşulda dolu string
 fallback değeri 'donem-2026-2027' sözleşmesi kaynakta
-4 kayıt noktasında donemId: aktifDonemId() damgası var
+5 kayıt noktasında donemId: aktifDonemId() damgası var (4 + DÖNGÜ-29 geri-alma isteği)
 2. bağlamda yeni istek 'donem-2025-2026' aldı
 2. bağlamda yeni ders 'donem-2025-2026' aldı
 2. bağlamda yeni grup istek 'donem-2026-2027' aldı (A'ya döndük)

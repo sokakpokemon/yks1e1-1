@@ -14,10 +14,10 @@ dersBurak tarih yardımcılarını kullanıyor (manuel index yok)
 slot 6 → 13:50 · slot 8 → 15:30
 birebir ders hücresi draggable + dersDrag(event, ...) taşıyor
 birebir hücre içeriği değişmedi (tam ad)
-GRUP dersi hücresi draggable DEĞİL
+GRUP dersi hücresi draggable (DÖNGÜ-29: yalnız havuz hedefi kabul eder — dersBurak reddeder)
 grup dersinde ana öğrenci adı hâlâ görünür
 İPTAL ders haftalık tabloda YOK (draggable kaynak olamaz)
-iptal guard'ı kaynakta (ders.durum !== "iptal")
+draggable guard'ı kaynakta (DÖNGÜ-29: iptal+tamamlanmış hariç; grup dahil)
 rose Sınıf Dersi hücresi draggable DEĞİL
 rose hücrede sınıf adı görünür, hiç draggable yok (o hücrede)
 amber Ek Ders hücresi draggable DEĞİL

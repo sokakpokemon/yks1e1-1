@@ -8,7 +8,7 @@ drop-zone çağrısı 3 yol (haftalık + günlük dersli + günlük Boş satırl
 günlük yama işareti var (GUNLUK-DERS-TASI-YAMASI)
 günlük hücre MEVCUT dersDrag'i çağırıyor (yeni fonksiyon değil)
 günlük boş hücre MEVCUT istekDragOver/istekDragLeave/istekBurak yolunu kullanıyor
-günlük draggable yalnız tek öğrencili birebir (grup/iptal guard'ı)
+günlük draggable planlı birebir (DÖNGÜ-29: grup dahil; iptal+tamamlanmış hariç)
 hedef saat MEVCUT SAAT_SLOTLARI yardımcısından (slot.b) — index varsayımı YOK
 hedef gün MEVCUT dowIdx(gunKey) ile — gün değişmez
 dersBurak mevcut duzeltmeBul kontrolünü kullanıyor (kaynak hariç: staged.id)
@@ -24,11 +24,11 @@ Mola hücresi markup'ı birebir korundu (emerald)
 ksKodOf("12:00") = '' (mola kısa kodda yok)
 birebir ders hücresi draggable + dersDrag taşıyor
 birebir hücre içeriği değişmedi (tam ad)
-GRUP dersi hücresi draggable DEĞİL
+GRUP dersi hücresi draggable (DÖNGÜ-29: havuz hedefi; çizelge-içi taşıma reddedilir)
 grup dersinde ana öğrenci tam adı görünür
 amber Ek Ders hücresi draggable DEĞİL
 amber Ek Ders hücresi eski markup'ta (bg-amber-50 + 'Ek Ders')
-T satırında draggable sayısı = birebir ders sayısı (1)
+T satırında draggable sayısı = ders sayısı (2: birebir + grup)
 İPTAL ders günlük tabloda YOK (draggable kaynak olamaz)
 iptal guard'ı günlük kaynakta (ders.durum !== "iptal")
 aynı satır 6→8 → ders hedef SAATE taşındı (saat + kod)

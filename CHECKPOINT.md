@@ -3516,3 +3516,39 @@ copy-static: 7 dosya byte-birebir kopyalandı.
 ## Canlı Doğrulama (Şart 5) — dağıtım sonrası
 
 Canlıda 6 istek: `/app.js` → SHA `009d03d7…` + `application/javascript` · `/ek-ders.js` → `application/javascript` · `/vendor/tailwind.js` → `application/javascript` · `/vendor/fontawesome.css` + `/vendor/fonts.css` → `text/css` — hepsi GERÇEK içerik (`content-disposition: index.html` fallback YOK). Son kabul: kullanıcı görsel kontrolü (Ctrl+Shift+R).
+
+
+---
+
+# ✅ CHECKPOINT: TEMİZLİK — Eski .bak ve Mutasyon Dosyalarının Güvenli Arşivlenmesi (dongu15–29)
+
+**Tarih:** 26 Eylül 2026 · **Durum:** ✅ Tamamlandı — SİLME YOK, doğrulanmış kopya sonrası taşıma
+
+## Ne yapıldı
+
+- **224 dosya (16.493.316 byte)** codebase'den KOPYALANDI → her dosya byte+SHA-256 ile kaynakla BİREBİR doğrulandı → ancak SONRA kaynakta taşındı:
+  **/home/daytona/codebase-arsiv-dongu15-29/** (codebase DIŞI). Kategoriler: app.js*.bak 56 + app.js.yama-tmp 1 · ek-ders.js 2 · index.html 5 · test.mjs 8 · gate-oncesi 44 · fixture-oncesi 9 · catchfix-oncesi 8 · bayrak-oncesi 4 · gercek-dal-oncesi 9 · ks-yama-* 49 · mutasyon-dongu13–21 9 · aktif-süit .bak 20.
+- **MANIFEST.txt** (orijinal-yol|byte|sha256, 224 veri satırı) üretildi ve ayrıca hash'lendi:
+  **MANIFEST-SHA256: bff56c30b74079f8170a5ff1ccc6051cca03c611ce0b8dafa800d0c407b8c95e** (MANIFEST-SHA.txt).
+
+## Dürüstlük notu (temizlik — DÖNGÜ düzeltme geleneği)
+
+Önceki rapordaki **236** sayısı KE özetleme hatasıydı (25↔37); mekanik türevle doğru sayı **224** — kanıt: **224+37=261**, byte dengesi kapalı (16.493.316 + 3.914.924 = 20.408.240 B), keşif envanteri (261 satır ad|byte|SHA) makine-diff temiz, 224 dökümü ↔ KE-37 türevi kesişimi **0** (comm -12), pre-move korunan-desen taraması **5 desen / 0 hit**. İlk Kapı-3 koşusundaki kırmızı, kontrol komutundaki yanlış yön türetiminden (grep -vE ile KE yerine 224 kümesi üretilmiş) kaynaklanıyordu; doğru türev (comm -23 = 37, donmuş listeyle birebir) ile kesişim 0 doğrulandı.
+
+## KE — codebase'de KALAN 37 (kararla)
+
+dongu22–29 aileleri (app.js ×10, index.html ×1, süit .bak ×7, ks-yama-dongu22/26/26b/27/28/29 ×6, mutasyon-dongu22–27 ×6) · mutasyon-dongu12 · I/O-referanslı 4 (ks-yama-excel-csv.mjs, ks-yama-excel-k-import.mjs, ks-yama-gunluk-ders-tasi.mjs, app.js.ekders-ozet-csv-oncesi.bak) · suit-vakalar yedekleri 2.
+
+## Dokunulmazlar
+
+- **olay-dongu15-kilit dokunulmadı:** TABAN-8ce8093d…kopya codebase'de yerinde; dongu15-bento ikili + tmp-taban ise onaylı taşıma listesinde olduğundan arşivde (MANIFEST satırlarında kayıtlı).
+- package.json · scripts/copy-static.mjs · public/ · dist/ arşive TAŞINMADI (deploy zinciri).
+- Eski CHECKPOINT satırları DEĞİŞTİRİLMEDİ — orijinal yollar tarihsel kanıt olarak durur; bu bölüm TEK append.
+
+## Kapılar (taşıma sonrası, hepsi yeşil)
+
+- node --check app.js / ek-ders.js → OK
+- node test.mjs → **2452/2452 OK** (51 süit, HAM Σ beşli birebir, exit 0)
+- node statik-eksiksizlik.mjs → **48/48 TAMLIK KANITI** (exit 0)
+- Kök SHA'lar DEĞİŞMEDİ: app.js 009d03d7… · index.html 244f61c8… · ek-ders.js 3d2dd38f…
+- Kalıntı kontrolü: taşıma sonrası aday-desen kalan = 37, KE türeviyle birebir; arşivde 226 dosya (224 + MANIFEST.txt + MANIFEST-SHA.txt).

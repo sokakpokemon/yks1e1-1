@@ -3469,3 +3469,50 @@ Havuz kartları geniş ekranda iki sütun zigzag dizilmeli (1 sol, 2 sağ, 3 sol
 - Kullanıcı haftalık/günlük çizelgeden havuza geri sürükleme, onay penceresi, grup üyelerinin korunması ve reddedilen durumları **görsel olarak doğruladı** (Ctrl+Shift+R) — bu kayıtla DÖNGÜ-29 KAPANDI.
 - **Eski "grup hücresi sürüklenemez" assertion kontrolü:** EVET, vardı — D29 öncesi donmuş testlerde 5 adet grup-sürüklemez assertion vardı: `ks-ders-tasi.mjs` (#17 "GRUP dersi hücresi draggable DEĞİL", #20 "iptal guard'ı kaynakta"), `ks-gunluk-ders-tasi.mjs` (#11 "günlük draggable yalnız tek öğrencili birebir", #27 "GRUP dersi hücresi draggable DEĞİL", #31 "T satırında draggable sayısı = birebir ders sayısı (1)") ve `ks-dongu26.mjs` (#12/#16 "grup hücresi draggable DEĞİL" haftalık/günlük).
 - **Eski→yeni gerekçe (kesin kayıt):** D29 ile grup birebir dersler HAVUZ hedefi için draggable yapıldı (kullanıcı onayı: "grup dersleri de geri alınabilsin"); çizelge-içi grup taşıma YİNE reddedilir (dersBurak guard'ı korunur). Bu nedenle 5 eski assertion'ın adı/beklentisi şu şekilde güncellendi (gevşetme DEĞİL — davranış kasıtlı değişti): "GRUP dersi hücresi draggable DEĞİL" → "GRUP dersi hücresi draggable (DÖNGÜ-29: yalnız havuz hedefi kabul eder — dersBurak reddeder)" (ks-ders-tasi #17); "grup hücresi draggable DEĞİL" → "grup hücresi draggable (DÖNGÜ-29: havuz hedefi)" (ks-dongu26 #12, haftalık) ve "(gunluk, DÖNGÜ-29)" (ks-dongu26 #16); "günlük draggable yalnız tek öğrencili birebir" → "günlük draggable planlı birebir (DÖNGÜ-29: grup dahil; iptal+tamamlanmış hariç)" (ks-gunluk-ders-tasi #11); "GRUP dersi hücresi draggable DEĞİL" → "GRUP dersi hücresi draggable (DÖNGÜ-29: havuz hedefi; çizelge-içi taşıma reddedilir)" (ks-gunluk-ders-tasi #27); "T satırında draggable sayısı = birebir ders sayısı (1)" → "= ders sayısı (2: birebir + grup)" (ks-gunluk-ders-tasi #31). İptal guard'ı (ks-ders-tasi #20) "draggable guard'ı kaynakta (DÖNGÜ-29: iptal+tamamlanmış hariç; grup dahil)" olarak güncellendi — guard'ın kendisi genişletildi. Gerekçe CHECKPOINT D29 tablosunda ve donmuş beşlide (suit-vakalar txt + elle-vaka-adlari) elle kayıtlı; koşumdan otomatik üretim YOK.
+---
+
+# ✅ CHECKPOINT: DAĞITIM-DÜZELTME — Canlı Site Stilsiz (Assets SPA-Fallback HTML Dönüyordu)
+
+**Tarih:** 26 Eylül 2026 · **Durum:** ✅ Tamamlandı — saf deploy düzeltmesi; app.js/index.html/ek-ders.js/vendor/* UYGULAMA KODUNA DOKUNULMADI
+
+## Kök Neden (kanıtlı)
+
+Dağıtım pipeline'ı `vite build` (dist-based) çalıştırıp `dist/`'i yayımlıyor. Vite, kök `index.html`'i build girdisi alıp React/convex bundle'larını `assets/index-*.js` + `assets/index-*.css` olarak inject etti; ama uygulamanın GERÇEK statik dosyaları (`app.js`, `ek-ders.js`, `vendor/*`) kökte durduğu için **dist'e hiç girmedi**.
+
+Canlı kanıt (dağıtım öncesi): `/app.js`, `/ek-ders.js`, `/vendor/tailwind.js`, `/vendor/fontawesome.css`, `/vendor/fonts.css` hepsi HTTP 200 döndürüyordu AMA `content-type: text/html` + `content-disposition: inline; filename="index.html"` — CDN'in SPA fallback'i 404'leri index.html'le karşılıyordu. Tarayıcı JS/CSS yerine HTML alınca Tailwind/FontAwesome/modal-gizleme çöküyordu (belirtiyle birebir). Canlı `/` SHA `c5c79b32…` (dist/index.html build'i); yerel kök `index.html` SHA `244f61c8…` — birebir aynı DEĞİLDİ (build inject edilmiş). DÖNGÜ-15 notundaki "freebuff-deploy.tar.gz içinde app.js yoktu" ile uyumlu; repoda deploy manifest/tar dosyası YOK (platform build-based dağıtıyor).
+
+## Çözüm (build-time copy)
+
+- **Yeni:** `scripts/copy-static.mjs` — build'den SONRA koşar; 7 dosyayı kökten `dist/`'e byte-birebir kopyalar + SHA eşliğini assert eder: `app.js`, `ek-ders.js`, `vendor/tailwind.js`, `vendor/fontawesome.css`, `vendor/fonts.css`, `vendor/html2canvas.js`, `vendor/chart.js`.
+- **package.json:** `"postbuild": "node scripts/copy-static.mjs"` eklendi (dist oluştuktan sonra koşulur — Şart 2). `bun run build` → vite build → postbuild copy zinciri.
+- **Şart 1 (pin kontrolü):** hiçbir donmuş süitte `package.json`/`vite.config.ts` SHA pini/referansı YOK (tüm *.mjs tarandı: 0 hit) → düzenleme serbest, gerekçe gereksiz.
+- Kaynak dosyalar kökte KALDI (donmuş süitler kökten okumaya devam eder); `vite.config.ts` ve `index.html` DOKUNULMADI.
+
+## Yerel build doğrulaması (Şart 3) — dist/kaynak SHA birebir
+
+```
+OK  app.js                 009d03d787f4…  (350.571 B)
+OK  ek-ders.js             3d2dd38ff517…  (30.405 B)
+OK  vendor/tailwind.js     7afa0afd2536…  (407.280 B)
+OK  vendor/fontawesome.css f69efe0fb337…  (1.305.692 B)
+OK  vendor/fonts.css       b801b3a0b951…  (178.509 B)
+OK  vendor/html2canvas.js  669b68b0b682…  (198.690 B)
+OK  vendor/chart.js        19dfdc0ce3bd…  (205.400 B)
+copy-static: 7 dosya byte-birebir kopyalandı.
+```
+
+## Injected bundle'ların vanilla app'e etkisi (Şart 4) — TEMİZ
+
+- `assets/index-CCReYZHy.js` (3.8 KB): yalnız Vly screenshot/postMessage altyapısı + modulepreload polyfill. createRoot/React mount YOK → vanilla DOM'a dokunmaz, no-op.
+- `assets/index-DFQ7PBkv.css` (1.48 MB): Tailwind v4 output + Inter @font-face; vanilla sayfada çakışan tanım/konsol hatası üretmez.
+- Vite log'undaki "can't be bundled without type=module" uyarıları bilgilendirme — 5 script HTML'de aynen korunuyor.
+
+## No-drift (Şart 6)
+
+- Kök SHA'lar DEĞİŞMEDİ: index.html `244f61c8…` · app.js `009d03d7…` · ek-ders.js `3d2dd38f…`.
+- `node --check app.js` / `ek-ders.js` OK · `node test.mjs` → **2452/2452 OK** (51 süit, HAM Σ beşli birebir) · `node statik-eksiksizlik.mjs` → **48/48**.
+- Değişen dosyalar YALNIZ: `package.json` (+1 satır postbuild) · `scripts/copy-static.mjs` (yeni).
+
+## Canlı Doğrulama (Şart 5) — dağıtım sonrası
+
+Canlıda 6 istek: `/app.js` → SHA `009d03d7…` + `application/javascript` · `/ek-ders.js` → `application/javascript` · `/vendor/tailwind.js` → `application/javascript` · `/vendor/fontawesome.css` + `/vendor/fonts.css` → `text/css` — hepsi GERÇEK içerik (`content-disposition: index.html` fallback YOK). Son kabul: kullanıcı görsel kontrolü (Ctrl+Shift+R).

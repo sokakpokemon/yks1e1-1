@@ -3321,3 +3321,57 @@ Kullanıcı notu: Değişiklikleri görmek için tarayıcıda Ctrl+Shift+R (önb
 ## Son Kabul
 
 Öğretmen haftalık+günlük tablosunda grup üyeleri TAM ADLARIYLA görünmeli; havuz kartı eşleştirme sonrası anında tazelenmeli — **kullanıcı görsel kontrolü ile (Ctrl+Shift+R)**.
+
+---
+
+# ✅ CHECKPOINT: DÖNGÜ-27 — Grup Üyeleri WhatsApp Akışı Doğrulaması ve Düzeltmesi
+
+**Tarih:** 26 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **2407/2407 OK** (2376 eski + 31 yeni) · 49 süit · mutasyon **4/4 FAIL** ✓
+
+## Keşif (salt-okuma; SHA/baseline birebir: app.js `888c0356…` = DÖNGÜ-26 final)
+- Form grup kaydı (planla/istekBurak/dersOgrenciIds) ve öğretmen günlük/haftalık tabloları kanıtlı DOĞRU → DOKUNULMADI.
+- **Kök neden A — waAc (app.js:4311):** alıcı sayacı `k = l.ogrenciId || l.ogrenciAd` → grup dersinde yalnız ANA öğrenci satırı; üyeler listeye hiç girmiyor, "N ders" sayacı üyelere dağıtılmıyor.
+- **Kök neden B — ogrenciMesajMetni (app.js:4207):** ders filtresi `l.ogrenciId === o.id || l.ogrenciAd === o.ad` → ek grup üyesinin mesajında grup dersi hiç görünmüyor (null/eksik).
+- Ekran görüntüsündeki Yusuf/İngilizce mesajı Çarşamba TEKLİ dersi; Pazar Emir+Yusuf grup dersi ayrı gerçek fixture ile kuruldu (talimat gereği).
+
+## Yapılan İş (app.js — 2 bölge, baştan yazma YOK; ks-yama-dongu27.mjs idempotent yama)
+1. **Yama 1 (waAc):** sayacı `dersOgrenciIds(l)` üzerinden her katılımcıya BİR kez dağıtır; ID'siz üye ad anahtarıyla, ad DB'den çözülür (uydurma yok). Tekli derste `[ogrenciId]` → eski davranış birebir.
+2. **Yama 2 (ogrenciMesajMetni):** ders filtresi `dersOgrenciIds(l).indexOf(o.id) !== -1 || l.ogrenciAd === o.ad`; iptal filtresi ve DÖNGÜ-25 şablonu (emoji yok, saat aralığı KISA_KOD, kapanış+imza) AYNEN.
+3. **DOKUNULMADI:** planla/istekBurak, öğretmen tabloları, PNG, waAliciBilgisi/waGonder (varMi=false fallback yok), form akışları, ek-ders.js, index.html, vendor/*.
+
+## Gerçek Fixture (ks-dongu27.mjs — 31 test)
+- PAZAR grup dersi: `ogrenciId=Emir, ogrenciIds=[Yusuf]` + Çarşamba Yusuf TEKLİ dersi; seed dersleri izole (deterministik sayım).
+- Alıcı listesi: Emir ve Yusuf AYRI satırlar; üçüncü öğrenci YOK; Emir sayacı=1, Yusuf=2, waAlt "2 öğrenci".
+- Telefonsuz üye listede kalır; waGonder varMi=false uyarı verir (fallback YOK).
+- Mesajlar: Emir = yalnız Pazar; Yusuf = Çarşamba + Pazar (2 bölüm); D25 şablon + `13:00 - 13:40` aralığı korunur; sızma YOK; iptal dersi sızamaz.
+- Tekli regresyon: tekli-only listede yalnız Yusuf (sayı 1), Emir mesajı null.
+
+## Eski→yeni assertion eşlemesi (elle; koşumdan otomatik üretim YOK)
+- `ks-kart-sirasi.mjs` "…AŞAĞI DÜŞMÜYOR (min 33) → 48" → "→ 49" (gerekçe: test.mjs süit sayısı 48→49; koşul aynen).
+- `test.mjs` MANIFEST satırı "48 süit" → "49 süit" (koşum yansıması).
+- Diğer süitlerde assertion değişikliği YOK; donmuş beşli (suit-manifest/elle-vaka-manifesti/elle-vaka-adlari/suit-vakalar txt) DÖNGÜ-27 kayıtları ELLE yazıldı.
+
+## Mutasyon kanıtları (mutasyon-dongu27.mjs — yalnız tmp kopya; canonical SHA birebir)
+4/4 PASS:
+  M1 waAc üye-dağıtımı kaldır (eski tek-ana sayaç geri) → "Yusuf ders sayacı = 2" kırmızı
+  M2 ogrenciMesajMetni filtresi eski hâle döner → "Yusuf mesajında PAZAR grup dersi VAR" (3 test) kırmızı
+  M3 her üyeye ders iki kez sayılır (dup anahtar) → "alıcı satırları benzersiz" kırmızı
+  M4 iptal filtresi gevşetilir → "iptal dersi saat/tarihiyle de girmez" kırmızı
+  Restore: canonical app.js SHA önce/sonra BİREBİR (931efb65…).
+
+## Yedek / SHA
+
+| Dosya | SHA-256 |
+|---|---|
+| app.js (önce = yedek `app.js.dongu27-oncesi.bak`) | `888c0356a11476e11c6360b40dc25f21ac9b71ec01affbea1df432c4c5d3c290` |
+| app.js (sonra) | `931efb65d6c85520de9407ee23d33ce1411c96d226f230b40d676421ecdc6c3f` |
+| index.html | `244f61c87e84b3f43efc3326fcbf3b7950c981fa04fae077976b950318e6b403` (DEĞİŞMEDİ) |
+| ek-ders.js | `3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f` (DEĞİŞMEDİ) |
+
+- Yama idempotent: 2. koşu "Zaten uygulanmış (DÖNGÜ-27)" + exit 2, dosya değişmez.
+- Doğrulama: `node --check app.js` / `ek-ders.js` OK · `node test.mjs` → **2407/2407 OK, HAM Σ beşli BİREBİR**.
+- Süit Δ: `ks-kart-sirasi` 33 (ad güncellemesi) · `ks-dongu27` +31 yeni · diğer 47 süit aynen.
+
+## Son Kabul
+
+WhatsApp alıcı listesinde grup üyeleri AYRI satırlarda doğru ders sayısıyla görünmeli; her üyenin önizleme/gönder/kopyala mesajında kendi dersleri + grup dersi olmalı — **kullanıcı görsel kontrolü ile (Ctrl+Shift+R)**.

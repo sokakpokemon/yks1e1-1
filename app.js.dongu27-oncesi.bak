@@ -4207,11 +4207,8 @@ function geciciKopyala(metin, cb) {
 function ogrenciMesajMetni(ogrenciId) {
   var o = DB.ogrenciler.find(function (s) { return s.id === ogrenciId; });
   if (!o) return null;
-  /* DONGU-27: ek grup üyesi için grup dersi (l.ogrenciId = ana) bu filtrede görünmüyordu;
-     dersOgrenciIds(l) ana + tüm ek üyeleri döner → her üyenin mesajında grup dersi VAR.
-     Tekli derste [ogrenciId] döner → eski eşleşme birebir korunur. İptal filtresi aynen. */
   var liste = penceredeDersler().filter(function (l) {
-    return (dersOgrenciIds(l).indexOf(o.id) !== -1 || l.ogrenciAd === o.ad) && l.durum !== "iptal";
+    return (l.ogrenciId === o.id || l.ogrenciAd === o.ad) && l.durum !== "iptal";
   });
   if (!liste.length) return null;
   var satirlar = liste.map(function (l, i) {
@@ -4310,19 +4307,9 @@ function waAc() {
   var liste = penceredeDersler().filter(function (l) { return l.durum !== "iptal"; });
   var sayac = {};
   liste.forEach(function (l) {
-    /* DONGU-27: grup dersinde sayaç yalnız ana öğrenciye giderdi; artık dersOgrenciIds(l)
-       ile TÜM katılımcılar aynı dersi kendi hesabına BİR kez sayar. Tekli derste
-       dersOgrenciIds [ogrenciId] döner → eski davranış birebir korunur. Ad DB'den çözülür. */
-    var uyeIds = dersOgrenciIds(l);
-    if (!uyeIds.length) uyeIds = [l.ogrenciId || ""];
-    uyeIds.forEach(function (oid) {
-      var k = oid || l.ogrenciAd;
-      if (!sayac[k]) {
-        var uye = oid ? DB.ogrenciler.find(function (x) { return x.id === oid; }) : null;
-        sayac[k] = { id: oid || "", ad: (uye && uye.ad) || l.ogrenciAd, n: 0 };
-      }
-      sayac[k].n++;
-    });
+    var k = l.ogrenciId || l.ogrenciAd;
+    if (!sayac[k]) sayac[k] = { id: l.ogrenciId || "", ad: l.ogrenciAd, n: 0 };
+    sayac[k].n++;
   });
   var dizi = Object.keys(sayac).map(function (k) { return sayac[k]; }).sort(function (a, b) { return b.n - a.n; });
   $("waAlt").textContent = pencereAdi() + " · " + dizi.length + " öğrenci";

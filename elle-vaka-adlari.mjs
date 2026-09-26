@@ -4,6 +4,7 @@
    Sayı eşit ama ad farklı → FAIL. Koşumdan türetme YOK: bu dosya bağımsız elle kaynak. */
 
 export const elleVakaAdlari = {
+
   "ks-harness.mjs": [
     "08:50 → 1",
     "15:30 → 8",
@@ -1464,7 +1465,7 @@ export const elleVakaAdlari = {
     "test.mjs suites listesi bulunuyor",
     "ks-kart-sirasi.mjs test.mjs'te tam 1 kez",
     "mevcut 30 süit listede korundu",
-    "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 49",
+    "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 50",
   ],
   "ks-kart-kolon.mjs": [
     "boot hatasız",
@@ -2040,7 +2041,7 @@ export const elleVakaAdlari = {
     "dersBurak tanımı tam 1 (YENİ sistem YOK)",
     "paralel dragover/dersDragOver YOK",
     "AYNI drop yolu (istekBurak → dersBurak devri) tam 1",
-    "drop-zone çağrısı 2 yol (haftalık + günlük), aynı handler adı",
+    "drop-zone çağrısı 3 yol (haftalık + günlük dersli + günlük Boş satırları), aynı handler adı", /* DÖNGÜ-28-YAMASI: 2→3 kasıtlı güncelleme */
     "günlük yama işareti var (GUNLUK-DERS-TASI-YAMASI)",
     "günlük hücre MEVCUT dersDrag'i çağırıyor (yeni fonksiyon değil)",
     "günlük boş hücre MEVCUT istekDragOver/istekDragLeave/istekBurak yolunu kullanıyor",
@@ -2509,4 +2510,26 @@ export const elleVakaAdlari = {
     "waAc kaynak kanıtı: dersOgrenciIds kullanımı VAR",
     "ogrenciMesajMetni kaynak kanıtı: dersOgrenciIds filtresi VAR"
   ],
+  "ks-dongu28.mjs": [ /* DÖNGÜ-28: elle yazıldı (koşum sırasıyla birebir, otomatik üretim YOK) */
+    "boot hatasız",
+    "liste sarmalayıcı grid + relative",
+    "ayırıcı TEK dikey çizgi (absolute left-1/2, pointer-events-none)",
+    "divide-x KULLANILMADI",
+    "üst filtre çipleri korundu",
+    "kart içeriği korundu (avatar + Eşleştir & Planla + drag)",
+    "dersli öğretmen satırı adıyla VAR (etiketsiz)",
+    "'Boş' etiketi markup'ta (aynı sayıda: boş öğretmen sayısı)",
+    "Boş satırlarda drop-zone yolu aynen (istekBurak)",
+    "Boş satırda data-drop-ogrt gerçek id'li",
+    "tüm gün kapalı öğretmene 'Boş' satır YOK (kOgr'un tüm Salı slotları kapalı)",
+    "kısmen kapalı öğretmen Boş satırında 'Kapalı' kilitli hücre VAR",
+    "kısmen kapalı öğretmen Boş satırı hâlâ VAR (başka uygun slotları var)",
+    "Pazar günü 'Boş' satır YOK",
+    "istekBurak tanımı tam 1 (paralel sistem YOK)",
+    "dersBurak tanımı tam 1 (grup dahil mevcut yol)",
+    "dersDrag tanımı tam 1",
+    "istekBurak → dersBurak devri tam 1",
+    "grup guard: dersOgrenciIds(ders).length === 1 draggable koşulu aynen",
+    "Boş satır drop hedefi SADECE uygun slotlarda (kilitli hücre dnd-bos değil)"
+  ]
 };

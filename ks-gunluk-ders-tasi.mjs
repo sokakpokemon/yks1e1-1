@@ -173,7 +173,7 @@ t("dersDrag tanımı tam 1 (YENİ sistem YOK)", kez("function dersDrag(ev, id) {
 t("dersBurak tanımı tam 1 (YENİ sistem YOK)", kez("function dersBurak(ogrtId, tarih, saat) {") === 1);
 t("paralel dragover/dersDragOver YOK", !appKaynak.includes("function dersDragOver(") && kez("function istekDragOver(") === 1);
 t("AYNI drop yolu (istekBurak → dersBurak devri) tam 1", kez("if (dersDropHedef) { dersBurak(ogrtId, tarih, saat); return; }") === 1);
-t("drop-zone çağrısı 2 yol (haftalık + günlük), aynı handler adı", kez('ondrop="istekBurak(event, this,') === 2);
+t("drop-zone çağrısı 3 yol (haftalık + günlük dersli + günlük Boş satırları), aynı handler adı", kez('ondrop="istekBurak(event, this,') === 3); /* DÖNGÜ-28-YAMASI: günlük tabloya "Boş" etiketli ek satırlar eklendi — drop yolu AYNI istekBurak; 2→3 kasıtlı güncelleme (gevşetme değil) */
 t("günlük yama işareti var (GUNLUK-DERS-TASI-YAMASI)", kez("GUNLUK-DERS-TASI-YAMASI") >= 5);
 t("günlük hücre MEVCUT dersDrag'i çağırıyor (yeni fonksiyon değil)", gunlukBolge.includes('ondragstart="dersDrag(event,'));
 t("günlük boş hücre MEVCUT istekDragOver/istekDragLeave/istekBurak yolunu kullanıyor",

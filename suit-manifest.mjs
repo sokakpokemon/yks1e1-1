@@ -54,6 +54,7 @@ export const manifest = {
   "ks-ogrt-denetim.mjs": 42,
   "ks-dongu26.mjs": 26,
   "ks-dongu27.mjs": 31,
+  "ks-dongu28.mjs": 20,
 };
 
 /* Süit içi yardımcı: kosan sayacını manifest ile KENDİ sunar.

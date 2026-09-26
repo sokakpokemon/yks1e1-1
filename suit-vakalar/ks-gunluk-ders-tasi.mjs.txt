@@ -4,7 +4,7 @@ dersDrag tanımı tam 1 (YENİ sistem YOK)
 dersBurak tanımı tam 1 (YENİ sistem YOK)
 paralel dragover/dersDragOver YOK
 AYNI drop yolu (istekBurak → dersBurak devri) tam 1
-drop-zone çağrısı 2 yol (haftalık + günlük), aynı handler adı
+drop-zone çağrısı 3 yol (haftalık + günlük dersli + günlük Boş satırları), aynı handler adı
 günlük yama işareti var (GUNLUK-DERS-TASI-YAMASI)
 günlük hücre MEVCUT dersDrag'i çağırıyor (yeni fonksiyon değil)
 günlük boş hücre MEVCUT istekDragOver/istekDragLeave/istekBurak yolunu kullanıyor

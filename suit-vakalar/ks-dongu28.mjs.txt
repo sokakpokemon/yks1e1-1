@@ -1,0 +1,20 @@
+boot hatasız
+liste sarmalayıcı grid + relative
+ayırıcı TEK dikey çizgi (absolute left-1/2, pointer-events-none)
+divide-x KULLANILMADI
+üst filtre çipleri korundu
+kart içeriği korundu (avatar + Eşleştir & Planla + drag)
+dersli öğretmen satırı adıyla VAR (etiketsiz)
+'Boş' etiketi markup'ta (aynı sayıda: boş öğretmen sayısı)
+Boş satırlarda drop-zone yolu aynen (istekBurak)
+Boş satırda data-drop-ogrt gerçek id'li
+tüm gün kapalı öğretmene 'Boş' satır YOK (kOgr'un tüm Salı slotları kapalı)
+kısmen kapalı öğretmen Boş satırında 'Kapalı' kilitli hücre VAR
+kısmen kapalı öğretmen Boş satırı hâlâ VAR (başka uygun slotları var)
+Pazar günü 'Boş' satır YOK
+istekBurak tanımı tam 1 (paralel sistem YOK)
+dersBurak tanımı tam 1 (grup dahil mevcut yol)
+dersDrag tanımı tam 1
+istekBurak → dersBurak devri tam 1
+grup guard: dersOgrenciIds(ders).length === 1 draggable koşulu aynen
+Boş satır drop hedefi SADECE uygun slotlarda (kilitli hücre dnd-bos değil)

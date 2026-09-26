@@ -2903,14 +2903,9 @@ function renderHavuz() {
     return ka < kb ? -1 : ka > kb ? 1 : 0;
   });
 
-  /* DÖNGÜ-28-YAMASI: kart listesi geniş ekranda İKİ SÜTUN grid (zigzag: 1 sol, 2 sağ, 3 sol…);
-     dar ekranda tek sütun. Ayırıcı: sarmalayıcı relative + %50'de absolute 1px dikey çizgi
-     (pointer-events-none; divide-x yerine — TEK çizgi garantisi). Üst filtreler, boş-havuz
-     mesajı ve kart içeriği DEĞİŞMEDİ; kart sıralaması (sirali) ve draggable zinciri aynen. */
-  var liste = '<div class="relative space-y-2 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-2 md:space-y-0">' +
-    '<div aria-hidden="true" class="havuz-ayirici pointer-events-none absolute inset-y-0 left-1/2 hidden w-px -translate-x-1/2 bg-slate-200 md:block"></div>';
+  var liste = '<div class="space-y-2">';
   if (!sirali.length) {
-    liste += '<div class="md:col-span-2 border border-dashed border-slate-200 rounded-2xl py-10 text-center"><p class="text-[12px] text-slate-400">' + (aktif ? "Bu derse ait istek yok." : "Havuz boş — rehberlik servisinin öğrenci talepleri burada toplanır.") + "</p></div>";
+    liste += '<div class="border border-dashed border-slate-200 rounded-2xl py-10 text-center"><p class="text-[12px] text-slate-400">' + (aktif ? "Bu derse ait istek yok." : "Havuz boş — rehberlik servisinin öğrenci talepleri burada toplanır.") + "</p></div>";
   }
   sirali.forEach(function (r, i) {
     var o = DB.ogrenciler.find(function (x) { return x.id === r.ogrenciId; });
@@ -3917,31 +3912,6 @@ function gunlukTablo() {
   ogrtSirasi.forEach(function (ad) {
     if (!ogrtIdMap[ad]) { var ts = DB.ogretmenler.find(function (x) { return x.ad === ad; }); ogrtIdMap[ad] = ts ? ts.id : ""; }
   });
-  /* DÖNGÜ-28-YAMASI (bosOgrtSatirlari): o gün HİÇ dersi olmayan ve MEVCUT istekBurak/dersBurak
-     kilit kurallarına göre ≥1 uygun boş slotu olan öğretmenler ek satır olarak eklenir.
-     Kural aynen: mola hariç, Pazar hariç (di!==6), ders/ek-ders dolu değil, avail.sinif'ta
-     GÜN-KOD yok (Sınıf Dersi), avail.musait'te yok (Kapalı). "Boş" etiketiyle AYIRT EDİLİR;
-     istekBurak/dersBurak koduna DOKUNULMAZ — kilitler zaten reddeder. */
-  var dowIdx28 = dowIdx(gunKey);
-  var bosOgrtSatirlari = [];
-  if (dowIdx28 !== 6) {
-    var gunDersleri28 = gunDersler; /* dersli öğretmen adları ogrtMap'te zaten var */
-    DB.ogretmenler.forEach(function (t) {
-      if (!t || !t.id) return;
-      if (ogrtIdMap[t.ad] === t.id || Object.keys(ogrtIdMap).some(function (k) { return ogrtIdMap[k] === t.id; })) return; /* o gün dersi VAR — eklenmez */
-      var uygunVar = false;
-      KISA_KOD.forEach(function (slot) {
-        if (uygunVar) return;
-        var kod = slot.no, key28 = dowIdx28 + "-" + kod;
-        var saatStr = (function () { var k = KISA_KOD.filter(function (x) { return x.no === kod; })[0]; return k ? k.b : ""; })();
-        var dolu28 = DB.dersler.some(function (x) { return x.ogretmenId === t.id && x.tarih === gunKey && ksKodOf(x.saat) === kod && x.durum !== "iptal"; }) ||
-          (Array.isArray(DB.ekDersler) ? DB.ekDersler : []).some(function (x) { return x.ogretmenId === t.id && x.tarih === gunKey && ksKodOf(x.saat) === kod && x.durum !== "iptal"; });
-        var kilitli28 = dolu28 || (t.avail && ((t.avail.sinif && key28 in t.avail.sinif) || (Array.isArray(t.avail.musait) ? t.avail.musait.indexOf(key28) >= 0 : false)));
-        if (!kilitli28 && saatStr) uygunVar = true;
-      });
-      if (uygunVar) bosOgrtSatirlari.push(t);
-    });
-  }
   if (!ogrtSirasi.length) {
     return '<div class="rounded-2xl border border-slate-100 overflow-hidden mb-4 bg-white">' +
       '<div class="text-center py-3 border-b border-slate-100 bg-slate-50"><h3 class="text-[15px] font-black text-slate-800 uppercase tracking-wide">' + gunAdi + '</h3></div>' +
@@ -4027,37 +3997,6 @@ function gunlukTablo() {
             '<span class="text-[9px] text-slate-300 select-none">+</span></td>';
         } else {
           html += '<td class="px-1.5 py-2 border-r border-slate-200"></td>';
-        }
-      }
-    });
-    html += '</tr>';
-  });
-  /* DÖNGÜ-28-YAMASI: "Boş" etiketli ek satırlar — dersli satırlardan hemen sonra, aynı
-     slot/tesis mantığıyla; dolu/Kapalı/Sınıf-Dersi hücreleri gri-kilitli, uygunlar drop-zone. */
-  bosOgrtSatirlari.forEach(function (t) {
-    var ogrtId = t.id;
-    html += '<tr class="border-b border-slate-200 bg-white">';
-    html += '<td class="px-3 py-3 border-r border-slate-200 text-left">' +
-      '<div class="text-[12px] font-black text-slate-500 uppercase leading-tight">' + esc(t.ad) + '</div>' +
-      '<span class="inline-block mt-1 rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[9px] font-bold text-slate-400 uppercase tracking-wide">Boş</span></td>';
-    SAAT_SLOTLARI.forEach(function (slot) {
-      if (slot.mola) {
-        html += '<td class="px-1.5 py-2 border-r border-slate-200 bg-emerald-50/60">' +
-          '<div class="text-[10px] font-bold text-emerald-400">Mola</div>' +
-          '<div class="text-[9px] text-emerald-300">' + slot.b + '-' + slot.e + '</div></td>';
-      } else {
-        var kod = slot.no, key28 = dowIdx28 + "-" + kod;
-        var dolu28 = DB.dersler.some(function (x) { return x.ogretmenId === ogrtId && x.tarih === gunKey && ksKodOf(x.saat) === kod && x.durum !== "iptal"; }) ||
-          (Array.isArray(DB.ekDersler) ? DB.ekDersler : []).some(function (x) { return x.ogretmenId === ogrtId && x.tarih === gunKey && ksKodOf(x.saat) === kod && x.durum !== "iptal"; });
-        var kilitli28 = dolu28 || (t.avail && ((t.avail.sinif && key28 in t.avail.sinif) || (Array.isArray(t.avail.musait) ? t.avail.musait.indexOf(key28) >= 0 : false)));
-        if (kilitli28) {
-          html += '<td class="px-1.5 py-2 border-r border-slate-200 bg-slate-100/70" title="Kilitli — bu saatte ders veremez">' +
-            '<span class="text-[9px] font-bold text-slate-400 select-none">' + (dolu28 ? "Dolu" : (t.avail && t.avail.sinif && key28 in t.avail.sinif) ? "Sınıf" : "Kapalı") + '</span></td>';
-        } else {
-          html += '<td class="dnd-bos px-1.5 py-2 border-r border-slate-200 transition-colors"' +
-            ' data-drop-ogrt="' + esc(ogrtId) + '" data-drop-gun="' + dowIdx28 + '" data-drop-saat="' + slot.b + '"' +
-            ' ondragover="istekDragOver(event, this)" ondragleave="istekDragLeave(this)" ondrop="istekBurak(event, this, \'' + esc(ogrtId) + '\', \'' + gunKey + '\', \'' + slot.b + '\')" title="Boş saat — ders kartını ya da havuz isteğini bırakın">' +
-            '<span class="text-[9px] text-slate-300 select-none">+</span></td>';
         }
       }
     });

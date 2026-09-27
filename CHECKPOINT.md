@@ -51,6 +51,22 @@
 
 ---
 
+# ⚡ JET MODU (kademeli yayın politikası)
+
+*(Not: bu bölüm dosya SONUNA eklenmek istendi; düzenleyici araç 319 KB dosyanın son bölgesini eşleştiremediği için HIZ PROTOKOLÜ bloğunun hemen ardına alındı — içerik birebir.)*
+
+Değişikliği kademelendir:
+   T0 kozmetik (metin/renk/boşluk): yalnız etkilenen süit + node --check;
+      tam test ve mutasyon YOK.
+   T1 UI davranışı: etkilenen + komşu süitler + statik + syntax + 1 kritik mutasyon.
+   T2 iş mantığı: tam test + statik + syntax + 2-3 kritik mutasyon.
+   T3 veri/yayın: T2 + build + publish-guard + no-drift SHA + canlı teyit.
+   Ortak kural: yedek yalnız değişecek dosya için (yazmadan önce); donmuş liste
+   yalnız gerçekten değişen satır için güncellenir; rapor EN FAZLA 1 ekran;
+   tur başına EN ÇOK 1 publish. T0/T1'de ara denemelerde tam kapı koşulmaz.
+
+---
+
 # ✅ CHECKPOINT: DÖNGÜ-30-CACHE — app.js/ek-ders.js İçerik Damgası (?v=<sha16>)
 
 **Tarih:** 27 Eylül 2026 · **Durum:** ✅ Tamamlandı — yalnız index.html (2 satır) + test pinleri; app.js/ek-ders.js İÇERİĞİ DEĞİŞMEDİ

@@ -6,6 +6,9 @@
      node hizli-test.mjs mutasyon <ad>       → yalnız ilgili mutasyon script'i (mutasyon-<ad>.mjs)
                                                <ad> süit adı da olabilir (ör. ks-dongu27)
      node hizli-test.mjs --tam               → kapanış kapısı: node test.mjs + node statik-eksiksizlik.mjs
+     node hizli-test.mjs --profil            → tüm süitleri AYRI Node süreçlerinde SIRALI koşar;
+                                               her süitin süresi + toplam + EN YAVAŞ 10 süit
+                                               (manifest/vaka dosyalarına YAZMAZ, yalnız ölçer)
 
    Notlar:
    - HİÇBİR assertion/gevşetme burada yapılmaz; süitler doğrudan (node <süit>) koşar.
@@ -113,9 +116,38 @@ function tam() {
   process.exit(gecti ? 0 : 1);
 }
 
+/* ——— MOD 4: profil ——— */
+function profil() {
+  /* Süit kümesi = suit-manifest.mjs anahtarları (SÜİT kayıtlarının tek gerçek kaynağı).
+     Kökteki diğer ks-*.mjs dosyaları süit DEĞİL (teşhis/yama/checkpoint script'leri) —
+     glob ile koşmak uygulama dosyalarına yazabilir; bu yüzden yalnız kayıtlı süitler koşar.
+     Bu mod HİÇBİR dosyaya yazmaz; sadece ölçüm basar. */
+  const suitler = Object.keys(manifest);
+  console.log(`=== PROFİL: ${suitler.length} süit (ayrı Node süreçleri, sıralı) ===`);
+  const olcum = [];
+  const t0 = Date.now();
+  for (const ad of suitler) {
+    const t = Date.now();
+    const r = spawnSync(process.execPath, [ad], { encoding: "utf8" });
+    const sure = Date.now() - t;
+    const cikti = (r.stdout || "") + (r.stderr || "");
+    const kotu = (cikti.match(/✗/g) || []).length;
+    const gecti = r.status === 0 && kotu === 0;
+    olcum.push({ ad, sure, gecti });
+    console.log(`${gecti ? "✓" : "✗"} ${ad.padEnd(34)} ${SURE(sure)}`);
+  }
+  const toplam = Date.now() - t0;
+  const gecen = olcum.filter((x) => x.gecti).length;
+  console.log(`\nTOPLAM: ${SURE(toplam)}  (${gecen}/${olcum.length} süit geçti)`);
+  const enYavas = [...olcum].sort((a, b) => b.sure - a.sure).slice(0, 10);
+  console.log("\nEN YAVAŞ 10 SÜİT:");
+  enYavas.forEach((x, i) => console.log(`  ${String(i + 1).padStart(2)}. ${x.ad.padEnd(34)} ${SURE(x.sure)}`));
+}
+
 /* ——— YÖNLENDİRME ——— */
 const [mod, arg] = process.argv.slice(2);
 if (mod === "--tam" || mod === "tam") tam();
+else if (mod === "--profil" || mod === "profil") profil();
 else if (mod === "mutasyon") {
   if (!arg) { console.error("Kullanım: node hizli-test.mjs mutasyon <ad>"); process.exit(1); }
   mutasyon(arg);
@@ -124,6 +156,7 @@ else if (mod === "mutasyon") {
     "HIZ PROTOKOLÜ koşum seçicisi:\n" +
     "  node hizli-test.mjs <süit>          tek süit + süre (ör. ks-ders-karti)\n" +
     "  node hizli-test.mjs mutasyon <ad>   yalnız ilgili mutasyon script'i\n" +
-    "  node hizli-test.mjs --tam           kapanış kapısı: test.mjs + statik-eksiksizlik.mjs"
+    "  node hizli-test.mjs --tam           kapanış kapısı: test.mjs + statik-eksiksizlik.mjs\n" +
+    "  node hizli-test.mjs --profil        tüm süitler sıralı + süre + EN YAVAŞ 10 (yazmaz)"
   );
 } else tekSuit(mod);

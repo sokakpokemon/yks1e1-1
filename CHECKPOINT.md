@@ -3589,3 +3589,10 @@ dongu22–29 aileleri (app.js ×10, index.html ×1, süit .bak ×7, ks-yama-dong
 ## Sonraki adımlar (kullanıcıya ait)
 
 - Commit + publish kullanıcı işi; canlıda 7 asset SHA/content-type doğrulaması kullanıcıda (Ctrl+Shift+R ile görsel kontrol dahil).
+
+## KAPANIŞ — DAĞITIM-DÜZELTME (görsel doğrulama + kök neden + kalıcı kural)
+
+- **Canlı doğrulama (kullanıcı görsel onayı):** 7/7 asset GERÇEK içerik döndürüyor (app.js, ek-ders.js, vendor/tailwind.js, html2canvas.js, chart.js = `application/javascript`; fontawesome.css, fonts.css = `text/css`); SPA-fallback dönemi kapandı; index.html doğru script etiketleriyle servis ediliyor; stiller (Tailwind), ikonlar (FontAwesome) ve modal gizleme tamamen doğru. **DAĞITIM-DÜZELTME TAMAMLANDI.**
+- **Kök neden (geriye dönük kesin):** Platform her publish'i git snapshot'ından build alıyor. public/ dosyaları ilk turda eksik/kararsız snapshot'larda kaldı; Vly otomatik commit'i (HEAD `35e8914`) tüm public/ içeriğini repoya tam girince sorun çözüldü. Ders: publish öncesi "working tree temiz / tüm dosyalar commit'te" şartı.
+- **Kalıcı kural — CANLI-YAYIM KURALI:** Her publish'ten önce: (a) `node test.mjs` yeşil, (b) working tree temiz (commit edilmemiş dosya yok), (c) public/ ↔ kök SHA birebir, (d) publish sonrası canlı 7 asset SHA/content-type kontrolü (canlı app.js SHA = canonical app.js SHA).
+- **No-drift teyidi:** app.js `009d03d7…` · index.html `244f61c8…` · ek-ders.js `3d2dd38f…` — uygulama kodu bu zincir boyunca hiç değişmedi (yalnız dağıtım altyapısı: package.json postbuild, scripts/copy-static.mjs, public/).

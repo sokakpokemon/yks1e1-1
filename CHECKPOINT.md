@@ -103,6 +103,21 @@ Bu protokol HER turda geçerlidir; kullanıcı ayrıca şablon yapıştırmaz.
 
 ---
 
+## 🎨 LOGO KİLİDİ (mutlak kural — her turda geçerli, kullanıcı hatırlatmaz)
+Formül Kurs logosu (marka "formul" + turuncu çift çizgi + "kurs merkezi" alt yazı)
+ORİJİNALDİR ve ASLA DEĞİŞTİRİLMEZ.
+- İZİN VERİLEN TEK ŞEY: uyum sağlamak için ORANTILI ölçekleme (TEK çarpan, TÜM ölçülere uygulanır).
+- YASAK: renk, font-weight(900), italik, harf-aralığı oranı, SVG yolu (path), viewBox, stroke-width,
+  stroke-linecap, alt yazı metni, hizalama, eleman sırası, "iyileştirme" amaçlı tasarım değişikliği.
+- ZORUNLU (master'ın offline birebir karşılığı — kapsam dışı istisna): font-family **'MontsKart'**
+  (gömülü, CDN YOK, system fallback YOK) · literal renkler #d31d24 / #f29222 / #1a1a1a ·
+  xmlns="http://www.w3.org/2000/svg".
+- YÖNTEM: bir çarpan seç, TÜM ölçüleri o çarpanla ölçekle; TEK bir değeri elle değiştirme.
+- TEK KAYNAK: `logo-master/formul-kurs-logo.html` (master/orijinal HTML, 8.5rem tabanı). Logo işi
+  başlamadan ÖNCE bu dosyaya bak; ölçek gerekiyorsa çarpanı buradan hesapla, karta elle yazma.
+
+---
+
 # ✅ CHECKPOINT: DÖNGÜ-30-CACHE — app.js/ek-ders.js İçerik Damgası (?v=<sha16>)
 
 **Tarih:** 27 Eylül 2026 · **Durum:** ✅ Tamamlandı — yalnız index.html (2 satır) + test pinleri; app.js/ek-ders.js İÇERİĞİ DEĞİŞMEDİ

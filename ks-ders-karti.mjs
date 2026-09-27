@@ -1,5 +1,6 @@
+import { existsSync } from "node:fs";
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":109"); return; } if (__kosan !== 109) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ders-karti.mjs kosan=" + __kosan + " beklenen=109"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":109"); } });
+process.on("exit", (c) => { if (c !== 0) { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":110"); return; } if (__kosan !== 110) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ders-karti.mjs kosan=" + __kosan + " beklenen=110"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":110"); } });
 /* ks-ders-karti.mjs — DERS-KARTI-YAMASI süiti
    Doğruladıkları:
     1) Kart üretimi: dersKartiHTML/dersKartiVeri doğru alanlarla çalışır (ad, ders, konu, öğretmen, tarih+saat, sınıf, durum).
@@ -148,6 +149,22 @@ t("D30 kart başlığı 'Birebir Ders Kartı' VAR + 'Formül Kurs' METİN alt ya
                   master -3px markanın üstüne biniyordu → 0 kullanıldı) · margin-right 14px */
 t("D33 logo master birebir: inline-flex sarmalayıcı · relative/flex marka kutusu · 'formul' 2.25rem · -1.05px · 0.85 · #d31d24 · çift #f29222 çizgi width 21 · right 8 · top 0.5 · viewBox 0 0 100 40 · stroke-width 14 · 'kurs merkezi' 0.74rem · -0.4px · margin-top 0 (çakışma) · margin-right 14 · #1a1a1a · padding 5px · nowrap/flex-shrink:0/min-width:0/margin-left:12px", (() => { const h = dersKartiHTML(birebir); return ["display:inline-flex","flex-direction:column","align-items:flex-end","padding:5px","position:relative","display:flex","align-items:flex-start",">formul</div>",">kurs merkezi</div>","font-size:2.25rem","letter-spacing:-1.05px","line-height:0.85","color:#d31d24","width=\"21\"","viewBox=\"0 0 100 40\"","height:auto","right:8px","top:0.5px","d=\"M15 10 L95 10\"","d=\"M14 29 L94 29\"","stroke-width=\"14\"","stroke-linecap=\"round\"","stroke=\"#f29222\"","font-size:0.74rem","letter-spacing:-0.4px","margin-top:0","margin-right:14px","color:#1a1a1a","white-space:nowrap","flex-shrink:0","min-width:0","margin-left:12px"].every(s => h.includes(s)) && !h.includes("formul kurs") && !h.includes(">merkezi</div>") && !/margin-top:-/.test(h) && (h.match(/id="fk-logo"/g) || []).length === 1 && h.indexOf(">formul</div>") < h.indexOf('id="fk-logo"') && h.indexOf('id="fk-logo"') < h.indexOf(">kurs merkezi</div>"); })());
 t("D30 logo stroke literal #f29222 (var() YOK) + xmlns VAR", (() => { const h = dersKartiHTML(birebir); return h.includes("stroke=\"#f29222\"") && !h.includes("stroke=\"var(") && h.includes("xmlns=\"http://www.w3.org/2000/svg\""); })());
+/* LOGO KİLİDİ (CHECKPOINT.md → "🎨 LOGO KİLİDİ"): master'ın TEK kaynağı
+   logo-master/formul-kurs-logo.html. Master değişirse kademe değerleri değişir;
+   karta elle müdahale YOK — çarpan master'dan hesaplanır (8.5rem × 0.2647 = 2.25rem).
+   Bu kapı master dosyasının varlığını + kilitli değerlerini sabitler (D33 kademesiyle tutarlılık). */
+t("D33 logo master kaynağı logo-master/formul-kurs-logo.html VAR (8.5rem tabanı · kilitli path/viewBox/stroke-width/renkler/900-italik) + kademe = master × 0.2647 (2.25rem ≈ 8.5×0.2647)", (() => {
+  if (!existsSync("logo-master/formul-kurs-logo.html")) return false;
+  const m = readFileSync("logo-master/formul-kurs-logo.html", "utf8");
+  const h = dersKartiHTML(birebir);
+  const masterKilitli = ["font-size:8.5rem", "font-weight:900", "font-style:italic", "color:#d31d24", "letter-spacing:-4px",
+    "viewBox=\"0 0 100 40\"", "d=\"M15 10 L95 10\"", "d=\"M14 29 L94 29\"", "stroke-width=\"14\"", "stroke-linecap=\"round\"",
+    "stroke=\"#f29222\"", "color:#1a1a1a", ">formul<", ">kurs merkezi<", "xmlns=\"http://www.w3.org/2000/svg\"",
+    "display:inline-flex", "flex-direction:column", "align-items:flex-end", "align-items:flex-start"];
+  const kademe = masterKilitli.every(s => m.includes(s)) && Math.abs(8.5 * 0.2647 - 2.25) < 0.01 && h.includes("font-size:2.25rem");
+  /* master dosyası 'ÖLÇEK' başlığıyla ölçek kuralını da taşır (yarım uygulama koruması) */
+  return kademe && m.includes("ÖLÇEK") && m.includes("logo-wrapper") && m.includes("brand-container");
+})());
 /* D33 font kapısı: gömülü aile MONTSSKART (italic 900) · 'Montserrat' ve CDN referansı YOK.
    D30'da ad "Montserrat ... @font-face" idi; aile adı değişti (MontsKart) → ad ve kontrol güncellendi. */
 t("D33 gömülü font ailesi = MontsKart (italic 900 base64 @font-face) · Montserrat/CDN referansı YOK", (() => { const h = dersKartiHTML(birebir); return h.includes("@font-face") && h.includes("data:font/woff2;base64,") && h.includes("font-family:MontsKart") && h.includes("font-style:italic;font-weight:900") && !h.includes("Montserrat") && !/fonts\.googleapis/.test(h) && !/@import/.test(h); })());

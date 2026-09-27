@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  FORMÜL KURS LOGOSU — MASTER (ORİJİNAL) · TEK KAYNAK
+  ============================================================================
+  Bu dosya DEĞİŞTİRİLMEZ. Her logo işinde referans noktası budur.
+  Uygulamadaki logo (app.js → dersKartiHTML) bu master'ın yalnızca
+    (1) gömülü font açısından (Montserrat → 'MontsKart', italic 900, base64 data-URI)
+    (2) ÖLÇEK açısından (TEK çarpan 0.2647) farklı bir kopyasıdır.
+  Başka HİÇBİR fark yoktur.
+
+  ÖLÇEK: 8.5rem tabanı × 0.2647  →  marka 8.5rem → 2.25rem
+    marka font-size     8.5rem  → 2.25rem
+    marka letter-spacing -4px    → -1.05px
+    marka line-height   0.85    → 0.85        (oranlı ölçek = değişmez)
+    SVG width           80      → 21
+    SVG right           30px    → 8px
+    SVG top             2px     → 0.5px
+    SVG viewBox 0 0 100 40 · stroke-width 14 · stroke-linecap round  → AYNEN
+    alt yazı font-size  2.8rem  → 0.74rem
+    alt yazı letter-sp. -1.5px  → -0.4px
+    alt yazı margin-top -3px    → 0   (ÇAKIŞMA KURALI: -3px alt yazıyı
+                                          markanın üstüne bindiriyordu → 0)
+    alt yazı margin-right 53px  → 14px
+    sarmalayıcı padding  19px   → 5px
+
+  YASAK (bkz. CHECKPOINT.md → "🎨 LOGO KİLİDİ"): renk, font-weight(900), italik,
+  harf-aralığı ORANI, SVG path/viewBox/stroke-width/stroke-linecap, alt yazı metni,
+  hizalama, eleman sırası, "iyileştirme" amaçlı tasarım değişikliği.
+
+  NOT (master değerlerinin türetilmesi): master'ın 8.5rem tabanı kullanıcı tarafından
+  verilmişti; dosyadaki kalan master ölçüleri karttaki D33 değerlerinin 0.2647'ye
+  bölünmesiyle birebir geriye çözülmüştür (2.25rem / 0.2647 = 8.5rem — tam).
+  ============================================================================
+-->
+<div class="logo-wrapper"
+     style="display:inline-flex;flex-direction:column;align-items:flex-end;padding:19px;white-space:nowrap">
+
+  <div class="brand-container" style="position:relative;display:flex;align-items:flex-start;white-space:nowrap">
+
+    <div class="brand-name"
+         style="font-family:'Montserrat',sans-serif;font-size:8.5rem;font-weight:900;font-style:italic;letter-spacing:-4px;color:#d31d24;line-height:0.85;white-space:nowrap">formul</div>
+
+    <svg class="u-to-ü-lines" width="80" viewBox="0 0 100 40" xmlns="http://www.w3.org/2000/svg"
+         style="position:absolute;right:30px;top:2px;height:auto;display:block;overflow:visible">
+      <path d="M15 10 L95 10" fill="none" stroke="#f29222" stroke-width="14" stroke-linecap="round"/>
+      <path d="M14 29 L94 29" fill="none" stroke="#f29222" stroke-width="14" stroke-linecap="round"/>
+    </svg>
+
+    <div class="sub-text"
+         style="font-family:'Montserrat',sans-serif;font-size:2.8rem;font-weight:900;font-style:italic;letter-spacing:-1.5px;margin-top:-3px;margin-right:53px;color:#1a1a1a;white-space:nowrap">kurs merkezi</div>
+
+  </div>
+</div>

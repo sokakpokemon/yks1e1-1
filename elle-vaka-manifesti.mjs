@@ -49,7 +49,7 @@ export const elleManifest = {
   "ks-kadro-telefon3.mjs": 57,
   "ks-ders-tasi.mjs": 90,
   "ks-gunluk-ders-tasi.mjs": 114,
-  "ks-ders-karti.mjs": 109, /* DÖNGÜ-30: elle sayım (101+8 yeni D30) */
+  "ks-ders-karti.mjs": 110, /* D33-LOGO-KİLİDİ: 109 + 1 yeni master-kaynak kapısı (logo-master/formul-kurs-logo.html) */
   "ks-ders-karti-tasima.mjs": 56,
   "ks-ogrt-ders-karti.mjs": 91,
   "ks-ogrt-denetim.mjs": 42, /* OGRT-TAMGUN-KART: elle sayım */

@@ -186,7 +186,7 @@ t("csvKadroIndir değişmedi (KADRO-KOLON-YAMASI/TELEFON3-YAMASI işaretli deği
   return yeni.includes("CSV_BASLIK_KADRO_V3") && yeni.includes("kadroV3Satirlari()") && yeni.includes("TELEFON3-YAMASI");
 })());
 t("dersOgrenciIds değişmedi", sha(blok("function dersOgrenciIds(ders) {")) === sha(bakBlok(bakKaynak, "function dersOgrenciIds(ders) {")));
-t("index.html değişmedi", sha(readFileSync("index.html", "utf8")) === "608e93d3a9503949946924f5c5789972e99fa61edb59929c65452e95de9072a6");
+t("index.html değişmedi", sha(readFileSync("index.html", "utf8")) === "0fe95a46ebc743722c022a7424b51c1080ecce3d6eb5e7093257a2896e36e41c");
 t("ek-ders.js değişmedi", sha(readFileSync("ek-ders.js", "utf8")) === "3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f");
 
 /* ---- 8) Başka döneme geçiş: ek dersler orada görünür, A'da değil ---- */

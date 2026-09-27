@@ -50,6 +50,44 @@
 
 ---
 
+# ✅ CHECKPOINT: DÖNGÜ-30-CACHE — app.js/ek-ders.js İçerik Damgası (?v=<sha16>)
+
+**Tarih:** 27 Eylül 2026 · **Durum:** ✅ Tamamlandı — yalnız index.html (2 satır) + test pinleri; app.js/ek-ders.js İÇERİĞİ DEĞİŞMEDİ
+
+*(Not: bu bölüm dosya SONUNA eklenmek istendi; düzenleyici aracı 311 KB dosyanın son bölgesini eşleştiremediği için PROJE REHBERİ/HIZ PROTOKOLÜ bloğunun hemen ardına alındı — içerik birebir.)*
+
+## Yapılan İş
+- `index.html:13` `ek-ders.js?v=6dd3188` → `ek-ders.js?v=3d2dd38ff517c64f`
+- `index.html:349` `app.js?v=6dd3188` → `app.js?v=1d509a6410c874b4`
+- Kural: damga = ilgili dosyanın SHA-256 **ilk 16 hanesi** (commit hash yerine içerik damgası).
+
+## Build kanıtı
+- `bun run build` exit 0; `dist/index.html` damgaları BİREBİR korudu (Vite query'yi düşürmedi); postbuild `dist/app.js` (376774 B, `1d509a64…`) + `dist/ek-ders.js` (30405 B) kökten kopyalandı.
+
+## Donmuş pin güncellemesi (elle, old→new)
+- 8 süitte `index.html` SHA-256 `608e93d3…` → `0fe95a46ebc743722c022a7424b51c1080ecce3d6eb5e7093257a2896e36e41c` (22728 → 22746 B): ks-birebir-gorunum:196 · ks-ders-tasi:415 · ks-donem-ilk:158 · ks-donem-olusturma:292 · ks-ek-ders-donem:213 · ks-ekders-ozet-csv:189 · ks-gunluk-ders-tasi:399 · ks-sinif-ogretmen-uyum:13.
+- Damga +9 B/kayıt ile statik offsetler kaydı: ks-kart-sirasi #2 `plan=9510 havuz=15421`; ks-kart-kolon #7 `sol=9454 plan=9510 sag=15312` · #8 `sag=15312 havuz=15421 kapa=19809`.
+- `elle-vaka-adlari.mjs` (sarmalayıcı) hedefli güncellendi; `elle-vaka-adlari-base.mjs` (133 KB) DEĞİŞMEDİ.
+
+## Yeni assertion (kendini doğrular)
+- `ks-kart-kolon.mjs` #56: "index.html damga = SHA ilk 16 hane (app.js ?v=… + ek-ders.js ?v=…)" — beklenen değerler dosyalardan CANLI hesaplanır; eksik/yanlış damga KIRMIZI. Mevcut `ks-donem-ilk.mjs:162` damga assertion'ı da yeni damgaya güncellendi (48 test sabit).
+
+## Mutasyonlar (tmp kopya, yalnız ks-kart-kolon)
+- M1 `?v=` damgası silinir → FAIL · M2 damga yanlış hash → FAIL (her biri tam 1 kırmızı: #56 damga assertion'ı). Restore sonrası canonical `index.html` SHA birebir: `0fe95a46…`.
+
+## Kapı / No-drift
+- `node hizli-test.mjs --tam` → exit 0 (test + statik yeşil).
+- DEĞİŞMEDİ: `app.js` `1d509a6410c874b478ace1f6688651c155095127e82c73402a38ae7c3b2888a3` (376774 B) · `ek-ders.js` `3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f` (30405 B).
+
+## Kalıcı kural — CANLI-YAYIM KURALI (e)
+> (e) Statik varlık URL'leri içerik damgasıyla (?v=<sha16>) sunulur; app.js/ek-ders.js değişince damga güncellenir; publish sonrası canlı SHA teyidi şart.
+
+## Yedek / Sonraki adım
+- Yedek: `index.html.dongu30cache-oncesi.bak` (22728 B, `608e93d3…`).
+- Publish YAPILMADI (kullanıcı basacak).
+
+---
+
 # VERİ ŞEMASI — localStorage & Yedek
 
 Tek anahtar: `yksOto_arsiv_v1` (app.js `LS_KEY`; ek-ders.js aynı DB'yi paylaşır). Değer `bosDB()` şemasında JSON'dur:

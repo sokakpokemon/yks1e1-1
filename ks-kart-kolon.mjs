@@ -1,10 +1,11 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 55) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-kart-kolon.mjs kosan=" + __kosan + " beklenen=55"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-kart-kolon.mjs:" + __kosan + ":55"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 56) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-kart-kolon.mjs kosan=" + __kosan + " beklenen=56"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-kart-kolon.mjs:" + __kosan + ":56"); } });
 /* ks-kart-kolon.mjs — PANEL-YIGINLAMA süiti (DÖNGÜ-20): planlama ekranındaki iki kart
    (Birebir Ders Planla + Öğrenci Birebir İstek Havuzu) TÜM genişliklerde TEK KOLON, ALT ALTA;
    planKart ÜSTTE, havuzBolum ALTTA (CSS order YOK; DOM sırası belirler). Gerçek DOM semantiği:
    bilinmeyen id → null, innerHTML yazımı eski çocukları siler, gerçek parent/çocuk yapısı. */
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 
 const appKaynak = readFileSync("app.js", "utf8");
 const ekKaynak = readFileSync("ek-ders.js", "utf8");
@@ -238,6 +239,18 @@ function kartParentId(env, kid) {
     const eski = ["ks-harness.mjs", "ks-test-render.mjs", "ks-durum-fn.mjs", "ks-grup-uyum.mjs", "ks-panel-secim.mjs", "ks-grup-gorunum.mjs", "ks-istekten-grup.mjs", "ks-grup-istegi.mjs", "ks-benzersiz-id.mjs", "ks-gercek-kadro.mjs", "ks-donem-ilk.mjs", "ks-donem-damga.mjs", "ks-donem-secici.mjs", "ks-excel-csv.mjs", "ks-donem-olusturma.mjs", "ks-donem-secici-gorunum.mjs", "ks-donem-secici-dom.mjs", "ks-sinifprog-csv.mjs", "ks-sablon-kopya.mjs", "ks-render-sahipligi.mjs", "ks-d1-render-refactor.mjs", "ks-kadro-siralama.mjs", "ks-kapali-gorunum.mjs", "ks-ek-ders-donem.mjs", "ks-ekders-gorunum.mjs", "ks-ekders-ozet-csv.mjs", "ks-birebir-gorunum.mjs", "ks-sinif-ogretmen-uyum.mjs", "ks-sinif-prog-uyum-onar.mjs", "ks-sinif-prog-etiket.mjs", "ks-kart-sirasi.mjs"];
     const eksik = eski.filter((s) => !testRunner.includes('"' + s + '"'));
     t("Mevcut 31 süit test.mjs'te korundu (test sayısı düşmüyor)", eksik.length === 0, eksik.join(","));
+  }
+
+  /* H) İÇERİK DAMGASI (?v=<sha16>): index.html'deki statik varlık URL'leri,
+     ilgili dosyanın SHA-256 ilk 16 hanesini taşımalı — damga eksik/yanlışsa KIRMIZI.
+     (Kendini doğrular: beklenen değerler dosyalardan CANLI hesaplanır.) */
+  {
+    const appSha16 = createHash("sha256").update(readFileSync("app.js")).digest("hex").slice(0, 16);
+    const ekSha16 = createHash("sha256").update(readFileSync("ek-ders.js")).digest("hex").slice(0, 16);
+    t(
+      "index.html damga = SHA ilk 16 hane (app.js ?v=" + appSha16 + " + ek-ders.js ?v=" + ekSha16 + ")",
+      html.includes('src="app.js?v=' + appSha16 + '"') && html.includes('src="ek-ders.js?v=' + ekSha16 + '"')
+    );
   }
 
   console.log(fail === 0 ? "HEPSİ GEÇTİ" : fail + " TEST KIRMIZI");

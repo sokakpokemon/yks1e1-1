@@ -57,6 +57,7 @@ export const manifest = {
   "ks-dongu28.mjs": 20,
   "ks-index-kimlik.mjs": 8,
   "ks-dongu29.mjs": 25,
+  "ks-d32-grup-birebir-e2e.mjs": 20,
 };
 
 /* Süit içi yardımcı: kosan sayacını manifest ile KENDİ sunar.

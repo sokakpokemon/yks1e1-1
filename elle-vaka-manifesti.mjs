@@ -58,4 +58,5 @@ export const elleManifest = {
   "ks-dongu28.mjs": 20, /* DÖNGÜ-28: elle sayım */
   "ks-index-kimlik.mjs": 8,
   "ks-dongu29.mjs": 25, /* DÖNGÜ-29: elle sayım */
+  "ks-d32-grup-birebir-e2e.mjs": 20, /* D32-GRUP-2UYE: elle sayım (gerçek form akışı + eşik regresyonu) */
 };

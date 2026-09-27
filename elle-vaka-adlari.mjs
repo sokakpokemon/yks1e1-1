@@ -97,5 +97,31 @@ offsetDuzelt(
   "C: dersOgrenciIds iki kimlik verir (ana + ek)",
 );
 
-/* YENİ SÜİT (ks-index-kimlik.mjs) sonrası toplam süit 51 → 52; yazdığa gömülü sayı güncellendi. */
-offsetDuzelt("ks-kart-sirasi.mjs", "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 51", "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 52");
+/* D32-GRUP-2UYE sonrası toplam süit 52 → 53 (yeni kalıcı süit ks-d32-grup-birebir-e2e.mjs);
+   yazdığa gömülü sayı ELLE güncellendi (koşumdan otomatik üretim YOK). */
+offsetDuzelt("ks-kart-sirasi.mjs", "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 51", "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 53");
+
+/* D32-GRUP-2UYE KALICI SÜİT (ks-d32-grup-birebir-e2e.mjs): gerçek form akışı + eşik regresyonu.
+   20 assertion — ana öğrenci + 1 ek üye PAZAR grup birebir dersi; K1..K6 + 0/1/2 ek eşikleri. */
+elleVakaAdlari["ks-d32-grup-birebir-e2e.mjs"] = [
+  "boot hatasız",
+  "eşik 0 ek (tekli): ogrenciIds YAZILMAZ, ogrenciId = ana",
+  "eşik 2 ek (grup-3): ogrenciIds = [ek, üçüncü]",
+  "eşik 1 ek (grup-2): ogrenciIds = [ek]",
+  "K1 kayıt: ogrenciId = ana + ogrenciIds = [ek] BİRLİKTE",
+  "K1 dersOgrenciIds = [ana, ek] (tüm katılımcı)",
+  "K2 haftalık çizelgede ANA üye TAM ad",
+  "K2 haftalık çizelgede EK üye TAM ad",
+  "K3 günlük çizelgede ANA üye TAM ad",
+  "K3 günlük çizelgede EK üye TAM ad",
+  "K4 alıcı listesinde ana üye AYRI satır",
+  "K4 alıcı listesinde ek üye AYRI satır",
+  "K4 üçüncü öğrenci sızmaz",
+  "K4 ana sayaç = 1 (grup dersi BİR kez)",
+  "K4 ek sayaç = 1 (grup dersi BİR kez)",
+  "K5 ana ve ek mesajı üretildi (ikisi de null değil)",
+  "K5 ana mesajında ortak grup dersi VAR (Pazar)",
+  "K5 ek mesajında ortak grup dersi VAR (Pazar)",
+  "K6 ders silindi + TEK istek oluştu (+1)",
+  "K6 istek: ogrenciId = ana + ogrenciIds = [ek] + bekliyor",
+];

@@ -3552,3 +3552,6 @@ dongu22–29 aileleri (app.js ×10, index.html ×1, süit .bak ×7, ks-yama-dong
 - node statik-eksiksizlik.mjs → **48/48 TAMLIK KANITI** (exit 0)
 - Kök SHA'lar DEĞİŞMEDİ: app.js 009d03d7… · index.html 244f61c8… · ek-ders.js 3d2dd38f…
 - Kalıntı kontrolü: taşıma sonrası aday-desen kalan = 37, KE türeviyle birebir; arşivde 226 dosya (224 + MANIFEST.txt + MANIFEST-SHA.txt).
+- /tmp çalışma kalıntıları kapsam dışı bırakıldı (codebase dışı, sandbox ömrüyle silinir — bilinçli karar).
+- **TEMİZLİK TAMAMLANDI.**
+

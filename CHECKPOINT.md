@@ -12,6 +12,41 @@
 - Durum seçici çubuğu (takvim düzenleme): `ui.seciliDurum` + `ui.seciliOgrId`; butonlar `tumSiniflar()`'dan otomatik (DB), en sonda Kapalı. `durumSec(val, ogrId)` seçer, `togOgrSecili(tid, di, saat)` hücreye uygular — aynı hücreye 2. tıklama Boş yapar (döngü yok). Görünen "Müsait Değil" etiketleri "Kapalı" oldu; davranış kaydı `avail.musait` aynı kaldı. Eski "Sınıf Dersi" hücreleri korundu (68 hücre, seed verisinde) — kullanıcı sonradan yeniden işaretleyecek. İşlevsel test: `ks-durum-fn.mjs` (20 test)
 - ⚠️ **Kritik:** index.html'de düzenleme yaparken str_replace takılırsa doğrudan assert'li Node script kullan
 - **Protokol:** tek iş → test → rapor
+- **📌 HIZ PROTOKOLÜ (kalıcı kural):** kalite kapıları korunur, yalnız koşum SIKLIĞI azalır. Koşum seçici: `node hizli-test.mjs …` — ayrıntı aşağıdaki HIZ PROTOKOLÜ bölümünde.
+
+---
+
+# 📌 HIZ PROTOKOLÜ (kalıcı kural — her turda geçerli)
+
+**Amaç:** Aynı KALİTE kapılarını koruyarak tur başına koşum SIKLIĞINI azaltmak. Hiçbir assertion silinmez/gevşetilmez — yalnız neyin NE ZAMAN koşacağı değişir. Koşum seçici: `node hizli-test.mjs …`.
+
+## A) GELİŞTİRME
+- Tam kapı (`node test.mjs` + `node statik-eksiksizlik.mjs`) tur başına **EN ÇOK 1 kez**, kapanışta koşar. Ara adımda YALNIZ etkilenen süit: `node hizli-test.mjs ks-<ad>` (= o süiti + süreyi basar).
+- Yama öncesi hedef satırı grep ile oku; uygulanabilirliği tek komutla teyit et. "No changes to existing files" tekrarına GİRME: bir kez dene, olmazsa DUR ve raporla.
+- Yedek: tur başına TEK yedek; dosya zaten `.bak`'lıysa yenisini alma.
+
+## B) MUTASYONLAR
+- Hedefe göre 2–3 kritik mutasyon (5 zorunlu değil). Her mutasyon YALNIZ etkilenen süiti koşar, tam süiti değil: `node hizli-test.mjs mutasyon <ad>`.
+- Rapor 2 satır: "FAIL etti" + "restore SHA birebir". Tam çıktı dökümü yok.
+
+## C) DONMUŞ LİSTELER
+- Yalnız gerçekten değişen vaka/süit satırları güncellenir; donmuş beşli (`suit-manifest.mjs`, `elle-vaka-manifesti.mjs`, `elle-vaka-adlari.mjs`, `suit-vakalar/<süit>.txt`) baştan ÜRETİLMEZ. Rapor: "N satır değişti + dosya:satır".
+
+## D) RAPOR FORMATI
+- Keşif ve kapanış raporu EN FAZLA 1 ekran: karar listesi + dosya:satır + sayı. Uzun envanter/tablo ve satır-satır döküm YOK.
+
+## E) YAYIN
+- Publish tur başına **EN ÇOK 1**. Akış: commit → publish → TEK curl teyidi (SHA + farklılaştırıcı string: `fk-logo` / `Değerli Öğrencimiz`).
+- Aynı turda 2. publish YOK; cache şüphesinde ÖNCE `?v=` damgası güncellenir.
+
+## F) KALİTE KAPILARI KORUNUR
+- Kapanışta: tam test + statik + syntax + no-drift SHA. Hiçbir assertion silinmez/gevşetilmez — yalnız koşum sıklığı azalır.
+
+## G) hizli-test.mjs KOŞUM SEÇİCİSİ
+- `node hizli-test.mjs ks-ders-karti` → tek süit + süre (SUITE_DONE kapısı test.mjs ile aynı kural).
+- `node hizli-test.mjs mutasyon <ad>` → yalnız ilgili mutasyon script'i (`mutasyon-<ad>.mjs`; `<ad>` süit adı da olabilir).
+- `node hizli-test.mjs --tam` → kapanış kapısı: `node test.mjs` + `node statik-eksiksizlik.mjs`.
+- Yardımcı test mantığını DEĞİŞTİRMEZ, yalnız koşum seçicisidir.
 
 ---
 

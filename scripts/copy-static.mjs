@@ -16,6 +16,7 @@ const DOSYALAR = [
   "vendor/fonts.css",
   "vendor/html2canvas.js",
   "vendor/chart.js",
+  "vendor/fonts/montserrat-900-italic.woff2",
 ];
 
 const sha = async (p) =>

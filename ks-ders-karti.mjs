@@ -1,5 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":101"); return; } if (__kosan !== 101) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ders-karti.mjs kosan=" + __kosan + " beklenen=101"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":101"); } });
+process.on("exit", (c) => { if (c !== 0) { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":109"); return; } if (__kosan !== 109) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ders-karti.mjs kosan=" + __kosan + " beklenen=109"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":109"); } });
 /* ks-ders-karti.mjs — DERS-KARTI-YAMASI süiti
    Doğruladıkları:
     1) Kart üretimi: dersKartiHTML/dersKartiVeri doğru alanlarla çalışır (ad, ders, konu, öğretmen, tarih+saat, sınıf, durum).
@@ -67,6 +67,9 @@ global.document = {
   createElement: (tag) => { const e = yapEl(); if (tag === "a") { e._download = true; } return e; },
   body: { appendChild(n) { if (n && n._download) { indirmeSayisi++; sonIndirmeAdi = n.download || ""; } }, removeChild() {} },
   querySelectorAll: () => [],
+  /* DÖNGÜ-30: app.js dersKartiAc html2canvas'tan ÖNCE document.fonts.ready bekliyor —
+     mock gerçek davranışa uygun hemen çözülen Promise (gevşetme değil, şema güncellemesi). */
+  fonts: { ready: Promise.resolve() },
 };
 global.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => { store[k] = String(v); }, removeItem: (k) => { delete store[k]; } };
 global.Chart = function () { this.destroy = () => {}; };
@@ -133,10 +136,18 @@ const bosSinifOgr = Object.assign({}, ogr, { sinif: "" });
 t("kart sınıf alanı boş → tam 'Sınıf belirtilmemiş' (uydurma YOK)", (() => { const kayitli = DB.ogrenciler; const i0 = DB.ogrenciler.findIndex(x => x.id === ogr.id); DB.ogrenciler = kayitli.slice(); DB.ogrenciler[i0] = bosSinifOgr; const v2 = dersKartiVeri(Object.assign({}, birebir, { ogrenciId: ogr.id })); DB.ogrenciler = kayitli; return v2.sinif === "Sınıf belirtilmemiş"; })());
 t("konu boş → tam 'Genel tekrar' (HTML)", dersKartiHTML(Object.assign({}, birebir, { konu: "" })).includes("Genel tekrar"));
 t("kart bento zemin #f4f6fa taşıyor", dersKartiHTML(birebir).includes("background:#f4f6fa"));
-t("kart başlığı 'Birebir Ders Kartı' + 'Formül Kurs'", dersKartiHTML(birebir).includes("Birebir Ders Kartı") && dersKartiHTML(birebir).includes("Formül Kurs"));
+t("D30 kart başlığı 'Birebir Ders Kartı' VAR + 'Formül Kurs' METİN alt yazısı YOK + fk-logo VAR", (() => { const h = dersKartiHTML(birebir); return h.includes("Birebir Ders Kartı") && h.includes("fk-logo") && !h.includes(">Formül Kurs</div>"); })());
+t("D30 logo kademe değerleri (3rem · -1.4px · 27.5 · 0.7px · 10.5px · 1rem · -0.5px · -4.2px · 18px · 7px)", (() => { const h = dersKartiHTML(birebir); return ["font-size:3rem","letter-spacing:-1.4px","width=\"27.5\"","margin-top:0.7px","margin-right:10.5px","font-size:1rem","letter-spacing:-0.5px","margin:-4.2px 0 0 18px","padding:7px"].every(s => h.includes(s)); })());
+t("D30 logo stroke literal #f29222 (var() YOK) + xmlns VAR", (() => { const h = dersKartiHTML(birebir); return h.includes("stroke=\"#f29222\"") && !h.includes("stroke=\"var(") && h.includes("xmlns=\"http://www.w3.org/2000/svg\""); })());
+t("D30 Montserrat base64 data-URI @font-face (harici URL YOK — assertion 145 ile uyumlu)", (() => { const h = dersKartiHTML(birebir); return h.includes("@font-face") && h.includes("data:font/woff2;base64,") && h.includes("MontsKart"); })());
+t("D30 etiket 'Değerli Öğrencimiz' VAR + düz 'ÖĞRENCİ' etiketi YOK", (() => { const h = dersKartiHTML(birebir); return h.includes(">Değerli Öğrencimiz</div>") && !h.includes(">ÖĞRENCİ</div>"); })());
+t("D30 FROZEN not şeridi TEK tam-dizi eşitliği (6 cümle birebir, • ayracı yok)", (() => { const h = dersKartiHTML(birebir); const bekl = "Bu dersler, eksiklerini tamamlaman ve hedeflerine biraz daha yaklaşman için planlandı. Ders saatinden birkaç dakika önce hazır olman yeterli. Anlamadığın veya zorlandığın konuları öğretmeninle paylaşmayı unutma. Sen çalışmaya devam et, biz de bu süreçte yanında olalım. Güzel çalışmalar, başarılar dileriz. — FORMÜL KURS REHBERLİK SERVİSİ"; return h.includes(bekl) && !h.includes("•"); })());
+t("D30 not şeridi stili (10.5px · slate-500 #64748b · border-top #e2e8f0 · sol hizalı)", (() => { const h = dersKartiHTML(birebir); const i = h.indexOf("Bu dersler, eksiklerini"); const bas = h.lastIndexOf("<div", i); return h.slice(bas, i).includes("font-size:10.5px") && h.slice(bas, i).includes("color:#64748b") && h.slice(bas, i).includes("border-top:1px solid #e2e8f0") && h.slice(bas, i).includes("text-align:left"); })());
+t("D30 dersKartiAc document.fonts.ready bekliyor (font render güvencesi)", (() => { const i0 = appKaynak.indexOf("function dersKartiAc("); const i1 = appKaynak.indexOf("\nfunction ", i0 + 10); const blok = appKaynak.slice(i0, i1 > 0 ? i1 : appKaynak.length); return blok.includes("document.fonts.ready") && blok.includes("html2canvas(el,") && blok.indexOf("document.fonts.ready") < blok.indexOf("html2canvas(el,"); })());
+t("D30 etki-sınırı: öğretmen TEK-DERS kartında 'Değerli Öğrencimiz' YOK + fk-logo YOK + öğrenci not şeridi YOK", (() => { const ogrtBas = appKaynak.indexOf("function dersKartiOgrtHTML("); const ogrtSon = appKaynak.indexOf("\nfunction ", ogrtBas + 10); const ogrtKaynak = appKaynak.slice(ogrtBas, ogrtSon > 0 ? ogrtSon : appKaynak.length); const h = dersKartiOgrtHTML(birebir); return !h.includes("Değerli Öğrencimiz") && !h.includes("fk-logo") && !h.includes("Bu dersler, eksiklerini tamamlaman") && !ogrtKaynak.includes("Bu dersler, eksiklerini tamamlaman"); })());
 t("kart markup'ında class= YOK (Tailwind bağımsız)", !dersKartiHTML(birebir).includes("class="));
 t("kart markup'ında fa- ikonu YOK", !dersKartiHTML(birebir).includes("fa-"));
-t("kart markup'ında harici CDN URL YOK", !/https?:\/\//.test(dersKartiHTML(birebir).replace(/xmlns="http:\/\/www.w3.org\/2000\/svg"/, "")));
+t("kart markup'ında harici CDN URL YOK (D30: tüm xmlns girdileri muaf — kartta 2 SVG var)", !/https?:\/\//.test(dersKartiHTML(birebir).replace(/xmlns="http:\/\/www.w3.org\/2000\/svg"/g, "")));
 t("nötr inline SVG ikon VAR", dersKartiHTML(birebir).includes("<svg") && dersKartiHTML(birebir).includes("</svg>"));
 t("bento bölümleri: TARİH/SAAT/DERS/KONU/ÖĞRETMEN/SINIF etiketleri VAR", (() => { const h = dersKartiHTML(birebir); return ["TARİH","SAAT","DERS","KONU","ÖĞRETMEN","SINIF"].every(b => h.includes(b)); })());
 t("ogrenciMesajMetni iptal filtresi kaynakta (WA korunumu)", appKaynak.includes('l.durum !== "iptal"'));

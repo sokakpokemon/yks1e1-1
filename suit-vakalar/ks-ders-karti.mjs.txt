@@ -20,10 +20,18 @@ D16 fallback: KISA_KOD dışı saat → String(saat)
 kart sınıf alanı boş → tam 'Sınıf belirtilmemiş' (uydurma YOK)
 konu boş → tam 'Genel tekrar' (HTML)
 kart bento zemin #f4f6fa taşıyor
-kart başlığı 'Birebir Ders Kartı' + 'Formül Kurs'
+D30 kart başlığı 'Birebir Ders Kartı' VAR + 'Formül Kurs' METİN alt yazısı YOK + fk-logo VAR
+D30 logo kademe değerleri (3rem · -1.4px · 27.5 · 0.7px · 10.5px · 1rem · -0.5px · -4.2px · 18px · 7px)
+D30 logo stroke literal #f29222 (var() YOK) + xmlns VAR
+D30 Montserrat base64 data-URI @font-face (harici URL YOK — assertion 145 ile uyumlu)
+D30 etiket 'Değerli Öğrencimiz' VAR + düz 'ÖĞRENCİ' etiketi YOK
+D30 FROZEN not şeridi TEK tam-dizi eşitliği (6 cümle birebir, • ayracı yok)
+D30 not şeridi stili (10.5px · slate-500 #64748b · border-top #e2e8f0 · sol hizalı)
+D30 dersKartiAc document.fonts.ready bekliyor (font render güvencesi)
+D30 etki-sınırı: öğretmen TEK-DERS kartında 'Değerli Öğrencimiz' YOK + fk-logo YOK + öğrenci not şeridi YOK
 kart markup'ında class= YOK (Tailwind bağımsız)
 kart markup'ında fa- ikonu YOK
-kart markup'ında harici CDN URL YOK
+kart markup'ında harici CDN URL YOK (D30: tüm xmlns girdileri muaf — kartta 2 SVG var)
 nötr inline SVG ikon VAR
 bento bölümleri: TARİH/SAAT/DERS/KONU/ÖĞRETMEN/SINIF etiketleri VAR
 ogrenciMesajMetni iptal filtresi kaynakta (WA korunumu)

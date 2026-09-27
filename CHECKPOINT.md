@@ -3596,3 +3596,52 @@ dongu22–29 aileleri (app.js ×10, index.html ×1, süit .bak ×7, ks-yama-dong
 - **Kök neden (geriye dönük kesin):** Platform her publish'i git snapshot'ından build alıyor. public/ dosyaları ilk turda eksik/kararsız snapshot'larda kaldı; Vly otomatik commit'i (HEAD `35e8914`) tüm public/ içeriğini repoya tam girince sorun çözüldü. Ders: publish öncesi "working tree temiz / tüm dosyalar commit'te" şartı.
 - **Kalıcı kural — CANLI-YAYIM KURALI:** Her publish'ten önce: (a) `node test.mjs` yeşil, (b) working tree temiz (commit edilmemiş dosya yok), (c) public/ ↔ kök SHA birebir, (d) publish sonrası canlı 7 asset SHA/content-type kontrolü (canlı app.js SHA = canonical app.js SHA).
 - **No-drift teyidi:** app.js `009d03d7…` · index.html `244f61c8…` · ek-ders.js `3d2dd38f…` — uygulama kodu bu zincir boyunca hiç değişmedi (yalnız dağıtım altyapısı: package.json postbuild, scripts/copy-static.mjs, public/).
+
+
+---
+
+# ✅ CHECKPOINT: DÖNGÜ-30 — Öğrenci Bento Kart: Logo + Etiket + Not Şeridi
+
+**Tarih:** 27 Eylül 2026 · **Durum:** ✅ Tamamlandı, `node test.mjs` → **2460/2460 OK** (2452 eski + 8 yeni)
+
+## Yapılan İş (app.js — baştan yazma YOK, 4 noktalı hedefli yama)
+
+1. **Logo (master 3rem kademe türevi):** header'daki "Formül Kurs" metin alt yazısı (app.js:4638) KALKAR; yerine `fk-logo` bloğu: `padding:7px` sarmalayıcı · `font-family:MontsKart,serif;font-size:3rem;font-weight:900;font-style:italic;letter-spacing:-1.4px;line-height:1;color:#0f172a` "formul kurs" · SVG `id="fk-logo" width="27.5" height="27.5"` + `margin-right:10.5px;margin-top:0.7px` · `stroke="#f29222" LITERAL (var() YOK — html2canvas güvenliği)` + `xmlns` düzeltmeli · `font-size:1rem;letter-spacing:-0.5px;margin:-4.2px 0 0 18px;color:#f29222` "merkezi". `class=` KULLANILMADI (D30 assertion 143 korunur). Montserrat YÜKLENMEZSE logo KONMAZ (fallback fontla logo yasak — yalnız MontsKart ailesi, system-ui fallback yok).
+2. **Montserrat 900 italic latin woff2** (18.624 B, `7084156f0b371b85`): `vendor/fonts/montserrat-900-italic.woff2` + `public/vendor/fonts/` kopyası + `scripts/copy-static.mjs` listesine eklendi (package.json'a DOKUNULMADI). Kart İÇİNE **base64 data-URI @font-face** gömülü (harici URL YOK — harici-CDN assertion'ı korunur).
+3. **"ÖĞRENCİ" → "Değerli Öğrencimiz"** (yalnız app.js:4649 — öğrenci kartı etiketi; öğretmen kartlarına dokunulmaz).
+4. **FROZEN not şeridi** (kart en altı, öğretmen kutusunun altında; D16 footer-yok korunur):
+   `10.5px · #64748b (slate-500) · border-top:1px solid #e2e8f0 · text-align:left · line-height:1.6 · • ayracı YOK` — 6 cümle birebir, metin DONMUŞ.
+5. **dersKartiAc:** html2canvas'tan ÖNCE `document.fonts.ready` beklemesi (font render güvencesi).
+
+## Test güncellemeleri (ks-ders-karti.mjs 101→109, donmuş beşli ELLE)
+
+- Satır 136 eski "kart başlığı + 'Formül Kurs'" → "D30 kart başlığı VAR + 'Formül Kurs' METİN YOK + fk-logo VAR" + 7 yeni D30 assertion (kademe değerleri · literal stroke+xmlns · base64 @font-face · Değerli Öğrencimiz VAR/ÖĞRENCİ YOK · FROZEN not TEK tam-dizi · şerit stili · fonts.ready html2canvas(el,) çağrısından önce).
+- "harici CDN URL YOK" → tüm xmlns girdileri muaf (kartta artık 2 SVG; beyaz liste yine yalnız w3.org — gevşetme değil, şema güncellemesi).
+- Mock'lar (ks-ders-karti + ks-ders-karti-tasima): `document.fonts.ready = Promise.resolve()` — gerçek davranışa uygun, gevşetme değil.
+- Donmuş beşli elle yazıldı (koşum-sıralı, 109 ad): suit-manifest 109 · elle-vaka-manifesti 109 · elle-vaka-adlari 109 ad · suit-vakalar/ks-ders-karti.mjs.txt 109 ad.
+
+## Mutasyon kanıtları (tmp kopya, restore byte-birebir)
+
+5/5 KIRMIZI:
+  M1 logo kademe bozma (3rem→2.5rem) → 1 kırmızı · M2 stroke var()'a dönüş → 1 kırmızı · M3 not metni tek karakter değişme → 1 kırmızı · M4 "Değerli Öğrencimiz"→"ÖĞRENCİ" dönüş → 1 kırmızı · M5c öğretmen kartına GERÇEK not şeridi sızması → D30 etki-sınırı assertion'ı kırmızı (assertion bu turda not-şeridi sızması kapsamıyla GENİŞLETİLDİ).
+
+## Etki sınırı (byte-diff kanıtı)
+
+`dersKartiOgrtVeri` · `dersKartiOgrtHTML` · `dersKartiOgrtGunlukHTML` — üçü de yama öncesiyle **BİREBİR AYNI** (byte-diff temiz). Öğretmen ekran tabloları dokunulmadı.
+
+## Yedek / SHA
+
+| Dosya | SHA-256 (ilk 8) |
+|---|---|
+| app.js (önce = yedek `/tmp/app.js.dongu30-oncesi.bak`) | `009d03d7` |
+| app.js (sonra) | `1d509a64` |
+| index.html | `244f61c8` (DEĞİŞMEDİ) |
+| ek-ders.js | `3d2dd38f` (DEĞİŞMEDİ) |
+| vendor/fonts/montserrat-900-italic.woff2 (yeni) | `7084156f` |
+
+- Doğrulama: `node --check app.js` OK · `node test.mjs` → **2460/2460 OK, HAM Σ beşli BİREBİR** (51 süit) · `node statik-eksiksizlik.mjs` → **48/48 TAMLIK KANITI**.
+- Süit Δ: `ks-ders-karti` 101→109 (+8 yeni D30) · diğer 50 süit aynen.
+
+## Son Kabul
+
+Öğrenci ders kartında: "Formül Kurs" metin alt yazısı yerine Montserrat 900 italic logo kademesi (fk-logo, #f29222) konmalı; öğrenci kutu etiketi "Değerli Öğrencimiz" olmalı; kart en altında 6 cümlelik rehberlik not şeridi (küçük punto, slate-500, üst çizgiyle ayrık) görünmeli; öğretmen kartları hiç etkilenmemeli — **kullanıcı görsel kontrolü ile (Ctrl+Shift+R)**.

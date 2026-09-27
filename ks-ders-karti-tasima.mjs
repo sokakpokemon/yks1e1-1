@@ -28,6 +28,7 @@ global.document = {
   getElementById: (id) => domReg.get(id) || mockEl(id), createElement: () => mockEl(),
   querySelector: () => mockEl(), querySelectorAll: () => [],
   addEventListener: () => {}, body: { appendChild() {} }, documentElement: { outerHTML: "" },
+  fonts: { ready: Promise.resolve() }, /* DÖNGÜ-30: dersKartiAc html2canvas'tan önce fonts.ready bekliyor */
 };
 try { global.navigator = {}; } catch (e) {}
 global.localStorage = { _d: {}, getItem(k) { return this._d[k] ?? null; }, setItem(k, v) { this._d[k] = String(v); }, removeItem(k) { delete this._d[k]; } };

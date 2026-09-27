@@ -3555,3 +3555,37 @@ dongu22–29 aileleri (app.js ×10, index.html ×1, süit .bak ×7, ks-yama-dong
 - /tmp çalışma kalıntıları kapsam dışı bırakıldı (codebase dışı, sandbox ömrüyle silinir — bilinçli karar).
 - **TEMİZLİK TAMAMLANDI.**
 
+
+---
+
+# ✅ CHECKPOINT: DAĞITIM — public/ Geçişi ve Derleme-Zincir Kanıt Turu
+
+**Tarih:** 26 Eylül 2026 · **Durum:** ✅ Tamamlandı — uygulama koduna dokunulmadı; kanıt + taze derleme turu
+
+## Durum (baştan sorgulandı)
+
+- `scripts/copy-static.mjs` + `package.json` postbuild **mevcuttu** (önceki DAĞITIM-DÜZELTME bölümünden).
+- `public/` geçişi **zaten yapılmıştı**: public/app.js, public/ek-ders.js, public/vendor/* (5 dosya) — kök orijinler YERİNDE KALMAYA devam ediyor (tek gerçek kaynak kök).
+
+## Bu turda kanıtlananlar
+
+1. **public ↔ kök birebir (7/7):** app.js `009d03d787f4` · ek-ders.js `3d2dd38ff517` · vendor/tailwind.js `7afa0afd2536` · fontawesome.css `f69efe0fb337` · fonts.css `b801b3a0b951` · html2canvas.js `669b68b0b682` · chart.js `19dfdc0ce3bd`.
+2. **Taze derleme:** `bun run build` (= tsc -b + vite build + postbuild) exit 0; postbuild çıktısı: "copy-static: 7 dosya byte-birebir kopyalandı".
+3. **dist SHA tablosu (kök ↔ dist, byte dahil 7/7 BİREBİR):**
+
+| Dosya | SHA-256 (ilk 16) | Byte |
+|---|---|---|
+| app.js | `009d03d787f4fa43` | 350571 |
+| ek-ders.js | `3d2dd38ff517c64f` | 30405 |
+| vendor/tailwind.js | `7afa0afd25360446` | 407280 |
+| vendor/fontawesome.css | `f69efe0fb3372fe8` | 1305692 |
+| vendor/fonts.css | `b801b3a0b95140ed` | 178509 |
+| vendor/html2canvas.js | `669b68b0b6828272` | 198690 |
+| vendor/chart.js | `19dfdc0ce3bd0e46` | 205400 |
+
+4. **No-drift kapıları:** node --check app.js/ek-ders.js OK · node test.mjs → **2452/2452 OK** (51 süit, HAM Σ birebir, exit 0) · node statik-eksiksizlik.mjs → **48/48 TAMLIK KANITI** · kök SHA'lar DEĞİŞMEDİ: app.js `009d03d7…` · index.html `244f61c8…` · ek-ders.js `3d2dd38f…`.
+5. `public/logo.svg` → `dist/logo.svg` (9246 B birebir) — Vite public/ kopyalama zinciri çalışıyor.
+
+## Sonraki adımlar (kullanıcıya ait)
+
+- Commit + publish kullanıcı işi; canlıda 7 asset SHA/content-type doğrulaması kullanıcıda (Ctrl+Shift+R ile görsel kontrol dahil).

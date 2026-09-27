@@ -67,6 +67,27 @@ Değişikliği kademelendir:
 
 ---
 
+# ⚡ JET 2.0 (kurallar)
+
+- Testler ücretsiz (tam paket 15.5 s) → rahatça koştur.
+- 5 ayrı düzenleme yerine TEK idempotent yama script'i yaz.
+- app.js'i ASLA baştan okuma (376 KB) → yalnız grep + hedefli satır okuma.
+- Rapor EN FAZLA 1 ekran; T0/T1 işlerinde keşif raporu YOK.
+- Aynı düzenleme 1 kez başarısız olursa DUR ve raporla (tekrar deneme yasak).
+- Tur başına EN ÇOK 1 publish; öncesinde publish-guard yeşil olmalı.
+
+---
+
+# ⏱️ SÜRE KARNESİ
+
+Her turun sonunda zorunlu satır:
+
+> ⏱️ Bu tur: X dk · Hedef: <T0/T1/T2/T3/V> → Zamanında/Uzun
+
+Hedef bütçe: T0 ≤5 · T1 ≤12 · T2 ≤25 · T3 ≤40 · Doğrulama ≤2 dk.
+
+---
+
 # ✅ CHECKPOINT: DÖNGÜ-30-CACHE — app.js/ek-ders.js İçerik Damgası (?v=<sha16>)
 
 **Tarih:** 27 Eylül 2026 · **Durum:** ✅ Tamamlandı — yalnız index.html (2 satır) + test pinleri; app.js/ek-ders.js İÇERİĞİ DEĞİŞMEDİ

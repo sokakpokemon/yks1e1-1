@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<title>Formül Kurs — ders kartı başlığı önizleme (D32)</title>
+<style>
+  /* D32 önizleme: kart başlığının birebir kopyası (app.js:dersKartiHTML ile aynı markup).
+     Marka yazı tipi, kartta gömülü base64 olarak gelir; burada sistem italik serif ile
+     YAKLAŞIKLANIR — ölçek/boşluk/konum gerçek piksel değerleriyle aynıdır. */
+  body { margin: 0; padding: 32px; background: #eef1f6; font-family: Inter, system-ui, sans-serif; }
+  .cerceve { width: 1200px; }
+  .kart { background: #f4f6fa; padding: 24px; border-radius: 16px; }
+  .ic { background: #fff; border-radius: 14px; padding: 24px 26px; }
+  .ust { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .sol { display: flex; gap: 12px; align-items: center; }
+  .baslik { min-width: 0; font-size: 16px; font-weight: 800; color: #0f172a; }
+  .logo { padding: 4px 0; white-space: nowrap; flex-shrink: 0; margin-left: 12px; }
+  .logo-kutu { position: relative; white-space: nowrap; }
+  .marka { font-family: Georgia, "Times New Roman", serif; font-size: 2rem; font-weight: 900;
+           font-style: italic; letter-spacing: -0.95px; color: #d31d24; line-height: 0.95;
+           white-space: nowrap; }
+  .alt { font-family: Georgia, "Times New Roman", serif; font-size: 0.72rem; font-weight: 900;
+         font-style: italic; letter-spacing: -0.35px; margin-top: 1px; margin-right: 14px;
+         color: #1a1a1a; white-space: nowrap; }
+  .rozet { background: #ecfdf5; color: #047857; font-size: 11px; font-weight: 800;
+           padding: 4px 12px; border-radius: 99px; }
+  .not { margin-top: 18px; font-size: 12px; color: #475569; line-height: 1.6; }
+  code { background: #fff; padding: 1px 5px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="cerceve">
+  <div class="kart">
+    <div class="ic">
+      <div class="ust">
+        <div class="sol">
+          <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="12" fill="#6366f1"/><rect x="11" y="12" width="18" height="16" rx="2" fill="none" stroke="#ffffff" stroke-width="2"/><line x1="11" y1="17" x2="29" y2="17" stroke="#ffffff" stroke-width="2"/><line x1="17" y1="10" x2="17" y2="14" stroke="#ffffff" stroke-width="2"/><line x1="23" y1="10" x2="23" y2="14" stroke="#ffffff" stroke-width="2"/></svg>
+          <div class="baslik">Birebir Ders Kartı</div>
+          <div class="logo">
+            <div class="logo-kutu">
+              <div class="marka">formul</div>
+              <svg id="fk-logo" width="20" height="8" viewBox="0 0 100 40" xmlns="http://www.w3.org/2000/svg" style="position:absolute;right:8px;top:0;display:block;overflow:visible;z-index:1"><path d="M8 12 L92 12" fill="none" stroke="#f29222" stroke-width="14" stroke-linecap="round"/><path d="M8 28 L92 28" fill="none" stroke="#f29222" stroke-width="14" stroke-linecap="round"/></svg>
+              <div class="alt">kurs merkezi</div>
+            </div>
+          </div>
+        </div>
+        <span class="rozet">Planlandı</span>
+      </div>
+    </div>
+  </div>
+  <div class="not">
+    D32 kademeleri: <code>formul</code> 2rem · line-height 0.95 · #d31d24 ·
+    çift çizgi <code>20×8</code> · viewBox <code>0 0 100 40</code> · stroke-width 14 (≈2.8px) ·
+    <code>overflow:visible</code> · right 8px · top 0 · z-index 1 ·
+    <code>kurs merkezi</code> 0.72rem · #1a1a1a · negatif margin YOK (+1px) · margin-right 14px ·
+    sarmalayıcı <code>padding:4px 0</code> + <code>margin-left:12px</code> (başlıkla arada boşluk).
+  </div>
+</div>
+</body>
+</html>

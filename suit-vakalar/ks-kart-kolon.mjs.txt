@@ -53,4 +53,4 @@ Tek-kolon grid kuralı kaynakta (minmax(0,1fr) tek değer)
 Dar kolonda min-width:0 koruması
 ks-kart-kolon.mjs test.mjs'te tam 1 kez → 1
 Mevcut 31 süit test.mjs'te korundu (test sayısı düşmüyor) →
-index.html damga = SHA ilk 16 hane (app.js ?v=921744395dbd8b20 + ek-ders.js ?v=3d2dd38ff517c64f)
+index.html damga = SHA ilk 16 hane (app.js ?v=346cd3e28059fab2 + ek-ders.js ?v=3d2dd38ff517c64f)

@@ -39,7 +39,7 @@ offsetDuzelt(
 /* DÖNGÜ-30-CACHE (SHA16 damgası): ks-donem-ilk damga assertion'ı KALDIRILDI;
    damga artık DİNAMİK olarak ks-index-kimlik.mjs süitinde doğrulanır. */
 elleVakaAdlari["ks-kart-kolon.mjs"].push(
-  "index.html damga = SHA ilk 16 hane (app.js ?v=921744395dbd8b20 + ek-ders.js ?v=3d2dd38ff517c64f)",
+  "index.html damga = SHA ilk 16 hane (app.js ?v=346cd3e28059fab2 + ek-ders.js ?v=3d2dd38ff517c64f)",
 );
 
 /* KALICI DÜZELTME: index.html SABİT SHA-256 pinleri ve literal damga assertion'ı KALDIRILDI.
@@ -82,6 +82,20 @@ elleVakaAdlari["ks-index-kimlik.mjs"] = [
   "index.html havuzBolum id'si VAR",
   "index.html ks-kart-kolon id'si VAR",
 ];
+
+/* D32-GRUP-2UYE: plan formunda ana + 1 ek artık GRUP kaydıdır (havuz ortak grup isteğiyle hizalandı).
+   ks-grup-uyum Senaryo C'nin iki assertion adı bu davranış değişikliği için ELLE güncellendi
+   (koşumdan otomatik üretim YOK; sayı/sıra değişmedi: 41). */
+offsetDuzelt(
+  "ks-grup-uyum.mjs",
+  "C: eski davranış: ogrenciIds alanı YOK",
+  "C: iki öğrencili grup: ogrenciIds = [ek]",
+);
+offsetDuzelt(
+  "ks-grup-uyum.mjs",
+  "C: dersOgrenciIds tek kimlik verir",
+  "C: dersOgrenciIds iki kimlik verir (ana + ek)",
+);
 
 /* YENİ SÜİT (ks-index-kimlik.mjs) sonrası toplam süit 51 → 52; yazdığa gömülü sayı güncellendi. */
 offsetDuzelt("ks-kart-sirasi.mjs", "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 51", "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 52");

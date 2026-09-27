@@ -32,9 +32,9 @@ A: kayıt sonrası grup chip listesi sıfırlandı (temizleForm)
 B: çakışan grup öğrencisi adıyla uyarıda geçiyor
 B: uyarı ders çakışması olarak nitelendiriliyor
 C: kayıt oluştu
-C: eski davranış: ogrenciIds alanı YOK
+C: iki öğrencili grup: ogrenciIds = [ek]
 C: ogrenciId = formdaki öğrenci
-C: dersOgrenciIds tek kimlik verir
+C: dersOgrenciIds iki kimlik verir (ana + ek)
 sinif dizi → obje (Sınıf Dersi değeriyle)
 musait dizi korunur
 Sınıf Dersi uyarısı bu şekille üretiliyor

@@ -156,16 +156,18 @@ console.log("7) Senaryolar: grup kayıt, isimli çakışma, birebir akış:");
   t("B: uyarı ders çakışması olarak nitelendiriliyor", uyariB.some(m => m.includes(zeynep.ad) && m.includes("ile dersi var")));
   DB3.dersler = DB3.dersler.filter(l => l.id !== "test-conflict-1");
 
-  /* Senaryo C — 1 ek öğrenci bile kaydederse: eski birebir akış AYNEN (ogrenciIds YAZILMAZ) */
+  /* Senaryo C — D32-GRUP-2UYE: 1 ek öğrenci (ana + 1 ek = İKİ öğrencili grup) artık GRUP kaydıdır; ogrenciIds = [ek].
+     Havuz ortak grup isteği de en az 2 TOPLAM üye kabul ediyordu — form eşiği hizalandı.
+     0 ek (yalnız ana) → eski birebir akış AYNEN korunur. */
   formuDoldur();
   ui3.ekOgrenciIds = [emir.id];
   const sayiOnce = DB3.dersler.length;
   planla();
   const yeniKayit = DB3.dersler[sayiOnce];
   t("C: kayıt oluştu", DB3.dersler.length === sayiOnce + 1 && !!yeniKayit);
-  t("C: eski davranış: ogrenciIds alanı YOK", yeniKayit && !("ogrenciIds" in yeniKayit));
+  t("C: iki öğrencili grup: ogrenciIds = [ek]", yeniKayit && Array.isArray(yeniKayit.ogrenciIds) && yeniKayit.ogrenciIds.length === 1 && yeniKayit.ogrenciIds[0] === emir.id);
   t("C: ogrenciId = formdaki öğrenci", yeniKayit && yeniKayit.ogrenciId === ayse.id);
-  t("C: dersOgrenciIds tek kimlik verir", yeniKayit && api3.dersOgrenciIds(yeniKayit).length === 1);
+  t("C: dersOgrenciIds iki kimlik verir (ana + ek)", yeniKayit && api3.dersOgrenciIds(yeniKayit).length === 2);
   DB3.dersler = DB3.dersler.filter(l => l !== yeniKayit);
 
   /* 8) avail şema sapması: planla() kaydetmeden önce normalize ile aynı şekle getirir */

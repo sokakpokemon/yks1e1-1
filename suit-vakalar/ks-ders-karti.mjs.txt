@@ -21,9 +21,9 @@ kart sınıf alanı boş → tam 'Sınıf belirtilmemiş' (uydurma YOK)
 konu boş → tam 'Genel tekrar' (HTML)
 kart bento zemin #f4f6fa taşıyor
 D30 kart başlığı 'Birebir Ders Kartı' VAR + 'Formül Kurs' METİN alt yazısı YOK + fk-logo VAR
-D32 logo görünürlük: çift #f29222 çizgi 20×8 · viewBox 0 0 100 40 · stroke-width 14 · overflow:visible · right 8 · top 0 · z-index:1; 'formul' 2rem · 0.95 · #d31d24; 'kurs merkezi' 0.72rem · #1a1a1a · negatif margin YOK (+1px) · margin-right:14px; sarmalama padding 4px 0 · margin-left:12px · nowrap · flex-shrink:0 · min-width:0
+D33 logo master birebir: inline-flex sarmalayıcı · relative/flex marka kutusu · 'formul' 2.25rem · -1.05px · 0.85 · #d31d24 · çift #f29222 çizgi width 21 · right 8 · top 0.5 · viewBox 0 0 100 40 · stroke-width 14 · 'kurs merkezi' 0.74rem · -0.4px · margin-top 0 (çakışma) · margin-right 14 · #1a1a1a · padding 5px · nowrap/flex-shrink:0/min-width:0/margin-left:12px
 D30 logo stroke literal #f29222 (var() YOK) + xmlns VAR
-D30 Montserrat base64 data-URI @font-face (harici URL YOK — assertion 145 ile uyumlu)
+D33 gömülü font ailesi = MontsKart (italic 900 base64 @font-face) · Montserrat/CDN referansı YOK
 D30 etiket 'Değerli Öğrencimiz' VAR + düz 'ÖĞRENCİ' etiketi YOK
 D30 FROZEN not şeridi TEK tam-dizi eşitliği (6 cümle birebir, • ayracı yok)
 D30 not şeridi stili (10.5px · slate-500 #64748b · border-top #e2e8f0 · sol hizalı)

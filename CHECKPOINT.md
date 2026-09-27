@@ -89,6 +89,36 @@
 
 ---
 
+# ✅ KAPANIŞ KAYDI: DÖNGÜ-30 + DÖNGÜ-30-CACHE KAPANDI
+
+**Tarih:** 27 Eylül 2026 · **Durum:** ✅ Kapandı — kullanıcı görsel doğrulaması + canlı teyit
+
+*(Not: dosya SONUNA eklenmek istendi; düzenleyici araç 311 KB dosyanın son bölgesini eşleştiremediği için bu kayıt da üst bloğa alındı — tek append.)*
+
+## Kullanıcı görsel doğrulaması
+- Öğrenci kartında logo (`fk-logo`, `#f29222`) + "Değerli Öğrencimiz" + 6 cümlelik not şeridi **DOĞRU**.
+- Canlı teyit: `app.js` SHA `1d509a64…` (376774 B) · `fk-logo` ≥1 · `app.js?v=1d509a6410c874b4` + `ek-ders.js?v=3d2dd38ff517c64f` servis ediliyor.
+- → **DÖNGÜ-30 ve DÖNGÜ-30-CACHE KAPANDI.**
+
+## 1) Kök↔public drift — kök neden + çözüm zinciri
+- **Kök neden:** yayına giden `public/app.js` **eskimişti** (`009d03d7…`, 350571 B); platformda postbuild/prebuild hook'ları KOŞMADIĞI için Vite `public/`'i birebir kopyaladı ve `dist/app.js` eski dosyadan geldi. `?v=` damgası URL cache'ini kırar ama dosya eskiyse işe yaramaz.
+- **Çözüm zinciri:**
+  1. `public/app.js` ← kök `app.js` senkronu (`cp`); 7 varlık kök↔public birebir.
+  2. `vite.config.ts` → `kok-varlik-kopyala` plugin (`closeBundle`): kök `app.js` + `ek-ders.js` + `vendor/*`'ı doğrudan `dist/`'e yazar, `public/` kopyasını EZER (`writeBundle` erken koşup ezilebilirdi → `closeBundle`).
+  3. `scripts/publish-guard.mjs` (yeni) + HIZ PROTOKOLÜ **(f)**: "guard YEŞİL olmadan publish YOK" (dist/app.js/ek-ders.js SHA=kök, dist/index.html damgaları=SHA16).
+- **Canlı kapanış:** sunucu artık `app.js` `1d509a64…` (376774 B) + `fk-logo`=1 döndürüyor.
+
+## 2) Dürüstlük notu (düzeltme)
+- Uzun süre **YANLIŞ iz (CDN cache)** kovalandı; gerçek neden yayına giden **`public/app.js`'in eskimiş olmasıydı**.
+- Eski "CDN cache kanıtlı / `?v=` ile çözüldü" iddiası **GEÇERSİZDİR**; `?v=` damgası cache için gerekli ama yeterli değildi — asıl düzeltme kök↔public senkronu + build-içi kopya + publish-guard'dır. Bu kayıt önceki yanlış teşhisi geçersiz kılar.
+
+## 3) Kapı
+- `node test.mjs` → **2462/2462** · `node statik-eksiksizlik.mjs` → **48/48**.
+- No-drift: `app.js` `1d509a6410c874b478ace1f6688651c155095127e82c73402a38ae7c3b2888a3` (376774 B) · `ek-ders.js` `3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f` (30405 B) — **DEĞİŞMEDİ**.
+- Bu turda (kapanış kaydı) değişen dosya: **yalnız `CHECKPOINT.md`**.
+
+---
+
 # VERİ ŞEMASI — localStorage & Yedek
 
 Tek anahtar: `yksOto_arsiv_v1` (app.js `LS_KEY`; ek-ders.js aynı DB'yi paylaşır). Değer `bosDB()` şemasında JSON'dur:

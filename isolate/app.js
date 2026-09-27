@@ -4451,9 +4451,12 @@ function waAliciSeciciHTML() {
 }
 
 function waUrl(metin, tel) {
-  var no = String(tel || "").replace(/\D/g, "");
-  if (no) return "https://wa.me/" + no + "?text=" + encodeURIComponent(metin);
-  return "https://wa.me/?text=" + encodeURIComponent(metin);
+  var no = String(tel || "").replace(/\D/g, "").replace(/^0+/, "");
+  if (no) {
+    if (no.slice(0, 2) !== "90") no = "90" + no;
+    return "https://web.whatsapp.com/send?phone=" + no + "&text=" + encodeURIComponent(metin);
+  }
+  return "https://web.whatsapp.com/send?text=" + encodeURIComponent(metin);
 }
 function waAc() {
   var liste = penceredeDersler().filter(function (l) { return l.durum !== "iptal"; });

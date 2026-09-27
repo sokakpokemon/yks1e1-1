@@ -128,7 +128,7 @@ DB.ayarlar.whatsappSablon = eskiSab;
 const tel = ilk.tel || "";
 const m = ogrenciMesajMetni(ilk.id);
 const url = waUrl(m, tel);
-t("waUrl formatı korunmuş", url === (function () { var n = String(tel || "").replace(/\D/g, "").replace(/^0+/, ""); if (n && n.slice(0, 2) !== "90") n = "90" + n; return n ? "https://web.whatsapp.com/send?phone=" + n + "&text=" + encodeURIComponent(m) : "https://web.whatsapp.com/send?text=" + encodeURIComponent(m); })());
+t("waUrl formatı korunmuş", url === "https://wa.me/" + String(tel).replace(/\D/g, "") + "?text=" + encodeURIComponent(m) || url === "https://wa.me/?text=" + encodeURIComponent(m));
 t("encodeURIComponent aynı davranış", url.includes(encodeURIComponent(m)));
 
 /* 7) waGonder ve waKopyalaMesaj hâlâ bağlı (kaynak + davranış) */

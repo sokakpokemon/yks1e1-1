@@ -210,7 +210,7 @@ t("waGonder waAliciBilgisi çözücüsünü kullanıyor (ogrenci → tel)", waGo
 t("waGonder anneTel/babaTel KULLANMIYOR", !waGonderG.includes("anneTel") && !waGonderG.includes("babaTel"));
 const waUrlG = telKaynak.split("function waUrl(metin, tel) {")[1].split("\nfunction ")[0];
 t("waUrl imzası değişmedi (metin, tel)", !!waUrlG && !waUrlG.includes("anneTel"));
-t("waUrl boş tel → wa.me/?text", waUrl("Merhaba", "") === "https://web.whatsapp.com/send?text=" + encodeURIComponent("Merhaba"));
+t("waUrl boş tel → wa.me/?text", waUrl("Merhaba", "") === "https://wa.me/?text=" + encodeURIComponent("Merhaba"));
 const mesaj = ogrenciMesajMetni("t3-ogr-2");
 t("mesaj metni değişmedi (ogrenciMesajMetni çalışıyor)", typeof mesaj === "string" || mesaj == null);
 const kayit2 = DB.ogrenciler.find((o) => o.id === "t3-ogr-2");

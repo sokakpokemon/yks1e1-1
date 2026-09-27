@@ -116,25 +116,25 @@ t("boş telefonda window.open çağrılmadı", (window._waOpenSayisi || 0) === o
 t("boş telefonda URL üretilmedi (fallback yok)", !window._sonWaUrl || window._sonWaUrl === "");
 /* ogr1 anne'e gönder → doğru numara */
 waOnizle(ogr1.id);
-const urlAnne = "https://web.whatsapp.com/send?phone=" + ("90" + A1.replace(/\D/g, "").replace(/^0+/, "")) + "&text=" + encodeURIComponent(ogrenciMesajMetni(ogr1.id));
+const urlAnne = "https://wa.me/" + A1 + "?text=" + encodeURIComponent(ogrenciMesajMetni(ogr1.id));
 waGonder(ogr1.id);
 t("anne gönderimi anneTel numarasını kullanır", window._sonWaUrl === urlAnne, JSON.stringify(window._sonWaUrl && window._sonWaUrl.slice(0, 30)));
 t("anne gönderiminde window.open 1 kez", (window._waOpenSayisi || 0) === openOnceO2 + 1);
 /* baba */
 waAliciDegistir("baba");
-const urlBaba = "https://web.whatsapp.com/send?phone=" + ("90" + B1.replace(/\D/g, "").replace(/^0+/, "")) + "&text=" + encodeURIComponent(ogrenciMesajMetni(ogr1.id));
+const urlBaba = "https://wa.me/" + B1 + "?text=" + encodeURIComponent(ogrenciMesajMetni(ogr1.id));
 waGonder(ogr1.id);
 t("baba gönderimi babaTel numarasını kullanır", window._sonWaUrl === urlBaba);
 /* ogrenci */
 waAliciDegistir("ogrenci");
-const urlOgr = "https://web.whatsapp.com/send?phone=" + ("90" + T1.replace(/\D/g, "").replace(/^0+/, "")) + "&text=" + encodeURIComponent(ogrenciMesajMetni(ogr1.id));
+const urlOgr = "https://wa.me/" + T1 + "?text=" + encodeURIComponent(ogrenciMesajMetni(ogr1.id));
 waGonder(ogr1.id);
 t("ogrenci gönderimi tel numarasını kullanır", window._sonWaUrl === urlOgr);
 
 /* 5) encodeURIComponent davranışı korunur */
 console.log("5) waUrl / encodeURIComponent:");
-t("waUrl formatı korunmuş", waUrl("Merhaba dünya", "05551112233") === "https://web.whatsapp.com/send?phone=905551112233&text=" + encodeURIComponent("Merhaba dünya"));
-t("waUrl boş tel → wa.me/?text", waUrl("x", "") === "https://web.whatsapp.com/send?text=" + encodeURIComponent("x"));
+t("waUrl formatı korunmuş", waUrl("Merhaba dünya", "05551112233") === "https://wa.me/05551112233?text=" + encodeURIComponent("Merhaba dünya"));
+t("waUrl boş tel → wa.me/?text", waUrl("x", "") === "https://wa.me/?text=" + encodeURIComponent("x"));
 t("waUrl imzası değişmedi (metin, tel)", /function waUrl\(metin, tel\) \{/.test(appKaynak));
 
 /* 6) Önizleme = gönderilecek metin (birebir) + üst bilgi */

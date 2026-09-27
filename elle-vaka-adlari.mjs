@@ -39,7 +39,7 @@ offsetDuzelt(
 /* DÖNGÜ-30-CACHE (SHA16 damgası): ks-donem-ilk damga assertion'ı KALDIRILDI;
    damga artık DİNAMİK olarak ks-index-kimlik.mjs süitinde doğrulanır. */
 elleVakaAdlari["ks-kart-kolon.mjs"].push(
-  "index.html damga = SHA ilk 16 hane (app.js ?v=6751449a8d3dea92 + ek-ders.js ?v=3d2dd38ff517c64f)",
+  "index.html damga = SHA ilk 16 hane (app.js ?v=b0cd5e00aa22ae24 + ek-ders.js ?v=3d2dd38ff517c64f)",
 );
 
 /* KALICI DÜZELTME: index.html SABİT SHA-256 pinleri ve literal damga assertion'ı KALDIRILDI.

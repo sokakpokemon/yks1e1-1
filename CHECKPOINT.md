@@ -38,6 +38,7 @@
 ## E) YAYIN
 - Publish tur başına **EN ÇOK 1**. Akış: commit → publish → TEK curl teyidi (SHA + farklılaştırıcı string: `fk-logo` / `Değerli Öğrencimiz`).
 - Aynı turda 2. publish YOK; cache şüphesinde ÖNCE `?v=` damgası güncellenir.
+- **(f) Publish öncesi `node scripts/publish-guard.mjs` YEŞİL olmadan publish YOK.** (dist/app.js + dist/ek-ders.js kökle birebir; dist/index.html damgaları = SHA16)
 
 ## F) KALİTE KAPILARI KORUNUR
 - Kapanışta: tam test + statik + syntax + no-drift SHA. Hiçbir assertion silinmez/gevşetilmez — yalnız koşum sıklığı azalır.

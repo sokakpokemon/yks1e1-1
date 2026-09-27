@@ -2,11 +2,33 @@ import { vlyPlugin } from "@vly-ai/integrations";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import fs from "node:fs";
 import { defineConfig } from "vite";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), vlyPlugin(), tailwindcss()],
+  plugins: [
+    // KÖK-VARLIK KOPYASI: platformda postbuild/prebuild hook'ları KOŞMUYOR (kanıtlı).
+    // Bu yüzden kök app.js + ek-ders.js + vendor/*'ı doğrudan dist/'e yazar; public/ kopyasını
+    // EZER (closeBundle = publicDir kopyasından SONRA koşar; writeBundle önce koşup ezilebilir).
+    {
+      name: "kok-varlik-kopyala",
+      closeBundle() {
+        const hedefKok = path.resolve(__dirname, "dist");
+        const kopyala = (rel: string) => {
+          const hedef = path.join(hedefKok, rel);
+          fs.mkdirSync(path.dirname(hedef), { recursive: true });
+          fs.copyFileSync(path.resolve(__dirname, rel), hedef);
+        };
+        kopyala("app.js");
+        kopyala("ek-ders.js");
+        fs.cpSync(path.resolve(__dirname, "vendor"), path.join(hedefKok, "vendor"), { recursive: true });
+      },
+    },
+    react(),
+    vlyPlugin(),
+    tailwindcss(),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

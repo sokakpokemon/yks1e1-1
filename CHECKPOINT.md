@@ -88,6 +88,21 @@ Hedef bütçe: T0 ≤5 · T1 ≤12 · T2 ≤25 · T3 ≤40 · Doğrulama ≤2 dk
 
 ---
 
+## ⚡ HIZLI TUR PROTOKOLÜ (her turda OTOMATİK — kullanıcı hatırlatmaz)
+Kullanıcı yalnız "Şunu değiştir: <hedef>" yazar. Aşağıdakiler KENDİLİĞİNDEN uygulanır:
+1. app.js'i baştan OKUMA; yalnız grep + hedefli satır okuma.
+2. Değişikliği TEK idempotent yama script'i ile uygula (ks-yama-*.mjs).
+3. Yedek yalnız değişecek dosya için, yazmadan ÖNCE (byte + SHA).
+4. Kapı: node hizli-test.mjs --tam → TAM 1 KEZ; çıktı /tmp/tam.txt + tail -n 6.
+5. 1 başarısız denemede DUR ve raporla; aynı komutu/düzenlemeyi TEKRARLAMA.
+6. Rapor EN FAZLA 1 ekran (yapılan + dosya:satır + kapı sonucu + SHA'lar).
+7. Publish YOK; var olmayan süit/dosya adı UYDURMA.
+8. Rapor sonu ZORUNLU: "⏱️ Bu tur: X dk · Hedef: Tk → Zamanında/Uzun".
+Kademe hedefleri: T0≤5 · T1≤12 · T2≤25 · T3≤40 · doğrulama≤2 dk.
+Bu protokol HER turda geçerlidir; kullanıcı ayrıca şablon yapıştırmaz.
+
+---
+
 # ✅ CHECKPOINT: DÖNGÜ-30-CACHE — app.js/ek-ders.js İçerik Damgası (?v=<sha16>)
 
 **Tarih:** 27 Eylül 2026 · **Durum:** ✅ Tamamlandı — yalnız index.html (2 satır) + test pinleri; app.js/ek-ders.js İÇERİĞİ DEĞİŞMEDİ

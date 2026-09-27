@@ -15,7 +15,7 @@ export const manifest = {
   "ks-grup-istegi.mjs": 68,
   "ks-benzersiz-id.mjs": 46,
   "ks-gercek-kadro.mjs": 80,
-  "ks-donem-ilk.mjs": 47,
+  "ks-donem-ilk.mjs": 48,
   "ks-donem-damga.mjs": 50,
   "ks-donem-secici.mjs": 77,
   "ks-excel-csv.mjs": 85,

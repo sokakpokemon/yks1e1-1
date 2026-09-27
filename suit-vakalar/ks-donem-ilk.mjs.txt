@@ -45,3 +45,4 @@ index.html SHA-256 değişmedi
 ek-ders.js SHA-256 değişmedi
 ek-ders.js yama içermiyor (donemleriBaslat yok)
 index.html yama içermiyor (donemleriBaslat yok)
+index.html statik varlık ?v=6dd3188 damgası VAR (app.js + ek-ders.js) — damga kaldırılırsa KIRMIZI

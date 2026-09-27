@@ -1,5 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 47) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-donem-ilk.mjs kosan=" + __kosan + " beklenen=47"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-donem-ilk.mjs:" + __kosan + ":47"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 48) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-donem-ilk.mjs kosan=" + __kosan + " beklenen=48"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-donem-ilk.mjs:" + __kosan + ":48"); } });
 /* ks-donem-ilk.mjs — 2026/2027 DÖNEM MODELİ, İLK (VERİ-UYUMLULUK) DİLİM süiti (DONEM-ILK-YAMASI)
    Doğruladıkları:
     1) 2026/2027 dönem kaydı tek kez var · 2) aktifDonemId doğru ·
@@ -155,10 +155,11 @@ t("ikinci yedek döngüsünde dönem alanları yine aynı", JSON.stringify(donem
 console.log("11) UI/HTML/ek-ders.js değişmiyor:");
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ekders = readFileSync("ek-ders.js", "utf8");
-t("index.html SHA-256 değişmedi", sha(html) === "244f61c87e84b3f43efc3326fcbf3b7950c981fa04fae077976b950318e6b403", sha(html));
+t("index.html SHA-256 değişmedi", sha(html) === "608e93d3a9503949946924f5c5789972e99fa61edb59929c65452e95de9072a6", sha(html));
 t("ek-ders.js SHA-256 değişmedi", sha(ekders) === "3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f", sha(ekders));
 t("ek-ders.js yama içermiyor (donemleriBaslat yok)", !ekders.includes("donemleriBaslat") && !ekders.includes("DONEM-ILK"));
 t("index.html yama içermiyor (donemleriBaslat yok)", !html.includes("donemleriBaslat") && !html.includes("DONEM-ILK"));
+t("index.html statik varlık ?v=6dd3188 damgası VAR (app.js + ek-ders.js) — damga kaldırılırsa KIRMIZI", html.includes('src="app.js?v=6dd3188"') && html.includes('src="ek-ders.js?v=6dd3188"'));
 
 console.log(fail === 0 ? "HEPSİ GEÇTİ" : "BAŞARISIZ");
 process.exit(fail);

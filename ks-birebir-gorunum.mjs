@@ -193,7 +193,7 @@ console.log("7) Freeze korumaları:");
 const { createHash } = await import("node:crypto");
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 t("ek-ders.js değişmedi (bilinen hash)", sha(readFileSync("ek-ders.js", "utf8")) === "3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f");
-t("index.html değişmedi (bilinen hash)", sha(readFileSync("index.html", "utf8")) === "244f61c87e84b3f43efc3326fcbf3b7950c981fa04fae077976b950318e6b403");
+t("index.html değişmedi (bilinen hash)", sha(readFileSync("index.html", "utf8")) === "608e93d3a9503949946924f5c5789972e99fa61edb59929c65452e95de9072a6");
 t("bu süit test.mjs'te tam 1 kez", (readFileSync("test.mjs", "utf8").match(/ks-birebir-gorunum\.mjs/g) || []).length === 1);
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");

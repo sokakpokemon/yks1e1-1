@@ -10,7 +10,7 @@ const sha = (s) => createHash("sha256").update(s).digest("hex");
 const app = readFileSync("app.js", "utf8");
 const ekders = readFileSync("ek-ders.js", "utf8");
 const html = readFileSync("index.html", "utf8");
-const KNOWN_HTML = "244f61c87e84b3f43efc3326fcbf3b7950c981fa04fae077976b950318e6b403"; /* referans; yalnız uyarı amaçlı değil — hash farklıysa başkası dokundu */
+const KNOWN_HTML = "608e93d3a9503949946924f5c5789972e99fa61edb59929c65452e95de9072a6"; /* referans; yalnız uyarı amaçlı değil — hash farklıysa başkası dokundu */
 const KNOWN_EKDERS = "3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f"; /* güncel checkout hash — bu dilim ek-ders.js'e dokunmaz */
 
 let pass = 0, fail = 0;
@@ -135,6 +135,7 @@ t("sinifIds birebir aynı kaldı (3 koşu sonrası)", DB.sinifIds && Object.keys
 console.log("11) Duplicate yok:");
 t("sinifProg hücre anahtarları her sınıfta benzersiz", Object.keys(DB.sinifProg).every((s) => new Set(DB.sinifProg[s]).size === DB.sinifProg[s].length));
 t("boot + 3 onarım sonrası hücre sayısı sabit", (() => { const n1 = JSON.stringify(DB.sinifProgDonemler).length; fn.sinifOgrtUyumOnar(DB); fn.sinifOgrtUyumOnar(DB); return JSON.stringify(DB.sinifProgDonemler).length === n1; })());
+
 
 console.log(fail === 0 ? "\nHEPSİ GEÇTİ" : "\n" + fail + " TEST KIRMIZI");
 process.exit(fail ? 1 : 0);

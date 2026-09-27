@@ -1,5 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 44) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ekders-ozet-csv.mjs kosan=" + __kosan + " beklenen=44"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ekders-ozet-csv.mjs:" + __kosan + ":44"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 45) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ekders-ozet-csv.mjs kosan=" + __kosan + " beklenen=45"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ekders-ozet-csv.mjs:" + __kosan + ":45"); } });
 /* ks-ekders-ozet-csv.mjs — EKDERS-OZET-CSV-YAMASI süiti: Özet/Analiz "Ek Ders" kategorisi + Ek Ders CSV dışa aktarma
    Kapsam:
     1) renderOzet: "Ek Ders" kartı ayrı kategori; birebir toplamı değişmez (ek ders eklenmez)
@@ -186,6 +186,7 @@ t("csvKadroIndir değişmedi (KADRO-KOLON-YAMASI/TELEFON3-YAMASI işaretli deği
   return yeni.includes("CSV_BASLIK_KADRO_V3") && yeni.includes("kadroV3Satirlari()") && yeni.includes("TELEFON3-YAMASI");
 })());
 t("dersOgrenciIds değişmedi", sha(blok("function dersOgrenciIds(ders) {")) === sha(bakBlok(bakKaynak, "function dersOgrenciIds(ders) {")));
+t("index.html değişmedi", sha(readFileSync("index.html", "utf8")) === "0fe95a46ebc743722c022a7424b51c1080ecce3d6eb5e7093257a2896e36e41c");
 t("ek-ders.js değişmedi", sha(readFileSync("ek-ders.js", "utf8")) === "3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f");
 
 /* ---- 8) Başka döneme geçiş: ek dersler orada görünür, A'da değil ---- */

@@ -1,5 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 58) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ek-ders-donem.mjs kosan=" + __kosan + " beklenen=58"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ek-ders-donem.mjs:" + __kosan + ":58"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 59) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ek-ders-donem.mjs kosan=" + __kosan + " beklenen=59"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ek-ders-donem.mjs:" + __kosan + ":59"); } });
 /* ks-ek-ders-donem.mjs — EK-DERS-DONEM süiti: ek ders kayıtları dönem modeline bağlandı
    ve birebir planlamada iki yönlü çakışma kontrolü etkin.
    Kapsam (talimat gereği):
@@ -210,7 +210,7 @@ for (const fn of ["function renderOzet() {", "function renderAnaliz() {", "funct
 
 /* ---- 11) Dosya bütünlüğü ---- */
 console.log("11) Dokunulmayan dosyaların SHA-256'sı:");
-const beklenen = { "ek-ders.js": "3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f", "vendor/tailwind.js": "7afa0afd2536044695e7e674298bc0dda9af94475e4e07d0575feccfa796c74f", "vendor/fontawesome.css": "f69efe0fb3372fe8aca04af3664ec926cda67b34772246ae416fb4d1bf040ac8", "vendor/html2canvas.js": "669b68b0b6828272e5298a36f20a646b027b2cdf5b524ec05b2410009e75063e", "vendor/chart.js": "205400" === "x" ? "" : "19dfdc0ce3bd0e46eaf94db65617f7be79c1ba50fdeadd2b18c5989216617f9a" };
+const beklenen = { "index.html": "0fe95a46ebc743722c022a7424b51c1080ecce3d6eb5e7093257a2896e36e41c", "ek-ders.js": "3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f", "vendor/tailwind.js": "7afa0afd2536044695e7e674298bc0dda9af94475e4e07d0575feccfa796c74f", "vendor/fontawesome.css": "f69efe0fb3372fe8aca04af3664ec926cda67b34772246ae416fb4d1bf040ac8", "vendor/html2canvas.js": "669b68b0b6828272e5298a36f20a646b027b2cdf5b524ec05b2410009e75063e", "vendor/chart.js": "205400" === "x" ? "" : "19dfdc0ce3bd0e46eaf94db65617f7be79c1ba50fdeadd2b18c5989216617f9a" };
 /* chart.js hash'i aşağıda dosyadan doğrulanır (yukarıdaki satır yalnız yapı için) */
 beklenen["vendor/chart.js"] = "19dfdc0ce3bd0e46eaf94db65617f7be79c1ba50fdeadd2b18c5989216617f9a";
 for (const [f, h] of Object.entries(beklenen)) {

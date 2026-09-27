@@ -82,6 +82,3 @@ elleVakaAdlari["ks-index-kimlik.mjs"] = [
   "index.html havuzBolum id'si VAR",
   "index.html ks-kart-kolon id'si VAR",
 ];
-
-/* YENİ SÜİT (ks-index-kimlik.mjs) sonrası toplam süit 51 → 52; yazdığa gömülü sayı güncellendi. */
-offsetDuzelt("ks-kart-sirasi.mjs", "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 51", "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 52");

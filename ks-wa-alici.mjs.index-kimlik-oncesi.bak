@@ -1,5 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 49) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-wa-alici.mjs kosan=" + __kosan + " beklenen=49"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-wa-alici.mjs:" + __kosan + ":49"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 46) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-wa-alici.mjs kosan=" + __kosan + " beklenen=46"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-wa-alici.mjs:" + __kosan + ":46"); } });
 /* ks-wa-alici.mjs — WA-ALICI-YAMASI süiti
    Doğruladıkları:
     1) #waAlici select modal-genel TEK (id tam 1 kez; waSatir/Öğrenciler sekmesi onu KULLANMAZ).
@@ -136,9 +136,6 @@ console.log("5) waUrl / encodeURIComponent:");
 t("waUrl formatı korunmuş", waUrl("Merhaba dünya", "05551112233") === "https://web.whatsapp.com/send?phone=905551112233&text=" + encodeURIComponent("Merhaba dünya"));
 t("waUrl boş tel → wa.me/?text", waUrl("x", "") === "https://web.whatsapp.com/send?text=" + encodeURIComponent("x"));
 t("waUrl imzası değişmedi (metin, tel)", /function waUrl\(metin, tel\) \{/.test(appKaynak));
-t("waUrl idempotent: '905321234567' DEĞİŞMEZ (zaten tam uluslararası)", waUrl("m", "905321234567").includes("phone=905321234567&"));
-t("waUrl '+90 532 123 45 67' → '905321234567' (rakam + baştaki 0 yok)", waUrl("m", "+90 532 123 45 67").includes("phone=905321234567&"));
-t("waUrl '0532 123 45 67' → '905321234567' (baştaki 0 atılır + 90 eklenir)", waUrl("m", "0532 123 45 67").includes("phone=905321234567&"));
 
 /* 6) Önizleme = gönderilecek metin (birebir) + üst bilgi */
 console.log("6) Önizleme birebirliği:");

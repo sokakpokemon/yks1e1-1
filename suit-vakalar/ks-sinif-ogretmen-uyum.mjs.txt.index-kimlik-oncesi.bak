@@ -26,6 +26,7 @@ Ek Ders amber dalı (haftalık)
 birebirHucreHTML ortak hücre
 haftalikOgrtTablo aktifDonemKayitlari(DB.dersler) filtresi
 ek-ders.js değişmedi
+index.html dokunulmadı (bu dilim)
 tüm öğretmen ID'leri dolu
 tüm ders donemId'leri dolu
 sinifIds birebir aynı kaldı (3 koşu sonrası)

@@ -86,5 +86,6 @@ istek akışı TEK saveDB
 istek akışı ders dalına kaymıyor (istekDropHedef ile çalışır)
 ders taşıma havuz isteklerine dokunmadı
 bu süit test.mjs'te tam 1 kez
+index.html değişmedi (bilinen hash)
 ek-ders.js değişmedi (bilinen hash)
 EK-DERS-GORUNUM mark sayısı 5 (değişmedi)

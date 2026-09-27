@@ -50,6 +50,7 @@ function haftalikOgrtTablo() { EK-DERS etiket markup'ı taşıyor
 function renderOzet() { ekDersler referansı yok (kapsam dışı) [daraltıldı]
 function renderAnaliz() { ekDersler referansı yok (kapsam dışı) [daraltıldı]
 function csvAktifDonemKayitSatirlari ekDersler referansı yok (kapsam dışı) [daraltıldı]
+index.html değişmedi
 ek-ders.js değişmedi
 vendor/tailwind.js değişmedi
 vendor/fontawesome.css değişmedi

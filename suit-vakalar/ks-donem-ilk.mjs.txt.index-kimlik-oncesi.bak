@@ -41,6 +41,8 @@ eski yedek yüklenince dönem kaydı oluşur (tek)
 eski yedekteki tüm ders/isteklere donemId taşındı
 eski yedekte taşınan: 37 ders + 3 istek, kopya yok
 ikinci yedek döngüsünde dönem alanları yine aynı
+index.html SHA-256 değişmedi
 ek-ders.js SHA-256 değişmedi
 ek-ders.js yama içermiyor (donemleriBaslat yok)
 index.html yama içermiyor (donemleriBaslat yok)
+index.html statik varlık ?v=1d509a6410c874b4 (app.js) + ?v=3d2dd38ff517c64f (ek-ders.js) damgası VAR — damga kaldırılırsa KIRMIZI

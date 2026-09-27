@@ -107,6 +107,7 @@ ders taşıma havuz isteklerine dokunmadı
 istekDragOver boşta tepki vermez (dersDropHedef de yoksa) hata atmaz
 bu süit test.mjs'te tam 1 kez
 haftalık süit hâlâ test.mjs'te tam 1 kez
+index.html değişmedi (bilinen hash)
 ek-ders.js değişmedi (bilinen hash)
 EK-DERS-GORUNUM mark sayısı 5 (değişmedi)
 haftalık süitteki stale günlük assert güncellendi (draggable DEĞİL → birebir draggable)

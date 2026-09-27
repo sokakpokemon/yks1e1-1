@@ -16,11 +16,11 @@ export const elleManifest = {
   "ks-grup-istegi.mjs": 68,
   "ks-benzersiz-id.mjs": 46,
   "ks-gercek-kadro.mjs": 80,
-  "ks-donem-ilk.mjs": 46,
+  "ks-donem-ilk.mjs": 48,
   "ks-donem-damga.mjs": 50,
   "ks-donem-secici.mjs": 77,
   "ks-excel-csv.mjs": 85,
-  "ks-donem-olusturma.mjs": 86,
+  "ks-donem-olusturma.mjs": 87,
   "ks-donem-secici-gorunum.mjs": 44,
   "ks-donem-secici-dom.mjs": 22,
   "ks-sinifprog-csv.mjs": 57,
@@ -29,11 +29,11 @@ export const elleManifest = {
   "ks-d1-render-refactor.mjs": 45,
   "ks-kadro-siralama.mjs": 27,
   "ks-kapali-gorunum.mjs": 19,
-  "ks-ek-ders-donem.mjs": 58,
+  "ks-ek-ders-donem.mjs": 59,
   "ks-ekders-gorunum.mjs": 51,
-  "ks-ekders-ozet-csv.mjs": 44,
-  "ks-birebir-gorunum.mjs": 34,
-  "ks-sinif-ogretmen-uyum.mjs": 33,
+  "ks-ekders-ozet-csv.mjs": 45,
+  "ks-birebir-gorunum.mjs": 35,
+  "ks-sinif-ogretmen-uyum.mjs": 34,
   "ks-sinif-prog-uyum-onar.mjs": 36,
   "ks-sinif-prog-etiket.mjs": 24,
   "ks-kart-sirasi.mjs": 33,
@@ -43,12 +43,12 @@ export const elleManifest = {
   "ks-wa-sablon.mjs": 49,
   "ks-wa-onizleme.mjs": 36,
   "ks-wa-durum.mjs": 38,
-  "ks-wa-alici.mjs": 49,
+  "ks-wa-alici.mjs": 46,
   "ks-excel-k-import.mjs": 23,
   "ks-kadro-kolon.mjs": 62,
   "ks-kadro-telefon3.mjs": 57,
-  "ks-ders-tasi.mjs": 90,
-  "ks-gunluk-ders-tasi.mjs": 114,
+  "ks-ders-tasi.mjs": 91,
+  "ks-gunluk-ders-tasi.mjs": 115,
   "ks-ders-karti.mjs": 109, /* DÖNGÜ-30: elle sayım (101+8 yeni D30) */
   "ks-ders-karti-tasima.mjs": 56,
   "ks-ogrt-ders-karti.mjs": 91,
@@ -56,6 +56,5 @@ export const elleManifest = {
   "ks-dongu26.mjs": 26, /* DÖNGÜ-26: elle sayım */
   "ks-dongu27.mjs": 31, /* DÖNGÜ-27: elle sayım */
   "ks-dongu28.mjs": 20, /* DÖNGÜ-28: elle sayım */
-  "ks-index-kimlik.mjs": 8,
   "ks-dongu29.mjs": 25, /* DÖNGÜ-29: elle sayım */
 };

@@ -20,9 +20,6 @@ ogrenci gönderimi tel numarasını kullanır
 waUrl formatı korunmuş
 waUrl boş tel → wa.me/?text
 waUrl imzası değişmedi (metin, tel)
-waUrl idempotent: '905321234567' DEĞİŞMEZ (zaten tam uluslararası)
-waUrl '+90 532 123 45 67' → '905321234567' (rakam + baştaki 0 yok)
-waUrl '0532 123 45 67' → '905321234567' (baştaki 0 atılır + 90 eklenir)
 önizleme metni = ogrenciMesajMetni (birebir)
 waOnizle gövdesinde etiket/telefon MESAJA eklenmiyor
 alıcı üst bilgi kutusu ayrı (#waAliciBilgi)

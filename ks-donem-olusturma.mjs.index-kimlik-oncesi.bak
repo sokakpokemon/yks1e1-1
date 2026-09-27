@@ -1,5 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 86) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-donem-olusturma.mjs kosan=" + __kosan + " beklenen=86"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-donem-olusturma.mjs:" + __kosan + ":86"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 87) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-donem-olusturma.mjs kosan=" + __kosan + " beklenen=87"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-donem-olusturma.mjs:" + __kosan + ":87"); } });
 /* ks-donem-olusturma.mjs — DONEM-OLUSTURMA-YAMASI süiti: 2027/2028 dönemi + dönemli sınıf programı (sinifProgDonemler)
    Doğruladıkları:
     1) Eski tek dönemlik DB.sinifProg'un "donem-2026-2027"ye KAYIPSIZ migration'ı (normalize yolu)
@@ -289,6 +289,7 @@ console.log("12) saveDB / yedek yükleme döngüsünde dönemli programların ka
 console.log("13) index.html, ek-ders.js ve vendor hash'leri:");
 {
   const sha = (s) => createHash("sha256").update(s).digest("hex");
+  t("index.html SHA-256 değişmedi", sha(html) === "0fe95a46ebc743722c022a7424b51c1080ecce3d6eb5e7093257a2896e36e41c", sha(html));
   t("ek-ders.js SHA-256 değişmedi", sha(readFileSync("ek-ders.js", "utf8")) === "3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f", sha(readFileSync("ek-ders.js", "utf8")));
   const vendor = ["tailwind.js", "fontawesome.css", "chart.js", "html2canvas.js", "fonts.css"];
   let ok = 0;

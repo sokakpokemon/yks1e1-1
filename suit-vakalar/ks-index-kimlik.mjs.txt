@@ -1,0 +1,8 @@
+index.html app.js?v= damgası = app.js SHA-256 ilk 16 hane (bayat kalırsa KIRMIZI)
+index.html ek-ders.js?v= damgası = ek-ders.js SHA-256 ilk 16 hane (bayat kalırsa KIRMIZI)
+her iki statik varlıkta ?v= 16 haneli SHA biçiminde (damga kaybolur/bozulursa KIRMIZI)
+app.js script src'i index.html'de TAM 1 kez
+ek-ders.js script src'i index.html'de TAM 1 kez (defer'li)
+index.html planKart id'si VAR
+index.html havuzBolum id'si VAR
+index.html ks-kart-kolon id'si VAR

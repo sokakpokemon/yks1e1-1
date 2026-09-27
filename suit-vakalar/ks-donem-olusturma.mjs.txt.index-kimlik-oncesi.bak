@@ -80,6 +80,7 @@ eski yedek: 2027/2028 programı yeniden BOŞ oluşturuldu (veri uydurma YOK)
 eski yedek: ders/istek verileri korunur
 2. yedek döngüsü birebir
 sinifProgDonemler localStorage'a yazıldı
+index.html SHA-256 değişmedi
 ek-ders.js SHA-256 değişmedi
 vendor 5 dosya okunur ve değişmez (5/5)
 index.html yama işareti YOK

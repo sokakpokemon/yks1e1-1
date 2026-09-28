@@ -239,3 +239,16 @@ adSonrasiEkle("ks-gunluk-ders-tasi.mjs", "D36 ana satır sınıf chip hücresi (
   "D36 regresyon: mola hücresi hâlâ drop-zone DEĞİL, birebir hücresi hâlâ draggable (ana satır chip'i bunları değiştirmedi)",
   "D36 tek üretici korunuyor: chip markup literali kaynakta TAM 1 · sinifChipHTML çağrısı 3 (haftalık + günlük Boş satırı + günlük ANA satır)",
 ]);
+
+/* D36-BOS-AD-KILIT: kilit koşulu "anahtar VAR" tabanlı (ad DOLU mu değil) + chip yalnız ad DOLUYSA.
+   ks-gunluk-ders-tasi.mjs'te 1 ad güncellendi + 1 yeni ad eklendi (120 → 121). ELLE yazıldı. */
+offsetDuzelt(
+  "ks-gunluk-ders-tasi.mjs",
+  "D36 ana satır: boş sınıf adı → T satırında chip YOK + literal 'Sınıf' YOK + mevcut '+' drop-zone korunur",
+  "D36 ana satır boş ad: anahtar VAR + ad BOŞ → hücre KİLİTLİ (dnd-bos/drop/draggable YOK), chip YOK, literal 'Sınıf' YOK",
+);
+adSonrasiEkle(
+  "ks-gunluk-ders-tasi.mjs",
+  "D36 ana satır boş ad: anahtar VAR + ad BOŞ → hücre KİLİTLİ (dnd-bos/drop/draggable YOK), chip YOK, literal 'Sınıf' YOK",
+  ["D36 haftalık boş ad: anahtar VAR + ad BOŞ → KİLİTLİ hücre (chip YOK, literal 'Sınıf' YOK); adlı slot chip'i DEĞİŞMEDİ"],
+);

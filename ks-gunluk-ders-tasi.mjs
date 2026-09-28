@@ -1,5 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 120) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-gunluk-ders-tasi.mjs kosan=" + __kosan + " beklenen=120"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-gunluk-ders-tasi.mjs:" + __kosan + ":120"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 121) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-gunluk-ders-tasi.mjs kosan=" + __kosan + " beklenen=121"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-gunluk-ders-tasi.mjs:" + __kosan + ":121"); } });
 /* ks-gunluk-ders-tasi.mjs — GUNLUK-DERS-TASI-YAMASI regresyon süiti.
 
    TEK İŞ: GÜNLÜK tabloda (gunlukTablo; satır=öğretmen, kolon=saat) MEVCUT birebir ders kartını
@@ -317,12 +317,27 @@ t("D36 ana satır: chip hücresi KİLİTLİ — dnd-bos/drop-zone/draggable YOK,
 red("D36 ana satır sınıf chip hücresi (avail.sinif)", kSinif.id, T.id, gunKey, KOD8);
 t("D36 ana satır: bırakma REDDİ sonrası ders 6. slotta kaldı (tek kayıt, kopya YOK)",
   dersBul(kSinif.id).saat === KOD6 && DB.dersler.filter(x => x.id === kSinif.id).length === 1);
-/* sınıf adı BOŞ → chip YOK, uydurma etiket YOK; ana satırın MEVCUT davranışı (drop-zone "+") korunur */
+/* D36-BOS-AD-KILIT: sınıf kaydı VAR ama adı BOŞ → hücre artık DROP-ZONE DEĞİL, KİLİTLİ (dnd-kilit);
+   chip YALNIZ ad DOLUYSA çizilir (ad boşsa uydurma "Sınıf" YOK).
+   ESKİ: koşul "ogrtAvail.avail.sinif[dowIdx28 + \"-\" + slot.no]" (değer truthy) idi → ad boşken
+   bu dal HİÇ çalışmıyor, hücre MEVCUT drop-zone "+" olarak kalıyordu. YENİ: koşul "anahtar VAR". */
 T.avail.sinif = { [dowIdx(gunKey) + "-" + ksKodOf(KOD8)]: "" };
 const bosAdH = gunGorunum();
 const bosAdSatir = bosAdH.split("<tr").find(r => r.includes(T.ad)) || "";
-t("D36 ana satır: boş sınıf adı → T satırında chip YOK + literal 'Sınıf' YOK + mevcut '+' drop-zone korunur",
-  !bosAdSatir.includes("bg-rose-100") && !bosAdSatir.includes(">Sınıf</span>") && bosAdSatir.includes('data-drop-saat="' + KOD8 + '"'));
+t("D36 ana satır boş ad: anahtar VAR + ad BOŞ → hücre KİLİTLİ (dnd-bos/drop/draggable YOK), chip YOK, literal 'Sınıf' YOK",
+  (bosAdSatir.match(/<td class="dnd-kilit px-1\.5 py-1\.5 text-center border-r border-slate-200"><\/td>/g) || []).length === 1 &&
+  !bosAdSatir.includes('data-drop-saat="' + KOD8 + '"') &&
+  !bosAdSatir.includes("bg-rose-100") && !bosAdSatir.includes(">Sınıf</div>"));
+T.avail.sinif = {};
+/* D36-BOS-AD-KILIT (HAFTALIK): anahtar VAR + ad BOŞ → hücre KİLİTLİ, chip YOK, literal "Sınıf" YOK;
+   ad DOLU slotta chip DEĞİŞMEDİ (aynı üretici). ESKİ: sinifChipHTML("") uydurma "Sınıf" basıyordu. */
+T.avail.sinif = { [dowIdx(gunKey) + "-" + ksKodOf(KOD8)]: "", [dowIdx(gunKey) + "-" + ksKodOf(KOD6)]: "KG MEZUN SAY 2" };
+const haftaBosAd = haftaGorunum();
+t("D36 haftalık boş ad: anahtar VAR + ad BOŞ → KİLİTLİ hücre (chip YOK, literal 'Sınıf' YOK); adlı slot chip'i DEĞİŞMEDİ",
+  haftaBosAd.includes('<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100"></td>') &&
+  !haftaBosAd.includes(">Sınıf</div>") &&
+  (haftaBosAd.match(/bg-rose-100 border border-rose-200/g) || []).length === 1 &&
+  haftaBosAd.includes(">KG MEZUN SAY 2<"));
 T.avail.sinif = {};
 t("D36 regresyon: mola hücresi hâlâ drop-zone DEĞİL, birebir hücresi hâlâ draggable (ana satır chip'i bunları değiştirmedi)",
   anaH.includes("Mola</div>") && !anaH.includes('data-drop-saat="12:00"') && anaH.includes('ondragstart="dersDrag(event,'));

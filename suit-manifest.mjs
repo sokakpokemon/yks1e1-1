@@ -47,7 +47,7 @@ export const manifest = {
   "ks-kadro-kolon.mjs": 62,
   "ks-kadro-telefon3.mjs": 57,
   "ks-ders-tasi.mjs": 90,
-  "ks-gunluk-ders-tasi.mjs": 120, /* D36-ANA-SATIR: +6 vaka (ana satır sınıf chip'i + kilit + drop reddi + boş ad + regresyon + tek üretici) */
+  "ks-gunluk-ders-tasi.mjs": 121, /* D36-ANA-SATIR +6 → 120; D36-BOS-AD-KILIT +1 → 121 (haftalık boş ad → kilitli hücre) */
   "ks-ders-karti.mjs": 110,
   "ks-ders-karti-tasima.mjs": 56,
   "ks-ogrt-ders-karti.mjs": 91,

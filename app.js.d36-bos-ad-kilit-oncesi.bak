@@ -3829,9 +3829,7 @@ function haftalikOgrtTablo() {
       if (musaitDegil) { /* PAZAR-BIREBIR-GORUNUM-YAMASI: Pazar artık normal gün satırı — yalnız Kapalı (musaitDegil) gri kalır */
         satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100 bg-slate-100"><span class="text-[9px] text-slate-400">—</span></td>';
       } else if (sinifVar) {
-        /* D36-BOS-AD-KILIT: KİLİT koşulu "anahtar VAR" (key in avail.sinif) — sınıf adı BOŞ olsa bile
-           hücre dnd-kilit (drop-zone DEĞİL); chip YALNIZ ad DOLUYSA çizilir (ad boşsa uydurma "Sınıf" YOK). */
-        satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100">' + (avail.sinif[key] ? sinifChipHTML(avail.sinif[key]) : "") + '</td>'; /* SINIF-CHIP-ORTAK-YAMASI: pembe chip TEK üreticiden — dnd-kilit hücresi ve çıktı birebir aynı */
+        satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100">' + sinifChipHTML(avail.sinif[key]) + '</td>'; /* SINIF-CHIP-ORTAK-YAMASI: pembe chip TEK üreticiden — dnd-kilit hücresi ve çıktı birebir aynı */
       } else if (ekDers) {
         /* EK-DERS-GORUNUM: ayırt edici amber hücre — birebir/grup/sinif/Bos/Kapali stillerinden farklı */
         satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100"><div class="rounded-lg bg-amber-100 border border-amber-300 px-1 py-1.5" title="Ek Ders — kilitli">' +
@@ -4244,13 +4242,12 @@ function gunlukTablo() {
             birebirHucreHTML(ders, ogrenci, ders.ogrenciAd || "", sinif, durumRenkG); /* DERS-KARTI-TASIMA-YAMASI: gunluk hücreden kart butonu kaldırıldı. D35-AD-SINIF: üyeler hücre İÇİNDE (ayrı üye satırı KALDIRILDI) */
 
           html += '</td>';
-        } else if (ogrtAvail && ogrtAvail.avail && ogrtAvail.avail.sinif && ((dowIdx28 + "-" + slot.no) in ogrtAvail.avail.sinif)) {
-          /* D36-ANA-SATIR-YAMASI + D36-BOS-AD-KILIT: sınıf dersi slotu (avail.sinif) — bu hücre DROP-ZONE DEĞİL;
+        } else if (ogrtAvail && ogrtAvail.avail && ogrtAvail.avail.sinif && ogrtAvail.avail.sinif[dowIdx28 + "-" + slot.no]) {
+          /* D36-ANA-SATIR-YAMASI: sınıf dersi slotu (avail.sinif) — bu hücre artık DROP-ZONE DEĞİL;
              haftalık çizelge ve günlük "Boş" satırıyla AYNI sinifChipHTML üreticisi + AYNI veri alanı.
-             KİLİT koşulu "anahtar VAR" (key in avail.sinif): sınıf adı BOŞ olsa bile hücre KİLİTLİ kalır,
-             drop-zone "+" AÇILMAZ. Chip YALNIZ sınıf adı DOLUYSA çizilir (ad boşsa uydurma "Sınıf" YOK).
+             Sınıf adı boş/yoksa bu dal HİÇ çalışmaz → mevcut drop-zone davranışı korunur (uydurma etiket YOK).
              Kilit ayrıca MEVCUT istekBurak/dersBurak kuralında (avail.sinif → kilitli) zaten reddeder. */
-          html += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-r border-slate-200">' + (ogrtAvail.avail.sinif[dowIdx28 + "-" + slot.no] ? sinifChipHTML(ogrtAvail.avail.sinif[dowIdx28 + "-" + slot.no]) : "") + '</td>';
+          html += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-r border-slate-200">' + sinifChipHTML(ogrtAvail.avail.sinif[dowIdx28 + "-" + slot.no]) + '</td>';
         } else if (ogrtId) {
           /* GUNLUK-DERS-TASI-YAMASI: boş hücre = MEVCUT drop-zone yolu (aynı dnd-bos + istekDragOver/istekDragLeave +
              istekBurak → dersBurak devri). Mola hücresi bu dala HİÇ girmez (slot.mola dalı üstte).

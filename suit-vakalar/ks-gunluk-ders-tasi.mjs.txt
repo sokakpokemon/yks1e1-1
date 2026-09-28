@@ -68,7 +68,8 @@ D36 ana satır sınıf chip hücresi (avail.sinif) → RED: DB birebir aynı + s
 D36 ana satır sınıf chip hücresi (avail.sinif) → RED: toast gösterildi
 D36 ana satır sınıf chip hücresi (avail.sinif) → RED: ders yerinde kaldı
 D36 ana satır: bırakma REDDİ sonrası ders 6. slotta kaldı (tek kayıt, kopya YOK)
-D36 ana satır: boş sınıf adı → T satırında chip YOK + literal 'Sınıf' YOK + mevcut '+' drop-zone korunur
+D36 ana satır boş ad: anahtar VAR + ad BOŞ → hücre KİLİTLİ (dnd-bos/drop/draggable YOK), chip YOK, literal 'Sınıf' YOK
+D36 haftalık boş ad: anahtar VAR + ad BOŞ → KİLİTLİ hücre (chip YOK, literal 'Sınıf' YOK); adlı slot chip'i DEĞİŞMEDİ
 D36 regresyon: mola hücresi hâlâ drop-zone DEĞİL, birebir hücresi hâlâ draggable (ana satır chip'i bunları değiştirmedi)
 D36 tek üretici korunuyor: chip markup literali kaynakta TAM 1 · sinifChipHTML çağrısı 3 (haftalık + günlük Boş satırı + günlük ANA satır)
 Ek Ders (amber) hedefi → RED: localStorage byte-birebir aynı

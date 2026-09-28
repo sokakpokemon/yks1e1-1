@@ -118,6 +118,81 @@ ORİJİNALDİR ve ASLA DEĞİŞTİRİLMEZ.
 
 ---
 
+# ✅ KAPANIŞ KAYDI: D39 (Grup Üyesi Editöründe Öğrenci Arama) KAPANDI
+
+**Tarih:** 28 Eylül 2026 · **Durum:** ✅ Kapandı — kullanıcı publish etti + canlı görsel doğrulama TEMİZ
+**Bu turda değişen tek dosya:** `CHECKPOINT.md` (uygulama kodu ve testler DEĞİŞMEDİ).
+
+*(Not: bu kayıt HIZ PROTOKOLÜ / JET 2.0 / LOGO KİLİDİ bloğunun hemen ardına, mevcut kapanış kayıtlarının EN ÜSTÜNE, TEK append olarak alındı — içerik birebir.)*
+
+## 1) KEŞİF — ui.istekUye* ailesi + checkbox liste konteyner sınırı (yama ÖNCESİ satırlar)
+- Buton: `app.js:3066` `istekUyeButonHTML` (D38: `app.js:3069` `uyeAcik` · `app.js:3070` etiket).
+- Editör: `app.js:3072` `istekUyeEditorHTML` — `app.js:3073` `if (ui.istekUyeId !== r.id) return '';`
+- Satır üreticisi: `app.js:3075-3080` `var satir = DB.ogrenciler.map(...)` (markup `app.js:3077-3079`).
+- **LİSTE KONTEYNERİ: `app.js:3083`** `<div class="max-h-40 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-x-3">' + satir + "</div>`
+  — **id/data-* YOK** ⇒ tek başına yeniden çizilebilir DEĞİL (satırlar yalnız burada üretiliyor; her değişim `renderHavuz()`).
+- Aç/Kapa: `app.js:3090` `istekUyeAc` (`app.js:3094` toggle kapanış · `app.js:3096` taslak yükleme) ·
+  Seçim: `app.js:3099` `istekUyeSec` (`app.js:3104` `renderHavuz()`) · İptal: `app.js:3106` ·
+  Kaydet: `app.js:3107-3119` (`app.js:3116` temizlik) · `istekSil`: `app.js:3120-3125`.
+- Durum: `ui.istekUyeId` + `ui.istekUyeTaslak` (ui literal `app.js:948-958` içinde ÖN TANIM YOK — tembel alanlar).
+
+## 2) UYGULAMA — ks-yama-d39-uye-arama.mjs
+- Marker `D39-UYE-ARAMA`, **7 anchor**, idempotent (2. koşu **exit 2**, dosya değişmez).
+- Yeni yardımcılar: `istekUyeAramaNorm(s)` (`app.js:3074`) · `istekUyeListeHTML(rid)` (`app.js:3080`) · `istekUyeAra(v)` (`app.js:3096`).
+- Konteyner kimliği: `id="istek-uye-liste"` (**app.js:3111**, tek üretici) · tazeleme `app.js:3098` `getElementById("istek-uye-liste")` ·
+  arama input'u `id="istek-uye-arama"` (`app.js:3108`, placeholder "Öğrenci ara…", `oninput="istekUyeAra(this.value)"`).
+- FİLTRE: `normalize("NFC").toLocaleLowerCase("tr-TR")` + `includes` (hem SORGUYA hem ADA uygulanır).
+- GÖRÜNÜRLÜK: SEÇİLİ üye aramayla eşleşmese de listede **KALIR ve İŞARETLİ kalır**; eşleşmeyen SEÇİLMEMİŞ gizlenir;
+  "N üye seçili" sayacı filtreyi YOK SAYAR (seçili toplam); eşleşme yoksa **"Sonuç yok"**; sorgu BOŞKEN liste BİREBİR eski hâl.
+- `ui.istekUyeArama` (`app.js:957`): açılışta "", kapanışta/kart değişiminde (`app.js:3122`/`3125`), İptal'de (`app.js:3135`),
+  başarılı Kaydet'te (`app.js:3145`), istekSil'de (`app.js:3150`) TEMİZLENİR; filtre değişince taslak **SIFIRLANMAZ**.
+- Kaydet/İptal + `grupUyeYaz` + D38 toggle davranışı **DEĞİŞMEDİ**; yeni görsel dil/CDN YOK.
+
+## 3) ODAK KORUMA
+- Her tuşta TÜM editör/havuz yeniden çizilmez; **YALNIZ liste konteyneri içeriği** güncellenir → arama input'unun ODAĞI + imleç KORUNUR.
+- Kanıt (statik): `istekUyeAra` gövdesinde `renderHavuz()` çağrısı YOK, yalnız `#istek-uye-liste` içeriği yazılır.
+- Kanıt (dinamik): tuş sonrası liste DIŞINDAKİ editör DOM'u byte-birebir AYNI kalır (input yeniden ÜRETİLMEZ).
+
+## 4) SAYILAR
+- Toplam: **2560 → 2573 (+13)** · süit: **55 SABİT** · `ks-grup-uye-yaz.mjs`: **36 → 49 (+13)**.
+- Statik: `site=49 hit=49 vaka=49 koşum=49` · donmuş beşli ELLE hizalandı
+  (`suit-manifest.mjs:61` 49 · `elle-vaka-manifesti.mjs:62` 49 · ELLE ad listesi 49 · `suit-vakalar/ks-grup-uye-yaz.mjs.txt` 49 ·
+  süit `SUITE_DONE:ks-grup-uye-yaz.mjs:49:49`).
+
+## 5) SHA / DAMGA
+- `app.js`: **390372 → 392976 B** · `9e1f611265dbd1f6…` → **`af149eedb804449c…`** (sha16 `af149eedb804449c`).
+- Kök = `public/app.js` = `dist/app.js` = `isolate/app.js` — **byte-birebir** (`af149eedb804449c`, 392976 B).
+- Damga: `app.js?v=9e1f611265dbd1f6` → **`app.js?v=af149eedb804449c`** (`index.html` + `dist/index.html` + `isolate/index.html`).
+- `ek-ders.js 3d2dd38ff517c64f…` **DEĞİŞMEDİ** (30405 B) · `scripts/publish-guard.mjs` → **YEŞİL**.
+
+## 6) KAPI
+- `node hizli-test.mjs --tam` (**TAM 1 KEZ**) → **EXIT=0** · `MANIFEST: 55 süit, toplam 2573 beklenen | RUNNER: 2573 koşan, 2573 geçen — BİREBİR EŞİT ✓` ·
+  `HAM Σ beşli 2573 — BİREBİR ✓` · `TAMLIK KANITI: 48/48` · `node --check app.js` **OK**.
+- `ks-dongu28.mjs` (D28 zikzak + %50'deki TEK ayırıcı çizgi) **yeşil** — arama kutusu yerleşimi bozmadı.
+
+## 7) CANLI DOĞRULAMA
+- Kullanıcı **publish etti**; görsel kontrol **TEMİZ**: yazarken odak kaybolmuyor; eşleşmeyen seçili üye görünür + işaretli;
+  eşleşmeyen seçilmemiş gizli; sayaç filtreyi yok sayıyor; Kaydet/İptal + D38 toggle normal.
+- → **D39 (Grup Üyesi Editöründe Öğrenci Arama) KAPANDI.**
+
+## 8) DÜRÜST NOT
+- **(a)** Test HARNESS stub DOM'unda alt konteynere yazılan içerik ana `innerHTML`'e yansımadığı için testler taze içeriği
+  **KONTEYNERİN KENDİSİNDEN** okur (`ks-grup-uye-yaz.mjs:280` `konteynerHTML()`); konteyner kimliği gerçek kodla birebir eşleşiyor
+  (`app.js:3098` ↔ `app.js:3111`) → **ZAYIFLATMA DEĞİL**; `ks-grup-uye-yaz.mjs:316` "gövdede `renderHavuz` YOK" kanıtı
+  odak-koruma yaklaşımını doğrular.
+- **(b)** *Kozmetik:* `grep -E 'HAM'` ikinci satır olarak `HAM 'AHMET KIZILIRMAK'` vaka adını da yakalar.
+
+## AÇIK KALEMLER
+- **(a)** **LOGO ince ayarı** — **askıda** (kullanıcının ölçek kararını bekliyor; LOGO KİLİDİ kuralı yürürlükte).
+- **(b)** **Eski Pazar grup kaydı** kontrolü — **opsiyonel**, yalnız kullanıcı isterse.
+
+## Kapı / No-drift
+- No-drift: `app.js af149eedb804449c…` (392976 B) · `index.html` damga `af149eedb804449c` ·
+  `ek-ders.js 3d2dd38f…` — **DEĞİŞMEDİ** (bu tur yalnız `CHECKPOINT.md`).
+- Commit'i Vly alır · **publish GEREKMEZ** (CHECKPOINT canlıya servis edilmiyor).
+
+---
+
 # ✅ KAPANIŞ KAYDI: D38 (Grup Üyesi Butonu AÇ/KAPA) KAPANDI
 
 **Tarih:** 28 Eylül 2026 · **Durum:** ✅ Kapandı — kullanıcı publish etti + canlı görsel doğrulama TEMİZ

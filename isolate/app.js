@@ -3740,6 +3740,15 @@ function guncelMi() {
 // ═══════════════════════════════════════════════════════════════
 // HAFTALIK ÖĞRETMEN TABLOSU — Bir öğretmenin haftalık programı
 // ═══════════════════════════════════════════════════════════════
+/* SINIF-CHIP-ORTAK-YAMASI: haftalık çizelgedeki PEMBE sınıf dersi chip'i — TEK üretici.
+   Veri alanı DAİMA t.avail.sinif["<günIdx>-<slotNo>"] (haftalık ve günlük aynı alan).
+   Çağıran gerçek sınıf adını verir; ad boş/bulunamazsa çağıran chip BASMAZ (günlük de dahil).
+   "Sınıf" yer tutucusu yalnız haftalığın MEVCUT davranışını korur (gerçek ad DAİMA önceliklidir). */
+function sinifChipHTML(sinifAd) {
+  return '<div class="rounded-lg bg-rose-100 border border-rose-200 px-1 py-1.5" title="Sınıf dersi — kilitli">' +
+    '<div class="text-[8px] font-bold text-rose-700 leading-tight truncate whitespace-nowrap">' + esc((sinifAd || "Sınıf").substring(0, 14)) + '</div></div>';
+}
+
 function haftalikOgrtTablo() {
   var ogrtId = ui.haftalikOgrtId;
   if (!ogrtId) return "";
@@ -3820,8 +3829,7 @@ function haftalikOgrtTablo() {
       if (musaitDegil) { /* PAZAR-BIREBIR-GORUNUM-YAMASI: Pazar artık normal gün satırı — yalnız Kapalı (musaitDegil) gri kalır */
         satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100 bg-slate-100"><span class="text-[9px] text-slate-400">—</span></td>';
       } else if (sinifVar) {
-        satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100"><div class="rounded-lg bg-rose-100 border border-rose-200 px-1 py-1.5" title="Sınıf dersi — kilitli">' +
-          '<div class="text-[8px] font-bold text-rose-700 leading-tight truncate whitespace-nowrap">' + esc((avail.sinif[key] || 'Sınıf').substring(0, 14)) + '</div></div></td>';
+        satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100">' + sinifChipHTML(avail.sinif[key]) + '</td>'; /* SINIF-CHIP-ORTAK-YAMASI: pembe chip TEK üreticiden — dnd-kilit hücresi ve çıktı birebir aynı */
       } else if (ekDers) {
         /* EK-DERS-GORUNUM: ayırt edici amber hücre — birebir/grup/sinif/Bos/Kapali stillerinden farklı */
         satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100"><div class="rounded-lg bg-amber-100 border border-amber-300 px-1 py-1.5" title="Ek Ders — kilitli">' +
@@ -4192,6 +4200,9 @@ function gunlukTablo() {
   ogrtSirasi.forEach(function (ogrtAd, oi) {
     var saatMap = ogrtMap[ogrtAd];
     var ogrtId = ogrtIdMap[ogrtAd] || ""; /* GUNLUK-DERS-TASI-YAMASI: satırın öğretmen kimliği — hedef satır kontrolü bununla yapılır */
+    /* D36-ANA-SATIR-YAMASI: satır öğretmeninin avail kaydı — sınıf dersi slotu ANA satırda da GERÇEK
+       sınıf adı chip'i olarak çizilir; veri alanı haftalık ve "Boş" satırıyla AYNI: avail.sinif["<günIdx>-<slotNo>"] */
+    var ogrtAvail = ogrtId ? DB.ogretmenler.find(function (x) { return x.id === ogrtId; }) : null;
     var bg = oi % 2 === 0 ? 'bg-white' : 'bg-slate-50/60';
 
     html += '<tr class="border-b border-slate-200 ' + bg + '">';
@@ -4231,6 +4242,12 @@ function gunlukTablo() {
             birebirHucreHTML(ders, ogrenci, ders.ogrenciAd || "", sinif, durumRenkG); /* DERS-KARTI-TASIMA-YAMASI: gunluk hücreden kart butonu kaldırıldı. D35-AD-SINIF: üyeler hücre İÇİNDE (ayrı üye satırı KALDIRILDI) */
 
           html += '</td>';
+        } else if (ogrtAvail && ogrtAvail.avail && ogrtAvail.avail.sinif && ogrtAvail.avail.sinif[dowIdx28 + "-" + slot.no]) {
+          /* D36-ANA-SATIR-YAMASI: sınıf dersi slotu (avail.sinif) — bu hücre artık DROP-ZONE DEĞİL;
+             haftalık çizelge ve günlük "Boş" satırıyla AYNI sinifChipHTML üreticisi + AYNI veri alanı.
+             Sınıf adı boş/yoksa bu dal HİÇ çalışmaz → mevcut drop-zone davranışı korunur (uydurma etiket YOK).
+             Kilit ayrıca MEVCUT istekBurak/dersBurak kuralında (avail.sinif → kilitli) zaten reddeder. */
+          html += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-r border-slate-200">' + sinifChipHTML(ogrtAvail.avail.sinif[dowIdx28 + "-" + slot.no]) + '</td>';
         } else if (ogrtId) {
           /* GUNLUK-DERS-TASI-YAMASI: boş hücre = MEVCUT drop-zone yolu (aynı dnd-bos + istekDragOver/istekDragLeave +
              istekBurak → dersBurak devri). Mola hücresi bu dala HİÇ girmez (slot.mola dalı üstte).
@@ -4265,8 +4282,17 @@ function gunlukTablo() {
           (Array.isArray(DB.ekDersler) ? DB.ekDersler : []).some(function (x) { return x.ogretmenId === ogrtId && x.tarih === gunKey && ksKodOf(x.saat) === kod && x.durum !== "iptal"; });
         var kilitli28 = dolu28 || (t.avail && ((t.avail.sinif && key28 in t.avail.sinif) || (Array.isArray(t.avail.musait) ? t.avail.musait.indexOf(key28) >= 0 : false)));
         if (kilitli28) {
-          html += '<td class="px-1.5 py-2 border-r border-slate-200 bg-slate-100/70" title="Kilitli — bu saatte ders veremez">' +
-            '<span class="text-[9px] font-bold text-slate-400 select-none">' + (dolu28 ? "Dolu" : (t.avail && t.avail.sinif && key28 in t.avail.sinif) ? "Sınıf" : "Kapalı") + '</span></td>';
+          /* SINIF-CHIP-ORTAK-YAMASI: sınıf dersi slotu UYDURMA "Sınıf" etiketi DEĞİL — haftalık çizelgeyle
+             AYNI pembe chip + AYNI veri alanı (t.avail.sinif["<gün>-<slot>"]). Sınıf adı boş/yoksa chip
+             BASILMAZ (uydurma etiket yok). "Dolu"/"Kapalı" hücreleri DEĞİŞMEDİ (aynı td + aynı span).
+             Hücre çerçevesi günlük tablonun kendi kenarlık kuralıdır (border-r); CHIP markup'ı birebir aynı. */
+          var snf28 = (t.avail && t.avail.sinif && key28 in t.avail.sinif) ? t.avail.sinif[key28] : "";
+          if (!dolu28 && snf28) {
+            html += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-r border-slate-200">' + sinifChipHTML(snf28) + '</td>';
+          } else {
+            html += '<td class="px-1.5 py-2 border-r border-slate-200 bg-slate-100/70" title="Kilitli — bu saatte ders veremez">' +
+              '<span class="text-[9px] font-bold text-slate-400 select-none">' + (dolu28 ? "Dolu" : "Kapalı") + '</span></td>';
+          }
         } else {
           html += '<td class="dnd-bos px-1.5 py-2 border-r border-slate-200 transition-colors"' +
             ' data-drop-ogrt="' + esc(ogrtId) + '" data-drop-gun="' + dowIdx28 + '" data-drop-saat="' + slot.b + '"' +

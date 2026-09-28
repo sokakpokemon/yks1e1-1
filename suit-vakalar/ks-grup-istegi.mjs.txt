@@ -35,9 +35,9 @@ ders.ogrenciIds = [Zeynep, Emir, Elif]
 dersOgrenciIds tüm katılımcılar (4)
 snapshot gerçek deep-copy (referans değil)
 planlama öncesi snapshot alınmıştı (deep-copy)
-istekte yalnızca 'durum' alanı değişti
+istekte 'durum' + 'ogrenciIds' SENKRON değişti (ADIM-4)
 durum artık 'planlandi'
-ogrenciId/ogrenciIds/konu/dersId/olusturma KORUNDU
+ogrenciId/konu/dersId/olusturma KORUNDU; ogrenciIds SENKRON (ADIM-4)
 ui.aktifIstekId temizlendi
 çakışan üyenin ADI uyarıda
 öğretmen çakışması da uyarıda
@@ -51,8 +51,8 @@ sonuç benzersiz + sıra korunur
 bozuk kayıtta hata vermez
 yükleme sonrası grup isteği bulunur
 grup isteği alanları DEEP-EQUAL geri döner (+donemId migration)
-ogrenciIds eksiksiz (2 üye — planlama ek üyeyi isteğe yazmaz; süit 9 ile tutarlı)
-loadDB de grup isteğini korur
+ogrenciIds eksiksiz (3 üye — planlama ile SENKRON; ADIM-4)
+loadDB de grup isteğini korur (SENKRON üyeler)
 ilk seçim sırası register'da [Zeynep, Emir]
 Zeynep kaldırıldı → görünen üyeler [Emir]
 register Zeynep'i SİLMEZ (slot korunur)

@@ -39,8 +39,15 @@ offsetDuzelt(
 /* DÖNGÜ-30-CACHE (SHA16 damgası): ks-donem-ilk damga assertion'ı KALDIRILDI;
    damga artık DİNAMİK olarak ks-index-kimlik.mjs süitinde doğrulanır. */
 elleVakaAdlari["ks-kart-kolon.mjs"].push(
-  "index.html damga = SHA ilk 16 hane (app.js ?v=346cd3e28059fab2 + ek-ders.js ?v=3d2dd38ff517c64f)",
+  "index.html damga = SHA ilk 16 hane (app.js ?v=e1f6fc0d665bdc88 + ek-ders.js ?v=3d2dd38ff517c64f)",
 );
+
+/* D34-GRUP-UYE-YAZ: ADIM-4 istek.ogrenciIds SENKRON davranışı nedeniyle ks-grup-istegi.mjs'te
+   4 assertion adı ELLE güncellendi (koşumdan otomatik üretim YOK; sayı/sıra değişmedi: 68). */
+offsetDuzelt("ks-grup-istegi.mjs", "istekte yalnızca 'durum' alanı değişti", "istekte 'durum' + 'ogrenciIds' SENKRON değişti (ADIM-4)");
+offsetDuzelt("ks-grup-istegi.mjs", "ogrenciId/ogrenciIds/konu/dersId/olusturma KORUNDU", "ogrenciId/konu/dersId/olusturma KORUNDU; ogrenciIds SENKRON (ADIM-4)");
+offsetDuzelt("ks-grup-istegi.mjs", "ogrenciIds eksiksiz (2 üye — planlama ek üyeyi isteğe yazmaz; süit 9 ile tutarlı)", "ogrenciIds eksiksiz (3 üye — planlama ile SENKRON; ADIM-4)");
+offsetDuzelt("ks-grup-istegi.mjs", "loadDB de grup isteğini korur", "loadDB de grup isteğini korur (SENKRON üyeler)");
 
 /* KALICI DÜZELTME: index.html SABİT SHA-256 pinleri ve literal damga assertion'ı KALDIRILDI.
    Koruma kaybolmaz: damga/script/id denetimi artık TEK yerde, ks-index-kimlik.mjs'de DİNAMİK. */
@@ -97,9 +104,9 @@ offsetDuzelt(
   "C: dersOgrenciIds iki kimlik verir (ana + ek)",
 );
 
-/* D32-GRUP-2UYE sonrası toplam süit 52 → 53 (yeni kalıcı süit ks-d32-grup-birebir-e2e.mjs);
-   yazdığa gömülü sayı ELLE güncellendi (koşumdan otomatik üretim YOK). */
-offsetDuzelt("ks-kart-sirasi.mjs", "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 51", "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 53");
+/* D32-GRUP-2UYE sonrası toplam süit 52 → 53; D34-GRUP-UYE-YAZ sonrası 53 → 54
+   (yeni kalıcı süit ks-grup-uye-yaz.mjs); yazdığa gömülü sayı ELLE güncellendi (koşumdan otomatik üretim YOK). */
+offsetDuzelt("ks-kart-sirasi.mjs", "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 51", "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 54");
 
 /* D32-GRUP-2UYE KALICI SÜİT (ks-d32-grup-birebir-e2e.mjs): gerçek form akışı + eşik regresyonu.
    20 assertion — ana öğrenci + 1 ek üye PAZAR grup birebir dersi; K1..K6 + 0/1/2 ek eşikleri. */
@@ -124,4 +131,35 @@ elleVakaAdlari["ks-d32-grup-birebir-e2e.mjs"] = [
   "K5 ek mesajında ortak grup dersi VAR (Pazar)",
   "K6 ders silindi + TEK istek oluştu (+1)",
   "K6 istek: ogrenciId = ana + ogrenciIds = [ek] + bekliyor",
+];
+
+/* D34-GRUP-UYE-YAZ KALICI SÜİT (ks-grup-uye-yaz.mjs): "ek öğrenci > 0 ⇒ ogrenciIds ZORUNLU" TEK KAPI kapısı.
+   25 assertion — 4 yazım yolu (yeni/düzenleme · istekBurak · formaAktar+planla · havuza geri) × (0/1 ek),
+   düzenleme üye koruması, havuz istek kartı üye editörü, WhatsApp ve statik sözleşme. */
+elleVakaAdlari["ks-grup-uye-yaz.mjs"] = [
+  "boot hatasız",
+  "grupUyeYaz: ek>0 ⇒ ogrenciIds = [ek] (ana yazılır)",
+  "grupUyeYaz: ek=0 ⇒ ogrenciIds SİLİNİR",
+  "grupUyeYaz: ana ek listesinde tekrar etmez + kopya elenir",
+  "grupUyeYaz: mevcut ogrenciIds ÜZERİNE yazılır (bayat kayıt kalmaz)",
+  "planla() yeni 0 ek: ogrenciIds YAZILMAZ, ogrenciId = ana",
+  "planla() yeni 1 ek: ogrenciIds = [ek]",
+  "düzenleme 1 ek: grup üyesi KORUNUR",
+  "düzenleme 2→1 ek: ogrenciIds = [kalan]",
+  "düzenleme tüm ekler çıkarıldı: ogrenciIds SİLİNİR, ogrenciId = ana",
+  "düzenleme panel dokunulmadı: mevcut üyeler KORUNUR (silinmez)",
+  "istekBurak tekil istek: ogrenciIds YAZILMAZ",
+  "istekBurak grup istek: ogrenciIds = [ek]",
+  "formaAktar grup istek: ek üyeler panele yüklenir",
+  "planla sonrası ilgili istek ogrenciIds SENKRON",
+  "WA alıcı listesinde ana üye AYRI satır",
+  "WA alıcı listesinde ek üye AYRI satır",
+  "WA mesajlarında ortak grup dersi VAR (ikisi)",
+  "havuza geri: ders silinir + TEK istek",
+  "havuza geri istek: ogrenciId = ana + ogrenciIds = [ek, uc]",
+  "istekUyeAc: editör açılır + taslak mevcut üyeler",
+  "istekUyeSec: üye ekle/çıkar taslağı değiştirir",
+  "istekUyeKaydet: istek.ogrenciIds SENKRON + durum bekliyor",
+  "app.js'te grupUyeYaz TEK tanım",
+  "5 yazım yolu grupUyeYaz'dan geçer (elle ogrenciIds ataması YOK)",
 ];

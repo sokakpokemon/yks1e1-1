@@ -187,9 +187,9 @@ t("snapshot gerçek deep-copy (referans değil)", giSnapshot !== gi && JSON.stri
 t("planlama öncesi snapshot alınmıştı (deep-copy)", typeof giSnapshot === "object" && giSnapshot !== null);
 const alanlar = [...new Set([...Object.keys(giSnapshot), ...Object.keys(gi)])];
 const farklar = alanlar.filter(k => JSON.stringify(giSnapshot[k]) !== JSON.stringify(gi[k]));
-t("istekte yalnızca 'durum' alanı değişti", farklar.length === 1 && farklar[0] === "durum", "farklı alanlar: " + JSON.stringify(farklar));
+t("istekte 'durum' + 'ogrenciIds' SENKRON değişti (ADIM-4)", farklar.length === 2 && farklar.includes("durum") && farklar.includes("ogrenciIds"), "farklı alanlar: " + JSON.stringify(farklar));
 t("durum artık 'planlandi'", gi.durum === "planlandi");
-t("ogrenciId/ogrenciIds/konu/dersId/olusturma KORUNDU", gi.ogrenciId === giSnapshot.ogrenciId && JSON.stringify(gi.ogrenciIds) === JSON.stringify(giSnapshot.ogrenciIds) && gi.konu === giSnapshot.konu && gi.dersId === giSnapshot.dersId && gi.olusturma === giSnapshot.olusturma);
+t("ogrenciId/konu/dersId/olusturma KORUNDU; ogrenciIds SENKRON (ADIM-4)", gi.ogrenciId === giSnapshot.ogrenciId && gi.konu === giSnapshot.konu && gi.dersId === giSnapshot.dersId && gi.olusturma === giSnapshot.olusturma && JSON.stringify(gi.ogrenciIds) === JSON.stringify([zeynep.id, emir.id, yeniUye.id]));
 t("ui.aktifIstekId temizlendi", ui.aktifIstekId === null);
 
 /* 10) Öğretmen + TÜM öğrenci çakışma kontrolü — isimli uyarı */
@@ -242,9 +242,9 @@ const giYuklenen = yuklenen2.istekler.find(r => r.id === gi.id);
 t("yükleme sonrası grup isteği bulunur", !!giYuklenen);
 /* DONEM-ILK-YAMASI: yükleme normalize'ı isteğe donemId ekler — beklenen kayıt gi+donemId; alanlara dokunulmazlığı hâlâ byte-seviyede assert eder */
 t("grup isteği alanları DEEP-EQUAL geri döner (+donemId migration)", giYuklenen && JSON.stringify(giYuklenen) === JSON.stringify(Object.assign({}, JSON.parse(JSON.stringify(gi)), { donemId: DB.aktifDonemId })));
-t("ogrenciIds eksiksiz (2 üye — planlama ek üyeyi isteğe yazmaz; süit 9 ile tutarlı)", giYuklenen && JSON.stringify(giYuklenen.ogrenciIds) === JSON.stringify([zeynep.id, emir.id]));
+t("ogrenciIds eksiksiz (3 üye — planlama ile SENKRON; ADIM-4)", giYuklenen && JSON.stringify(giYuklenen.ogrenciIds) === JSON.stringify([zeynep.id, emir.id, yeniUye.id]));
 const loadYuklenen = loadDB();
-t("loadDB de grup isteğini korur", !!loadYuklenen && !!loadYuklenen.istekler.find(r => r.id === gi.id && JSON.stringify(r.ogrenciIds) === JSON.stringify([zeynep.id, emir.id])));
+t("loadDB de grup isteğini korur (SENKRON üyeler)", !!loadYuklenen && !!loadYuklenen.istekler.find(r => r.id === gi.id && JSON.stringify(r.ogrenciIds) === JSON.stringify([zeynep.id, emir.id, yeniUye.id])));
 
 /* 14) v5 REGRESYON: grow-only sıra register'ı + kapalı/açık panel davranışı */
 console.log("14) v5 regresyon — grow-only register + panel aç/kapat:");

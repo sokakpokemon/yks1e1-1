@@ -1,0 +1,25 @@
+boot hatasız
+grupUyeYaz: ek>0 ⇒ ogrenciIds = [ek] (ana yazılır)
+grupUyeYaz: ek=0 ⇒ ogrenciIds SİLİNİR
+grupUyeYaz: ana ek listesinde tekrar etmez + kopya elenir
+grupUyeYaz: mevcut ogrenciIds ÜZERİNE yazılır (bayat kayıt kalmaz)
+planla() yeni 0 ek: ogrenciIds YAZILMAZ, ogrenciId = ana
+planla() yeni 1 ek: ogrenciIds = [ek]
+düzenleme 1 ek: grup üyesi KORUNUR
+düzenleme 2→1 ek: ogrenciIds = [kalan]
+düzenleme tüm ekler çıkarıldı: ogrenciIds SİLİNİR, ogrenciId = ana
+düzenleme panel dokunulmadı: mevcut üyeler KORUNUR (silinmez)
+istekBurak tekil istek: ogrenciIds YAZILMAZ
+istekBurak grup istek: ogrenciIds = [ek]
+formaAktar grup istek: ek üyeler panele yüklenir
+planla sonrası ilgili istek ogrenciIds SENKRON
+WA alıcı listesinde ana üye AYRI satır
+WA alıcı listesinde ek üye AYRI satır
+WA mesajlarında ortak grup dersi VAR (ikisi)
+havuza geri: ders silinir + TEK istek
+havuza geri istek: ogrenciId = ana + ogrenciIds = [ek, uc]
+istekUyeAc: editör açılır + taslak mevcut üyeler
+istekUyeSec: üye ekle/çıkar taslağı değiştirir
+istekUyeKaydet: istek.ogrenciIds SENKRON + durum bekliyor
+app.js'te grupUyeYaz TEK tanım
+5 yazım yolu grupUyeYaz'dan geçer (elle ogrenciIds ataması YOK)

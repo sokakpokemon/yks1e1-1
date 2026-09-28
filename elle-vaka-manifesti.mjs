@@ -59,4 +59,5 @@ export const elleManifest = {
   "ks-index-kimlik.mjs": 8,
   "ks-dongu29.mjs": 25, /* DÖNGÜ-29: elle sayım */
   "ks-d32-grup-birebir-e2e.mjs": 20, /* D32-GRUP-2UYE: elle sayım (gerçek form akışı + eşik regresyonu) */
+  "ks-grup-uye-yaz.mjs": 25, /* D34-GRUP-UYE-YAZ: elle sayım (TEK KAPI invariant: 4 yazım yolu + düzenleme koruması + havuz editörü + WA) */
 };

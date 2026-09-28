@@ -586,6 +586,31 @@ function dersOgrenciIds(ders) {
   return [];
 }
 
+/* ---------- Grup üye YAZMA yardımcısı (TEK KAPI) ----------
+   DEĞİŞMEZ: "ek öğrenci > 0 ⇒ ogrenciIds ZORUNLU".
+   Tüm yazım yolları (planla() yeni/düzenleme, istekBurak(), dersHavuzaGeriBurak(), istekGrupEkle())
+   ogrenciIds alanını YALNIZCA buradan yazar/siler — dağınık elle atama YOK.
+   - anaId: ana/sahip öğrenci id (boş bırakılırsa ogrenciId'ye dokunulmaz)
+   - ekIds: ek üyeler; benzersiz, ana hariç, boş/geçersiz değerler atılır
+   - ek > 0 → hedef.ogrenciIds = [ek...]  (ZORUNLU alan)
+   - ek = 0 → hedef.ogrenciIds SİLİNİR (tekli kayıt = eski şema)
+   Dönüş: yazılan ek üye dizisi (kopya). */
+function grupUyeYaz(hedef, anaId, ekIds) {
+  if (!hedef || typeof hedef !== "object") return [];
+  var ana = (anaId == null || anaId === "") ? null : anaId;
+  var ekler = [];
+  (Array.isArray(ekIds) ? ekIds : []).forEach(function (oid) {
+    if (oid == null || oid === "") return;
+    if (ana != null && oid === ana) return;
+    if (ekler.indexOf(oid) >= 0) return;
+    ekler.push(oid);
+  });
+  if (ana != null) hedef.ogrenciId = ana;
+  if (ekler.length) hedef.ogrenciIds = ekler.slice();
+  else if ("ogrenciIds" in hedef) delete hedef.ogrenciIds;
+  return ekler.slice();
+}
+
 /* ---------- Grup ders görünüm yardımcıları ----------
    Tek öğrencili derslerde eski görünüm birebir korunur (yardımcılar [] / boş döner).
    Grup derslerinde: ana öğrenci tam ad, diğer üyeler baş harf badge'i; 3+ üyede "+N" özeti.
@@ -632,30 +657,6 @@ function grupUyeSatirlari(ders) {
 /* ---------- Grup İSTEK uyumluluk katmanı ---------- */
 /* Sınıf kimliği okuma yardımcısı (KİMLİK-YAMASI): ada göre KALICI id — sinifIds'te yoksa boş döner.
    Okuma yan etkisizdir; kimlik üretimi yalnızca normalize() içinde yapılır. */
-/* ---------- Grup üye YAZMA yardımcısı (TEK KAPI) — D34-GRUP-UYE-YAZ ----------
-   DEĞİŞMEZ: "ek öğrenci > 0 ⇒ ogrenciIds ZORUNLU".
-   Tüm yazım yolları (planla() yeni/düzenleme, istekBurak(), dersHavuzaGeriBurak(), istekGrupEkle())
-   ogrenciIds alanını YALNIZCA buradan yazar/siler — dağınık elle atama YOK.
-   - anaId: ana/sahip öğrenci id (boş bırakılırsa ogrenciId'ye dokunulmaz)
-   - ekIds: ek üyeler; benzersiz, ana hariç, boş/geçersiz değerler atılır
-   - ek > 0 → hedef.ogrenciIds = [ek...]  (ZORUNLU alan)
-   - ek = 0 → hedef.ogrenciIds SİLİNİR (tekli kayıt = eski şema)
-   Dönüş: yazılan ek üye dizisi (kopya). */
-function grupUyeYaz(hedef, anaId, ekIds) {
-  if (!hedef || typeof hedef !== "object") return [];
-  var ana = (anaId == null || anaId === "") ? null : anaId;
-  var ekler = [];
-  (Array.isArray(ekIds) ? ekIds : []).forEach(function (oid) {
-    if (oid == null || oid === "") return;
-    if (ana != null && oid === ana) return;
-    if (ekler.indexOf(oid) >= 0) return;
-    ekler.push(oid);
-  });
-  if (ana != null) hedef.ogrenciId = ana;
-  if (ekler.length) hedef.ogrenciIds = ekler.slice();
-  else if ("ogrenciIds" in hedef) delete hedef.ogrenciIds;
-  return ekler.slice();
-}
 function sinifId(ad) { return (DB.sinifIds && DB.sinifIds[ad] != null) ? DB.sinifIds[ad] : ""; }
 /* İdempotent okuma yardımcısı: istek kaydına ASLA yazmaz.
    - [istek.ogrenciId, ...(istek.ogrenciIds || [])] → benzersiz, boş olmayan, sırasını koruyan üye listesi
@@ -741,9 +742,7 @@ function istekGrupEkle() {
   var konu = $("h-konu") ? $("h-konu").value.trim() : "";
   var anaId = uyeler[0], ekler = uyeler.slice(1);
   var anaO = DB.ogrenciler.find(function (x) { return x.id === anaId; });
-  var yeniGrupIstek = { id: uid(), ogrenciAd: anaO ? anaO.ad : "", dersId: dersId, konu: konu, durum: "bekliyor", olusturma: todayKey(), donemId: aktifDonemId() /* DONEM-DAMGA-YAMASI: yeni grup istek aktif döneme damgalanır */ };
-  grupUyeYaz(yeniGrupIstek, anaId, ekler); /* D34-GRUP-UYE-YAZ: ek>0 ⇒ ogrenciIds ZORUNLU (tek kapı) */
-  DB.istekler.push(yeniGrupIstek);
+  DB.istekler.push({ id: uid(), ogrenciId: anaId, ogrenciIds: ekler, ogrenciAd: anaO ? anaO.ad : "", dersId: dersId, konu: konu, durum: "bekliyor", olusturma: todayKey(), donemId: aktifDonemId() /* DONEM-DAMGA-YAMASI: yeni grup istek aktif döneme damgalanır */ });
   /* 10+ seçim engellenmez — yalnızca uyarı */
   if (uyeler.length >= 10) toast(uyeler.length + " öğrencilik geniş grup isteği kaydedildi — kontrol edin.", "uyari");
   else toast("Ortak grup isteği havuza eklendi ✓ (" + uyeler.length + " öğrenci)");
@@ -2948,7 +2947,7 @@ function renderHavuz() {
         return mo ? '<span class="inline-flex items-center rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[10px] font-medium text-slate-500 whitespace-normal break-words">' + birebirEtiketHTML(mo.ad, mo.sinif || "") + "</span>" : "";
       }).join("") + "</span>" : "";
     var bekliyor = r.durum === "bekliyor";
-    var kartHTML = '<div draggable="' + bekliyor + '" data-istek="' + r.id + '" class="istek-kart flex items-center gap-3 rounded-xl border px-3.5 py-2.5 ' + (bekliyor ? "border-slate-100 hover:border-teal-300 transition-colors cursor-grab active:cursor-grabbing" : "border-green-100 bg-green-50/40") + '"' +
+    liste += '<div draggable="' + bekliyor + '" data-istek="' + r.id + '" class="istek-kart flex items-center gap-3 rounded-xl border px-3.5 py-2.5 ' + (bekliyor ? "border-slate-100 hover:border-teal-300 transition-colors cursor-grab active:cursor-grabbing" : "border-green-100 bg-green-50/40") + '"' +
       (bekliyor ? ' ondragstart="istekDrag(event, \'' + r.id + '\'); this.style.opacity=\'0.45\'" ondragend="istekDropHedef=null; this.style.opacity=\'\'"' : "") + ">" +
       avatar((o ? o.ad : r.ogrenciAd), i) +
       '<div class="flex-1 min-w-0"><div class="flex items-center gap-2 flex-wrap">' + '<span class="inline-flex rounded-full bg-slate-50 border border-slate-200 px-2.5 py-1">' + (o ? birebirEtiketHTML(o.ad, o.sinif || "") : birebirEtiketHTML(r.ogrenciAd, null)) + '</span>' + uyeHtml +
@@ -2960,8 +2959,6 @@ function renderHavuz() {
         ? '<button onclick="formaAktar(\'' + r.id + '\')" title="Sürükleyip planlama formuna bırakın veya tıklayın" class="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-teal-500 hover:bg-teal-600 text-white text-[11.5px] font-bold px-3.5 py-2 shadow-sm transition-colors"><i class="fa-solid fa-arrow-right-arrow-left"></i>Eşleştir &amp; Planla</button>'
         : '<span class="text-[10.5px] text-emerald-600 font-bold shrink-0"><i class="fa-solid fa-check mr-1"></i>Derse dönüştürüldü</span>') +
       '<button onclick="istekSil(\'' + r.id + '\')" class="w-7 h-7 rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 shrink-0"><i class="fa-solid fa-trash-can text-[12px]"></i></button></div>';
-    if (bekliyor) kartHTML += istekUyeEditorHTML(r); /* D34-GRUP-UYE-YAZ ADIM-4: bekleyen istek kartına üye ekle/çıkar */
-    liste += kartHTML;
   });
   liste += "</div>";
 
@@ -3028,62 +3025,7 @@ function formaAktar(id) {
   toast("İstek planlama formuna aktarıldı. Tarih ve saati seçip kaydedin.");
   renderHavuz(); /* DÖNGÜ-26: havuz kartı anında tazelenir — eski hâliyle takılı kalmaz */
 }
-/* ================================================================
-   D34-GRUP-UYE-YAZ ADIM-4 — HAVUZ İSTEĞİ: "Grup Üyelerini Ekle/Çıkar"
-   Bekleyen bir isteğin üyeleri doğrudan kart üzerinden düzenlenir; kaydedince
-   grupUyeYaz TEK KAPISINDAN ogrenciId + ogrenciIds SENKRON yazılır. Mevcut chip düzeni korunur.
-   ================================================================ */
-function istekUyeEditorHTML(r) {
-  var uyeler = istekOgrenciIds(r);
-  if (ui.istekUyeId !== r.id) {
-    return '<div class="mt-1 px-1"><button type="button" onclick="istekUyeAc(\'' + esc(r.id) + '\')" class="text-[10.5px] font-bold text-slate-400 hover:text-teal-600 inline-flex items-center gap-1 transition-colors"><i class="fa-solid fa-user-group text-[10px]"></i>Grup üyelerini ekle/çıkar (' + uyeler.length + ')</button></div>';
-  }
-  var taslak = Array.isArray(ui.istekUyeTaslak) ? ui.istekUyeTaslak : [];
-  var satir = DB.ogrenciler.map(function (o) {
-    var sec = taslak.indexOf(o.id) >= 0;
-    return '<label class="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-white cursor-pointer"><input type="checkbox"' + (sec ? " checked" : "") +
-      ' onchange="istekUyeSec(\'' + esc(r.id) + '\',\'' + esc(o.id) + '\')" class="w-3.5 h-3.5 shrink-0 accent-teal-600" />' +
-      '<span class="text-[11.5px] text-slate-600 truncate">' + esc(o.ad) + (o.sinif ? ' <span class="text-slate-300">· ' + esc(o.sinif) + "</span>" : "") + "</span></label>";
-  }).join("");
-  return '<div class="mt-1 rounded-xl border border-teal-200 bg-teal-50/40 p-2.5">' +
-    '<div class="text-[10.5px] font-extrabold text-teal-700 mb-1"><i class="fa-solid fa-user-group mr-1"></i>Grup Üyelerini Ekle/Çıkar</div>' +
-    '<div class="max-h-40 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-x-3">' + satir + "</div>" +
-    '<div class="flex items-center gap-2 mt-2 flex-wrap">' +
-      '<button type="button" onclick="istekUyeKaydet(\'' + esc(r.id) + '\')" class="rounded-full bg-teal-500 hover:bg-teal-600 text-white text-[11px] font-bold px-3 py-1.5 transition-colors">Kaydet</button>' +
-      '<button type="button" onclick="istekUyeIptal()" class="rounded-full border border-slate-200 bg-white text-slate-500 hover:text-slate-700 text-[11px] font-bold px-3 py-1.5 transition-colors">İptal</button>' +
-      '<span class="text-[10.5px] text-slate-400 ml-auto">' + (taslak.length ? taslak.length + " üye seçili" : "üye seçilmedi — en az 1 gerekli") + "</span>" +
-    "</div></div>";
-}
-function istekUyeAc(id) {
-  var r = DB.istekler.find(function (x) { return x.id === id; });
-  if (!r || r.durum !== "bekliyor") { toast("Yalnızca bekleyen isteğin üyeleri düzenlenebilir.", "uyari"); return; }
-  ui.istekUyeId = id;
-  ui.istekUyeTaslak = istekOgrenciIds(r).slice();
-  renderHavuz();
-}
-function istekUyeSec(id, oid) {
-  if (ui.istekUyeId !== id) return;
-  if (!Array.isArray(ui.istekUyeTaslak)) ui.istekUyeTaslak = [];
-  var i = ui.istekUyeTaslak.indexOf(oid);
-  if (i === -1) ui.istekUyeTaslak.push(oid); else ui.istekUyeTaslak.splice(i, 1);
-  renderHavuz();
-}
-function istekUyeIptal() { ui.istekUyeId = null; ui.istekUyeTaslak = []; renderHavuz(); }
-function istekUyeKaydet(id) {
-  var r = DB.istekler.find(function (x) { return x.id === id; });
-  if (!r) { istekUyeIptal(); return; }
-  if (!Array.isArray(ui.istekUyeTaslak) || !ui.istekUyeTaslak.length) { toast("En az 1 üye seçin.", "hata"); return; }
-  var ana = ui.istekUyeTaslak[0], ekler = ui.istekUyeTaslak.slice(1);
-  grupUyeYaz(r, ana, ekler); /* D34-GRUP-UYE-YAZ ADIM-4: istek.ogrenciIds SENKRON güncellenir (tek kapı) */
-  var anaO = DB.ogrenciler.find(function (x) { return x.id === ana; });
-  if (anaO) r.ogrenciAd = anaO.ad;
-  saveDB();
-  ui.istekUyeId = null; ui.istekUyeTaslak = [];
-  renderHavuz();
-  toast("İstek üyeleri güncellendi ✓ (" + istekOgrenciIds(r).length + " üye)");
-}
 function istekSil(id) {
-  if (ui.istekUyeId === id) { ui.istekUyeId = null; ui.istekUyeTaslak = []; }
   DB.istekler = DB.istekler.filter(function (r) { return r.id !== id; });
   toast("İstek silindi.");
   renderHavuz();
@@ -3312,7 +3254,6 @@ function grupPanelAnaDegisti() {
 }
 function grupPanelSec(oid) {
   if (!oid) return;
-  ui.uyeDegisti = true; /* D34-GRUP-UYE-YAZ: üye listesi panelden AÇIKÇA değiştirildi */
   if (!ui.panelSecim) ui.panelSecim = { acik: false, arama: "", sinif: "" };
   /* GRUP İSTEK (havuz bağlamı): İLK seçilen ana olur; ana çıkarılırsa sıradaki üye ana olur; kopya yazılmaz */
   if (grupPanelBaglami() === "havuz") {
@@ -3452,7 +3393,6 @@ function temizleForm() {
   $("f-saat").value = "15:30";
   $("f-yoksay").checked = false;
   $("cakismaUyari").classList.add("hidden");
-  ui.uyeDegisti = false;
   var panelKirli = ui.panelSecim && (ui.panelSecim.acik || ui.panelSecim.arama || ui.panelSecim.sinif);
   if ((ui.ekOgrenciIds && ui.ekOgrenciIds.length) || panelKirli) {
     ui.ekOgrenciIds = [];
@@ -3598,8 +3538,8 @@ function planla() {
     if (ui.editId) {
       var mg = DB.dersler.find(function (x) { return x.id === ui.editId; });
       if (mg) {
-        grupUyeYaz(mg, o.id, grupOgrenciIds); /* D34-GRUP-UYE-YAZ: ek>0 ⇒ ogrenciIds ZORUNLU (tek kapı) */
-        mg.ogrenciAd = o.ad;
+        mg.ogrenciIds = grupOgrenciIds.slice();
+        mg.ogrenciId = o.id; mg.ogrenciAd = o.ad;
         mg.dersId = dersId; mg.konu = konu;
         mg.ogretmenId = t.id; mg.ogretmenAd = t.ad;
         mg.tarih = tarih; mg.saat = saat; mg.kod = ksKodOf(saat);
@@ -3607,30 +3547,24 @@ function planla() {
       }
       ui.editId = null;
     } else {
-      var yeniGrup = {
-        id: uid(), ogrenciAd: o.ad, dersId: dersId, konu: konu,
+      DB.dersler.push({
+        id: uid(), ogrenciId: o.id, ogrenciIds: grupOgrenciIds.slice(), ogrenciAd: o.ad, dersId: dersId, konu: konu,
         ogretmenId: t.id, ogretmenAd: t.ad, tarih: tarih, saat: saat, kod: ksKodOf(saat),
         durum: "planlandi", olusturma: todayKey(),
         donemId: aktifDonemId() /* DONEM-DAMGA-YAMASI: yeni grup dersi aktif döneme damgalanır */
-      };
-      grupUyeYaz(yeniGrup, o.id, grupOgrenciIds); /* D34-GRUP-UYE-YAZ: ek>0 ⇒ ogrenciIds ZORUNLU (tek kapı) */
-      DB.dersler.push(yeniGrup);
+      });
       toast("Grup dersi planlandı 🎉 " + toplam + " öğrenci · " + fmtTR(tarih) + " " + saatEtiket(saat));
-      /* D34-GRUP-UYE-YAZ ADIM-4: istekten planlandıysa ilgili istek üyeleri SENKRON güncellenir + durum planlandi */
+      /* ISTEK-GRUP: istekten planlandıysa istek kaydının SAHİBİ (ogrenciId) ve diğer alanları değişmez; yalnızca durum güncellenir */
       if (ui.aktifIstekId) {
         var _r2 = DB.istekler.find(function (x) { return x.id === ui.aktifIstekId; });
-        if (_r2) { grupUyeYaz(_r2, o.id, grupOgrenciIds); _r2.durum = "planlandi"; }
+        if (_r2) { _r2.durum = "planlandi"; }
         ui.aktifIstekId = null;
       }
     }
   } else if (ui.editId) {
     var mevcut = DB.dersler.find(function (x) { return x.id === ui.editId; });
     if (mevcut) {
-      /* D34-GRUP-UYE-YAZ KORUMA: düzenlemede form ek listesi boşalsa bile mevcut grup üyeleri
-         SİLİNMEZ; üye çıkarma yalnızca panelden AÇIKÇA yapılır (ui.uyeDegisti) — o zaman da tek kapı temizler. */
-      var _korunanEkler = Array.isArray(mevcut.ogrenciIds) ? mevcut.ogrenciIds.slice() : [];
-      grupUyeYaz(mevcut, o.id, ui.uyeDegisti ? grupOgrenciIds : _korunanEkler);
-      mevcut.ogrenciAd = o.ad;
+      mevcut.ogrenciId = o.id; mevcut.ogrenciAd = o.ad;
       mevcut.dersId = dersId; mevcut.konu = konu;
       mevcut.ogretmenId = t.id; mevcut.ogretmenAd = t.ad;
       mevcut.tarih = tarih; mevcut.saat = saat; mevcut.kod = ksKodOf(saat);
@@ -3646,8 +3580,7 @@ function planla() {
     });
     if (ui.aktifIstekId) {
       var r = DB.istekler.find(function (x) { return x.id === ui.aktifIstekId; });
-      /* D34-GRUP-UYE-YAZ ADIM-4: tekli planlamada ilgili istek üyeleri SENKRON (ek yok ⇒ ogrenciIds temizlenir) */
-      if (r) { grupUyeYaz(r, o.id, grupOgrenciIds); r.durum = "planlandi"; }
+      if (r) { r.durum = "planlandi"; }
       ui.aktifIstekId = null;
     }
     toast("Ders planlandı 🎉 " + o.ad + " · " + fmtTR(tarih) + " " + saatEtiket(saat));
@@ -3890,12 +3823,13 @@ function istekBurak(ev, el, ogrtId, tarih, saat) {
   // Dersi planla
   /* DÖNGÜ-26: GRUP istekte tüm üyeler ders kaydına taşınır (ogrenciIds = ana dışı ek üyeler);
      tekli istekte akış birebir eski hâl — ogrenciIds YAZILMAZ. İstek sahibi (ogrenciId) ve diğer alanlar aynen. */
+  var _d26Ekler = (Array.isArray(r.ogrenciIds) ? r.ogrenciIds.slice() : []);
   var _d26Yeni = {
-    id: uid(), ogrenciAd: o.ad, dersId: r.dersId, konu: r.konu || "",
+    id: uid(), ogrenciId: o.id, ogrenciAd: o.ad, dersId: r.dersId, konu: r.konu || "",
     ogretmenId: t.id, ogretmenAd: t.ad, tarih: tarih, saat: saat, kod: ksKodOf(saat),
     durum: "planlandi", olusturma: todayKey()
   };
-  grupUyeYaz(_d26Yeni, o.id, Array.isArray(r.ogrenciIds) ? r.ogrenciIds : []); /* D34-GRUP-UYE-YAZ: ek>0 ⇒ ogrenciIds ZORUNLU (tek kapı) */
+  if (_d26Ekler.length) _d26Yeni.ogrenciIds = _d26Ekler;
   DB.dersler.push(_d26Yeni);
 
   // İsteği havuzdan kaldır
@@ -3956,11 +3890,11 @@ function dersHavuzaGeriBurak(dersId) {
     /* Onaylı: ders silinir → TEK bekleyen istek */
     DB.dersler = DB.dersler.filter(function (x) { return x.id !== l.id; });
     var yeniIstek = {
-      id: uid(), ogrenciAd: (anaO ? anaO.ad : (l.ogrenciAd || "")),
+      id: uid(), ogrenciId: l.ogrenciId, ogrenciAd: (anaO ? anaO.ad : (l.ogrenciAd || "")),
       dersId: l.dersId, konu: l.konu || "", durum: "bekliyor",
       olusturma: l.olusturma || todayKey(), donemId: aktifDonemId()
     };
-    grupUyeYaz(yeniIstek, l.ogrenciId, ekler); /* üyelik aynen korunur; D34-GRUP-UYE-YAZ: ek>0 ⇒ ogrenciIds ZORUNLU */
+    if (ekler.length) yeniIstek.ogrenciIds = ekler; /* üyelik aynen korunur */
     DB.istekler.push(yeniIstek);
     /* State temizliği: düzenleme/istek bağlantıları düşürülür */
     ui.aktifIstekId = null;
@@ -4401,7 +4335,7 @@ function silOnay(id) {
 function duzenle(id) {
   var l = DB.dersler.find(function (x) { return x.id === id; });
   if (!l) return;
-  ui.editId = id; ui.aktifIstekId = null; ui.uyeDegisti = false;
+  ui.editId = id; ui.aktifIstekId = null;
   ui.ekOgrenciIds = dersOgrenciIds(l).filter(function (oid) { return oid && oid !== l.ogrenciId; });
   ui.panelSecim = { acik: true, arama: "", sinif: "", anaId: l.ogrenciId || null }; /* GRUP PANEL: düzenlemede panel seçili öğrencilerle açık açılır */
   $("f-ogrenci").value = l.ogrenciAd;

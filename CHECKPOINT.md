@@ -118,6 +118,68 @@ ORİJİNALDİR ve ASLA DEĞİŞTİRİLMEZ.
 
 ---
 
+# ✅ KAPANIŞ KAYDI: DÖNGÜ-36 + DÖNGÜ-36 KALANI KAPANDI
+
+**Tarih:** 28 Eylül 2026 · **Durum:** ✅ Kapandı — kullanıcı görsel doğrulaması + canlı damga teyidi
+**Bu turda değişen tek dosya:** `CHECKPOINT.md` (uygulama kodu ve testler DEĞİŞMEDİ).
+
+*(Not: bu kayıt HIZ PROTOKOLÜ / JET 2.0 bloğunun hemen ardına, TEK append olarak alındı — içerik birebir.)*
+
+## 1) D36 ilk tur — günlük kilitli satırdaki literal "Sınıf" → gerçek sınıf chip'i
+- Tek üretici: `function sinifChipHTML(sinifAd)` (`app.js:3747`) — TEK markup literali
+  (`bg-rose-100 border border-rose-200`) + `esc((sinifAd || "Sınıf").substring(0,14))`;
+  `"Sınıf"` yer tutucusu YALNIZ haftalık davranışı korur.
+- Çağrı yerleri: haftalık `app.js:3832` (`sinifChipHTML(avail.sinif[key])`) · günlük "Boş" satırı `app.js:4282` (`sinifChipHTML(snf28)`).
+- Kaynakta `sinifChipHTML(` = 1 tanım + 3 çağrı (haftalık + günlük Boş + günlük ANA); chip markup literali = 1 (tek üretici kanıtı).
+- Yama: `ks-yama-gunluk-sinif-chip.mjs` (marker `GUNLUK-SINIF-CHIP`; yedek `app.js.gunluk-sinif-chip-oncesi.bak` 386299 B `ed0cc06c…`).
+
+## 2) D36 kalanı — günlük ANA satır sınıf-dersi slotu
+- Günlük ANA satır sınıf-dersi slotu `dnd-bos` (drop-zone) dalından ÇIKARILDI.
+- `app.js:4246-4250`: `avail.sinif` dolu ise hücre KİLİTLİ `td` + AYNI chip
+  (`sinifChipHTML(ogrtAvail.avail.sinif[dowIdx28 + "-" + slot.no])`).
+- Veri alanı haftalık/"Boş" ile AYNI: `ogrtAvail` (`app.js:4203`, `ogrtId ? DB.ogretmenler.find(x => x.id === ogrtId) : null`); `dowIdx28 = dowIdx(gunKey)` (`app.js:4152`).
+- Kilit ÖNCEDEN vardı: `istekBurak` (`app.js:3892` / kilit `:3910`) ve `dersBurak` (`app.js:4018` / kilit `:4053`) — ikisi de `(t.avail.sinif && key in t.avail.sinif)` içerir.
+- Yama: `ks-yama-d36-ana-satir.mjs` (marker `D36-ANA-SATIR`, 2 çapa, `index.html` damgasını yeniden yazar — idempotent, 2. koşu exit 2).
+- Yedek: `app.js.d36-ana-satir-oncesi.bak` (387594 B, `02a81143…`).
+
+## 3) Sayı zinciri
+- Toplam assertion: **2536 → 2542 (+6) → 2548 (+6)**.
+- Süit: **55 SABİT** (değişmedi).
+- `ks-dongu28.mjs`: **20 → 26** · `ks-gunluk-ders-tasi.mjs`: **114 → 120**.
+
+## 4) SHA zinciri (no-drift)
+- `app.js`: **386299 → 387594 → 388693 B** · `ed0cc06c…` → `02a81143…` → `aa94ed0b…`
+  (tam: `aa94ed0b2b7226287742431b5bddc451ce9c5f82c8d3d2b420ffeff5153b2ad5`).
+- `index.html` damga: `app.js?v=aa94ed0b2b722628` (+ `ek-ders.js?v=3d2dd38ff517c64f`); `ks-index-kimlik.mjs` / `ks-kart-kolon.mjs:246-258` bunu DİNAMİK doğrular (ada gömülü elle SHA pin YOK).
+- `ek-ders.js 3d2dd38f…` **DEĞİŞMEDİ** (`3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f`, 30405 B).
+
+## 5) GÖRSEL DOĞRULAMA (kullanıcı onayı)
+- Günlük **PAZARTESİ** çizelgesinde sınıf-dersi slotları pembe chip + GERÇEK sınıf adı:
+  **12.DİL · MEZUN SAY 1 · 11 EA 1 · MEZUN EA 1 · 12 SAY 2** — haftalıkla TUTARLI.
+- Grup dersinde iki üye KENDİ satırında ad+sınıf: **ŞAHİN DOĞANAY slot 8 → "Emir Aydın MEZUN SAY 1" + "Yusuf Can MEZUN SAY 2"**.
+- → **D36 + grup üyesi görünümü KAPANDI.**
+
+## 6) DÜRÜST NOT
+- Sınıf kaydı VAR ama **adı BOŞ** olan slotta hücre hâlâ "+" drop-zone görünüyor — **YALNIZ görsel**.
+- `istekBurak` / `dersBurak` kilidi (`key in avail.sinif`) drop'u REDDETTİĞİ için **veri bozulmuyor**.
+- Bu durum sonraki tura AÇIK KALEM olarak kaydedildi (aşağıda).
+
+## 7) CANLI-YAYIM KURALI
+- Kullanıcı **publish etti**; canlı damga `app.js?v=aa94ed0b2b722628`.
+- Bu tur YALNIZ `CHECKPOINT.md` değiştiği için **publish GEREKMEZ** (CHECKPOINT canlıya servis edilmiyor).
+
+## AÇIK KALEMLER
+- **(a)** Boş adlı sınıf kaydı slotu görsel sertleştirmesi — `key in avail.sinif` VARSA hücreyi kilitle (drop-zone gösterme). *Görsel; veri zaten güvenli.*
+- **(b)** LOGO ince ayarı — **askıda** (LOGO KİLİDİ kuralı yürürlükte).
+- **(c)** Eski Pazar grup kaydı kontrolü — **opsiyonel**, yalnız kullanıcı isterse.
+
+## Kapı / No-drift
+- `node hizli-test.mjs --tam` → **exit 0** · `MANIFEST: 55 süit, toplam 2548 beklenen | RUNNER: 2548 koşan, 2548 geçen — BİREBİR EŞİT ✓` · `TAMLIK KANITI: 48/48`.
+- No-drift: `app.js aa94ed0b2b722628…` · `index.html` · `ek-ders.js 3d2dd38f…` — **DEĞİŞMEDİ**.
+- Bu turda (kapanış kaydı) değişen dosya: **yalnız `CHECKPOINT.md`**. Commit'i Vly alır; **publish YOK**.
+
+---
+
 # ✅ CHECKPOINT: DÖNGÜ-30-CACHE — app.js/ek-ders.js İçerik Damgası (?v=<sha16>)
 
 **Tarih:** 27 Eylül 2026 · **Durum:** ✅ Tamamlandı — yalnız index.html (2 satır) + test pinleri; app.js/ek-ders.js İÇERİĞİ DEĞİŞMEDİ

@@ -2,7 +2,11 @@
    Vite build'i yalnız dist/index.html + assets/ üretir; kökteki app.js,
    ek-ders.js ve vendor/* dist'e girmez → canlıda SPA fallback HTML döner
    (stilsiz site). Bu script build'den SONRA koşar (package.json postbuild)
-   ve dosyaları byte-birebir kopyalar. Kaynaklar kökte kalır. */
+   ve dosyaları byte-birebir kopyalar. Kaynaklar kökte kalır.
+
+   D41: kök → dist/ **ve** public/ senkronlanır (aynı 8 varlık). Böylece
+   app.js güncellenince public/app.js bayat kalmaz; publish-guard'ın
+   "public kökle senkron" kontrolü yanlış alarm üretmez. */
 import { copyFileSync, mkdirSync, statSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
@@ -22,18 +26,24 @@ const DOSYALAR = [
 const sha = async (p) =>
   createHash("sha256").update(new Uint8Array(await readFile(p))).digest("hex");
 
-for (const dosya of DOSYALAR) {
-  mkdirSync(dirname(join("dist", dosya)), { recursive: true });
-  copyFileSync(dosya, join("dist", dosya));
+const HEDEFLER = ["dist", "public"]; /* D41: kök → dist + public senkron */
+
+for (const hedef of HEDEFLER) {
+  for (const dosya of DOSYALAR) {
+    mkdirSync(dirname(join(hedef, dosya)), { recursive: true });
+    copyFileSync(dosya, join(hedef, dosya));
+  }
 }
 
-/* byte-birebirlik kanıtı */
+/* byte-birebirlik kanıtı (her hedef için) */
 let tamam = true;
 for (const dosya of DOSYALAR) {
   const s = await sha(dosya);
-  const d = await sha(join("dist", dosya));
-  if (s !== d) { console.error("SHA UYUŞMADI: " + dosya); tamam = false; }
-  else console.log("OK  " + dosya + "  " + s.slice(0, 12) + "…  (" + statSync(dosya).size + " B)");
+  for (const hedef of HEDEFLER) {
+    const h = await sha(join(hedef, dosya));
+    if (s !== h) { console.error("SHA UYUŞMADI: " + hedef + "/" + dosya); tamam = false; }
+    else console.log("OK  " + hedef + "/" + dosya + "  " + s.slice(0, 12) + "…  (" + statSync(dosya).size + " B)");
+  }
 }
 if (!tamam) process.exit(1);
-console.log("copy-static: " + DOSYALAR.length + " dosya byte-birebir kopyalandı.");
+console.log("copy-static: " + DOSYALAR.length + " dosya × " + HEDEFLER.length + " hedef (dist+public) byte-birebir kopyalandı.");

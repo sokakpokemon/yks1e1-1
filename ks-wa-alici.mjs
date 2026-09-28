@@ -1,5 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 49) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-wa-alici.mjs kosan=" + __kosan + " beklenen=49"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-wa-alici.mjs:" + __kosan + ":49"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 56) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-wa-alici.mjs kosan=" + __kosan + " beklenen=56"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-wa-alici.mjs:" + __kosan + ":56"); } });
 /* ks-wa-alici.mjs — WA-ALICI-YAMASI süiti
    Doğruladıkları:
     1) #waAlici select modal-genel TEK (id tam 1 kez; waSatir/Öğrenciler sekmesi onu KULLANMAZ).
@@ -62,7 +62,7 @@ try {
   console.error(e.stack ? e.stack.split("\n").slice(0, 6).join("\n") : e);
   throw e;
 }
-const { DB, waAc, waOnizle, waGonder, waUrl, waKapat, waAliciDegistir, waAliciBilgisi, waAliciTipiOf, waAktifIdOf, waSatir, ogrenciMesajMetni } = P;
+const { DB, ui, waAc, waOnizle, waGonder, waUrl, waKapat, waAliciDegistir, waAliciBilgisi, waAliciTipiOf, waAktifIdOf, waSatir, ogrenciMesajMetni } = P;
 
 /* ---- test verisi: tel/anneTel/babaTel doldur (yalnız bellek içi; kayıt atılmaz) ---- */
 const ogr1 = DB.ogrenciler[0], ogr2 = DB.ogrenciler[1];
@@ -202,6 +202,22 @@ const waAcG = appKaynak.split("function waAc() {")[1].split("\nfunction ")[0];
 t("waAc gövdesinde waAliciSeciciHTML çağrısı tam 1 nokta (tekrarlı açılışta markup tazelenir, çoğalmaz)", (waAcG.match(/waAliciSeciciHTML\(\)/g) || []).length === 1);
 t("app.js'te waAliciSeciciHTML tam 1 tanım", (appKaynak.match(/function waAliciSeciciHTML\(/g) || []).length === 1);
 t("süit test.mjs'te tam 1 kez", (testKaynak.match(/ks-wa-alici\.mjs/g) || []).length === 1);
+
+/* 13) D41-TELEFON: telefonsuz alıcı satırı — rozet + gönderim kapalı (diğer satırlar etkin) */
+console.log("13) D41 telefonsuz satır:");
+ui.filtre = "tumu"; /* liste deterministik: tüm dönem dersleri görünür */
+waAc();
+const h13 = reg.get("waIcerik").innerHTML;
+const parca13 = (id) => (h13.split('data-wa-satir="' + id + '"')[1] || "").split('data-wa-satir="')[0];
+const pEtkin = parca13(ogr1.id); /* ogr1: tel DOLU */
+const pBos = parca13(ogr2.id);   /* ogr2: tel BOŞ */
+t("D41: waAliciSatirHTML telefonsuz satırda 'Telefon kayıtlı değil' rozeti üretir", pBos.includes("Telefon kayıtlı değil"));
+t("D41: telefonsuz satırın Gönder butonu disabled (waGonder bağı korunur, tıklama engelli)", pBos.includes("disabled") && pBos.includes("waGonder('" + ogr2.id + "')"));
+t("D41: telefonlu satırda rozet YOK + Gönder butonu ETKİN (disabled değil)", pEtkin.includes("waGonder('" + ogr1.id + "')") && !pEtkin.includes("disabled") && !pEtkin.includes("Telefon kayıtlı değil"));
+t("D41: liste satırları TEK üreticiden (waAliciSatirHTML tanım 1 · waAc çağrısı 1)", (appKaynak.match(/function waAliciSatirHTML\(/g) || []).length === 1 && (appKaynak.split("function waAc() {")[1] || "").split("\nfunction ")[0].includes("waAliciSatirHTML(s,"));
+t("D41: waAc satırı telefonsuz üyeyi listede TUTAR (waGonder bağı kalır)", h13.includes("waGonder('" + ogr2.id + "')"));
+t("D41: rozet sayısı = devre dışı Gönder sayısı (birebir)", (h13.match(/Telefon kayıtlı değil/g) || []).length === (h13.match(/disabled/g) || []).length && (h13.match(/Telefon kayıtlı değil/g) || []).length >= 1);
+t("D41: telefonsuz satır yalnız KENDİ gönderimini kapatır (diğer satırlar etkin)", pBos.includes("disabled") && !pEtkin.includes("disabled"));
 
 console.log(fail ? "\nKIRMIZI TEST VAR" : "\nHEPSİ GEÇTİ");
 process.exit(fail ? 1 : 0);

@@ -42,7 +42,7 @@ export const manifest = {
   "ks-wa-sablon.mjs": 49,
   "ks-wa-onizleme.mjs": 36,
   "ks-wa-durum.mjs": 38,
-  "ks-wa-alici.mjs": 49,
+  "ks-wa-alici.mjs": 56, /* D41-TELEFON +7 → 56 (telefonsuz satır rozeti + Gönder disabled; diğer satırlar etkin) */
   "ks-excel-k-import.mjs": 23,
   "ks-kadro-kolon.mjs": 62,
   "ks-kadro-telefon3.mjs": 57,

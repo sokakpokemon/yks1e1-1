@@ -283,3 +283,15 @@ adSonrasiEkle(
   "D36 ana satır boş ad: anahtar VAR + ad BOŞ → hücre KİLİTLİ (dnd-bos/drop/draggable YOK), chip YOK, literal 'Sınıf' YOK",
   ["D36 haftalık boş ad: anahtar VAR + ad BOŞ → KİLİTLİ hücre (chip YOK, literal 'Sınıf' YOK); adlı slot chip'i DEĞİŞMEDİ"],
 );
+
+/* D41-TELEFON: ks-wa-alici'ye 7 assertion eklendi (telefonsuz satır rozeti + Gönder disabled;
+   koşum sırasıyla ELLE yazıldı, otomatik üretim YOK); 49 → 56. */
+elleVakaAdlari["ks-wa-alici.mjs"].push(
+  "D41: waAliciSatirHTML telefonsuz satırda 'Telefon kayıtlı değil' rozeti üretir",
+  "D41: telefonsuz satırın Gönder butonu disabled (waGonder bağı korunur, tıklama engelli)",
+  "D41: telefonlu satırda rozet YOK + Gönder butonu ETKİN (disabled değil)",
+  "D41: liste satırları TEK üreticiden (waAliciSatirHTML tanım 1 · waAc çağrısı 1)",
+  "D41: waAc satırı telefonsuz üyeyi listede TUTAR (waGonder bağı kalır)",
+  "D41: rozet sayısı = devre dışı Gönder sayısı (birebir)",
+  "D41: telefonsuz satır yalnız KENDİ gönderimini kapatır (diğer satırlar etkin)",
+);

@@ -47,3 +47,10 @@ waAc innerHTML yolu waAlici markup'ı taşımıyor (mini-DOM innerHTML parse etm
 waAc gövdesinde waAliciSeciciHTML çağrısı tam 1 nokta (tekrarlı açılışta markup tazelenir, çoğalmaz)
 app.js'te waAliciSeciciHTML tam 1 tanım
 süit test.mjs'te tam 1 kez
+D41: waAliciSatirHTML telefonsuz satırda 'Telefon kayıtlı değil' rozeti üretir
+D41: telefonsuz satırın Gönder butonu disabled (waGonder bağı korunur, tıklama engelli)
+D41: telefonlu satırda rozet YOK + Gönder butonu ETKİN (disabled değil)
+D41: liste satırları TEK üreticiden (waAliciSatirHTML tanım 1 · waAc çağrısı 1)
+D41: waAc satırı telefonsuz üyeyi listede TUTAR (waGonder bağı kalır)
+D41: rozet sayısı = devre dışı Gönder sayısı (birebir)
+D41: telefonsuz satır yalnız KENDİ gönderimini kapatır (diğer satırlar etkin)

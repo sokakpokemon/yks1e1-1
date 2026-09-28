@@ -182,7 +182,10 @@ console.log("6) Korunan davranışlar:");
 t("grup üyeleri hücre İÇİNDE tek formatter'dan (D35: ayrı grupUyeEtiketleri satırı kaldırıldı)", !gunlukBolge.includes("grupUyeEtiketleri(ders)") && !haftalikBolge.includes("grupUyeEtiketleri(ders)") && appKaynak.includes("birebirEtiketHTML(kisaAdlik(") && (appKaynak.match(/function birebirHucreHTML\(/g) || []).length === 1);
 t("Ek Ders amber dalı (günlük) korunmuş", gunlukBolge.includes("bg-amber-50") && gunlukBolge.includes("Ek Ders"));
 t("Ek Ders amber dalı (haftalık) korunmuş", haftalikBolge.includes("bg-amber-100") && haftalikBolge.includes("Ek Ders"));
-t("Sınıf Dersi rose dalı korunmuş", haftalikBolge.includes("bg-rose-100"));
+/* SINIF-CHIP-ORTAK-YAMASI: rose chip markup'ı haftalık gövdeden ORTAK üreticiye (sinifChipHTML) taşındı;
+   gövde artık üreticiyi çağırır → assertion İKİ kanıt ister: (a) haftalık gövde üreticiyi çağırıyor,
+   (b) rose chip markup literali kaynakta TAM 1 (tek üretici). Zayıflatma YOK, kapsam genişledi. */
+t("Sınıf Dersi rose dalı korunmuş", haftalikBolge.includes("sinifChipHTML(avail.sinif[key])") && (appKaynak.match(/bg-rose-100 border border-rose-200/g) || []).length === 1);
 t("Kapalı slate dalı korunmuş", haftalikBolge.includes("musaitDegil") || haftalikBolge.includes("bg-slate-100"));
 t("Boş hücre drop-zone korunmuş", haftalikBolge.includes("istekBurak"));
 t("aktif dönem filtresi (günlük)", gunlukBolge.includes("aktifDonemKayitlari(DB.dersler)"));

@@ -54,7 +54,7 @@ export const manifest = {
   "ks-ogrt-denetim.mjs": 42,
   "ks-dongu26.mjs": 26,
   "ks-dongu27.mjs": 31,
-  "ks-dongu28.mjs": 20,
+  "ks-dongu28.mjs": 26,
   "ks-index-kimlik.mjs": 8,
   "ks-dongu29.mjs": 25,
   "ks-d32-grup-birebir-e2e.mjs": 20,

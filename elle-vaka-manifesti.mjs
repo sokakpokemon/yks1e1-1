@@ -55,7 +55,7 @@ export const elleManifest = {
   "ks-ogrt-denetim.mjs": 42, /* OGRT-TAMGUN-KART: elle sayım */
   "ks-dongu26.mjs": 26, /* DÖNGÜ-26: elle sayım */
   "ks-dongu27.mjs": 31, /* DÖNGÜ-27: elle sayım */
-  "ks-dongu28.mjs": 20, /* DÖNGÜ-28: elle sayım */
+  "ks-dongu28.mjs": 26, /* DÖNGÜ-28 + SINIF-CHIP (6 yeni vaka): elle sayım */
   "ks-index-kimlik.mjs": 8,
   "ks-dongu29.mjs": 25, /* DÖNGÜ-29: elle sayım */
   "ks-d32-grup-birebir-e2e.mjs": 20, /* D32-GRUP-2UYE: elle sayım (gerçek form akışı + eşik regresyonu) */

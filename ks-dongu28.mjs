@@ -46,7 +46,7 @@ global.Chart = function () { this.destroy = () => {}; };
 if (!globalThis.navigator) globalThis.navigator = {};
 
 let __kosan = 0;
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 20) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-dongu28.mjs kosan=" + __kosan + " beklenen=20"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-dongu28.mjs:" + __kosan + ":20"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 26) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-dongu28.mjs kosan=" + __kosan + " beklenen=26"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-dongu28.mjs:" + __kosan + ":26"); } });
 
 let fail = 0;
 const t = (name, cond, extra) => { __kosan++; console.log((cond ? "  ✓" : "  ✗") + " " + name); if (!cond) { fail = 1; if (extra) console.log("     ↳ " + extra); } };
@@ -55,7 +55,7 @@ let P;
 try {
   P = new Function(scripts + `
     yenile();
-    return { DB, ui, renderHavuz, gunlukTablo };
+    return { DB, ui, renderHavuz, gunlukTablo, haftalikOgrtTablo }; /* SINIF-CHIP: haftalık chip regresyonu için haftalık tablo da dışa verilir */
   `)();
   t("boot hatasız", true);
 } catch (e) {
@@ -63,7 +63,7 @@ try {
   console.log(e.stack.split("\n").slice(0, 8).join("\n"));
   process.exit(1);
 }
-const { DB, ui, renderHavuz, gunlukTablo } = P;
+const { DB, ui, renderHavuz, gunlukTablo, haftalikOgrtTablo } = P;
 
 /* Gelecek pazartesi + ertesi gün (Salı) — dersli senaryo günü */
 const gelecekPzt = (() => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + 7); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); })();
@@ -110,6 +110,30 @@ kOgr.avail.musait.push("1-3"); /* Salı 3. ders kapalı */
 const kismenHTML = gunlukTablo();
 t("kısmen kapalı öğretmen Boş satırında 'Kapalı' kilitli hücre VAR", kismenHTML.includes(">Kapalı</span>"));
 t("kısmen kapalı öğretmen Boş satırı hâlâ VAR (başka uygun slotları var)", kismenHTML.includes(">Boş</span>"));
+/* ---- SINIF-CHIP-ORTAK-YAMASI: günlük "Boş" satırındaki sınıf dersi hücresi ----
+   ESKİ: literal "Sınıf" etiketi · YENİ: haftalık çizelgeyle AYNI pembe chip + GERÇEK sınıf adı.
+   Veri alanı ikisinde de t.avail.sinif["<günIdx>-<slotNo>"]; markup TEK üreticiden (sinifChipHTML). */
+const CHIP28 = '<div class="rounded-lg bg-rose-100 border border-rose-200 px-1 py-1.5" title="Sınıf dersi — kilitli"><div class="text-[8px] font-bold text-rose-700 leading-tight truncate whitespace-nowrap">MEZUN SAY 1</div></div>';
+kOgr.avail.sinif["1-4"] = "MEZUN SAY 1"; /* Salı (dowIdx=1) 4. ders = sınıf dersi — günlük tabloda görünür slot */
+const sinifGunHTML = gunlukTablo();
+const chipTd28 = (() => { const i = sinifGunHTML.indexOf(">MEZUN SAY 1<"); if (i < 0) return ""; const b = sinifGunHTML.lastIndexOf("<td", i); return sinifGunHTML.slice(b, sinifGunHTML.indexOf("</td>", i) + 5); })();
+t("günlük Boş satırında sınıf dersi hücresi GERÇEK sınıf adı chip'i (haftalıkla birebir markup)",
+  sinifGunHTML.includes('<td class="dnd-kilit px-1.5 py-1.5 text-center border-r border-slate-200">' + CHIP28 + '</td>'), chipTd28.slice(0, 140));
+t("günlükte literal 'Sınıf' etiketi YOK; sınıf slotu KİLİTLİ (dnd-bos/drop hedefi DEĞİL)",
+  !sinifGunHTML.includes(">Sınıf</span>") && chipTd28.includes("dnd-kilit") && !chipTd28.includes("dnd-bos") && !chipTd28.includes("istekBurak") && !chipTd28.includes("draggable"));
+ui.haftalikOgrtId = kOgr.id;
+const hafta28 = haftalikOgrtTablo();
+ui.haftalikOgrtId = null;
+t("haftalık pembe chip DEĞİŞMEDİ (aynı td frame + aynı chip; chip sayısı = sınıf slotu sayısı)",
+  hafta28.includes('<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100">' + CHIP28 + '</td>') && (hafta28.match(/bg-rose-100 border border-rose-200/g) || []).length === Object.keys(kOgr.avail.sinif).length);
+t("tek üretici: sinifChipHTML tanımı 1 · chip markup literali 1 · çağrı 2 (haftalık+günlük)",
+  (scripts.match(/function sinifChipHTML\(/g) || []).length === 1 && (scripts.match(/bg-rose-100 border border-rose-200/g) || []).length === 1 && (scripts.match(/sinifChipHTML\(/g) || []).length === 3 && scripts.slice(scripts.indexOf("function haftalikOgrtTablo() {")).includes("sinifChipHTML(avail.sinif[key])") && gunlukBolge28(scripts).includes("sinifChipHTML(snf28)"));
+kOgr.avail.sinif["1-4"] = ""; /* sınıf adı BOŞ → uydurma etiket YASAK */
+const bosAdHTML28 = gunlukTablo();
+t("boş sınıf adı → chip YOK, uydurma etiket YOK (mevcut 'Kapalı' gri hücresi kalır)",
+  !bosAdHTML28.includes(CHIP28) && !bosAdHTML28.includes(">Sınıf</span>") && bosAdHTML28.includes(">Kapalı</span>"));
+t("mola + dolu birebir hücreleri DEĞİŞMEDİ (günlük: Mola hücresi, draggable birebir, 'Boş' etiketi)",
+  sinifGunHTML.includes("Mola</div>") && sinifGunHTML.includes('ondragstart="dersDrag(event,') && sinifGunHTML.includes(">Boş</span>"));
 DB.ogretmenler.forEach((t2, i) => { t2.avail = JSON.parse(JSON.stringify(musaitYedek28[i])); });
 /* Pazar: ek satır YOK */
 const gelecekPzr = (() => { const d = new Date(gelecekPzt + "T12:00:00"); d.setDate(d.getDate() + 6); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); })();

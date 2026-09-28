@@ -12,11 +12,12 @@
      I) statik sözleşme (tek tanım, elle atama yok)
      J) D37 havuz kartı DOM yerleşimi (kart + buton + editör TEK dış grid hücresi)
      K) D38 buton AÇ/KAPA (toggle): açıkken "Kapat" metni · aynı butona 2. tıklama kapatır · TEK açık editör
-   SUITE_DONE kapısı: tam 1 marker, kosan === beklenen === 36. */
+     L) D39 editörde ÖĞRENCİ ARAMA: NFC+tr-TR normalize · seçili üye filtre dışında da görünür/İŞARETLİ · odak korunur
+   SUITE_DONE kapısı: tam 1 marker, kosan === beklenen === 49. */
 import { readFileSync } from "node:fs";
 
 let __kosan = 0;
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 36) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-grup-uye-yaz.mjs kosan=" + __kosan + " beklenen=36"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-grup-uye-yaz.mjs:" + __kosan + ":36"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 49) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-grup-uye-yaz.mjs kosan=" + __kosan + " beklenen=49"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-grup-uye-yaz.mjs:" + __kosan + ":49"); } });
 
 const html = readFileSync("index.html", "utf8");
 const appKaynak = readFileSync("app.js", "utf8");
@@ -57,7 +58,7 @@ global.Chart = function () { this.destroy = () => {}; };
 let fail = 0;
 const t = (name, cond, extra) => { __kosan++; console.log((cond ? "  ✓ " : "  ✗ ") + name); if (!cond) { fail = 1; if (extra !== undefined) console.log("     ↳ " + extra); } };
 
-const EXPORTS = "{ DB, ui, planla, formaAktar, dersOgrenciIds, istekOgrenciIds, grupUyeYaz, istekDrag, istekBurak, dersHavuzaGeriBurak, onayOnayla, waAc, ogrenciMesajMetni, duzenle, grupPanelSec, istekUyeAc, istekUyeSec, istekUyeKaydet, renderHavuz }";
+const EXPORTS = "{ DB, ui, planla, formaAktar, dersOgrenciIds, istekOgrenciIds, grupUyeYaz, istekDrag, istekBurak, dersHavuzaGeriBurak, onayOnayla, waAc, ogrenciMesajMetni, duzenle, grupPanelSec, istekUyeAc, istekUyeSec, istekUyeKaydet, istekUyeIptal, istekUyeAra, istekUyeListeHTML, istekUyeAramaNorm, renderHavuz }";
 let P;
 try {
   P = new Function(scripts + "\n  yenile();\n  return " + EXPORTS + ";\n")();
@@ -66,7 +67,7 @@ try {
   console.error(e.stack ? e.stack.split("\n").slice(0, 8).join("\n") : e);
   throw e;
 }
-const { DB, ui, planla, formaAktar, dersOgrenciIds, istekOgrenciIds, grupUyeYaz, istekDrag, istekBurak, dersHavuzaGeriBurak, onayOnayla, waAc, ogrenciMesajMetni, duzenle, grupPanelSec, istekUyeAc, istekUyeSec, istekUyeKaydet, renderHavuz } = P;
+const { DB, ui, planla, formaAktar, dersOgrenciIds, istekOgrenciIds, grupUyeYaz, istekDrag, istekBurak, dersHavuzaGeriBurak, onayOnayla, waAc, ogrenciMesajMetni, duzenle, grupPanelSec, istekUyeAc, istekUyeSec, istekUyeKaydet, istekUyeIptal, istekUyeAra, istekUyeListeHTML, istekUyeAramaNorm, renderHavuz } = P;
 
 /* ---------- FIXTURE ---------- */
 const ana = DB.ogrenciler.find(o => o.ad === "Ayşe Demir");
@@ -260,6 +261,104 @@ t("DOM'da TEK editör paneli + TEK 'Kapat' etiketi; ikisi de HEDEF kartın hücr
   (hvK3.match(/class="istek-uye-editor/g) || []).length === 1 &&
   (hvK3.match(/>Kapat<\/button>/g) || []).length === 1 &&
   hK >= 0 && eK > hK && (sonraK < 0 || eK < sonraK));
+
+/* ================= L) D39-UYE-ARAMA: editörde öğrenci arama ================= */
+const ecrin = DB.ogrenciler.find(o => o.ad === "Ecrin Şahin");
+const yusuf = DB.ogrenciler.find(o => o.ad === "Yusuf Can");
+const havuzHTML = () => (reg["havuzBolum"] || { innerHTML: "" }).innerHTML;
+const listeHTML = () => {
+  const h = havuzHTML();
+  const i = h.indexOf('id="istek-uye-liste"');
+  if (i < 0) return null;
+  const b = h.indexOf(">", i) + 1;
+  const j = h.indexOf('<div class="flex items-center gap-2 mt-2 flex-wrap">', b);
+  return h.slice(b, j < 0 ? h.length : j);
+};
+const satirSay = (h) => (h || "").split('onchange="istekUyeSec(').length - 1;
+/* NOT (harness): stub DOM'da alt konteynere yazılan içerik ana innerHTML'e yansımaz.
+   Bu yüzden istekUyeAra() SONRASI taze liste, konteynerin KENDİSİNDEN okunur. */
+const konteynerHTML = () => (reg["istek-uye-liste"] ? reg["istek-uye-liste"].innerHTML : null);
+
+/* deterministik kurulum: editör KAPALI → hedef kart AÇIK (taslak = mevcut üyeler, arama TEMİZ) */
+ui.istekUyeId = null; ui.istekUyeTaslak = []; ui.istekUyeArama = "";
+renderHavuz();
+istekUyeAc(geri.id);
+
+const hvL1 = havuzHTML();
+t("editörde 'Öğrenci ara…' arama kutusu VAR (id=istek-uye-arama + placeholder + oninput=istekUyeAra(this.value))",
+  hvL1.includes('id="istek-uye-arama"') && hvL1.includes('placeholder="Öğrenci ara…"') && hvL1.includes('oninput="istekUyeAra(this.value)"'));
+
+t('arama normalize kuralı TEK fonksiyonda: normalize("NFC") + toLocaleLowerCase("tr-TR"); hem sorguya hem ada uygulanır (1 tanım + 2 kullanım)',
+  /function istekUyeAramaNorm\(s\) \{\s*return String\(s == null \? "" : s\)\.normalize\("NFC"\)\.toLocaleLowerCase\("tr-TR"\);\s*\}/.test(appKaynak) &&
+  (appKaynak.match(/istekUyeAramaNorm\(/g) || []).length === 3 &&
+  appKaynak.includes("istekUyeAramaNorm(ui.istekUyeArama)") &&
+  appKaynak.includes("istekUyeAramaNorm(o.ad).indexOf(q)"));
+
+const listeL3 = listeHTML();
+t("sorgu BOŞKEN görünür liste bugünkü hâliyle BİREBİR (tüm öğrenciler + satır markup'ı aynı, filtre YOK)",
+  satirSay(listeL3) === DB.ogrenciler.length && DB.ogrenciler.every(o => listeL3.includes(o.ad)) && listeL3.includes('class="w-3.5 h-3.5 shrink-0 accent-teal-600"'));
+
+istekUyeAra("ecr");
+const l4 = konteynerHTML();
+t("SORGU: eşleşen SEÇİLMEMİŞ öğrenci görünür · eşleşmeyen SEÇİLMEMİŞ öğrenci GİZLİ (ecr → Ecrin VAR, Yusuf YOK)",
+  l4.includes(ecrin.ad) && !l4.includes(yusuf.ad) && satirSay(l4) === 5);
+
+istekUyeAra("zzz");
+const l5 = konteynerHTML();
+t("eşleşmeyen SEÇİLİ üyeler listede KALIR ve İŞARETLİ kalır (zzz → 4 seçili satır + 4 checked)",
+  satirSay(l5) === 4 && (l5.match(/checked/g) || []).length === 4 && [ana.ad, ek.ad, uc.ad, dort.ad].every(ad => l5.includes(ad)));
+
+t("filtre değişince ui.istekUyeTaslak SIFIRLANMAZ (4 üye aynen korunur)",
+  JSON.stringify(ui.istekUyeTaslak) === JSON.stringify([ana.id, ek.id, uc.id, dort.id]));
+
+const araGovde = (appKaynak.match(/function istekUyeAra\(v\) \{[\s\S]*?\n\}/) || [""])[0];
+t("yazarken TÜM editör yeniden çizilmez: istekUyeAra gövdesi YALNIZ #istek-uye-liste içeriğini tazeler (renderHavuz() ÇAĞRISI YOK)",
+  araGovde.includes('getElementById("istek-uye-liste")') && araGovde.includes(".innerHTML = istekUyeListeHTML(") && !araGovde.includes("renderHavuz"));
+
+const onceL8 = havuzHTML();
+const onceAltL8 = konteynerHTML();
+istekUyeAra("ecr");
+const sonraL8 = havuzHTML();
+t("tazeleme SADECE liste konteynerinde: liste DIŞINDAKİ editör DOM'u byte-birebir AYNI (arama input'u yeniden ÜRETİLMEZ → odak/imleç korunur)",
+  onceL8 === sonraL8 && konteynerHTML() !== onceAltL8);
+
+istekUyeAra("ecr"); renderHavuz();
+t("'N üye seçili' sayacı SEÇİLİ TOPLAMI gösterir, filtreyi YOK SAYAR (ecr → görünür 5 satır, sayaç 4)",
+  havuzHTML().includes("4 üye seçili") && satirSay(listeHTML()) === 5);
+
+ui.istekUyeTaslak = []; istekUyeAra("zzz");
+const l10 = konteynerHTML();
+const l10ok = l10.includes("Sonuç yok") && satirSay(l10) === 0;
+ui.istekUyeTaslak = [ana.id, ek.id, uc.id, dort.id]; /* taslağı geri yükle */
+t("eşleşme yok ve SEÇİLİ de yok → listenin yerine 'Sonuç yok' satırı", l10ok);
+
+istekUyeAra("ecr"); istekUyeIptal();
+t('İptal\'de arama TEMİZLENİR (ui.istekUyeArama = "" + editör kapanır)',
+  ui.istekUyeArama === "" && ui.istekUyeId === null && !havuzHTML().includes('class="istek-uye-editor'));
+
+ui.istekUyeId = null; ui.istekUyeTaslak = []; ui.istekUyeArama = ""; renderHavuz();
+istekUyeAc(geri.id); istekUyeAra("ecr");
+istekUyeAc(geri.id); /* D38 toggle → KAPAT */
+const kapanisOk = ui.istekUyeArama === "" && ui.istekUyeId === null;
+istekUyeAc(geri.id); istekUyeAra("ecr");
+istekUyeAc("k38b"); /* başka kartın butonu → kart DEĞİŞİMİ */
+const kartOk = ui.istekUyeArama === "" && ui.istekUyeId === "k38b";
+t("toggle kapanışta VE kart değişiminde arama TEMİZLENİR (bayat sorgu taşınmaz)", kapanisOk && kartOk);
+
+ui.istekUyeId = null; ui.istekUyeTaslak = []; ui.istekUyeArama = ""; renderHavuz();
+istekUyeAc(geri.id);
+istekUyeAra("zzz");              /* hiçbir ad eşleşmiyor; seçili üyeler yine görünür */
+istekUyeSec(geri.id, dort.id);   /* Elif Koç: seçimden ÇIKAR */
+istekUyeSec(geri.id, ecrin.id);  /* Ecrin Şahin: sorgu dışı EKLE */
+istekUyeKaydet(geri.id);
+const hvL13 = havuzHTML();
+const iL13 = hvL13.indexOf('data-istek-hucre="' + geri.id + '"');
+const jL13 = hvL13.indexOf('data-istek-hucre="', iL13 + 1);
+const blokL13 = hvL13.slice(iL13, jL13 < 0 ? hvL13.length : jL13);
+t("Kaydet sonrası chip sayısı doğru + arama TEMİZLENDİ + editör kapandı (sorgu dışı seçili üye de kaydedilir)",
+  JSON.stringify(istekOgrenciIds(geri)) === JSON.stringify([ana.id, ek.id, uc.id, ecrin.id]) &&
+  [ana.ad, ek.ad, uc.ad, ecrin.ad].every(ad => blokL13.includes(ad)) && !blokL13.includes(dort.ad) &&
+  ui.istekUyeArama === "" && ui.istekUyeId === null);
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail);

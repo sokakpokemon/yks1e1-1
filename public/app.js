@@ -953,7 +953,8 @@ var ui = {
   panelSecim: null /* GRUP PANEL: { acik, arama, sinif } */,
   grupPanelBaglam: "plan" /* GRUP İSTEK: panelin aktif form bağlamı ("plan" | "havuz") */,
   havuzAnaId: null /* GRUP İSTEK: havuz bağlamında İLK seçilen öğrenci (ana/sahip) */,
-  grupAcikOgrId: null /* GRUP GORUNUM: tum uye adlari acik olan ders id'si (badge toggle) */
+  grupAcikOgrId: null /* GRUP GORUNUM: tum uye adlari acik olan ders id'si (badge toggle) */,
+  istekUyeArama: "" /* D39-UYE-ARAMA: havuz grup üyesi editörü öğrenci arama sorgusu (açılış/kart değişimi/kapanış/İptal/Kaydet'te TEMİZLENİR) */
 };
 
 // ---------- Durum seçici çubuk (takvim düzenlemesi) ----------
@@ -3069,18 +3070,45 @@ function istekUyeButonHTML(r) {
   var uyeAcik = ui.istekUyeId === r.id;
   return '<div class="istek-uye-buton w-full pt-0.5"><button type="button" onclick="istekUyeAc(\'' + esc(r.id) + '\')" class="text-[10.5px] font-bold ' + (uyeAcik ? "text-teal-600" : "text-slate-400 hover:text-teal-600") + ' inline-flex items-center gap-1 transition-colors"><i class="fa-solid fa-user-group text-[10px]"></i>' + (uyeAcik ? "Kapat" : "Grup üyelerini ekle/çıkar (" + uyeler.length + ")") + '</button></div>';
 }
+/* D39-UYE-ARAMA: arama normalizasyonu — hem SORGU hem AD aynı kuraldan geçer (Unicode NFC + Türkçe küçük harf). */
+function istekUyeAramaNorm(s) {
+  return String(s == null ? "" : s).normalize("NFC").toLocaleLowerCase("tr-TR");
+}
+/* D39-UYE-ARAMA: editör açıkken listelenecek öğrenci satırları (TEK üretici).
+   KURAL: SEÇİLİ üye (ui.istekUyeTaslak) aramayla eşleşmese bile listede KALIR ve İŞARETLİ kalır;
+   yalnız eşleşmeyen SEÇİLMEMİŞ öğrenciler gizlenir. Sorgu BOŞSA liste bugünkü hâliyle BİREBİR. */
+function istekUyeListeHTML(rid) {
+  var taslak = Array.isArray(ui.istekUyeTaslak) ? ui.istekUyeTaslak : [];
+  var q = istekUyeAramaNorm(ui.istekUyeArama);
+  var gorunur = q ? DB.ogrenciler.filter(function (o) {
+    return taslak.indexOf(o.id) >= 0 || istekUyeAramaNorm(o.ad).indexOf(q) >= 0;
+  }) : DB.ogrenciler;
+  if (!gorunur.length) return '<div class="px-2 py-1.5 text-[11.5px] text-slate-400 italic">Sonuç yok</div>';
+  return gorunur.map(function (o) {
+    var sec = taslak.indexOf(o.id) >= 0;
+    return '<label class="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-white cursor-pointer"><input type="checkbox"' + (sec ? " checked" : "") +
+      ' onchange="istekUyeSec(\'' + esc(rid) + '\',\'' + esc(o.id) + '\')" class="w-3.5 h-3.5 shrink-0 accent-teal-600" />' +
+      '<span class="text-[11.5px] text-slate-600 truncate">' + esc(o.ad) + (o.sinif ? ' <span class="text-slate-300">· ' + esc(o.sinif) + "</span>" : "") + "</span></label>";
+  }).join("");
+}
+/* D39-UYE-ARAMA: her tuşta TÜM editör yeniden çizilmez — YALNIZ #istek-uye-liste içeriği tazelenir;
+   böylece arama input'u ODAĞI ve imleç konumu KORUNUR. Taslak/asgari seçim mantığı değişmez. */
+function istekUyeAra(v) {
+  ui.istekUyeArama = (v == null ? "" : String(v));
+  var kutu = document.getElementById("istek-uye-liste");
+  if (kutu && ui.istekUyeId) kutu.innerHTML = istekUyeListeHTML(ui.istekUyeId);
+}
 function istekUyeEditorHTML(r) {
   if (ui.istekUyeId !== r.id) return '';
   var taslak = Array.isArray(ui.istekUyeTaslak) ? ui.istekUyeTaslak : [];
-  var satir = DB.ogrenciler.map(function (o) {
-    var sec = taslak.indexOf(o.id) >= 0;
-    return '<label class="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-white cursor-pointer"><input type="checkbox"' + (sec ? " checked" : "") +
-      ' onchange="istekUyeSec(\'' + esc(r.id) + '\',\'' + esc(o.id) + '\')" class="w-3.5 h-3.5 shrink-0 accent-teal-600" />' +
-      '<span class="text-[11.5px] text-slate-600 truncate">' + esc(o.ad) + (o.sinif ? ' <span class="text-slate-300">· ' + esc(o.sinif) + "</span>" : "") + "</span></label>";
-  }).join("");
   return '<div class="istek-uye-editor mt-1 rounded-xl border border-teal-200 bg-teal-50/40 p-2.5">' +
     '<div class="text-[10.5px] font-extrabold text-teal-700 mb-1"><i class="fa-solid fa-user-group mr-1"></i>Grup Üyelerini Ekle/Çıkar</div>' +
-    '<div class="max-h-40 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-x-3">' + satir + "</div>" +
+    /* D39-UYE-ARAMA: üstte sabit arama input'u — yazarken YALNIZ liste konteyneri tazelenir (odak/imleç korunur). */
+    '<div class="relative mb-1.5">' +
+      '<input id="istek-uye-arama" type="text" autocomplete="off" placeholder="Öğrenci ara…" value="' + esc(ui.istekUyeArama || "") + '" oninput="istekUyeAra(this.value)" class="w-full rounded-xl border border-slate-200 bg-white pl-7 pr-2.5 py-1.5 text-[11.5px] font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
+      '<i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-[10.5px] text-slate-300 pointer-events-none"></i>' +
+    '</div>' +
+    '<div id="istek-uye-liste" class="max-h-40 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-x-3">' + istekUyeListeHTML(r.id) + "</div>" +
     '<div class="flex items-center gap-2 mt-2 flex-wrap">' +
       '<button type="button" onclick="istekUyeKaydet(\'' + esc(r.id) + '\')" class="rounded-full bg-teal-500 hover:bg-teal-600 text-white text-[11px] font-bold px-3 py-1.5 transition-colors">Kaydet</button>' +
       '<button type="button" onclick="istekUyeIptal()" class="rounded-full border border-slate-200 bg-white text-slate-500 hover:text-slate-700 text-[11px] font-bold px-3 py-1.5 transition-colors">İptal</button>' +
@@ -3091,9 +3119,10 @@ function istekUyeAc(id) {
   var r = DB.istekler.find(function (x) { return x.id === id; });
   if (!r || r.durum !== "bekliyor") { toast("Yalnızca bekleyen isteğin üyeleri düzenlenebilir.", "uyari"); return; }
   /* D38-UYE-BUTON-TOGGLE: AYNI kartın butonu 2. kez → editör KAPANIR (taslak atılır, editör durumu temizlenir). */
-  if (ui.istekUyeId === id) { ui.istekUyeId = null; ui.istekUyeTaslak = []; renderHavuz(); return; }
+  if (ui.istekUyeId === id) { ui.istekUyeId = null; ui.istekUyeTaslak = []; ui.istekUyeArama = ""; renderHavuz(); return; } /* D39: kapanışta arama TEMİZLENİR */
   ui.istekUyeId = id; /* D38: başka kartın butonu → önceki editör bu TEK alan üzerinden KAPANIR (TEK açık editör) */
   ui.istekUyeTaslak = istekOgrenciIds(r).slice();
+  ui.istekUyeArama = ""; /* D39: açılışta ve kart DEĞİŞİMİNDE arama temiz başlar */
   renderHavuz();
 }
 function istekUyeSec(id, oid) {
@@ -3103,7 +3132,7 @@ function istekUyeSec(id, oid) {
   if (i === -1) ui.istekUyeTaslak.push(oid); else ui.istekUyeTaslak.splice(i, 1);
   renderHavuz();
 }
-function istekUyeIptal() { ui.istekUyeId = null; ui.istekUyeTaslak = []; renderHavuz(); }
+function istekUyeIptal() { ui.istekUyeId = null; ui.istekUyeTaslak = []; ui.istekUyeArama = ""; renderHavuz(); } /* D39: İptal'de arama TEMİZLENİR */
 function istekUyeKaydet(id) {
   var r = DB.istekler.find(function (x) { return x.id === id; });
   if (!r) { istekUyeIptal(); return; }
@@ -3113,12 +3142,12 @@ function istekUyeKaydet(id) {
   var anaO = DB.ogrenciler.find(function (x) { return x.id === ana; });
   if (anaO) r.ogrenciAd = anaO.ad;
   saveDB();
-  ui.istekUyeId = null; ui.istekUyeTaslak = [];
+  ui.istekUyeId = null; ui.istekUyeTaslak = []; ui.istekUyeArama = ""; /* D39: başarılı Kaydet'te arama TEMİZLENİR */
   renderHavuz();
   toast("İstek üyeleri güncellendi ✓ (" + istekOgrenciIds(r).length + " üye)");
 }
 function istekSil(id) {
-  if (ui.istekUyeId === id) { ui.istekUyeId = null; ui.istekUyeTaslak = []; }
+  if (ui.istekUyeId === id) { ui.istekUyeId = null; ui.istekUyeTaslak = []; ui.istekUyeArama = ""; } /* D39 */
   DB.istekler = DB.istekler.filter(function (r) { return r.id !== id; });
   toast("İstek silindi.");
   renderHavuz();

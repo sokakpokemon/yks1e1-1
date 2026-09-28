@@ -58,7 +58,7 @@ export const manifest = {
   "ks-index-kimlik.mjs": 8,
   "ks-dongu29.mjs": 25,
   "ks-d32-grup-birebir-e2e.mjs": 20,
-  "ks-grup-uye-yaz.mjs": 36, /* D37-HUCRE-GRUP +6 → 31 (havuz kartı DOM yerleşimi: TEK dış grid hücresi); D38-UYE-BUTON-TOGGLE +5 → 36 (buton aç/kapa) */
+  "ks-grup-uye-yaz.mjs": 49, /* D37-HUCRE-GRUP +6 → 31 (havuz kartı DOM yerleşimi: TEK dış grid hücresi); D38-UYE-BUTON-TOGGLE +5 → 36 (buton aç/kapa); D39-UYE-ARAMA +13 → 49 (editörde öğrenci arama) */
   "ks-d35-ad-sinif.mjs": 26,
 };
 

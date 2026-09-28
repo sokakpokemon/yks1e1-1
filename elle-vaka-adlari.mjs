@@ -184,7 +184,9 @@ elleVakaAdlari["ks-d32-grup-birebir-e2e.mjs"] = [
    25 assertion — 4 yazım yolu (yeni/düzenleme · istekBurak · formaAktar+planla · havuza geri) × (0/1 ek),
    düzenleme üye koruması, havuz istek kartı üye editörü, WhatsApp ve statik sözleşme.
    D37-HUCRE-GRUP +6 assertion → 31 (havuz kartı DOM yerleşimi: kart + buton + editör TEK dış grid hücresi; ELLE yazılır).
-   D38-UYE-BUTON-TOGGLE +5 assertion → 36 (buton aç/kapa: "Kapat" metni · aynı butona 2. tıklama kapatır · TEK açık editör; ELLE yazılır). */
+   D38-UYE-BUTON-TOGGLE +5 assertion → 36 (buton aç/kapa: "Kapat" metni · aynı butona 2. tıklama kapatır · TEK açık editör; ELLE yazılır).
+   D39-UYE-ARAMA +13 assertion → 49 (editörde öğrenci arama: NFC+tr-TR normalize · SEÇİLİ üye filtre dışında da görünür/İŞARETLİ ·
+   taslak korunur · odak/imleç korunur (yalnız liste konteyneri tazelenir) · "Sonuç yok" · kapanış/İptal/kart değişimi/Kaydet'te arama temizlenir; ELLE yazılır). */
 elleVakaAdlari["ks-grup-uye-yaz.mjs"] = [
   "boot hatasız",
   "grupUyeYaz: ek>0 ⇒ ogrenciIds = [ek] (ana yazılır)",
@@ -224,6 +226,20 @@ elleVakaAdlari["ks-grup-uye-yaz.mjs"] = [
   "editör KAPALIYKEN buton metni eski hâline döner: 'Grup üyelerini ekle/çıkar (N)' (sayaç + soluk renk geri gelir)",
   "başka kartın butonu → önceki editör KAPANIR, hedef AÇILIR (ui.istekUyeId = hedef · taslak hedefin üyeleri)",
   "DOM'da TEK editör paneli + TEK 'Kapat' etiketi; ikisi de HEDEF kartın hücresinde (önceki kartta editör YOK)",
+  /* D39-UYE-ARAMA: editörde öğrenci arama — koşum sırasıyla birebir, otomatik üretim YOK. */
+  "editörde 'Öğrenci ara…' arama kutusu VAR (id=istek-uye-arama + placeholder + oninput=istekUyeAra(this.value))",
+  "arama normalize kuralı TEK fonksiyonda: normalize(\"NFC\") + toLocaleLowerCase(\"tr-TR\"); hem sorguya hem ada uygulanır (1 tanım + 2 kullanım)",
+  "sorgu BOŞKEN görünür liste bugünkü hâliyle BİREBİR (tüm öğrenciler + satır markup'ı aynı, filtre YOK)",
+  "SORGU: eşleşen SEÇİLMEMİŞ öğrenci görünür · eşleşmeyen SEÇİLMEMİŞ öğrenci GİZLİ (ecr → Ecrin VAR, Yusuf YOK)",
+  "eşleşmeyen SEÇİLİ üyeler listede KALIR ve İŞARETLİ kalır (zzz → 4 seçili satır + 4 checked)",
+  "filtre değişince ui.istekUyeTaslak SIFIRLANMAZ (4 üye aynen korunur)",
+  "yazarken TÜM editör yeniden çizilmez: istekUyeAra gövdesi YALNIZ #istek-uye-liste içeriğini tazeler (renderHavuz() ÇAĞRISI YOK)",
+  "tazeleme SADECE liste konteynerinde: liste DIŞINDAKİ editör DOM'u byte-birebir AYNI (arama input'u yeniden ÜRETİLMEZ → odak/imleç korunur)",
+  "'N üye seçili' sayacı SEÇİLİ TOPLAMI gösterir, filtreyi YOK SAYAR (ecr → görünür 5 satır, sayaç 4)",
+  "eşleşme yok ve SEÇİLİ de yok → listenin yerine 'Sonuç yok' satırı",
+  "İptal'de arama TEMİZLENİR (ui.istekUyeArama = \"\" + editör kapanır)",
+  "toggle kapanışta VE kart değişiminde arama TEMİZLENİR (bayat sorgu taşınmaz)",
+  "Kaydet sonrası chip sayısı doğru + arama TEMİZLENDİ + editör kapandı (sorgu dışı seçili üye de kaydedilir)",
 ];
 
 /* D36-ANA-SATIR: günlük çizelge ANA satırında sınıf dersi hücresi (avail.sinif) artık drop-zone "+"

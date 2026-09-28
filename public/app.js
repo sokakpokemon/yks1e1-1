@@ -3065,7 +3065,9 @@ function formaAktar(id) {
    yerleşir (ayrı dış grid hücresi DEĞİL). Editör paneli ise kartın ALTINA, AYNI hücreye çizilir. */
 function istekUyeButonHTML(r) {
   var uyeler = istekOgrenciIds(r);
-  return '<div class="istek-uye-buton w-full pt-0.5"><button type="button" onclick="istekUyeAc(\'' + esc(r.id) + '\')" class="text-[10.5px] font-bold text-slate-400 hover:text-teal-600 inline-flex items-center gap-1 transition-colors"><i class="fa-solid fa-user-group text-[10px]"></i>Grup üyelerini ekle/çıkar (' + uyeler.length + ')</button></div>';
+  /* D38-UYE-BUTON-TOGGLE: aynı buton AÇ/KAPA — editör AÇIKKEN metin "Kapat" olur (2. tıklama kapatır). */
+  var uyeAcik = ui.istekUyeId === r.id;
+  return '<div class="istek-uye-buton w-full pt-0.5"><button type="button" onclick="istekUyeAc(\'' + esc(r.id) + '\')" class="text-[10.5px] font-bold ' + (uyeAcik ? "text-teal-600" : "text-slate-400 hover:text-teal-600") + ' inline-flex items-center gap-1 transition-colors"><i class="fa-solid fa-user-group text-[10px]"></i>' + (uyeAcik ? "Kapat" : "Grup üyelerini ekle/çıkar (" + uyeler.length + ")") + '</button></div>';
 }
 function istekUyeEditorHTML(r) {
   if (ui.istekUyeId !== r.id) return '';
@@ -3088,7 +3090,9 @@ function istekUyeEditorHTML(r) {
 function istekUyeAc(id) {
   var r = DB.istekler.find(function (x) { return x.id === id; });
   if (!r || r.durum !== "bekliyor") { toast("Yalnızca bekleyen isteğin üyeleri düzenlenebilir.", "uyari"); return; }
-  ui.istekUyeId = id;
+  /* D38-UYE-BUTON-TOGGLE: AYNI kartın butonu 2. kez → editör KAPANIR (taslak atılır, editör durumu temizlenir). */
+  if (ui.istekUyeId === id) { ui.istekUyeId = null; ui.istekUyeTaslak = []; renderHavuz(); return; }
+  ui.istekUyeId = id; /* D38: başka kartın butonu → önceki editör bu TEK alan üzerinden KAPANIR (TEK açık editör) */
   ui.istekUyeTaslak = istekOgrenciIds(r).slice();
   renderHavuz();
 }

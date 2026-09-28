@@ -11,11 +11,12 @@
      H) havuz istek kartı "Grup Üyelerini Ekle/Çıkar" (ADIM-4)
      I) statik sözleşme (tek tanım, elle atama yok)
      J) D37 havuz kartı DOM yerleşimi (kart + buton + editör TEK dış grid hücresi)
-   SUITE_DONE kapısı: tam 1 marker, kosan === beklenen === 31. */
+     K) D38 buton AÇ/KAPA (toggle): açıkken "Kapat" metni · aynı butona 2. tıklama kapatır · TEK açık editör
+   SUITE_DONE kapısı: tam 1 marker, kosan === beklenen === 36. */
 import { readFileSync } from "node:fs";
 
 let __kosan = 0;
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 31) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-grup-uye-yaz.mjs kosan=" + __kosan + " beklenen=31"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-grup-uye-yaz.mjs:" + __kosan + ":31"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 36) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-grup-uye-yaz.mjs kosan=" + __kosan + " beklenen=36"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-grup-uye-yaz.mjs:" + __kosan + ":36"); } });
 
 const html = readFileSync("index.html", "utf8");
 const appKaynak = readFileSync("app.js", "utf8");
@@ -218,6 +219,47 @@ t("editör paneli kart genişliğinde taşmaz: hücre min-w-0 + yalnız dikey ka
   hvJ2.includes('class="istek-hucre min-w-0"') && hvJ2.includes("max-h-40 overflow-y-auto grid grid-cols-1 sm:grid-cols-2") && !hvJ2.includes("overflow-x"));
 t("boş-havuz mesajı md:col-span-2 kuralı kaynakta korunur",
   appKaynak.includes('md:col-span-2 border border-dashed border-slate-200 rounded-2xl py-10 text-center'));
+
+/* ================= K) D38-UYE-BUTON-TOGGLE: buton AÇ/KAPA ================= */
+/* Durum kurulumu (assertion DEĞİL): editör KAPALI başlangıçtan hedef kartı AÇ. */
+ui.istekUyeId = null; ui.istekUyeTaslak = [];
+istekUyeAc(geri.id);
+const butonEtiket = (h, rid) => {
+  const i = h.indexOf("istekUyeAc('" + rid + "')");
+  if (i < 0) return null;
+  const b = h.lastIndexOf("<button", i);
+  const j = h.indexOf("</button>", i);
+  return j < 0 ? null : h.slice(b < 0 ? i : b, j + "</button>".length);
+};
+const hvK1 = (reg["havuzBolum"] || { innerHTML: "" }).innerHTML;
+const etiket1 = butonEtiket(hvK1, geri.id);
+t("editör AÇIKKEN buton etiketi 'Kapat' (üye sayaç metni yerine) + vurgu rengi (text-slate-400 DEĞİL)",
+  !!etiket1 && etiket1.includes(">Kapat</button>") && !etiket1.includes("Grup üyelerini ekle/çıkar") && !etiket1.includes("text-slate-400"));
+
+istekUyeAc(geri.id); /* AYNI butona 2. tıklama */
+const hvK2 = (reg["havuzBolum"] || { innerHTML: "" }).innerHTML;
+t("AYNI butona 2. tıklama editörü KAPATIR (ui.istekUyeId = null · taslak boş · panel DOM'da YOK)",
+  ui.istekUyeId === null && Array.isArray(ui.istekUyeTaslak) && ui.istekUyeTaslak.length === 0 && !hvK2.includes('class="istek-uye-editor'));
+
+const etiket2 = butonEtiket(hvK2, geri.id);
+t("editör KAPALIYKEN buton metni eski hâline döner: 'Grup üyelerini ekle/çıkar (N)' (sayaç + soluk renk geri gelir)",
+  !!etiket2 && etiket2.includes("Grup üyelerini ekle/çıkar (" + istekOgrenciIds(geri).length + ")") && !etiket2.includes(">Kapat</button>") && etiket2.includes("text-slate-400"));
+
+/* İkinci bekleyen istek: TEK AÇIK EDİTÖR kuralını AYNI ANDA iki kartla sınar. */
+DB.istekler.push({ id: "k38b", ogrenciId: ana.id, ogrenciAd: ana.ad, dersId: "mat", konu: "", durum: "bekliyor", olusturma: "2026-09-02", donemId: DB.aktifDonemId });
+istekUyeAc(geri.id);  /* 1. kart AÇIK */
+istekUyeAc("k38b");   /* başka kartın butonu → önceki kapanır, hedef açılır */
+t("başka kartın butonu → önceki editör KAPANIR, hedef AÇILIR (ui.istekUyeId = hedef · taslak hedefin üyeleri)",
+  ui.istekUyeId === "k38b" && JSON.stringify(ui.istekUyeTaslak) === JSON.stringify([ana.id]));
+
+const hvK3 = (reg["havuzBolum"] || { innerHTML: "" }).innerHTML;
+const hK = hvK3.indexOf('data-istek-hucre="k38b"');
+const eK = hvK3.indexOf('class="istek-uye-editor', hK);
+const sonraK = hvK3.indexOf('data-istek-hucre="', hK + 1);
+t("DOM'da TEK editör paneli + TEK 'Kapat' etiketi; ikisi de HEDEF kartın hücresinde (önceki kartta editör YOK)",
+  (hvK3.match(/class="istek-uye-editor/g) || []).length === 1 &&
+  (hvK3.match(/>Kapat<\/button>/g) || []).length === 1 &&
+  hK >= 0 && eK > hK && (sonraK < 0 || eK < sonraK));
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail);

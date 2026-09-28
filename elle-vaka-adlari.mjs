@@ -183,7 +183,8 @@ elleVakaAdlari["ks-d32-grup-birebir-e2e.mjs"] = [
 /* D34-GRUP-UYE-YAZ KALICI SÜİT (ks-grup-uye-yaz.mjs): "ek öğrenci > 0 ⇒ ogrenciIds ZORUNLU" TEK KAPI kapısı.
    25 assertion — 4 yazım yolu (yeni/düzenleme · istekBurak · formaAktar+planla · havuza geri) × (0/1 ek),
    düzenleme üye koruması, havuz istek kartı üye editörü, WhatsApp ve statik sözleşme.
-   D37-HUCRE-GRUP +6 assertion → 31 (havuz kartı DOM yerleşimi: kart + buton + editör TEK dış grid hücresi; ELLE yazılır). */
+   D37-HUCRE-GRUP +6 assertion → 31 (havuz kartı DOM yerleşimi: kart + buton + editör TEK dış grid hücresi; ELLE yazılır).
+   D38-UYE-BUTON-TOGGLE +5 assertion → 36 (buton aç/kapa: "Kapat" metni · aynı butona 2. tıklama kapatır · TEK açık editör; ELLE yazılır). */
 elleVakaAdlari["ks-grup-uye-yaz.mjs"] = [
   "boot hatasız",
   "grupUyeYaz: ek>0 ⇒ ogrenciIds = [ek] (ana yazılır)",
@@ -217,6 +218,12 @@ elleVakaAdlari["ks-grup-uye-yaz.mjs"] = [
   "editör paneli kartın ALTINDA ve AYNI dış grid hücresinde (hücre sarmalayıcı kart + editörü kapsar)",
   "editör paneli kart genişliğinde taşmaz: hücre min-w-0 + yalnız dikey kaydırma (overflow-x YOK) + dar ekranda 1 sütun",
   "boş-havuz mesajı md:col-span-2 kuralı kaynakta korunur",
+  /* D38-UYE-BUTON-TOGGLE: buton aç/kapa — koşum sırasıyla birebir, otomatik üretim YOK. */
+  "editör AÇIKKEN buton etiketi 'Kapat' (üye sayaç metni yerine) + vurgu rengi (text-slate-400 DEĞİL)",
+  "AYNI butona 2. tıklama editörü KAPATIR (ui.istekUyeId = null · taslak boş · panel DOM'da YOK)",
+  "editör KAPALIYKEN buton metni eski hâline döner: 'Grup üyelerini ekle/çıkar (N)' (sayaç + soluk renk geri gelir)",
+  "başka kartın butonu → önceki editör KAPANIR, hedef AÇILIR (ui.istekUyeId = hedef · taslak hedefin üyeleri)",
+  "DOM'da TEK editör paneli + TEK 'Kapat' etiketi; ikisi de HEDEF kartın hücresinde (önceki kartta editör YOK)",
 ];
 
 /* D36-ANA-SATIR: günlük çizelge ANA satırında sınıf dersi hücresi (avail.sinif) artık drop-zone "+"

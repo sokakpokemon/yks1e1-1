@@ -29,3 +29,8 @@ buton kart DOM'unun İÇİNDE (kart açılışından SONRA, editör panelinden �
 editör paneli kartın ALTINDA ve AYNI dış grid hücresinde (hücre sarmalayıcı kart + editörü kapsar)
 editör paneli kart genişliğinde taşmaz: hücre min-w-0 + yalnız dikey kaydırma (overflow-x YOK) + dar ekranda 1 sütun
 boş-havuz mesajı md:col-span-2 kuralı kaynakta korunur
+editör AÇIKKEN buton etiketi 'Kapat' (üye sayaç metni yerine) + vurgu rengi (text-slate-400 DEĞİL)
+AYNI butona 2. tıklama editörü KAPATIR (ui.istekUyeId = null · taslak boş · panel DOM'da YOK)
+editör KAPALIYKEN buton metni eski hâline döner: 'Grup üyelerini ekle/çıkar (N)' (sayaç + soluk renk geri gelir)
+başka kartın butonu → önceki editör KAPANIR, hedef AÇILIR (ui.istekUyeId = hedef · taslak hedefin üyeleri)
+DOM'da TEK editör paneli + TEK 'Kapat' etiketi; ikisi de HEDEF kartın hücresinde (önceki kartta editör YOK)

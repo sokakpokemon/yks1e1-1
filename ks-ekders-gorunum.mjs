@@ -176,12 +176,20 @@ const haftalikBolge = bolge("function haftalikOgrtTablo() {");
    çizilir: tam ad + gerçek konu + sınıf; ders adı YOK. Eski hucreIcerik/altYazi kaynak satırları
    meşru olarak değişti — davranış eşdeğerleriyle değiştirildi. */
 t("gunlukTablo ortak hücre yardımcısını kullanıyor (birebirHucreHTML)", gunlukBolge.includes("birebirHucreHTML(ders, ogrenci, ders.ogrenciAd || \"\", sinif, durumRenkG)"));
-t("gunlukTablo grup satırı (grupUyelerG) aynen", gunlukBolge.includes("var grupUyelerG = grupUyeEtiketleri(ders);"));
+/* D35-AD-SINIF: eski→yeni ad + gerekçe — "gunlukTablo grup satırı (grupUyelerG) aynen" →
+   "gunlukTablo grup üyeleri ortak hücreden"; gerekçe: ayrı grupUyelerG satırı kaldırıldı,
+   üyeler birebirHucreHTML hücresi içinde birebirEtiketHTML (ad + sınıf) ile çizilir. */
+t("gunlukTablo grup üyeleri ortak hücreden (D35: ayrı grupUyelerG satırı kaldırıldı)", !gunlukBolge.includes("grupUyelerG") && gunlukBolge.includes("birebirHucreHTML(ders, ogrenci, ders.ogrenciAd || \"\", sinif, durumRenkG)"));
 t("gunlukTablo hücresinde ders adı üretilmiyor", !gunlukBolge.includes('hucreIcerik') && !/dersBilgi\s*\?\s*['"]\s*·/.test(gunlukBolge));
-t("haftalik grup satırı (grupUyeler) aynen", haftalikBolge.includes("var grupUyeler = grupUyeEtiketleri(ders);"));
+/* D35-AD-SINIF: eski→yeni ad + gerekçe — "haftalik grup satırı (grupUyeler) aynen" →
+   "haftalik grup üyeleri ortak hücreden"; gerekçe: ayrı grupUyeler satırı kaldırıldı. */
+t("haftalik grup üyeleri ortak hücreden (D35: ayrı grupUyeler satırı kaldırıldı)", !haftalikBolge.includes("grupUyeler.length") && !haftalikBolge.includes("grupUyeEtiketleri(ders)") && haftalikBolge.includes("birebirHucreHTML(ders, ogrenci, ogrenciAd, sinif, durumRenk)"));
 /* DÖNGÜ-26: eski→yeni ad + gerekçe — "hucreUst aynen" → "grup üye satırı hücrede GERÇEKTEN kullanılıyor";
    gerekçe: eski hucreUst ölü değişkendi (hücreye hiç eklenmiyordu) → öğretmen tablosunda grup üyeleri görünmüyordu. */
-t("haftalik grup üye satırı hücrede kullanılıyor (DÖNGÜ-26: ölü hucreUst kaldırıldı)", !haftalikBolge.includes("var hucreUst = grupUyeler.length ?") && haftalikBolge.includes("grupUyeler.length ? '<div"));
+/* DÖNGÜ-26 → D35-AD-SINIF: eski→yeni ad + gerekçe — "haftalik grup üye satırı hücrede kullanılıyor
+   (DÖNGÜ-26: ölü hucreUst kaldırıldı)" → "haftalik grup üyeleri hücre İÇİNDE kendi satırında";
+   gerekçe: virgüllü ayrı üye satırı kaldırıldı; üyeler hücrenin İÇİNDE (ad + sınıf, yan yana) çizilir. */
+t("haftalik grup üyeleri hücre İÇİNDE kendi satırında (D35: virgüllü alt satır kaldırıldı)", !haftalikBolge.includes("var hucreUst = grupUyeler.length ?") && !haftalikBolge.includes("grupUyeler.length ? '<div") && !haftalikBolge.includes("Grup üyeleri") && haftalikBolge.includes("birebirHucreHTML(ders, ogrenci, ogrenciAd, sinif, durumRenk)"));
 t("durumRenk satırı aynen (birebir mavi/emerald)", haftalikBolge.includes('var durumRenk = ders.durum === "tamamlandi" ? "bg-emerald-50 border-emerald-200" : "bg-blue-50 border-blue-200";'));
 /* runtime: mevcut seed dersleri ile birebir hücre amber DEĞİL */
 DB.ekDersler = [];

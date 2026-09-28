@@ -228,7 +228,7 @@ function avatar(ad, i) {
    Ad gorselAd() ile Türkçe güvenli normal harf düzeninde; iki satıra sarar; kırpmasız. */
 function birebirEtiketHTML(ad, sinif) {
   var snfSpan = "";
-  if (sinif !== null) snfSpan = '<span class="text-[10px] font-medium text-slate-400 shrink-0 whitespace-nowrap">' + esc(sinif ? sinif : "Sınıf belirtilmemiş") + "</span>";
+  if (sinif !== null) snfSpan = '<span class="text-[10px] font-medium text-slate-400 shrink-0">' + esc(sinif ? sinif : "Sınıf belirtilmemiş") + "</span>";
   return '<span class="birebir-etiket inline-flex items-baseline gap-2 min-w-0 flex-wrap"><span class="text-[12px] font-semibold normal-case tracking-normal text-slate-800 whitespace-normal break-words leading-snug">' + esc(gorselAd(ad)) + "</span>" + snfSpan + "</span>";
 }
 /* DÖNGÜ-19: TEK ortak custom suggestion satırı renderer'ı — TÜM autocomplete hostları bu renderer'ı kullanır.
@@ -253,26 +253,6 @@ function gorselAd(ad) {
   return String(ad || "").trim().split(/\s+/)
     .map(function (w) { return w ? w.toLocaleLowerCase("tr-TR").replace(/(^|\u2019)([\u00e7\u011f\u0131\u00f6\u015f\u00fc\u00e2\u00e0-\u00ff\u0259a-z])/g, function (_m, p, c) { return p + c.toLocaleUpperCase("tr-TR"); }) : w; })
     .join(" ");
-}
-
-/* ---------- D35-AD-SINIF: uzun ad kısaltma yardımcısı (TEK kaynak) ----------
-   Görünen ad gorselAd() ile normalize edilir; ardından soyadı harf sayısı MAX_SOYAD_HARF'e
-   ulaşırsa VEYA ad+soyadın boşluksuz toplam harfi MAX_AD_UZUNLUK'a ulaşırsa soyadı baş harfe iner:
-   "Ahmet Kızılırmak" → "Ahmet K." · "Mehmet Ali Kızılırmak" → "Mehmet Ali K." · tek kelimeli ad DEĞİŞMEZ.
-   Türkçe karakter tek harf sayılır; boşluk/tire/kesme işareti sayılmaz. Yalnız ÇİZELGE hücrelerinde
-   (haftalikOgrtTablo + gunlukTablo) kullanılır; havuz/WA/PNG/banner TAM adla kalır. */
-var MAX_SOYAD_HARF = 8;
-var MAX_AD_UZUNLUK = 22;
-function adHarfSayisi(s) { return String(s == null ? "" : s).replace(/[\s\-'’]/g, "").length; }
-function kisaAdlik(ad) {
-  var tam = gorselAd(ad);
-  var parcalar = tam.split(/\s+/).filter(function (p) { return p; });
-  if (parcalar.length < 2) return tam; /* tek kelimeli ad */
-  var soyad = parcalar[parcalar.length - 1];
-  if (adHarfSayisi(soyad) >= MAX_SOYAD_HARF || adHarfSayisi(parcalar.join("")) >= MAX_AD_UZUNLUK) {
-    return parcalar.slice(0, -1).join(" ") + " " + soyad.charAt(0).toLocaleUpperCase("tr-TR") + ".";
-  }
-  return tam;
 }
 
 // ---------- Veri katmanı ----------
@@ -3829,7 +3809,9 @@ function haftalikOgrtTablo() {
         var sinif = ogrenci ? ogrenci.sinif : "";
         var dersBilgi = DERS[ders.dersId];
         var durumRenk = ders.durum === "tamamlandi" ? "bg-emerald-50 border-emerald-200" : "bg-blue-50 border-blue-200";
-        /* DÖNGÜ-26 → D35-AD-SINIF: grup üyeleri artık birebirHucreHTML hücresi İÇİNDE (her biri kendi satırında, ad + sınıf) — ayrı virgüllü üye satırı KALDIRILDI. */
+        /* DÖNGÜ-26: grup dersinde TÜM üye tam adları hücrede okunur (hover gerektirmez);
+           birebirde eski görünüm birebir korunur. Eski ölü hucreUst (baş harf, hiç kullanılmıyordu) kaldırıldı. */
+        var grupUyeler = grupUyeEtiketleri(ders);
         /* PAZAR-BIREBIR-GORUNUM-YAMASI: birebir hücresi = TAM AD + KONU + SINIF (3 ayrı satır);
            null-on-miss: ogrenci bulunamazsa DB.ogrenciler ad eşlemesiyle fallback, o da yoksa boş.
            Uzun metin taşması: truncate + min-w-0 + orantılı padding/font/leading korunur. */
@@ -3838,7 +3820,8 @@ function haftalikOgrtTablo() {
         satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100"' +
           /* DÖNGÜ-29-YAMASI: grup birebir dersler de draggable — yalnız havuz hedefi kabul eder (dersBurak reddeder); iptal/tamamlanmış draggable değil */
           (ders.durum !== "iptal" && ders.durum !== "tamamlandi" ? ' draggable="true" style="cursor:grab" ondragstart="dersDrag(event, \'' + esc(ders.id) + '\'); this.style.opacity=\'0.45\'" ondragend="dersDropHedef=null; this.style.opacity=\'\'"' : '') + '>' +
-          birebirHucreHTML(ders, ogrenci, ogrenciAd, sinif, durumRenk) + '</td>'; /* D35-AD-SINIF: üyeler birebirHucreHTML hücresi İÇİNDE (ayrı virgüllü üye satırı KALDIRILDI). DERS-KARTI-TASIMA-YAMASI: haftalik hücreden kart butonu kaldırıldı — ders listesi ISLEM alanına taşındı */
+          birebirHucreHTML(ders, ogrenci, ogrenciAd, sinif, durumRenk) +
+          (grupUyeler.length ? '<div class="text-[9px] font-semibold text-slate-500 leading-snug break-words mt-0.5" title="Grup üyeleri">' + grupUyeler.map(function (a) { return esc(a); }).join(", ") + '</div>' : '') + '</td>'; /* DÖNGÜ-26: grup üyeleri TAM AD, alt satır sarımlı; birebirde eklenmez. DERS-KARTI-TASIMA-YAMASI: haftalik hücreden kart butonu kaldırıldı — ders listesi ISLEM alanına taşındı */
       } else {
         // BOŞ HÜCRE → DROP ZONE (havuzdaki istek kartı buraya bırakılabilir)
         var hk = slotH.b;
@@ -4067,25 +4050,13 @@ function birebirHucreHTML(ders, ogrenci, ogrenciAd, sinif, durumRenk) {
   })();
   var dersBilgi = DERS[ders.dersId];
   var dersAdi = dersBilgi ? dersBilgi.ad : "";
-  /* D35-AD-SINIF: ana öğrenci kaydı (yoksa yalnız tam ad; sınıf UYDURULMAZ) */
-  var anaO = (ogrenci && ogrenci.ad) ? ogrenci : (ders.ogrenciId ? DB.ogrenciler.find(function (x) { return x.id === ders.ogrenciId; }) : null);
-  var anaSinif = anaO ? anaO.sinif : null; /* null → sınıf spanı YOK ("Sınıf belirtilmemiş" de yazılmaz) */
   var konu = (typeof ders.konu === "string" ? ders.konu : "").trim();
-  var konuGecerli = konu.length > 0 && konu !== dersAdi && konu !== (anaSinif || "") && konu !== tamAd;
+  var konuGecerli = konu.length > 0 && konu !== dersAdi && konu !== (sinif || "") && konu !== tamAd;
   var hucreKonu = konuGecerli ? '<div class="text-[9px] text-slate-500 leading-tight truncate whitespace-nowrap min-w-0" title="' + esc(konu) + '">' + esc(konu) + '</div>' : '';
-  /* D35-AD-SINIF: HER üye (ana + ekler) KENDİ satırında — ad + sınıf YAN YANA, havuz kartındaki
-     birebirEtiketHTML ile AYNI tipografi; ad/sınıf için İKİNCİ formatter YOK. Ek üyenin kaydı
-     yoksa ad/sınıf YAZILMAZ (uydurma YOK). Uzun soyadlı adlar kisaAdlik ile kısalır (tam ad title'da). */
-  var hucreUyeleri = ['<div class="min-w-0" title="' + esc(tamAd) + '">' + birebirEtiketHTML(kisaAdlik(tamAd), anaSinif) + "</div>"];
-  dersOgrenciIds(ders).forEach(function (oid) {
-    if (oid === (anaO ? anaO.id : ders.ogrenciId)) return;
-    var uo = DB.ogrenciler.find(function (x) { return x.id === oid; });
-    if (!uo) return;
-    hucreUyeleri.push('<div class="min-w-0" title="' + esc(uo.ad) + '">' + birebirEtiketHTML(kisaAdlik(uo.ad), uo.sinif) + "</div>");
-  });
   return '<div class="rounded-lg border ' + (durumRenk || "bg-blue-50 border-blue-200") + ' px-1 py-1.5 min-w-0" title="Dolu — kilitli">' +
-    hucreUyeleri.join("") +
+    '<div class="text-[10px] font-bold text-slate-800 leading-tight truncate whitespace-nowrap min-w-0" title="' + esc(tamAd) + '">' + esc(tamAd) + '</div>' +
     hucreKonu +
+    (sinif ? '<div class="text-[8px] font-bold text-slate-400 leading-tight truncate whitespace-nowrap min-w-0">' + esc(sinif) + '</div>' : '') +
     '</div>';
 }
 
@@ -4213,7 +4184,8 @@ function gunlukTablo() {
         } else if (ders) {
           var ogrenci = DB.ogrenciler.find(function(x){ return x.id === ders.ogrenciId; });
           var sinif = ogrenci ? ogrenci.sinif : "";
-          /* DÖNGÜ-26 → D35-AD-SINIF: grup üyeleri artık birebirHucreHTML hücresi İÇİNDE (her biri kendi satırında, ad + sınıf) — ayrı üye satırı KALDIRILDI. */
+          /* GRUP: günlük tabloda üye baş harfleri alt satırda (birebirde eklenmez) */
+          var grupUyelerG = grupUyeEtiketleri(ders);
           var durumRenkG = ders.durum === "tamamlandi" ? "bg-emerald-50 border-emerald-200" : "bg-blue-50 border-blue-200";
           /* BIREBIR-GORUNUM-ORTAK-YAMASI: haftalik tablo ile AYNI hücre (tam ad + gerçek konu + sınıf; ders adı yok) */
           /* GUNLUK-DERS-TASI-YAMASI: yalnız AKTİF TEK ÖĞRENCİLİ birebir ders draggable'dır;
@@ -4222,8 +4194,9 @@ function gunlukTablo() {
           html += '<td class="px-1.5 py-2 border-r border-slate-200 hover:bg-blue-50 transition-colors"' +
             /* DÖNGÜ-29-YAMASI: grup birebir dersler de draggable — yalnız havuz hedefi kabul eder (dersBurak reddeder); iptal/tamamlanmış draggable değil */
           (ders.durum !== "iptal" && ders.durum !== "tamamlandi" ? ' draggable="true" style="cursor:grab" ondragstart="dersDrag(event, \'' + esc(ders.id) + '\'); this.style.opacity=\'0.45\'" ondragend="dersDropHedef=null; this.style.opacity=\'\'"' : '') + '>' +
-            birebirHucreHTML(ders, ogrenci, ders.ogrenciAd || "", sinif, durumRenkG); /* DERS-KARTI-TASIMA-YAMASI: gunluk hücreden kart butonu kaldırıldı. D35-AD-SINIF: üyeler hücre İÇİNDE (ayrı üye satırı KALDIRILDI) */
+            birebirHucreHTML(ders, ogrenci, ders.ogrenciAd || "", sinif, durumRenkG); /* DERS-KARTI-TASIMA-YAMASI: gunluk hücreden kart butonu kaldırıldı */
 
+          if (grupUyelerG.length) html += '<div class="text-[9px] font-semibold text-slate-500 leading-snug break-words mt-0.5" title="Grup üyeleri">' + grupUyelerG.map(function (a) { return esc(a); }).join(", ") + '</div>'; /* DÖNGÜ-26: üyeler TAM AD (baş harf yerine) */
           html += '</td>';
         } else if (ogrtId) {
           /* GUNLUK-DERS-TASI-YAMASI: boş hücre = MEVCUT drop-zone yolu (aynı dnd-bos + istekDragOver/istekDragLeave +

@@ -28,7 +28,7 @@ haftalikOgrtTablo imzası değişmedi
 haftalikOgrtTablo aktifDonemKayitlari(DB.ekDersler) filtresi KORUNDU
 haftalikOgrtTablo Ek Ders amber etiketi KORUNDU
 haftalikOgrtTablo birebir durumRenk (mavi/emerald) KORUNDU
-haftalikOgrtTablo grup üye satırı KORUNDU
+haftalikOgrtTablo grup üyeleri ortak hücreden (D35: ayrı grupUyeEtiketleri satırı kaldırıldı)
 haftalikOgrtTablo diff'i yalnız PAZAR-BIREBIR işaretli bölgede
 csvHucre değişmedi
 csvDosya değişmedi

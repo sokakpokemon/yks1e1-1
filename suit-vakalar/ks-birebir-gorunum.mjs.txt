@@ -16,11 +16,11 @@ iki tabloda hücre markup'ı (stil) BİREBİR AYNI
 birebir fixture: 6 gizleme dalının TAMAMI gerçekten koştu ve konu HİÇBİRİNDE sızmamış (site #16)
 6 gizleme durumu (boş/whitespace/null/ders adı/sınıf/tam ad)
 konu yokken konu satırı YOK ve ders adı fallback YOK
-uzun ad truncate + min-w-0 taşıyor
+uzun ad + sınıf kırpmasız (break-words) + min-w-0 + havuz formatter'ı (D35)
 uzun ad title attr'da tam
 Pazar satırı da ortak hücreyi gösteriyor (tam ad)
 farklı gün/slot'ta Pazar dersi YOK (slot eşleşmesi doğru)
-grup üye etiketleri yardımcısı yerinde
+grup üyeleri hücre İÇİNDE tek formatter'dan (D35: ayrı grupUyeEtiketleri satırı kaldırıldı)
 Ek Ders amber dalı (günlük) korunmuş
 Ek Ders amber dalı (haftalık) korunmuş
 Sınıf Dersi rose dalı korunmuş

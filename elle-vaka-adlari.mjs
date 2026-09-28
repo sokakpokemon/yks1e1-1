@@ -39,7 +39,7 @@ offsetDuzelt(
 /* DÖNGÜ-30-CACHE (SHA16 damgası): ks-donem-ilk damga assertion'ı KALDIRILDI;
    damga artık DİNAMİK olarak ks-index-kimlik.mjs süitinde doğrulanır. */
 elleVakaAdlari["ks-kart-kolon.mjs"].push(
-  "index.html damga = SHA ilk 16 hane (app.js ?v=e1f6fc0d665bdc88 + ek-ders.js ?v=3d2dd38ff517c64f)",
+  "index.html damga = SHA ilk 16 hane (app.js ?v=1a4722af9d39b620 + ek-ders.js ?v=3d2dd38ff517c64f)",
 );
 
 /* D34-GRUP-UYE-YAZ: ADIM-4 istek.ogrenciIds SENKRON davranışı nedeniyle ks-grup-istegi.mjs'te
@@ -104,9 +104,46 @@ offsetDuzelt(
   "C: dersOgrenciIds iki kimlik verir (ana + ek)",
 );
 
-/* D32-GRUP-2UYE sonrası toplam süit 52 → 53; D34-GRUP-UYE-YAZ sonrası 53 → 54
-   (yeni kalıcı süit ks-grup-uye-yaz.mjs); yazdığa gömülü sayı ELLE güncellendi (koşumdan otomatik üretim YOK). */
-offsetDuzelt("ks-kart-sirasi.mjs", "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 51", "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 54");
+/* D32-GRUP-2UYE sonrası toplam süit 52 → 53; D34-GRUP-UYE-YAZ sonrası 53 → 54;
+   D35-AD-SINIF sonrası 54 → 55 (yeni kalıcı süit ks-d35-ad-sinif.mjs);
+   yazdığa gömülü sayı ELLE güncellendi (koşumdan otomatik üretim YOK). */
+offsetDuzelt("ks-kart-sirasi.mjs", "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 51", "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 55");
+
+/* D35-AD-SINIF: çizelge hücresinde "Ad Soyad + Sınıf" (havuz tipografisi) + uzun soyad kısaltma.
+   6 assertion adı ELLE güncellendi (koşumdan otomatik üretim YOK; her süitte sayı/sıra DEĞİŞMEDİ). */
+offsetDuzelt("ks-birebir-gorunum.mjs", "uzun ad truncate + min-w-0 taşıyor", "uzun ad + sınıf kırpmasız (break-words) + min-w-0 + havuz formatter'ı (D35)");
+offsetDuzelt("ks-birebir-gorunum.mjs", "grup üye etiketleri yardımcısı yerinde", "grup üyeleri hücre İÇİNDE tek formatter'dan (D35: ayrı grupUyeEtiketleri satırı kaldırıldı)");
+offsetDuzelt("ks-ekders-gorunum.mjs", "gunlukTablo grup satırı (grupUyelerG) aynen", "gunlukTablo grup üyeleri ortak hücreden (D35: ayrı grupUyelerG satırı kaldırıldı)");
+offsetDuzelt("ks-ekders-gorunum.mjs", "haftalik grup satırı (grupUyeler) aynen", "haftalik grup üyeleri ortak hücreden (D35: ayrı grupUyeler satırı kaldırıldı)");
+offsetDuzelt("ks-ekders-gorunum.mjs", "haftalik grup üye satırı hücrede kullanılıyor (DÖNGÜ-26: ölü hucreUst kaldırıldı)", "haftalik grup üyeleri hücre İÇİNDE kendi satırında (D35: virgüllü alt satır kaldırıldı)");
+offsetDuzelt("ks-ekders-ozet-csv.mjs", "haftalikOgrtTablo grup üye satırı KORUNDU", "haftalikOgrtTablo grup üyeleri ortak hücreden (D35: ayrı grupUyeEtiketleri satırı kaldırıldı)");
+
+/* D35-AD-SINIF KALICI SÜİT (ks-d35-ad-sinif.mjs): 21 assertion — çizelge hücresinde her üye
+   kendi satırında ad+sınıf (havuz tipografisi), kisaAdlik eşikleri, etki sınırı (WA/PNG/havuz
+   TAM ad) ve statik sözleşme. */
+elleVakaAdlari["ks-d35-ad-sinif.mjs"] = [
+  "boot hatasız",
+  "kisaAdlik: 'Ahmet Kızılırmak' → 'Ahmet K.'",
+  "kisaAdlik: 'Mehmet Ali Kızılırmak' → 'Mehmet Ali K.'",
+  "kisaAdlik: 'Hasan Hüseyin Taşkın' DEĞİŞMEZ (eşik altı — soyadı 6 < 8, toplam 18 < 22)",
+  "kisaAdlik: tek kelimeli ad DEĞİŞMEZ ('Ecrin' · 'Yusuf Can')",
+  "kisaAdlik: gorselAd normalizasyonundan geçer (HAM 'AHMET KIZILIRMAK' → 'Ahmet K.')",
+  "eşikler tek yerde: MAX_SOYAD_HARF = 8 · MAX_AD_UZUNLUK = 22",
+  "adHarfSayisi: boşluk/tire/kesme işareti sayılmaz, Türkçe harf TEK sayılır",
+  "haftalık grup hücresi: ana + ek üyeler TAM ad ve sınıf AYNI hücrede",
+  "haftalık grup hücresi: HER üye KENDİ satırında (5 üye → 5 satır)",
+  "haftalık grup hücresi: uzun soyadlı üye 'Ahmet K.' görünür — tam soyadı GÖRÜNMEZ",
+  "haftalık grup hücresi: sınıfı BOŞ üye → 'Sınıf belirtilmemiş' (UYDURMA sınıf adı YOK)",
+  "haftalık grup hücresi: kaydı silinmiş üye hücreye YAZILMAZ (uydurma ad/sınıf YOK)",
+  "haftalık TEKLİ hücre: sınıf VAR + tek kelimeli ad DEĞİŞMEZ",
+  "günlük grup hücresi: TAM ad + sınıf AYNI hücrede + 'Ahmet K.' kısaltması",
+  "günlük grup hücresi = haftalık grup hücresi (üye satırları BİREBİR aynı)",
+  "günlük TEKLİ hücre: sınıf VAR (tek öğrencili ders de sınıfı gösterir)",
+  "ETKİ SINIRI: WhatsApp mesajı TAM ad (kısaltma sızmadı)",
+  "ETKİ SINIRI: PNG/rapor kartı TAM ad (kısaltma sızmadı)",
+  "ETKİ SINIRI: havuz chip'i TAM ad (kısaltma yok)",
+  "statik: ad/sınıf için İKİNCİ formatter YOK (kisaAdlik tek tanım · hücre birebirEtiketHTML · çizelge hücrelerinde ayrı üye satırı kalmadı)",
+];
 
 /* D32-GRUP-2UYE KALICI SÜİT (ks-d32-grup-birebir-e2e.mjs): gerçek form akışı + eşik regresyonu.
    20 assertion — ana öğrenci + 1 ek üye PAZAR grup birebir dersi; K1..K6 + 0/1/2 ek eşikleri. */

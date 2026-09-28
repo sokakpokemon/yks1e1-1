@@ -31,10 +31,10 @@ Kapali stil hâlâ kaynakta (slate)
 ek dersi stili amber — rose/mavi/slate hücre stiliyle ÇAKIŞMAZ
 ek dersi etiket metni 'Ek Ders' — 'Sınıf dersi' değil
 gunlukTablo ortak hücre yardımcısını kullanıyor (birebirHucreHTML)
-gunlukTablo grup satırı (grupUyelerG) aynen
+gunlukTablo grup üyeleri ortak hücreden (D35: ayrı grupUyelerG satırı kaldırıldı)
 gunlukTablo hücresinde ders adı üretilmiyor
-haftalik grup satırı (grupUyeler) aynen
-haftalik grup üye satırı hücrede kullanılıyor (DÖNGÜ-26: ölü hucreUst kaldırıldı)
+haftalik grup üyeleri ortak hücreden (D35: ayrı grupUyeler satırı kaldırıldı)
+haftalik grup üyeleri hücre İÇİNDE kendi satırında (D35: virgüllü alt satır kaldırıldı)
 durumRenk satırı aynen (birebir mavi/emerald)
 seed birebir dersi amber DEĞİL (eski görünüm)
 seed birebir dersi hücrede görünüyor

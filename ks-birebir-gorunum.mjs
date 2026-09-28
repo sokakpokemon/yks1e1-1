@@ -75,10 +75,11 @@ function hucreIcerik(htmlStr) {
   /* birebirHucreHTML çıktısını td'den çıkar */
   const m = htmlStr.match(/<div class="rounded-lg border[^"]*"[^>]*>[\s\S]*?<\/div><\/td>/) || null;
   const blok = m ? m[0] : (htmlStr.match(/<div class="rounded-lg border[\s\S]*?title="[^"]*">[\s\S]*?<\/div><\/div><\/td>/) || [""])[0];
-  /* satırları sırayla çıkar: text-[10px] tam ad, text-[9px] konu, text-[8px] sınıf */
-  const ad = (blok.match(/text-\[10px\] font-bold text-slate-800[^>]*>([^<]*)</) || [])[1] || "";
+  /* D35-AD-SINIF: hücre satırları artık havuz kartındaki birebirEtiketHTML ile üretilir
+     (ad 12px/600 spanı · konu 9px/500 · sınıf 10px/500 spanı). */
+  const ad = (blok.match(/text-\[12px\] font-semibold normal-case tracking-normal text-slate-800[^>]*>([^<]*)</) || [])[1] || "";
   const konu = (blok.match(/text-\[9px\] text-slate-500[^>]*>([^<]*)</) || [])[1] || "";
-  const sinif = (blok.match(/text-\[8px\] font-bold text-slate-400[^>]*>([^<]*)</) || [])[1] || "";
+  const sinif = (blok.match(/text-\[10px\] font-medium text-slate-400[^>]*>([^<]*)</) || [])[1] || "";
   return { ad, konu, sinif, blok };
 }
 
@@ -152,7 +153,10 @@ DB.ogrenciler.push(uzunOgr);
 DB.dersler.push({ id: "ks-bgb-uzun-d", donemId: DB.aktifDonemId, ogrenciId: uzunOgr.id, ogrenciAd: uzunOgr.ad, dersId: dersIdTam, konu: "Uuuuuzun Uuuuuuuuuu Konnnnnnuuuuuuuuuuuuuuuuuuuu Başlıııııııııııııııııııııııııııııı", ogretmenId: ogrt.id, ogretmenAd: ogrt.ad, tarih: gelecekPzt, saat: "08:50", kod: "1", durum: "planlandi", olusturma: "2026-09-01" });
 ui.gunSecim = gelecekPzt;
 const uC = hucreIcerik(gunlukTablo());
-t("uzun ad truncate + min-w-0 taşıyor", (uC.blok.match(/truncate/g) || []).length >= 2 && uC.blok.includes("min-w-0"));
+/* D35-AD-SINIF: eski→yeni ad + gerekçe — "uzun ad truncate + min-w-0 taşıyor" →
+   "uzun ad + sınıf kırpmasız (break-words) + min-w-0 + havuz formatter'ı"; gerekçe: hücre artık
+   havuz kartındaki birebirEtiketHTML'i kullanır — ad/sınıf truncate yerine break-words ile sarılır. */
+t("uzun ad + sınıf kırpmasız (break-words) + min-w-0 + havuz formatter'ı (D35)", (uC.blok.match(/break-words/g) || []).length >= 1 && uC.blok.includes("min-w-0") && uC.blok.includes("birebir-etiket"), "break-words=" + (uC.blok.match(/break-words/g) || []).length);
 t("uzun ad title attr'da tam", uC.blok.includes('title="' + uzunOgr.ad + '"'));
 DB.dersler = DB.dersler.filter(l => l.id !== "ks-bgb-uzun-d");
 DB.ogrenciler = DB.ogrenciler.filter(o => o.id !== uzunOgr.id);
@@ -172,7 +176,10 @@ temizle();
 
 /* ---- 6) Grup / Kapalı / Boş / Sınıf Dersi / Ek Ders davranışı değişmiyor ---- */
 console.log("6) Korunan davranışlar:");
-t("grup üye etiketleri yardımcısı yerinde", gunlukBolge.includes("grupUyeEtiketleri(ders)") && haftalikBolge.includes("grupUyeEtiketleri(ders)"));
+/* D35-AD-SINIF: eski→yeni ad + gerekçe — "grup üye etiketleri yardımcısı yerinde" →
+   "grup üyeleri hücre İÇİNDE tek formatter'dan"; gerekçe: ayrı virgüllü grupUyeEtiketleri satırı
+   kaldırıldı; üyeler birebirHucreHTML hücresi içinde birebirEtiketHTML ile kendi satırında çizilir. */
+t("grup üyeleri hücre İÇİNDE tek formatter'dan (D35: ayrı grupUyeEtiketleri satırı kaldırıldı)", !gunlukBolge.includes("grupUyeEtiketleri(ders)") && !haftalikBolge.includes("grupUyeEtiketleri(ders)") && appKaynak.includes("birebirEtiketHTML(kisaAdlik(") && (appKaynak.match(/function birebirHucreHTML\(/g) || []).length === 1);
 t("Ek Ders amber dalı (günlük) korunmuş", gunlukBolge.includes("bg-amber-50") && gunlukBolge.includes("Ek Ders"));
 t("Ek Ders amber dalı (haftalık) korunmuş", haftalikBolge.includes("bg-amber-100") && haftalikBolge.includes("Ek Ders"));
 t("Sınıf Dersi rose dalı korunmuş", haftalikBolge.includes("bg-rose-100"));

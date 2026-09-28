@@ -1,0 +1,21 @@
+boot hatasız
+kisaAdlik: 'Ahmet Kızılırmak' → 'Ahmet K.'
+kisaAdlik: 'Mehmet Ali Kızılırmak' → 'Mehmet Ali K.'
+kisaAdlik: 'Hasan Hüseyin Taşkın' DEĞİŞMEZ (eşik altı — soyadı 6 < 8, toplam 18 < 22)
+kisaAdlik: tek kelimeli ad DEĞİŞMEZ ('Ecrin' · 'Yusuf Can')
+kisaAdlik: gorselAd normalizasyonundan geçer (HAM 'AHMET KIZILIRMAK' → 'Ahmet K.')
+eşikler tek yerde: MAX_SOYAD_HARF = 8 · MAX_AD_UZUNLUK = 22
+adHarfSayisi: boşluk/tire/kesme işareti sayılmaz, Türkçe harf TEK sayılır
+haftalık grup hücresi: ana + ek üyeler TAM ad ve sınıf AYNI hücrede
+haftalık grup hücresi: HER üye KENDİ satırında (5 üye → 5 satır)
+haftalık grup hücresi: uzun soyadlı üye 'Ahmet K.' görünür — tam soyadı GÖRÜNMEZ
+haftalık grup hücresi: sınıfı BOŞ üye → 'Sınıf belirtilmemiş' (UYDURMA sınıf adı YOK)
+haftalık grup hücresi: kaydı silinmiş üye hücreye YAZILMAZ (uydurma ad/sınıf YOK)
+haftalık TEKLİ hücre: sınıf VAR + tek kelimeli ad DEĞİŞMEZ
+günlük grup hücresi: TAM ad + sınıf AYNI hücrede + 'Ahmet K.' kısaltması
+günlük grup hücresi = haftalık grup hücresi (üye satırları BİREBİR aynı)
+günlük TEKLİ hücre: sınıf VAR (tek öğrencili ders de sınıfı gösterir)
+ETKİ SINIRI: WhatsApp mesajı TAM ad (kısaltma sızmadı)
+ETKİ SINIRI: PNG/rapor kartı TAM ad (kısaltma sızmadı)
+ETKİ SINIRI: havuz chip'i TAM ad (kısaltma yok)
+statik: ad/sınıf için İKİNCİ formatter YOK (kisaAdlik tek tanım · hücre birebirEtiketHTML · çizelge hücrelerinde ayrı üye satırı kalmadı)

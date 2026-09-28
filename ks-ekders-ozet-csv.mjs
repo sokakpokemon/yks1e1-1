@@ -157,7 +157,10 @@ t("haftalikOgrtTablo imzası değişmedi", hotBlok.startsWith("function haftalik
 t("haftalikOgrtTablo aktifDonemKayitlari(DB.ekDersler) filtresi KORUNDU", /aktifDonemKayitlari\(Array\.isArray\(DB\.ekDersler\) \? DB\.ekDersler : \[\]\)/.test(hotBlok));
 t("haftalikOgrtTablo Ek Ders amber etiketi KORUNDU", hotBlok.includes("bg-amber-100") && hotBlok.includes("Ek Ders"));
 t("haftalikOgrtTablo birebir durumRenk (mavi/emerald) KORUNDU", hotBlok.includes('bg-blue-50 border-blue-200') && hotBlok.includes('bg-emerald-50 border-emerald-200'));
-t("haftalikOgrtTablo grup üye satırı KORUNDU", hotBlok.includes("grupUyeEtiketleri(ders)"));
+/* D35-AD-SINIF: eski→yeni ad + gerekçe — "haftalikOgrtTablo grup üye satırı KORUNDU" →
+   "haftalikOgrtTablo grup üyeleri ortak hücreden"; gerekçe: ayrı virgüllü grupUyeEtiketleri
+   satırı kaldırıldı; üyeler birebirHucreHTML hücresi içinde (ad + sınıf) çizilir. */
+t("haftalikOgrtTablo grup üyeleri ortak hücreden (D35: ayrı grupUyeEtiketleri satırı kaldırıldı)", hotBlok.includes("birebirHucreHTML(ders, ogrenci, ogrenciAd, sinif, durumRenk)") && !hotBlok.includes("grupUyeEtiketleri(ders)"));
 t("haftalikOgrtTablo diff'i yalnız PAZAR-BIREBIR işaretli bölgede", (() => {
   const eskiBlok = bakBlok(bakKaynak, "function haftalikOgrtTablo() {");
   const satirlarEski = eskiBlok.split("\n");

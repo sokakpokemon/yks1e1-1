@@ -4613,6 +4613,7 @@ function waAliciBilgisi(ogrenciId, aliciTipi) {
 }
 function waAliciDegistir(tip) {
   waAliciTipi = (tip === "anne" || tip === "baba") ? tip : "ogrenci";
+  waAliciListeTazele(); /* D42-WA-ALICI-TIP: rozet + Gönder durumu ANINDA seçili alıcıya göre güncellenir */
   waAliciPanelGuncelle();
   if (waAktifOgrenciId) waOnizle(waAktifOgrenciId);
 }
@@ -4671,6 +4672,33 @@ function waAliciSatirHTML(s, telVar) {
     '<button onclick="waKopyalaMesaj(\'' + s.id + '\')" title="Mesaj metnini kopyala" class="w-8 h-8 rounded-full border border-slate-200 text-slate-400 hover:text-teal-600 hover:border-teal-300 transition-colors"><i class="fa-regular fa-copy text-[12px]"></i></button></div>';
 }
 
+/* D42-WA-ALICI-TIP: son çizilen alıcı listesi (alıcı değişince satırlar bu diziden YENİDEN çizilir;
+   sayaç/ders listesi YENİDEN hesaplanmaz — "N ders" ve seçim korunur). */
+var waSonDizi = [];
+
+/* D42-WA-ALICI-TIP: satır gövdesi TEK üreticiden ve SEÇİLİ ALICIYA göre.
+   Tek çözücü waAliciBilgisi(s.id, waAliciTipi): öğrenci→tel · anne→anneTel · baba→babaTel. */
+function waAliciListeHTML(dizi) {
+  if (!dizi.length) {
+    return '<div class="text-center py-10"><p class="text-3xl mb-2">💬</p><p class="text-[13px] text-slate-400 font-medium">Bu dönemde bilgilendirme yapılacak ders yok.</p></div>';
+  }
+  var icerik = dizi.map(function (s) {
+    return waAliciSatirHTML(s, waAliciBilgisi(s.id, waAliciTipi).varMi); /* seçili alıcı çözücüsü */
+  }).join("");
+  var telVarMi = dizi.some(function (x) { return waAliciBilgisi(x.id, waAliciTipi).varMi; });
+  if (!telVarMi) icerik += '<p class="text-[10.5px] text-slate-300 mt-3 text-center">Seçili alıcı için telefon kaydedilmedi — WhatsApp’ta göndermek istediğiniz kişiyi seçersiniz. Telefon eklemek için Öğrenciler sekmesini kullanın.</p>';
+  return icerik;
+}
+
+/* D42-WA-ALICI-TIP: yalnız LİSTE KONTEYNERİNİ yeniler (modal yeniden açılmaz; ÇİFT SATIR YOK).
+   Sayaç/seçim KORUNUR: dizi (waSonDizi) yeniden hesaplanmaz; yalnız satır durumu tazelenir. */
+function waAliciListeTazele() {
+  var el = document.getElementById("waIcerik");
+  if (!el) return;
+  el.innerHTML = waAliciListeHTML(waSonDizi); /* TEK yenileme */
+  if (el.insertAdjacentHTML) el.insertAdjacentHTML("afterbegin", waAliciSeciciHTML());
+}
+
 function waAc() {
   var liste = penceredeDersler().filter(function (l) { return l.durum !== "iptal"; });
   var sayac = {};
@@ -4691,22 +4719,11 @@ function waAc() {
   });
   var dizi = Object.keys(sayac).map(function (k) { return sayac[k]; }).sort(function (a, b) { return b.n - a.n; });
   $("waAlt").textContent = pencereAdi() + " · " + dizi.length + " öğrenci";
-  var icerik = "";
-  if (!dizi.length) {
-    icerik = '<div class="text-center py-10"><p class="text-3xl mb-2">💬</p><p class="text-[13px] text-slate-400 font-medium">Bu dönemde bilgilendirme yapılacak ders yok.</p></div>';
-  } else {
-    icerik = dizi.map(function (s) {
-      var o = DB.ogrenciler.find(function (x) { return x.id === s.id; });
-      var tel = o ? o.tel : "";
-      return waAliciSatirHTML(s, !!tel); /* D41-TELEFON: telefonsuz üye → rozet + Gönder DEVRE DIŞI */
-    }).join("");
-    var telVarMi = dizi.some(function(x){ var o = DB.ogrenciler.find(function(y){return y.id===x.id;}); return o && o.tel; });
-    if (!telVarMi) icerik += '<p class="text-[10.5px] text-slate-300 mt-3 text-center">Öğrenciye telefon kaydedilmedi — WhatsApp’ta göndermek istediğiniz kişiyi seçersiniz. Telefon eklemek için Öğrenciler sekmesini kullanın.</p>';
-  }
-  /* WA-ALICI-YAMASI: her açılışta alıcı varsayılan "ogrenci" (state yalnız bellek içi) */
+  /* WA-ALICI-YAMASI: her açılışta alıcı varsayılan "ogrenci"; D42: satır durumu bu alıcıya göre çizilir. */
   waAliciTipi = "ogrenci";
   waAktifOgrenciId = null;
-  $("waIcerik").innerHTML = icerik;
+  waSonDizi = dizi; /* D42-WA-ALICI-TIP: alıcı değişince satırlar bu diziden YENİDEN çizilir (sayaç korunur) */
+  $("waIcerik").innerHTML = waAliciListeHTML(dizi); /* D42-WA-ALICI-TIP: satır TEK üreticiden + SEÇİLİ ALICIYA göre */
   /* seçici bar: innerHTML yazımı her açılışta eskiyi temizlediği için yalnız burada TEK kez kurulur
      (duplicate imkânsız); gerçek DOM'da yoksa afterbegin eklenir, mini-DOM stub'larda noop. */
   if (document.getElementById("waIcerik") && document.getElementById("waIcerik").insertAdjacentHTML) {

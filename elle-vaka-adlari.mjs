@@ -295,3 +295,22 @@ elleVakaAdlari["ks-wa-alici.mjs"].push(
   "D41: rozet sayısı = devre dışı Gönder sayısı (birebir)",
   "D41: telefonsuz satır yalnız KENDİ gönderimini kapatır (diğer satırlar etkin)",
 );
+
+/* D42-WA-ALICI-TIP: D41 satır-üreticisi assertion'ı D42 mimarisine göre YENİDEN ADLANDIRILDI
+   (aynı konum, sayı DEĞİŞMEDİ): waAc artık satırları waAliciListeHTML üzerinden üretir. ELLE. */
+offsetDuzelt(
+  "ks-wa-alici.mjs",
+  "D41: liste satırları TEK üreticiden (waAliciSatirHTML tanım 1 · waAc çağrısı 1)",
+  "D41/D42: satır markup'ı TEK üreticiden (waAliciSatirHTML tanım 1 · tek çağrı waAliciListeHTML içinde)",
+);
+
+/* D42-WA-ALICI-TIP: ks-wa-alici'ye 6 assertion eklendi (satır durumu SEÇİLİ ALICIYA göre +
+   alıcı değişince liste TEK kez tazelenir). Koşum sırasıyla ELLE yazıldı; 56 → 62. */
+elleVakaAdlari["ks-wa-alici.mjs"].push(
+  "D42: öğrenci teli BOŞ + veli teli VAR → alıcı=Öğrenci'de 'Telefon kayıtlı değil' + disabled",
+  "D42: aynı kayıt alıcı=Anne → satır ETKİN (rozet yok, Gönder açık; D41 regresyonu onarıldı)",
+  "D42: ters yön — öğrenci teli VAR + veli teli BOŞ → Öğrenci etkin, Anne seçiliyken disabled + rozet",
+  "D42: waAliciDegistir listeyi TEK kez yeniler (waAliciListeTazele · tek innerHTML)",
+  "D42: tazeleme ÇİFT SATIR üretmez (satır sayısı sabit)",
+  "D42: waGonder çözücü yolu korunur (!a.varMi → toast; fallback yok)",
+);

@@ -43,7 +43,7 @@ export const elleManifest = {
   "ks-wa-sablon.mjs": 49,
   "ks-wa-onizleme.mjs": 36,
   "ks-wa-durum.mjs": 38,
-  "ks-wa-alici.mjs": 56, /* D41-TELEFON: elle sayım (49 → 56) — telefonsuz satır işareti + gönderim kapalı */
+  "ks-wa-alici.mjs": 62, /* D41-TELEFON 49 → 56; D42-WA-ALICI-TIP 56 → 62 (elle sayım: seçili alıcıya göre satır durumu + alıcı değişince liste tazeleme) */
   "ks-excel-k-import.mjs": 23,
   "ks-kadro-kolon.mjs": 62,
   "ks-kadro-telefon3.mjs": 57,

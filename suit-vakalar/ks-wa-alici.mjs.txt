@@ -50,7 +50,13 @@ süit test.mjs'te tam 1 kez
 D41: waAliciSatirHTML telefonsuz satırda 'Telefon kayıtlı değil' rozeti üretir
 D41: telefonsuz satırın Gönder butonu disabled (waGonder bağı korunur, tıklama engelli)
 D41: telefonlu satırda rozet YOK + Gönder butonu ETKİN (disabled değil)
-D41: liste satırları TEK üreticiden (waAliciSatirHTML tanım 1 · waAc çağrısı 1)
+D41/D42: satır markup'ı TEK üreticiden (waAliciSatirHTML tanım 1 · tek çağrı waAliciListeHTML içinde)
 D41: waAc satırı telefonsuz üyeyi listede TUTAR (waGonder bağı kalır)
 D41: rozet sayısı = devre dışı Gönder sayısı (birebir)
 D41: telefonsuz satır yalnız KENDİ gönderimini kapatır (diğer satırlar etkin)
+D42: öğrenci teli BOŞ + veli teli VAR → alıcı=Öğrenci'de 'Telefon kayıtlı değil' + disabled
+D42: aynı kayıt alıcı=Anne → satır ETKİN (rozet yok, Gönder açık; D41 regresyonu onarıldı)
+D42: ters yön — öğrenci teli VAR + veli teli BOŞ → Öğrenci etkin, Anne seçiliyken disabled + rozet
+D42: waAliciDegistir listeyi TEK kez yeniler (waAliciListeTazele · tek innerHTML)
+D42: tazeleme ÇİFT SATIR üretmez (satır sayısı sabit)
+D42: waGonder çözücü yolu korunur (!a.varMi → toast; fallback yok)

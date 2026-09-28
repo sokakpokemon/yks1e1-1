@@ -1,5 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 56) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-wa-alici.mjs kosan=" + __kosan + " beklenen=56"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-wa-alici.mjs:" + __kosan + ":56"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 62) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-wa-alici.mjs kosan=" + __kosan + " beklenen=62"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-wa-alici.mjs:" + __kosan + ":62"); } });
 /* ks-wa-alici.mjs — WA-ALICI-YAMASI süiti
    Doğruladıkları:
     1) #waAlici select modal-genel TEK (id tam 1 kez; waSatir/Öğrenciler sekmesi onu KULLANMAZ).
@@ -214,10 +214,34 @@ const pBos = parca13(ogr2.id);   /* ogr2: tel BOŞ */
 t("D41: waAliciSatirHTML telefonsuz satırda 'Telefon kayıtlı değil' rozeti üretir", pBos.includes("Telefon kayıtlı değil"));
 t("D41: telefonsuz satırın Gönder butonu disabled (waGonder bağı korunur, tıklama engelli)", pBos.includes("disabled") && pBos.includes("waGonder('" + ogr2.id + "')"));
 t("D41: telefonlu satırda rozet YOK + Gönder butonu ETKİN (disabled değil)", pEtkin.includes("waGonder('" + ogr1.id + "')") && !pEtkin.includes("disabled") && !pEtkin.includes("Telefon kayıtlı değil"));
-t("D41: liste satırları TEK üreticiden (waAliciSatirHTML tanım 1 · waAc çağrısı 1)", (appKaynak.match(/function waAliciSatirHTML\(/g) || []).length === 1 && (appKaynak.split("function waAc() {")[1] || "").split("\nfunction ")[0].includes("waAliciSatirHTML(s,"));
+t("D41/D42: satır markup'ı TEK üreticiden (waAliciSatirHTML tanım 1 · tek çağrı waAliciListeHTML içinde)", (appKaynak.match(/function waAliciSatirHTML\(/g) || []).length === 1 && (appKaynak.match(/return waAliciSatirHTML\(s,/g) || []).length === 1 && (appKaynak.split("function waAc() {")[1] || "").split("\nfunction ")[0].includes("waAliciListeHTML(dizi)"));
 t("D41: waAc satırı telefonsuz üyeyi listede TUTAR (waGonder bağı kalır)", h13.includes("waGonder('" + ogr2.id + "')"));
 t("D41: rozet sayısı = devre dışı Gönder sayısı (birebir)", (h13.match(/Telefon kayıtlı değil/g) || []).length === (h13.match(/disabled/g) || []).length && (h13.match(/Telefon kayıtlı değil/g) || []).length >= 1);
 t("D41: telefonsuz satır yalnız KENDİ gönderimini kapatır (diğer satırlar etkin)", pBos.includes("disabled") && !pEtkin.includes("disabled"));
+
+/* 14) D42-WA-ALICI-TIP: satır durumu SEÇİLİ ALICIYA göre (anne→anneTel · baba→babaTel · tel) */
+console.log("14) D42 seçili alıcıya göre satır:");
+ui.filtre = "tumu";
+/* Senaryo A: ÖĞRENCI teli BOŞ + ANNESİNİN teli VAR */
+ogr2.tel = ""; ogr2.anneTel = "05339998877";
+waAc(); /* dizi sabitlenir; alıcı=ogrenci */
+const pA = () => (reg.get("waIcerik").innerHTML.split('data-wa-satir="' + ogr2.id + '"')[1] || "").split('data-wa-satir="')[0];
+t("D42: öğrenci teli BOŞ + veli teli VAR → alıcı=Öğrenci'de 'Telefon kayıtlı değil' + disabled", pA().includes("Telefon kayıtlı değil") && pA().includes("disabled"));
+waAliciDegistir("anne");
+t("D42: aynı kayıt alıcı=Anne → satır ETKİN (rozet yok, Gönder açık; D41 regresyonu onarıldı)", !pA().includes("Telefon kayıtlı değil") && !pA().includes("disabled") && pA().includes("waGonder('" + ogr2.id + "')"));
+/* Senaryo B (ters yön): ÖĞRENCI teli VAR + ANNESİNİN teli BOŞ */
+ogr1.tel = "05551110000"; ogr1.anneTel = "";
+waAc(); /* alıcı=ogrenci */
+const pB = () => (reg.get("waIcerik").innerHTML.split('data-wa-satir="' + ogr1.id + '"')[1] || "").split('data-wa-satir="')[0];
+const bEtkin = !pB().includes("disabled") && pB().includes("waGonder('" + ogr1.id + "')");
+waAliciDegistir("anne");
+t("D42: ters yön — öğrenci teli VAR + veli teli BOŞ → Öğrenci etkin, Anne seçiliyken disabled + rozet", bEtkin && pB().includes("disabled") && pB().includes("Telefon kayıtlı değil"));
+t("D42: waAliciDegistir listeyi TEK kez yeniler (waAliciListeTazele · tek innerHTML)", (appKaynak.match(/function waAliciListeTazele\(/g) || []).length === 1 && (appKaynak.split("function waAliciDegistir(tip) {")[1] || "").split("\nfunction ")[0].includes("waAliciListeTazele()") && ((appKaynak.split("function waAliciListeTazele() {")[1] || "").split("\nfunction ")[0].match(/innerHTML/g) || []).length === 1);
+const waSatirSay = () => (reg.get("waIcerik").innerHTML.match(/data-wa-satir="/g) || []).length;
+const sOnce = waSatirSay();
+waAliciDegistir("baba"); waAliciDegistir("ogrenci");
+t("D42: tazeleme ÇİFT SATIR üretmez (satır sayısı sabit)", waSatirSay() === sOnce && sOnce >= 1, "önce=" + sOnce + " sonra=" + waSatirSay());
+t("D42: waGonder çözücü yolu korunur (!a.varMi → toast; fallback yok)", /var a = waAliciBilgisi\(ogrenciId, waAliciTipi\)/.test(appKaynak) && appKaynak.includes("a.varMi") && appKaynak.includes("telefonu kayitli degil"));
 
 console.log(fail ? "\nKIRMIZI TEST VAR" : "\nHEPSİ GEÇTİ");
 process.exit(fail ? 1 : 0);

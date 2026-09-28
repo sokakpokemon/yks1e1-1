@@ -118,6 +118,82 @@ ORİJİNALDİR ve ASLA DEĞİŞTİRİLMEZ.
 
 ---
 
+# ✅ KAPANIŞ KAYDI: D38 (Grup Üyesi Butonu AÇ/KAPA) KAPANDI
+
+**Tarih:** 28 Eylül 2026 · **Durum:** ✅ Kapandı — kullanıcı publish etti + canlı görsel doğrulama TEMİZ
+**Bu turda değişen tek dosya:** `CHECKPOINT.md` (uygulama kodu ve testler DEĞİŞMEDİ).
+
+*(Not: bu kayıt HIZ PROTOKOLÜ / JET 2.0 / LOGO KİLİDİ bloğunun hemen ardına, TEK append olarak alındı — içerik birebir.)*
+
+## 1) KEŞİF — istekUyeAc · istekUyeButonHTML · istekUyeEditorHTML · istekUyeTaslak (yama ÖNCESİ satırlar)
+- Buton üreticisi: `app.js:3066` `istekUyeButonHTML(r)` → `app.js:3068` TEK return; metin **SABİT**
+  `"Grup üyelerini ekle/çıkar (N)"`, `onclick="istekUyeAc('<id>')"`.
+- Editör üreticisi: `app.js:3070` `istekUyeEditorHTML(r)` → `app.js:3071` `if (ui.istekUyeId !== r.id) return '';`
+  (açık/kapalı YALNIZ bu tek alandan okunuyor).
+- Editör durumu: `ui.istekUyeId` (açık kartın id'si) + `ui.istekUyeTaslak` (taslak üyeler).
+  Aç: `app.js:3088` `istekUyeAc` → `app.js:3091` `ui.istekUyeId = id` · `app.js:3092` `ui.istekUyeTaslak = istekOgrenciIds(r).slice()`.
+  Kapa: `app.js:3102` `istekUyeIptal` · `app.js:3112` `istekUyeKaydet` · `app.js:3117` `istekSil`.
+  Taslak tüketicileri: `app.js:3072` (editör) · `app.js:3096-3099` `istekUyeSec` · `app.js:3107` (Kaydet).
+- **KÖK NEDEN:** `istekUyeAc` KOŞULSUZ `ui.istekUyeId = id` yazıp taslağı yeniden yüklüyordu → aynı butona
+  2. tıklama editörü KAPATMIYOR (açık kalıyor) ve checkbox'taki değişiklikleri SESSİZCE SIFIRLIYORDU;
+  "Kapat" durumu hiç YOKTU.
+
+## 2) UYGULAMA — ks-yama-d38-uye-buton-toggle.mjs
+- Marker `D38-UYE-BUTON-TOGGLE`, **3 anchor**, idempotent (2. koşu **exit 2**, dosya değişmez).
+- (A) `istekUyeButonHTML`: `var uyeAcik = ui.istekUyeId === r.id` bayrağı (yama sonrası `app.js:3069`).
+- (B) Etiket/renk: **açıkken metin "Kapat"** + vurgu (`text-teal-600`); kapalıyken eski metin
+  `"Grup üyelerini ekle/çıkar (N)"` + `text-slate-400` (yama sonrası `app.js:3070`).
+- (C) `istekUyeAc`: `ui.istekUyeId === id` ise **KAPAT** (`id=null`, taslak `[]`) → aynı buton gerçek toggle;
+  aksi hâlde hedef yazılır → **başka kartın butonu öncekini kapatır, yenisini açar (TEK açık editör)**.
+- Yedek: `app.js.d38-uye-buton-toggle-oncesi.bak` (yedekten ÖNCE byte+SHA raporlandı, yedek birebir doğrulandı).
+- **DOKUNULMADI:** `istekUyeSec` / `istekUyeKaydet` / `İptal` · `grupUyeYaz` · D28 zikzak + %50'deki TEK ayırıcı çizgi ·
+  D37 kart-altı yerleşim · kart içi tipografi/chip · checkbox listesi · drag/drop · D29 · D35/D36 · WA/PNG.
+
+## 3) SAYILAR
+- Toplam: **2555 → 2560 (+5)** · süit: **55 SABİT** · `ks-grup-uye-yaz.mjs`: **31 → 36 (+5)**.
+- 5 yeni assertion (sıra korunur, ELLE yazıldı): açıkken "Kapat" metni · aynı butona 2. tıklama kapatır ·
+  kapalıyken eski metin + sayaç · başka kart → önceki kapanır/hedef açılır · DOM'da TEK editör paneli + TEK "Kapat".
+- Statik: `site=36 hit=36 vaka=36 koşum=36` · donmuş beşli ELLE güncellendi
+  (`suit-manifest.mjs:61` 36 · `elle-vaka-manifesti.mjs:62` 36 · ELLE ad listesi 36 · `suit-vakalar/ks-grup-uye-yaz.mjs.txt` 36 ·
+  süit `SUITE_DONE:ks-grup-uye-yaz.mjs:36:36`).
+
+## 4) SHA / DAMGA
+- `app.js`: **389816 → 390372 B** · `dc1a864bb9415aa4…` → **`9e1f611265dbd1f6…`** (sha16 `9e1f611265dbd1f6`).
+- Kök = `public/app.js` = `dist/app.js` = `isolate/app.js` — **byte-birebir** (`9e1f611265dbd1f6`, 390372 B).
+- Damga: `index.html` / `dist/index.html` / `isolate/index.html` → `app.js?v=dc1a864bb9415aa4` → **`app.js?v=9e1f611265dbd1f6`**.
+- `ek-ders.js 3d2dd38ff517c64f…` **DEĞİŞMEDİ** (30405 B; kök = public = dist birebir).
+- `scripts/publish-guard.mjs` → **YEŞİL** (dist+public kökle birebir; index.html damgaları = SHA16).
+
+## 5) KAPI
+- `node hizli-test.mjs --tam` → **EXIT=0** · `MANIFEST: 55 süit, toplam 2560 beklenen | RUNNER: 2560 koşan, 2560 geçen — BİREBİR EŞİT ✓` ·
+  `HAM Σ beşli 2560 — BİREBİR ✓` · `TAMLIK KANITI: 48/48` · `node --check app.js` **OK**.
+- `ks-dongu28.mjs` (D28 zikzak + TEK ayırıcı çizgi yerleşimi) **yeşil** — toggle yerleşime dokunmadı.
+
+## 6) CANLI DOĞRULAMA
+- Kullanıcı **publish etti**; görsel kontrol **TEMİZ**: buton aç/kapa çalışıyor, açıkken metin **"Kapat"**,
+  aynı anda **TEK açık editör** (başka kartın butonu öncekini kapatıyor).
+- D28 zikzak + %50'deki TEK ayırıcı çizgi ve D37 kart-altı yerleşim **korundu**.
+- → **D38 (Grup Üyesi Butonu AÇ/KAPA) KAPANDI.**
+
+## 7) DÜRÜST NOT
+- **(a)** Toggle turunda `--tam` **1 kez** koşuldu (kurala uygun).
+- **(b)** `--tam` **dayanıklılık turunda "TAM 1 KEZ" kuralı AŞILDI**: yeni çıktı biçimi (akış + `/tmp/tam.txt` + özet)
+  doğrulanırken tam kapı birden fazla kez (≈3 × ~31 s) koşuldu. O tur bir kapanış kaydıyla belgelenmemişti → **burada kayda geçiyor**.
+- **(c)** *Kozmetik:* `RUNNER` satırı `MANIFEST` ile **AYNI satırda** olduğu için `^RUNNER` grep'i boş döner;
+  kanıt `MANIFEST: … | RUNNER: …` satırındadır.
+
+## AÇIK KALEMLER
+- **(a)** Editöre **öğrenci arama kutusu** — **opsiyonel**; yalnız liste 20+ olunca gerekir (şu an YOK).
+- **(b)** **LOGO ince ayarı** — **askıda** (LOGO KİLİDİ kuralı yürürlükte).
+- **(c)** **Eski Pazar grup kaydı** kontrolü — **opsiyonel**, yalnız kullanıcı isterse.
+
+## Kapı / No-drift
+- No-drift: `app.js 9e1f611265dbd1f6…` (390372 B) · `index.html` damga `9e1f611265dbd1f6` ·
+  `ek-ders.js 3d2dd38f…` — **DEĞİŞMEDİ** (bu tur yalnız `CHECKPOINT.md`).
+- Commit'i Vly alır · **publish GEREKMEZ** (CHECKPOINT canlıya servis edilmiyor).
+
+---
+
 # ✅ KAPANIŞ KAYDI: D36-BOS-AD-KILIT KAPANDI
 
 **Tarih:** 28 Eylül 2026 · **Durum:** ✅ Kapandı — publish sonrası canlı görsel doğrulama

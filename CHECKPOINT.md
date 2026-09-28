@@ -181,6 +181,10 @@ ORİJİNALDİR ve ASLA DEĞİŞTİRİLMEZ.
   (`app.js:3098` ↔ `app.js:3111`) → **ZAYIFLATMA DEĞİL**; `ks-grup-uye-yaz.mjs:316` "gövdede `renderHavuz` YOK" kanıtı
   odak-koruma yaklaşımını doğrular.
 - **(b)** *Kozmetik:* `grep -E 'HAM'` ikinci satır olarak `HAM 'AHMET KIZILIRMAK'` vaka adını da yakalar.
+- **(c)** **DRIFT OLAYI:** kapı sonrası taramada `dist/app.js` **0 BAYT** (`e3b0c442…` boş-SHA) bulundu — harici build/kopyalama
+  boşaltmış; `node scripts/copy-static.mjs` ile **8/8 byte-birebir** onarıldı, `publish-guard` **YEŞİL**. Uygulama kodu ve kök SHA
+  **değişmedi**; canlı etkilenmedi (kullanıcı bu turdan önce publish edip görsel doğruladı) → **publish GEREKMEDİ**.
+  **GÜVENLİ SIRA:** `bun run build` → `node scripts/copy-static.mjs` → `node scripts/publish-guard.mjs` → başka build çalıştırmadan publish.
 
 ## AÇIK KALEMLER
 - **(a)** **LOGO ince ayarı** — **askıda** (kullanıcının ölçek kararını bekliyor; LOGO KİLİDİ kuralı yürürlükte).

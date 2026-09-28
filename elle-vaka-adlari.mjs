@@ -37,9 +37,12 @@ offsetDuzelt(
 );
 
 /* DÖNGÜ-30-CACHE (SHA16 damgası): ks-donem-ilk damga assertion'ı KALDIRILDI;
-   damga artık DİNAMİK olarak ks-index-kimlik.mjs süitinde doğrulanır. */
+   damga artık DİNAMİK olarak ks-index-kimlik.mjs süitinde doğrulanır.
+   D35-DUZELTME: ks-kart-kolon damga vakasının ADINDAN gömülü SHA-16 pini KALDIRILDI;
+   kontrol hâlâ DİNAMİK (index.html ?v= ↔ dosya SHA-16), adı ise app.js her değiştiğinde
+   elle güncelleme GEREKTİRMEZ. */
 elleVakaAdlari["ks-kart-kolon.mjs"].push(
-  "index.html damga = SHA ilk 16 hane (app.js ?v=1a4722af9d39b620 + ek-ders.js ?v=3d2dd38ff517c64f)",
+  "index.html damga = app.js/ek-ders.js SHA-256 ilk 16 hane (DİNAMİK — ada gömülü elle pin YOK)",
 );
 
 /* D34-GRUP-UYE-YAZ: ADIM-4 istek.ogrenciIds SENKRON davranışı nedeniyle ks-grup-istegi.mjs'te
@@ -118,22 +121,24 @@ offsetDuzelt("ks-ekders-gorunum.mjs", "haftalik grup satırı (grupUyeler) aynen
 offsetDuzelt("ks-ekders-gorunum.mjs", "haftalik grup üye satırı hücrede kullanılıyor (DÖNGÜ-26: ölü hucreUst kaldırıldı)", "haftalik grup üyeleri hücre İÇİNDE kendi satırında (D35: virgüllü alt satır kaldırıldı)");
 offsetDuzelt("ks-ekders-ozet-csv.mjs", "haftalikOgrtTablo grup üye satırı KORUNDU", "haftalikOgrtTablo grup üyeleri ortak hücreden (D35: ayrı grupUyeEtiketleri satırı kaldırıldı)");
 
-/* D35-AD-SINIF KALICI SÜİT (ks-d35-ad-sinif.mjs): 21 assertion — çizelge hücresinde her üye
-   kendi satırında ad+sınıf (havuz tipografisi), kisaAdlik eşikleri, etki sınırı (WA/PNG/havuz
-   TAM ad) ve statik sözleşme. */
+/* D35-AD-SINIF KALICI SÜİT (ks-d35-ad-sinif.mjs): 23 assertion (D35-DUZELTME turu) — çizelge
+   hücresinde her üye kendi satırında ad+sınıf (havuz tipografisi), kisaAdlik eşikleri (10/22),
+   sınıf yer tutucusunun KALDIRILMASI, nowrap kapsamı (yalnız hücre) ve etki sınırı (WA/PNG/havuz
+   TAM ad) + statik sözleşme. Adlar ELLE yazılır (koşumdan türetme YOK). */
 elleVakaAdlari["ks-d35-ad-sinif.mjs"] = [
   "boot hatasız",
   "kisaAdlik: 'Ahmet Kızılırmak' → 'Ahmet K.'",
   "kisaAdlik: 'Mehmet Ali Kızılırmak' → 'Mehmet Ali K.'",
-  "kisaAdlik: 'Hasan Hüseyin Taşkın' DEĞİŞMEZ (eşik altı — soyadı 6 < 8, toplam 18 < 22)",
+  "kisaAdlik: 'Hasan Hüseyin Taşkın' DEĞİŞMEZ (eşik altı — soyadı 6 < 10, toplam 18 < 22)",
   "kisaAdlik: tek kelimeli ad DEĞİŞMEZ ('Ecrin' · 'Yusuf Can')",
   "kisaAdlik: gorselAd normalizasyonundan geçer (HAM 'AHMET KIZILIRMAK' → 'Ahmet K.')",
-  "eşikler tek yerde: MAX_SOYAD_HARF = 8 · MAX_AD_UZUNLUK = 22",
+  "kisaAdlik: normal soyadlar KISALMAZ ('Ahmet Karabulut' 9 < 10 · 'Ahmet Demirci' 7 < 10)",
+  "eşikler tek yerde: MAX_SOYAD_HARF = 10 · MAX_AD_UZUNLUK = 22",
   "adHarfSayisi: boşluk/tire/kesme işareti sayılmaz, Türkçe harf TEK sayılır",
   "haftalık grup hücresi: ana + ek üyeler TAM ad ve sınıf AYNI hücrede",
   "haftalık grup hücresi: HER üye KENDİ satırında (5 üye → 5 satır)",
   "haftalık grup hücresi: uzun soyadlı üye 'Ahmet K.' görünür — tam soyadı GÖRÜNMEZ",
-  "haftalık grup hücresi: sınıfı BOŞ üye → 'Sınıf belirtilmemiş' (UYDURMA sınıf adı YOK)",
+  "haftalık grup hücresi: sınıfı BOŞ üye → hücrede sınıf metni YOK (yer tutucu YOK)",
   "haftalık grup hücresi: kaydı silinmiş üye hücreye YAZILMAZ (uydurma ad/sınıf YOK)",
   "haftalık TEKLİ hücre: sınıf VAR + tek kelimeli ad DEĞİŞMEZ",
   "günlük grup hücresi: TAM ad + sınıf AYNI hücrede + 'Ahmet K.' kısaltması",
@@ -142,6 +147,7 @@ elleVakaAdlari["ks-d35-ad-sinif.mjs"] = [
   "ETKİ SINIRI: WhatsApp mesajı TAM ad (kısaltma sızmadı)",
   "ETKİ SINIRI: PNG/rapor kartı TAM ad (kısaltma sızmadı)",
   "ETKİ SINIRI: havuz chip'i TAM ad (kısaltma yok)",
+  "havuz chip'i sarma SERBEST (whitespace-nowrap YOK) — nowrap YALNIZ çizelge hücresi üye satırında",
   "statik: ad/sınıf için İKİNCİ formatter YOK (kisaAdlik tek tanım · hücre birebirEtiketHTML · çizelge hücrelerinde ayrı üye satırı kalmadı)",
 ];
 

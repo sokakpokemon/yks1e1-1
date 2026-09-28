@@ -243,12 +243,14 @@ function kartParentId(env, kid) {
 
   /* H) İÇERİK DAMGASI (?v=<sha16>): index.html'deki statik varlık URL'leri,
      ilgili dosyanın SHA-256 ilk 16 hanesini taşımalı — damga eksik/yanlışsa KIRMIZI.
-     (Kendini doğrular: beklenen değerler dosyalardan CANLI hesaplanır.) */
+     (Kendini doğrular: beklenen değerler dosyalardan CANLI hesaplanır.)
+     D35-DUZELTME: vaka ADINDAN gömülü SHA-16 pini KALDIRILDI — kontrol hâlâ DİNAMİK,
+     ama app.js her değiştiğinde ada elle pin güncellemesi BİTMİŞTİR. */
   {
     const appSha16 = createHash("sha256").update(readFileSync("app.js")).digest("hex").slice(0, 16);
     const ekSha16 = createHash("sha256").update(readFileSync("ek-ders.js")).digest("hex").slice(0, 16);
     t(
-      "index.html damga = SHA ilk 16 hane (app.js ?v=" + appSha16 + " + ek-ders.js ?v=" + ekSha16 + ")",
+      "index.html damga = app.js/ek-ders.js SHA-256 ilk 16 hane (DİNAMİK — ada gömülü elle pin YOK)",
       html.includes('src="app.js?v=' + appSha16 + '"') && html.includes('src="ek-ders.js?v=' + ekSha16 + '"')
     );
   }

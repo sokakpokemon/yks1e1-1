@@ -1,12 +1,12 @@
-/* ks-d35-ad-sinif.mjs — D35-AD-SINIF kalıcı süiti (21 assertion)
+/* ks-d35-ad-sinif.mjs — D35-AD-SINIF kalıcı süiti (23 assertion)
    KAPSAM: çizelge hücresinde HER öğrenci için "Ad Soyad + Sınıf" (havuz kartındaki
    birebirEtiketHTML ile AYNI tipografi), üyeler ALT ALTA; uzun soyadlı adlar kisaAdlik ile kısalır.
    Etki sınırı: WhatsApp mesajı, PNG kartı, havuz chip'i TAM adla kalır.
-   SUITE_DONE kapısı: tam 1 marker, kosan === beklenen === 21. app.js'e YAZMAZ. */
+   SUITE_DONE kapısı: tam 1 marker, kosan === beklenen === 23. app.js'e YAZMAZ. */
 import { readFileSync } from "node:fs";
 
 let __kosan = 0;
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 21) { console.error("SUITE_DONE UYUŞMAZLIK: ks-d35-ad-sinif.mjs kosan=" + __kosan + " beklenen=21"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-d35-ad-sinif.mjs:" + __kosan + ":21"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 23) { console.error("SUITE_DONE UYUŞMAZLIK: ks-d35-ad-sinif.mjs kosan=" + __kosan + " beklenen=23"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-d35-ad-sinif.mjs:" + __kosan + ":23"); } });
 
 const html = readFileSync("index.html", "utf8");
 const appKaynak = readFileSync("app.js", "utf8");
@@ -81,16 +81,18 @@ ui.istekFiltre = "";
 const hafta = () => { ui.filtre = "hafta"; ui.anchor = pzt; ui.gunSecim = ""; ui.haftalikOgrtId = ogr.id; return haftalikOgrtTablo(); };
 const gun = () => { ui.filtre = "gun"; ui.anchor = pzt; ui.gunSecim = pzt; ui.haftalikOgrtId = null; return gunlukTablo(); };
 const tdAl = (h, anahtar) => { const i = h.indexOf(anahtar); if (i < 0) return ""; const b = h.lastIndexOf("<td", i); const e = h.indexOf("</td>", i); return h.slice(b, e < 0 ? h.length : e); };
-/* üye satırı = <div class="min-w-0" title="AD"> ... </div> (hücrenin dış kabuğu class="rounded-lg ... min-w-0" ile karışmaz) */
-const uyeSatirlari = (h) => (h.match(/<div class="min-w-0" title="[^"]*">[\s\S]*?<\/div>/g) || []);
+/* üye satırı = <div class="min-w-0 whitespace-nowrap" title="AD"> ... </div> (hücrenin dış kabuğu class="rounded-lg ... min-w-0" ile karışmaz).
+   D35-DUZELTME: nowrap ORTAK formatter'dan çıkarıldı → hücre üye sarmalayıcısına taşındı. */
+const uyeSatirlari = (h) => (h.match(/<div class="min-w-0 whitespace-nowrap" title="[^"]*">[\s\S]*?<\/div>/g) || []);
 
 /* ================= A) kisaAdlik birimi ================= */
 t("kisaAdlik: 'Ahmet Kızılırmak' → 'Ahmet K.'", kisaAdlik("Ahmet Kızılırmak") === "Ahmet K.", kisaAdlik("Ahmet Kızılırmak"));
 t("kisaAdlik: 'Mehmet Ali Kızılırmak' → 'Mehmet Ali K.'", kisaAdlik("Mehmet Ali Kızılırmak") === "Mehmet Ali K.", kisaAdlik("Mehmet Ali Kızılırmak"));
-t("kisaAdlik: 'Hasan Hüseyin Taşkın' DEĞİŞMEZ (eşik altı — soyadı 6 < 8, toplam 18 < 22)", kisaAdlik("Hasan Hüseyin Taşkın") === "Hasan Hüseyin Taşkın", kisaAdlik("Hasan Hüseyin Taşkın"));
+t("kisaAdlik: 'Hasan Hüseyin Taşkın' DEĞİŞMEZ (eşik altı — soyadı 6 < 10, toplam 18 < 22)", kisaAdlik("Hasan Hüseyin Taşkın") === "Hasan Hüseyin Taşkın", kisaAdlik("Hasan Hüseyin Taşkın"));
 t("kisaAdlik: tek kelimeli ad DEĞİŞMEZ ('Ecrin' · 'Yusuf Can')", kisaAdlik("Ecrin") === "Ecrin" && kisaAdlik("Yusuf Can") === "Yusuf Can", kisaAdlik("Ecrin") + " | " + kisaAdlik("Yusuf Can"));
 t("kisaAdlik: gorselAd normalizasyonundan geçer (HAM 'AHMET KIZILIRMAK' → 'Ahmet K.')", kisaAdlik("AHMET KIZILIRMAK") === "Ahmet K." && gorselAd("AHMET KIZILIRMAK") === "Ahmet Kızılırmak");
-t("eşikler tek yerde: MAX_SOYAD_HARF = 8 · MAX_AD_UZUNLUK = 22", MAX_SOYAD_HARF === 8 && MAX_AD_UZUNLUK === 22);
+t("kisaAdlik: normal soyadlar KISALMAZ ('Ahmet Karabulut' 9 < 10 · 'Ahmet Demirci' 7 < 10)", kisaAdlik("Ahmet Karabulut") === "Ahmet Karabulut" && kisaAdlik("Ahmet Demirci") === "Ahmet Demirci", kisaAdlik("Ahmet Karabulut") + " | " + kisaAdlik("Ahmet Demirci"));
+t("eşikler tek yerde: MAX_SOYAD_HARF = 10 · MAX_AD_UZUNLUK = 22", MAX_SOYAD_HARF === 10 && MAX_AD_UZUNLUK === 22);
 t("adHarfSayisi: boşluk/tire/kesme işareti sayılmaz, Türkçe harf TEK sayılır", adHarfSayisi("Kızılırmak") === 10 && adHarfSayisi("Taşkın") === 6 && adHarfSayisi("O'Brien Kızıl-ırmak") === 16, adHarfSayisi("Kızılırmak") + "/" + adHarfSayisi("O'Brien Kızıl-ırmak"));
 
 /* ================= B) HAFTALIK hücre ================= */
@@ -101,7 +103,7 @@ t("haftalık grup hücresi: ana + ek üyeler TAM ad ve sınıf AYNI hücrede", g
 t("haftalık grup hücresi: HER üye KENDİ satırında (5 üye → 5 satır)", uyeSatirlari(gTD).length === 5, "satır=" + uyeSatirlari(gTD).length);
 t("haftalık grup hücresi: uzun soyadlı üye 'Ahmet K.' görünür — tam soyadı GÖRÜNMEZ", gTD.includes("Ahmet K.") && !gTD.includes("Kızılırmak"), gTD.slice(0, 200));
 const bosSatir = uyeSatirlari(gTD).find((s) => s.includes(bosSinif.ad)) || "";
-t("haftalık grup hücresi: sınıfı BOŞ üye → 'Sınıf belirtilmemiş' (UYDURMA sınıf adı YOK)", !!bosSatir && bosSatir.includes("Sınıf belirtilmemiş") && !bosSatir.includes(aSinif) && !bosSatir.includes(eSinif));
+t("haftalık grup hücresi: sınıfı BOŞ üye → hücrede sınıf metni YOK (yer tutucu YOK)", !!bosSatir && bosSatir.includes(bosSinif.ad) && !bosSatir.includes("Sınıf belirtilmemiş") && !bosSatir.includes(aSinif) && !bosSatir.includes(eSinif), bosSatir);
 t("haftalık grup hücresi: kaydı silinmiş üye hücreye YAZILMAZ (uydurma ad/sınıf YOK)", !gTD.includes(GHOST) && (gTD.match(/birebir-etiket/g) || []).length === 5, "etiket=" + (gTD.match(/birebir-etiket/g) || []).length);
 const tTD = tdAl(hHTML, "d35-tekli");
 t("haftalık TEKLİ hücre: sınıf VAR + tek kelimeli ad DEĞİŞMEZ", tTD.includes(tek.ad) && !tTD.includes("Ecrin.") && tTD.includes(tek.sinif));
@@ -124,6 +126,12 @@ t("ETKİ SINIRI: PNG/rapor kartı TAM ad (kısaltma sızmadı)", pngHTML.include
 renderHavuz();
 const havuzHTML = reg["havuzBolum"] ? reg["havuzBolum"].innerHTML : "";
 t("ETKİ SINIRI: havuz chip'i TAM ad (kısaltma yok)", havuzHTML.includes(gorselAd(uzun.ad)) && !havuzHTML.includes("Ahmet K."));
+t("havuz chip'i sarma SERBEST (whitespace-nowrap YOK) — nowrap YALNIZ çizelge hücresi üye satırında",
+  !havuzHTML.includes("whitespace-nowrap") &&
+  (havuzHTML.match(/birebir-etiket/g) || []).length >= 1 &&
+  !appKaynak.includes("text-slate-400 shrink-0 whitespace-nowrap") &&
+  uyeSatirlari(gTD).length === 5 && uyeSatirlari(gTD).every((s) => s.includes("whitespace-nowrap")),
+  "havuz nowrap=" + havuzHTML.includes("whitespace-nowrap") + " · satır nowrap=" + uyeSatirlari(gTD).filter((s) => s.includes("whitespace-nowrap")).length + "/" + uyeSatirlari(gTD).length);
 
 /* ================= E) statik sözleşme ================= */
 const blok = (fn) => { const i = appKaynak.indexOf(fn); let j = appKaynak.indexOf("\nfunction ", i + 10); if (j === -1) j = appKaynak.length; return appKaynak.slice(i, j); };

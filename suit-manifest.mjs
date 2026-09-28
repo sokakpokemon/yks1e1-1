@@ -59,7 +59,7 @@ export const manifest = {
   "ks-dongu29.mjs": 25,
   "ks-d32-grup-birebir-e2e.mjs": 20,
   "ks-grup-uye-yaz.mjs": 25,
-  "ks-d35-ad-sinif.mjs": 21,
+  "ks-d35-ad-sinif.mjs": 23,
 };
 
 /* Süit içi yardımcı: kosan sayacını manifest ile KENDİ sunar.

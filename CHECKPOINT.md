@@ -118,6 +118,73 @@ ORİJİNALDİR ve ASLA DEĞİŞTİRİLMEZ.
 
 ---
 
+# ✅ KAPANIŞ KAYDI: D36-BOS-AD-KILIT KAPANDI
+
+**Tarih:** 28 Eylül 2026 · **Durum:** ✅ Kapandı — publish sonrası canlı görsel doğrulama
+**Bu turda değişen tek dosya:** `CHECKPOINT.md` (uygulama kodu ve testler DEĞİŞMEDİ).
+
+*(Not: bu kayıt HIZ PROTOKOLÜ / JET 2.0 / LOGO KİLİDİ bloğunun hemen ardına, TEK append olarak alındı — içerik birebir.)*
+
+## 1) KEŞİF — "ad dolu mu" ≠ "anahtar var mı"
+- HAFTALIK: `app.js:3826` `sinifVar = avail.sinif && key in avail.sinif` DOĞRUYDU (anahtar var) ama
+  `app.js:3832` `sinifChipHTML(avail.sinif[key])` KOŞULSUZ çağrılıyordu → ad boşsa **uydurma "Sınıf"** etiketi.
+- GÜNLÜK ANA SATIR: `app.js:4245` koşul `ogrtAvail.avail.sinif[dowIdx28 + "-" + slot.no]` (**değer truthy**) idi →
+  ad boşsa dal HİÇ çalışmıyor, hücre `app.js:4253` MEVCUT `dnd-bos` "+" drop-zone olarak kalıyordu.
+- GÜNLÜK "Boş" satırı `app.js:4283` (`kilitli28` zaten `key28 in t.avail.sinif`) → **DOKUNULMADI**.
+
+## 2) UYGULAMA — ks-yama-d36-bos-ad-kilit.mjs
+- Marker `D36-BOS-AD-KILIT`, 2 anchor, idempotent (2. koşu **exit 2**, dosya değişmez).
+- Kilit artık **"anahtar VAR"** tabanlı: haftalık `dnd-kilit` + chip YALNIZ ad DOLUYSA;
+  günlük ANA satır `((dowIdx28 + "-" + slot.no) in ogrtAvail.avail.sinif)` → KİLİTLİ, drop-zone AÇILMAZ.
+- Chip YALNIZ ad DOLUYSA çizilir. **Yeni üretici/string inşası YOK** (aynı `sinifChipHTML`).
+- Yedek: `app.js.d36-bos-ad-kilit-oncesi.bak` (yedekten ÖNCE byte+SHA raporlandı, yedek birebir doğrulandı).
+
+## 3) SAYILAR
+- Toplam: **2548 → 2549 (+1)** · süit: **55 SABİT** · `ks-gunluk-ders-tasi.mjs`: **120 → 121**
+  (1 ad güncellendi: günlük boş ad → KİLİTLİ; 1 yeni: haftalık boş ad → kilitli + adlı slot DEĞİŞMEDİ).
+
+## 4) SHA / DAMGA
+- `app.js`: **388693 → 389132 B** · `aa94ed0b…` → `feecb17b…`
+  (tam: `feecb17b82d067c223620e155a0d94d5dfc9d311bff013b4713368cd7c24792e`; sha16 `feecb17b82d067c2`).
+- `index.html` damga: `app.js?v=aa94ed0b2b722628` → `app.js?v=feecb17b82d067c2`.
+- `ek-ders.js 3d2dd38f…` **DEĞİŞMEDİ** (`3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f`, 30405 B).
+- Kök→public/dist senkron + `scripts/publish-guard.mjs` **YEŞİL**.
+
+## 5) KAPI
+- `node hizli-test.mjs --tam` → **EXIT=0** · `MANIFEST: 55 süit, toplam 2549 beklenen | RUNNER: 2549 koşan, 2549 geçen — BİREBİR EŞİT ✓` · `HAM Σ beşli 2549 — BİREBİR ✓` · `TAMLIK KANITI: 48/48` · `node --check app.js` **OK**.
+
+## 6) DÜRÜST NOT-1 — haftalık çıktı bilinçli DEĞİŞTİ
+- Haftalık çizelgede "sınıf kaydı VAR + ad BOŞ" durumu ESKİDEN uydurma **"Sınıf"** etiketi basıyordu;
+  YENİ: hücre **chip'siz + kilitli**. Bu, "uydurma etiket basma" kuralıyla UYUMLUDUR (gevşetme değil, sıkılaştırma).
+- Ad DOLU slotlarda chip **birebir aynı** kaldı (aynı üretici + aynı markup).
+
+## 7) DÜRÜST NOT-2 — sapma kaydı (HIZLI TUR "TAM 1 KEZ")
+- `--tam` **1. koşuda DÜŞTÜ**: `ks-ekders-ozet-csv.mjs` "haftalikOgrtTablo diff'i yalnız PAZAR-BIREBIR işaretli bölgede"
+  (yeni yasal bölge beyaz listede yoktu) → `[KAPI HATASI] SUITE_DONE marker'ı YOK`.
+- Düzeltilip **2. kez** koşuldu → yeşil. Bu, HIZLI TUR "TAM 1 KEZ" kuralından **SAPMA**dır; dürüstçe kayda geçti.
+
+## 8) BEYAZ LİSTE KANITI — test GEVŞETİLMEDİ
+- `ks-ekders-ozet-csv.mjs:170` `KELIMELER`: **32 → 33 bölge**; eklenen YALNIZ `"D36-BOS-AD-KILIT"`
+  (diğer 32 bölge adı/sırası DEĞİŞMEDİ).
+- **MUTASYON:** `haftalikOgrtTablo` içine ilgisiz satır eklendi → süit **exit 1 / BAŞARISIZ** (tek kırmızı)
+  → beyaz liste hâlâ DİŞLİ; restore sonrası canonical `feecb17b…` **birebir**. → gevşetme YOK.
+
+## 9) CANLI DOĞRULAMA
+- Kullanıcı **publish etti**; canlı damga **`app.js?v=feecb17b82d067c2`**.
+- Günlük + haftalık görsel kontrol **TEMİZ**: adlı sınıf slotları pembe chip + gerçek sınıf adı;
+  adsız (boş adlı) kayıtlı slot **chip'siz + "+"sız KİLİTLİ**.
+- → **D36-BOS-AD-KILIT KAPANDI.**
+
+## AÇIK KALEMLER
+- **(a)** LOGO ince ayarı — **askıda**; kullanıcının ölçek kararını bekliyor (LOGO KİLİDİ kuralı yürürlükte).
+- **(b)** Eski Pazar grup kaydı kontrolü — **opsiyonel**, yalnız kullanıcı isterse.
+
+## Kapı / No-drift
+- No-drift: `app.js feecb17b82d067c2…` · `index.html` damga `feecb17b82d067c2` · `ek-ders.js 3d2dd38f…` — **DEĞİŞMEDİ** (bu tur yalnız `CHECKPOINT.md`).
+- Commit'i Vly alır · **publish GEREKMEZ** (CHECKPOINT canlıya servis edilmiyor).
+
+---
+
 # ✅ KAPANIŞ KAYDI: DÖNGÜ-36 + DÖNGÜ-36 KALANI KAPANDI
 
 **Tarih:** 28 Eylül 2026 · **Durum:** ✅ Kapandı — kullanıcı görsel doğrulaması + canlı damga teyidi
@@ -167,6 +234,7 @@ ORİJİNALDİR ve ASLA DEĞİŞTİRİLMEZ.
 ## 7) CANLI-YAYIM KURALI
 - Kullanıcı **publish etti**; canlı damga `app.js?v=aa94ed0b2b722628`.
 - Bu tur YALNIZ `CHECKPOINT.md` değiştiği için **publish GEREKMEZ** (CHECKPOINT canlıya servis edilmiyor).
+- **D36 teyidi:** publish sonrası canlıda görsel doğrulama yapıldı (canlı damga `feecb17b82d067c2`) — KAPANDI.
 
 ## AÇIK KALEMLER
 - **(a)** Boş adlı sınıf kaydı slotu görsel sertleştirmesi — `key in avail.sinif` VARSA hücreyi kilitle (drop-zone gösterme). *Görsel; veri zaten güvenli.*

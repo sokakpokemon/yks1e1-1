@@ -2973,7 +2973,7 @@ function renderHavuz() {
         return mo ? '<span class="inline-flex items-center rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[10px] font-medium text-slate-500 whitespace-normal break-words">' + birebirEtiketHTML(mo.ad, mo.sinif || "") + "</span>" : "";
       }).join("") + "</span>" : "";
     var bekliyor = r.durum === "bekliyor";
-    var kartHTML = '<div draggable="' + bekliyor + '" data-istek="' + r.id + '" class="istek-kart flex items-center gap-3 rounded-xl border px-3.5 py-2.5 ' + (bekliyor ? "border-slate-100 hover:border-teal-300 transition-colors cursor-grab active:cursor-grabbing" : "border-green-100 bg-green-50/40") + '"' +
+    var kartHTML = '<div draggable="' + bekliyor + '" data-istek="' + r.id + '" class="istek-kart flex flex-wrap items-center gap-3 rounded-xl border px-3.5 py-2.5 ' + (bekliyor ? "border-slate-100 hover:border-teal-300 transition-colors cursor-grab active:cursor-grabbing" : "border-green-100 bg-green-50/40") + '"' +
       (bekliyor ? ' ondragstart="istekDrag(event, \'' + r.id + '\'); this.style.opacity=\'0.45\'" ondragend="istekDropHedef=null; this.style.opacity=\'\'"' : "") + ">" +
       avatar((o ? o.ad : r.ogrenciAd), i) +
       '<div class="flex-1 min-w-0"><div class="flex items-center gap-2 flex-wrap">' + '<span class="inline-flex rounded-full bg-slate-50 border border-slate-200 px-2.5 py-1">' + (o ? birebirEtiketHTML(o.ad, o.sinif || "") : birebirEtiketHTML(r.ogrenciAd, null)) + '</span>' + uyeHtml +
@@ -2984,9 +2984,12 @@ function renderHavuz() {
       (bekliyor
         ? '<button onclick="formaAktar(\'' + r.id + '\')" title="Sürükleyip planlama formuna bırakın veya tıklayın" class="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-teal-500 hover:bg-teal-600 text-white text-[11.5px] font-bold px-3.5 py-2 shadow-sm transition-colors"><i class="fa-solid fa-arrow-right-arrow-left"></i>Eşleştir &amp; Planla</button>'
         : '<span class="text-[10.5px] text-emerald-600 font-bold shrink-0"><i class="fa-solid fa-check mr-1"></i>Derse dönüştürüldü</span>') +
-      '<button onclick="istekSil(\'' + r.id + '\')" class="w-7 h-7 rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 shrink-0"><i class="fa-solid fa-trash-can text-[12px]"></i></button></div>';
-    if (bekliyor) kartHTML += istekUyeEditorHTML(r); /* D34-GRUP-UYE-YAZ ADIM-4: bekleyen istek kartına üye ekle/çıkar */
-    liste += kartHTML;
+      '<button onclick="istekSil(\'' + r.id + '\')" class="w-7 h-7 rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 shrink-0"><i class="fa-solid fa-trash-can text-[12px]"></i></button>' +
+      (bekliyor ? istekUyeButonHTML(r) : "") + /* D37-HUCRE-GRUP: buton kart DOM'unun İÇİNDE (w-full satır — ayrı grid öğesi DEĞİL) */
+      '</div>';
+    /* D37-HUCRE-GRUP: her istek kart + (açıksa) editör TEK dış grid hücresinde gruplanır; editör kartın ALTINDA,
+       kartla AYNI genişlikte. Hücre col-span ALMAZ → D28 zigzag + %50 ayırıcı çizgi aynen korunur. */
+    liste += '<div class="istek-hucre min-w-0" data-istek-hucre="' + r.id + '">' + kartHTML + (bekliyor ? istekUyeEditorHTML(r) : "") + '</div>';
   });
   liste += "</div>";
 
@@ -3058,11 +3061,14 @@ function formaAktar(id) {
    Bekleyen bir isteğin üyeleri doğrudan kart üzerinden düzenlenir; kaydedince
    grupUyeYaz TEK KAPISINDAN ogrenciId + ogrenciIds SENKRON yazılır. Mevcut chip düzeni korunur.
    ================================================================ */
-function istekUyeEditorHTML(r) {
+/* D37-HUCRE-GRUP: "Grup üyelerini ekle/çıkar" butonu TEK üreticiden — kart DOM'unun İÇİNE
+   yerleşir (ayrı dış grid hücresi DEĞİL). Editör paneli ise kartın ALTINA, AYNI hücreye çizilir. */
+function istekUyeButonHTML(r) {
   var uyeler = istekOgrenciIds(r);
-  if (ui.istekUyeId !== r.id) {
-    return '<div class="mt-1 px-1"><button type="button" onclick="istekUyeAc(\'' + esc(r.id) + '\')" class="text-[10.5px] font-bold text-slate-400 hover:text-teal-600 inline-flex items-center gap-1 transition-colors"><i class="fa-solid fa-user-group text-[10px]"></i>Grup üyelerini ekle/çıkar (' + uyeler.length + ')</button></div>';
-  }
+  return '<div class="istek-uye-buton w-full pt-0.5"><button type="button" onclick="istekUyeAc(\'' + esc(r.id) + '\')" class="text-[10.5px] font-bold text-slate-400 hover:text-teal-600 inline-flex items-center gap-1 transition-colors"><i class="fa-solid fa-user-group text-[10px]"></i>Grup üyelerini ekle/çıkar (' + uyeler.length + ')</button></div>';
+}
+function istekUyeEditorHTML(r) {
+  if (ui.istekUyeId !== r.id) return '';
   var taslak = Array.isArray(ui.istekUyeTaslak) ? ui.istekUyeTaslak : [];
   var satir = DB.ogrenciler.map(function (o) {
     var sec = taslak.indexOf(o.id) >= 0;
@@ -3070,7 +3076,7 @@ function istekUyeEditorHTML(r) {
       ' onchange="istekUyeSec(\'' + esc(r.id) + '\',\'' + esc(o.id) + '\')" class="w-3.5 h-3.5 shrink-0 accent-teal-600" />' +
       '<span class="text-[11.5px] text-slate-600 truncate">' + esc(o.ad) + (o.sinif ? ' <span class="text-slate-300">· ' + esc(o.sinif) + "</span>" : "") + "</span></label>";
   }).join("");
-  return '<div class="mt-1 rounded-xl border border-teal-200 bg-teal-50/40 p-2.5">' +
+  return '<div class="istek-uye-editor mt-1 rounded-xl border border-teal-200 bg-teal-50/40 p-2.5">' +
     '<div class="text-[10.5px] font-extrabold text-teal-700 mb-1"><i class="fa-solid fa-user-group mr-1"></i>Grup Üyelerini Ekle/Çıkar</div>' +
     '<div class="max-h-40 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-x-3">' + satir + "</div>" +
     '<div class="flex items-center gap-2 mt-2 flex-wrap">' +

@@ -182,7 +182,8 @@ elleVakaAdlari["ks-d32-grup-birebir-e2e.mjs"] = [
 
 /* D34-GRUP-UYE-YAZ KALICI SÜİT (ks-grup-uye-yaz.mjs): "ek öğrenci > 0 ⇒ ogrenciIds ZORUNLU" TEK KAPI kapısı.
    25 assertion — 4 yazım yolu (yeni/düzenleme · istekBurak · formaAktar+planla · havuza geri) × (0/1 ek),
-   düzenleme üye koruması, havuz istek kartı üye editörü, WhatsApp ve statik sözleşme. */
+   düzenleme üye koruması, havuz istek kartı üye editörü, WhatsApp ve statik sözleşme.
+   D37-HUCRE-GRUP +6 assertion → 31 (havuz kartı DOM yerleşimi: kart + buton + editör TEK dış grid hücresi; ELLE yazılır). */
 elleVakaAdlari["ks-grup-uye-yaz.mjs"] = [
   "boot hatasız",
   "grupUyeYaz: ek>0 ⇒ ogrenciIds = [ek] (ana yazılır)",
@@ -209,6 +210,13 @@ elleVakaAdlari["ks-grup-uye-yaz.mjs"] = [
   "istekUyeKaydet: istek.ogrenciIds SENKRON + durum bekliyor",
   "app.js'te grupUyeYaz TEK tanım",
   "5 yazım yolu grupUyeYaz'dan geçer (elle ogrenciIds ataması YOK)",
+  /* D37-HUCRE-GRUP: havuz kartı DOM yerleşimi — koşum sırasıyla birebir, otomatik üretim YOK. */
+  "ayırıcı grid'in İLK çocuğu + hücreler ONDAN sonra (auto-placement bozulmadı → 1-sol/2-sağ zigzag korunur)",
+  "her istek TEK dış grid hücresinde gruplanır (istek-hucre sayısı = istek-kart sayısı; hücre col-span DEĞİL)",
+  "buton kart DOM'unun İÇİNDE (kart açılışından SONRA, editör panelinden ÖNCE) — ayrı grid öğesi DEĞİL",
+  "editör paneli kartın ALTINDA ve AYNI dış grid hücresinde (hücre sarmalayıcı kart + editörü kapsar)",
+  "editör paneli kart genişliğinde taşmaz: hücre min-w-0 + yalnız dikey kaydırma (overflow-x YOK) + dar ekranda 1 sütun",
+  "boş-havuz mesajı md:col-span-2 kuralı kaynakta korunur",
 ];
 
 /* D36-ANA-SATIR: günlük çizelge ANA satırında sınıf dersi hücresi (avail.sinif) artık drop-zone "+"

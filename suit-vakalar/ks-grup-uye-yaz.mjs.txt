@@ -23,3 +23,9 @@ istekUyeSec: üye ekle/çıkar taslağı değiştirir
 istekUyeKaydet: istek.ogrenciIds SENKRON + durum bekliyor
 app.js'te grupUyeYaz TEK tanım
 5 yazım yolu grupUyeYaz'dan geçer (elle ogrenciIds ataması YOK)
+ayırıcı grid'in İLK çocuğu + hücreler ONDAN sonra (auto-placement bozulmadı → 1-sol/2-sağ zigzag korunur)
+her istek TEK dış grid hücresinde gruplanır (istek-hucre sayısı = istek-kart sayısı; hücre col-span DEĞİL)
+buton kart DOM'unun İÇİNDE (kart açılışından SONRA, editör panelinden ÖNCE) — ayrı grid öğesi DEĞİL
+editör paneli kartın ALTINDA ve AYNI dış grid hücresinde (hücre sarmalayıcı kart + editörü kapsar)
+editör paneli kart genişliğinde taşmaz: hücre min-w-0 + yalnız dikey kaydırma (overflow-x YOK) + dar ekranda 1 sütun
+boş-havuz mesajı md:col-span-2 kuralı kaynakta korunur

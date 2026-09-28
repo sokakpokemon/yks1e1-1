@@ -10,11 +10,12 @@
      G) WhatsApp alıcı listesi + mesajlar
      H) havuz istek kartı "Grup Üyelerini Ekle/Çıkar" (ADIM-4)
      I) statik sözleşme (tek tanım, elle atama yok)
-   SUITE_DONE kapısı: tam 1 marker, kosan === beklenen === 25. */
+     J) D37 havuz kartı DOM yerleşimi (kart + buton + editör TEK dış grid hücresi)
+   SUITE_DONE kapısı: tam 1 marker, kosan === beklenen === 31. */
 import { readFileSync } from "node:fs";
 
 let __kosan = 0;
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 25) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-grup-uye-yaz.mjs kosan=" + __kosan + " beklenen=25"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-grup-uye-yaz.mjs:" + __kosan + ":25"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 31) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-grup-uye-yaz.mjs kosan=" + __kosan + " beklenen=31"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-grup-uye-yaz.mjs:" + __kosan + ":31"); } });
 
 const html = readFileSync("index.html", "utf8");
 const appKaynak = readFileSync("app.js", "utf8");
@@ -64,7 +65,7 @@ try {
   console.error(e.stack ? e.stack.split("\n").slice(0, 8).join("\n") : e);
   throw e;
 }
-const { DB, ui, planla, formaAktar, dersOgrenciIds, istekOgrenciIds, grupUyeYaz, istekDrag, istekBurak, dersHavuzaGeriBurak, onayOnayla, waAc, ogrenciMesajMetni, duzenle, grupPanelSec, istekUyeAc, istekUyeSec, istekUyeKaydet } = P;
+const { DB, ui, planla, formaAktar, dersOgrenciIds, istekOgrenciIds, grupUyeYaz, istekDrag, istekBurak, dersHavuzaGeriBurak, onayOnayla, waAc, ogrenciMesajMetni, duzenle, grupPanelSec, istekUyeAc, istekUyeSec, istekUyeKaydet, renderHavuz } = P;
 
 /* ---------- FIXTURE ---------- */
 const ana = DB.ogrenciler.find(o => o.ad === "Ayşe Demir");
@@ -192,6 +193,31 @@ t("5 yazım yolu grupUyeYaz'dan geçer (elle ogrenciIds ataması YOK)",
   !appKaynak.includes("if (_d26Ekler.length) _d26Yeni.ogrenciIds") &&
   !appKaynak.includes("if (ekler.length) yeniIstek.ogrenciIds = ekler") &&
   !appKaynak.includes("ogrenciIds: ekler, ogrenciAd"));
+
+/* ================= J) havuz kartı DOM yerleşimi (D37: kart + buton + editör TEK dış grid hücresi) ================= */
+renderHavuz();
+const hvJ = (reg["havuzBolum"] || { innerHTML: "" }).innerHTML;
+t("ayırıcı grid'in İLK çocuğu + hücreler ONDAN sonra (auto-placement bozulmadı → 1-sol/2-sağ zigzag korunur)",
+  hvJ.indexOf("havuz-ayirici") >= 0 && hvJ.indexOf("havuz-ayirici") < hvJ.indexOf('data-istek-hucre="') && hvJ.indexOf('data-istek-hucre="') < hvJ.indexOf('class="istek-kart '));
+const hucreSayJ = (hvJ.match(/data-istek-hucre="/g) || []).length;
+const kartSayJ = (hvJ.match(/class="istek-kart /g) || []).length;
+t("her istek TEK dış grid hücresinde gruplanır (istek-hucre sayısı = istek-kart sayısı; hücre col-span DEĞİL)",
+  hucreSayJ >= 1 && hucreSayJ === kartSayJ && !/istek-hucre[^"]*col-span/.test(hvJ), "hücre=" + hucreSayJ + " kart=" + kartSayJ);
+istekUyeAc(geri.id); /* bekleyen istek: editörü AÇ */
+const hvJ2 = (reg["havuzBolum"] || { innerHTML: "" }).innerHTML;
+const hB = hvJ2.indexOf('data-istek-hucre="' + geri.id + '"');
+const kB = hvJ2.indexOf('class="istek-kart ', hB);
+const bB = hvJ2.indexOf("istekUyeAc('" + geri.id + "')", kB);
+const eB = hvJ2.indexOf('class="istek-uye-editor', kB);
+t("buton kart DOM'unun İÇİNDE (kart açılışından SONRA, editör panelinden ÖNCE) — ayrı grid öğesi DEĞİL",
+  hB >= 0 && kB > hB && bB > kB && eB > bB, "hücre=" + hB + " kart=" + kB + " buton=" + bB + " editör=" + eB);
+const sonrakiHucreJ = hvJ2.indexOf('data-istek-hucre="', hB + 1);
+t("editör paneli kartın ALTINDA ve AYNI dış grid hücresinde (hücre sarmalayıcı kart + editörü kapsar)",
+  eB > bB && (sonrakiHucreJ < 0 || sonrakiHucreJ > eB));
+t("editör paneli kart genişliğinde taşmaz: hücre min-w-0 + yalnız dikey kaydırma (overflow-x YOK) + dar ekranda 1 sütun",
+  hvJ2.includes('class="istek-hucre min-w-0"') && hvJ2.includes("max-h-40 overflow-y-auto grid grid-cols-1 sm:grid-cols-2") && !hvJ2.includes("overflow-x"));
+t("boş-havuz mesajı md:col-span-2 kuralı kaynakta korunur",
+  appKaynak.includes('md:col-span-2 border border-dashed border-slate-200 rounded-2xl py-10 text-center'));
 
 console.log(fail ? "BAŞARISIZ" : "HEPSİ GEÇTİ");
 process.exit(fail);

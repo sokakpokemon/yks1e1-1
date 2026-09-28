@@ -4200,6 +4200,9 @@ function gunlukTablo() {
   ogrtSirasi.forEach(function (ogrtAd, oi) {
     var saatMap = ogrtMap[ogrtAd];
     var ogrtId = ogrtIdMap[ogrtAd] || ""; /* GUNLUK-DERS-TASI-YAMASI: satırın öğretmen kimliği — hedef satır kontrolü bununla yapılır */
+    /* D36-ANA-SATIR-YAMASI: satır öğretmeninin avail kaydı — sınıf dersi slotu ANA satırda da GERÇEK
+       sınıf adı chip'i olarak çizilir; veri alanı haftalık ve "Boş" satırıyla AYNI: avail.sinif["<günIdx>-<slotNo>"] */
+    var ogrtAvail = ogrtId ? DB.ogretmenler.find(function (x) { return x.id === ogrtId; }) : null;
     var bg = oi % 2 === 0 ? 'bg-white' : 'bg-slate-50/60';
 
     html += '<tr class="border-b border-slate-200 ' + bg + '">';
@@ -4239,6 +4242,12 @@ function gunlukTablo() {
             birebirHucreHTML(ders, ogrenci, ders.ogrenciAd || "", sinif, durumRenkG); /* DERS-KARTI-TASIMA-YAMASI: gunluk hücreden kart butonu kaldırıldı. D35-AD-SINIF: üyeler hücre İÇİNDE (ayrı üye satırı KALDIRILDI) */
 
           html += '</td>';
+        } else if (ogrtAvail && ogrtAvail.avail && ogrtAvail.avail.sinif && ogrtAvail.avail.sinif[dowIdx28 + "-" + slot.no]) {
+          /* D36-ANA-SATIR-YAMASI: sınıf dersi slotu (avail.sinif) — bu hücre artık DROP-ZONE DEĞİL;
+             haftalık çizelge ve günlük "Boş" satırıyla AYNI sinifChipHTML üreticisi + AYNI veri alanı.
+             Sınıf adı boş/yoksa bu dal HİÇ çalışmaz → mevcut drop-zone davranışı korunur (uydurma etiket YOK).
+             Kilit ayrıca MEVCUT istekBurak/dersBurak kuralında (avail.sinif → kilitli) zaten reddeder. */
+          html += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-r border-slate-200">' + sinifChipHTML(ogrtAvail.avail.sinif[dowIdx28 + "-" + slot.no]) + '</td>';
         } else if (ogrtId) {
           /* GUNLUK-DERS-TASI-YAMASI: boş hücre = MEVCUT drop-zone yolu (aynı dnd-bos + istekDragOver/istekDragLeave +
              istekBurak → dersBurak devri). Mola hücresi bu dala HİÇ girmez (slot.mola dalı üstte).

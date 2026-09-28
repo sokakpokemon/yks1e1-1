@@ -1,5 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 114) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-gunluk-ders-tasi.mjs kosan=" + __kosan + " beklenen=114"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-gunluk-ders-tasi.mjs:" + __kosan + ":114"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 120) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-gunluk-ders-tasi.mjs kosan=" + __kosan + " beklenen=120"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-gunluk-ders-tasi.mjs:" + __kosan + ":120"); } });
 /* ks-gunluk-ders-tasi.mjs — GUNLUK-DERS-TASI-YAMASI regresyon süiti.
 
    TEK İŞ: GÜNLÜK tabloda (gunlukTablo; satır=öğretmen, kolon=saat) MEVCUT birebir ders kartını
@@ -297,13 +297,37 @@ T.avail.musait = [dowIdx(gunKey) + "-" + ksKodOf(KOD8)];
 red("Kapalı hedef (avail.musait)", kKapali.id, T.id, gunKey, KOD8);
 T.avail.musait = [];
 
-/* Sınıf Dersi (avail.sinif) hedefi RED */
+/* Sınıf Dersi (avail.sinif) hedefi RED + D36-ANA-SATIR: ANA satırda GERÇEK sınıf adı chip'i (kilitli hücre) */
 temizle();
 const kSinif = dersYap({ id: "kg-d-sinif" });
 DB.dersler.push(kSinif);
-T.avail.sinif = { [dowIdx(gunKey) + "-" + ksKodOf(KOD8)]: "KG MEZUN EA 1" };
-red("Sınıf Dersi hedefi (avail.sinif)", kSinif.id, T.id, gunKey, KOD8);
+const ANA_SINIF_AD = "KG MEZUN EA 1";
+T.avail.sinif = { [dowIdx(gunKey) + "-" + ksKodOf(KOD8)]: ANA_SINIF_AD };
+/* ESKİ: ana satırda sınıf dersi slotu drop-zone "+" (ders kaydı olmadığı için) → YENİ: gerçek sınıf adı chip'i.
+   Gerekçe: haftalık çizelge ve günlük "Boş" satırı aynı sınıf adını gösterirken ANA satır göstermiyordu.
+   Üretici TEK (sinifChipHTML); veri alanı TEK (avail.sinif["<günIdx>-<slotNo>"]). */
+const ANA_CHIP = '<div class="rounded-lg bg-rose-100 border border-rose-200 px-1 py-1.5" title="Sınıf dersi — kilitli"><div class="text-[8px] font-bold text-rose-700 leading-tight truncate whitespace-nowrap">' + ANA_SINIF_AD + '</div></div>';
+const anaH = gunGorunum();
+const anaSatir = anaH.split("<tr").find(r => r.includes(T.ad)) || ""; /* T satırı: chip iddiası BAŞKA satıra sızmasın */
+const anaSinifTd = tdBlok(anaH, ">" + ANA_SINIF_AD + "<");
+t("D36 ana satır: sınıf dersi hücresi GERÇEK sınıf adı chip'i (haftalıkla AYNI üretici + AYNI markup)",
+  anaSatir.includes('<td class="dnd-kilit px-1.5 py-1.5 text-center border-r border-slate-200">' + ANA_CHIP + '</td>'), anaSinifTd.slice(0, 160));
+t("D36 ana satır: chip hücresi KİLİTLİ — dnd-bos/drop-zone/draggable YOK, literal 'Sınıf' YOK",
+  anaSinifTd.includes("dnd-kilit") && !anaSinifTd.includes("dnd-bos") && !anaSinifTd.includes("istekBurak") && !anaSinifTd.includes("draggable") && !anaH.includes(">Sınıf</span>"));
+red("D36 ana satır sınıf chip hücresi (avail.sinif)", kSinif.id, T.id, gunKey, KOD8);
+t("D36 ana satır: bırakma REDDİ sonrası ders 6. slotta kaldı (tek kayıt, kopya YOK)",
+  dersBul(kSinif.id).saat === KOD6 && DB.dersler.filter(x => x.id === kSinif.id).length === 1);
+/* sınıf adı BOŞ → chip YOK, uydurma etiket YOK; ana satırın MEVCUT davranışı (drop-zone "+") korunur */
+T.avail.sinif = { [dowIdx(gunKey) + "-" + ksKodOf(KOD8)]: "" };
+const bosAdH = gunGorunum();
+const bosAdSatir = bosAdH.split("<tr").find(r => r.includes(T.ad)) || "";
+t("D36 ana satır: boş sınıf adı → T satırında chip YOK + literal 'Sınıf' YOK + mevcut '+' drop-zone korunur",
+  !bosAdSatir.includes("bg-rose-100") && !bosAdSatir.includes(">Sınıf</span>") && bosAdSatir.includes('data-drop-saat="' + KOD8 + '"'));
 T.avail.sinif = {};
+t("D36 regresyon: mola hücresi hâlâ drop-zone DEĞİL, birebir hücresi hâlâ draggable (ana satır chip'i bunları değiştirmedi)",
+  anaH.includes("Mola</div>") && !anaH.includes('data-drop-saat="12:00"') && anaH.includes('ondragstart="dersDrag(event,'));
+t("D36 tek üretici korunuyor: chip markup literali kaynakta TAM 1 · sinifChipHTML çağrısı 3 (haftalık + günlük Boş satırı + günlük ANA satır)",
+  (appKaynak.match(/bg-rose-100 border border-rose-200/g) || []).length === 1 && (appKaynak.match(/sinifChipHTML\(/g) || []).length === 4);
 
 /* Ek Ders (amber) hedefi RED */
 temizle();

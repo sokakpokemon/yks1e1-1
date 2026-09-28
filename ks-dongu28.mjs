@@ -126,8 +126,8 @@ const hafta28 = haftalikOgrtTablo();
 ui.haftalikOgrtId = null;
 t("haftalık pembe chip DEĞİŞMEDİ (aynı td frame + aynı chip; chip sayısı = sınıf slotu sayısı)",
   hafta28.includes('<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100">' + CHIP28 + '</td>') && (hafta28.match(/bg-rose-100 border border-rose-200/g) || []).length === Object.keys(kOgr.avail.sinif).length);
-t("tek üretici: sinifChipHTML tanımı 1 · chip markup literali 1 · çağrı 2 (haftalık+günlük)",
-  (scripts.match(/function sinifChipHTML\(/g) || []).length === 1 && (scripts.match(/bg-rose-100 border border-rose-200/g) || []).length === 1 && (scripts.match(/sinifChipHTML\(/g) || []).length === 3 && scripts.slice(scripts.indexOf("function haftalikOgrtTablo() {")).includes("sinifChipHTML(avail.sinif[key])") && gunlukBolge28(scripts).includes("sinifChipHTML(snf28)"));
+t("tek üretici: sinifChipHTML tanımı 1 · chip markup literali 1 · çağrı 3 (haftalık + günlük Boş satırı + günlük ANA satır)",
+  (scripts.match(/function sinifChipHTML\(/g) || []).length === 1 && (scripts.match(/bg-rose-100 border border-rose-200/g) || []).length === 1 && (scripts.match(/sinifChipHTML\(/g) || []).length === 4 && scripts.slice(scripts.indexOf("function haftalikOgrtTablo() {")).includes("sinifChipHTML(avail.sinif[key])") && gunlukBolge28(scripts).includes("sinifChipHTML(snf28)") && gunlukBolge28(scripts).includes("sinifChipHTML(ogrtAvail.avail.sinif["));
 kOgr.avail.sinif["1-4"] = ""; /* sınıf adı BOŞ → uydurma etiket YASAK */
 const bosAdHTML28 = gunlukTablo();
 t("boş sınıf adı → chip YOK, uydurma etiket YOK (mevcut 'Kapalı' gri hücresi kalır)",

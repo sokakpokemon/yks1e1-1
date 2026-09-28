@@ -210,3 +210,32 @@ elleVakaAdlari["ks-grup-uye-yaz.mjs"] = [
   "app.js'te grupUyeYaz TEK tanım",
   "5 yazım yolu grupUyeYaz'dan geçer (elle ogrenciIds ataması YOK)",
 ];
+
+/* D36-ANA-SATIR: günlük çizelge ANA satırında sınıf dersi hücresi (avail.sinif) artık drop-zone "+"
+   değil, TEK üreticiden (sinifChipHTML) GERÇEK sınıf adı chip'i + hücre kilitli (drop reddi MEVCUT
+   istekBurak/dersBurak kuralıyla). Adlar ELLE yazılır (koşumdan türetme YOK);
+   ks-gunluk-ders-tasi.mjs 114 → 120 (6 yeni + 4 ad güncellendi), ks-dongu28.mjs 26 (1 ad güncellendi). */
+offsetDuzelt(
+  "ks-dongu28.mjs",
+  "tek üretici: sinifChipHTML tanımı 1 · chip markup literali 1 · çağrı 2 (haftalık+günlük)",
+  "tek üretici: sinifChipHTML tanımı 1 · chip markup literali 1 · çağrı 3 (haftalık + günlük Boş satırı + günlük ANA satır)",
+);
+const d36Red = (x) => offsetDuzelt(
+  "ks-gunluk-ders-tasi.mjs",
+  "Sınıf Dersi hedefi (avail.sinif) → RED: " + x,
+  "D36 ana satır sınıf chip hücresi (avail.sinif) → RED: " + x,
+);
+d36Red("localStorage byte-birebir aynı");
+d36Red("DB birebir aynı + saveDB çağrılmadı (0)");
+d36Red("toast gösterildi");
+d36Red("ders yerinde kaldı");
+adSonrasiEkle("ks-gunluk-ders-tasi.mjs", "Kapalı hedef (avail.musait) → RED: ders yerinde kaldı", [
+  "D36 ana satır: sınıf dersi hücresi GERÇEK sınıf adı chip'i (haftalıkla AYNI üretici + AYNI markup)",
+  "D36 ana satır: chip hücresi KİLİTLİ — dnd-bos/drop-zone/draggable YOK, literal 'Sınıf' YOK",
+]);
+adSonrasiEkle("ks-gunluk-ders-tasi.mjs", "D36 ana satır sınıf chip hücresi (avail.sinif) → RED: ders yerinde kaldı", [
+  "D36 ana satır: bırakma REDDİ sonrası ders 6. slotta kaldı (tek kayıt, kopya YOK)",
+  "D36 ana satır: boş sınıf adı → T satırında chip YOK + literal 'Sınıf' YOK + mevcut '+' drop-zone korunur",
+  "D36 regresyon: mola hücresi hâlâ drop-zone DEĞİL, birebir hücresi hâlâ draggable (ana satır chip'i bunları değiştirmedi)",
+  "D36 tek üretici korunuyor: chip markup literali kaynakta TAM 1 · sinifChipHTML çağrısı 3 (haftalık + günlük Boş satırı + günlük ANA satır)",
+]);

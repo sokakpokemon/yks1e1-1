@@ -14,7 +14,7 @@ kısmen kapalı öğretmen Boş satırı hâlâ VAR (başka uygun slotları var)
 günlük Boş satırında sınıf dersi hücresi GERÇEK sınıf adı chip'i (haftalıkla birebir markup)
 günlükte literal 'Sınıf' etiketi YOK; sınıf slotu KİLİTLİ (dnd-bos/drop hedefi DEĞİL)
 haftalık pembe chip DEĞİŞMEDİ (aynı td frame + aynı chip; chip sayısı = sınıf slotu sayısı)
-tek üretici: sinifChipHTML tanımı 1 · chip markup literali 1 · çağrı 2 (haftalık+günlük)
+tek üretici: sinifChipHTML tanımı 1 · chip markup literali 1 · çağrı 3 (haftalık + günlük Boş satırı + günlük ANA satır)
 boş sınıf adı → chip YOK, uydurma etiket YOK (mevcut 'Kapalı' gri hücresi kalır)
 mola + dolu birebir hücreleri DEĞİŞMEDİ (günlük: Mola hücresi, draggable birebir, 'Boş' etiketi)
 Pazar günü 'Boş' satır YOK

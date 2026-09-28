@@ -61,10 +61,16 @@ Kapalı hedef (avail.musait) → RED: localStorage byte-birebir aynı
 Kapalı hedef (avail.musait) → RED: DB birebir aynı + saveDB çağrılmadı (0)
 Kapalı hedef (avail.musait) → RED: toast gösterildi
 Kapalı hedef (avail.musait) → RED: ders yerinde kaldı
-Sınıf Dersi hedefi (avail.sinif) → RED: localStorage byte-birebir aynı
-Sınıf Dersi hedefi (avail.sinif) → RED: DB birebir aynı + saveDB çağrılmadı (0)
-Sınıf Dersi hedefi (avail.sinif) → RED: toast gösterildi
-Sınıf Dersi hedefi (avail.sinif) → RED: ders yerinde kaldı
+D36 ana satır: sınıf dersi hücresi GERÇEK sınıf adı chip'i (haftalıkla AYNI üretici + AYNI markup)
+D36 ana satır: chip hücresi KİLİTLİ — dnd-bos/drop-zone/draggable YOK, literal 'Sınıf' YOK
+D36 ana satır sınıf chip hücresi (avail.sinif) → RED: localStorage byte-birebir aynı
+D36 ana satır sınıf chip hücresi (avail.sinif) → RED: DB birebir aynı + saveDB çağrılmadı (0)
+D36 ana satır sınıf chip hücresi (avail.sinif) → RED: toast gösterildi
+D36 ana satır sınıf chip hücresi (avail.sinif) → RED: ders yerinde kaldı
+D36 ana satır: bırakma REDDİ sonrası ders 6. slotta kaldı (tek kayıt, kopya YOK)
+D36 ana satır: boş sınıf adı → T satırında chip YOK + literal 'Sınıf' YOK + mevcut '+' drop-zone korunur
+D36 regresyon: mola hücresi hâlâ drop-zone DEĞİL, birebir hücresi hâlâ draggable (ana satır chip'i bunları değiştirmedi)
+D36 tek üretici korunuyor: chip markup literali kaynakta TAM 1 · sinifChipHTML çağrısı 3 (haftalık + günlük Boş satırı + günlük ANA satır)
 Ek Ders (amber) hedefi → RED: localStorage byte-birebir aynı
 Ek Ders (amber) hedefi → RED: DB birebir aynı + saveDB çağrılmadı (0)
 Ek Ders (amber) hedefi → RED: toast gösterildi

@@ -6,9 +6,6 @@
      node hizli-test.mjs mutasyon <ad>       → yalnız ilgili mutasyon script'i (mutasyon-<ad>.mjs)
                                                <ad> süit adı da olabilir (ör. ks-dongu27)
      node hizli-test.mjs --tam               → kapanış kapısı: node test.mjs + node statik-eksiksizlik.mjs
-                                               TAM çıktı → /tmp/tam.txt (akıtılır, kesilse bile kalır);
-                                               ekrana ≤ ~10 satır özet + kapı başına ilerleme izi
-     node hizli-test.mjs --tam --hizli       → aynı kapılar/assertion'lar; YALNIZ özet (iz + hata kuyruğu yok)
      node hizli-test.mjs --profil            → tüm süitleri AYRI Node süreçlerinde SIRALI koşar;
                                                her süitin süresi + toplam + EN YAVAŞ 10 süit
                                                (manifest/vaka dosyalarına YAZMAZ, yalnız ölçer)
@@ -19,7 +16,7 @@
    - Mutasyon script'leri kendi içinde canonical app.js'i yedekleyip geri yazar; bu helper
      onların çalışmasını değiştirmez, yalnız seçer. */
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync, writeFileSync, appendFileSync, openSync, closeSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { manifest } from "./suit-manifest.mjs";
 
 const SURE = (ms) => (ms / 1000).toFixed(2) + "s";
@@ -105,63 +102,18 @@ function kosMutasyon(dosya) {
   return gecti;
 }
 
-/* ——— MOD 3: kapanış kapısı (D37-TAM-DAYANIKLI) ———
-   Aynı iki kapı (test.mjs → statik-eksiksizlik.mjs) ve AYNI assertion'lar; yalnız KOŞUM/ÇIKTI biçimi değişti.
-   - Her kapının TAM çıktısı doğrudan /tmp/tam.txt'ye AKITILIR (child stdout+stderr → açık dosya fd).
-     Böylece terminal süreci 180 sn'de kesilse bile o ana kadarki çıktı dosyada kalır (eski kolda
-     173 KB çıktı yalnız parent belleğinde tamponlanıyor ve kapı bitene kadar hiçbir yere yazılmıyordu).
-   - Ekrana ≤ ~10 satır özet: kapı süresi + EXIT + MANIFEST/HAM Σ/TAMLIK satırları + KAPANIŞ + satır sayısı.
-   - Her kapıdan ÖNCE tek satırlık ilerleme izi (kesilirse hangi kapıda kalındığı görülür).
-   - hizli=true (--tam --hizli): aynı koşum; yalnız özet (ilerleme izi + hata kuyruğu basılmaz). */
-const TAM_DOSYA = "/tmp/tam.txt";
-const TAM_KAPILAR = ["test.mjs", "statik-eksiksizlik.mjs"];
-
-function tam(hizli = false) {
-  const bas = Date.now();
-  try {
-    writeFileSync(TAM_DOSYA, "");
-  } catch (e) {
-    console.error("✗ ÇIKTI DOSYASI AÇILAMADI: " + TAM_DOSYA + " (" + e.message + ")");
-    process.exit(1);
-  }
-  console.log("=== KAPANIŞ KAPISI (tam test + statik) ===  [çıktı → " + TAM_DOSYA + (hizli ? " · --hizli: yalnız özet" : "") + "]");
-
-  const olcum = [];
-  for (let i = 0; i < TAM_KAPILAR.length; i++) {
-    const kapi = TAM_KAPILAR[i];
-    if (!hizli) console.log("⏳ [" + (i + 1) + "/" + TAM_KAPILAR.length + "] " + kapi + " koşuyor…");
-    appendFileSync(TAM_DOSYA, "\n### KAPI " + (i + 1) + "/" + TAM_KAPILAR.length + ": " + kapi + " ###\n");
-    const once = statSync(TAM_DOSYA).size;
-    const t0 = Date.now();
-    const fd = openSync(TAM_DOSYA, "a");
-    let r;
-    try {
-      r = spawnSync(process.execPath, [kapi], { stdio: ["ignore", fd, fd] }); /* akış: çıktı doğrudan dosyaya */
-    } finally {
-      closeSync(fd);
-    }
-    const sure = Date.now() - t0;
-    const govde = readFileSync(TAM_DOSYA).subarray(once).toString("utf8");
-    const gecti = r.status === 0;
-    olcum.push({ kapi, sure, gecti, govde, kod: r.status });
-    console.log("→ " + kapi + ": " + (gecti ? "✓ GEÇTİ" : "✗ BAŞARISIZ") + "  (exit " + r.status + ")  " + SURE(sure));
-    if (!hizli && !gecti) {
-      govde.trimEnd().split("\n").slice(-5).forEach(function (s) { console.log("   | " + s); });
-    }
-  }
-
-  [["test.mjs", /^MANIFEST:.*$/m], ["test.mjs", /^HAM Σ:.*$/m], ["statik-eksiksizlik.mjs", /^TAMLIK KANITI:.*$/m]].forEach(function (kv) {
-    const k = olcum.find(function (x) { return x.kapi === kv[0]; });
-    const m = k && k.govde.match(kv[1]);
-    if (m) console.log("   " + m[0].trim());
-  });
-
-  const hepsi = olcum.every(function (x) { return x.gecti; });
-  const toplam = olcum.reduce(function (a, x) { return a + x.sure; }, 0);
-  const dk = olcum.map(function (x) { return kokN(x.kapi) + " " + SURE(x.sure); }).join(" + ");
-  console.log("KAPANIŞ: " + (hepsi ? "✓ TÜM KAPILAR GEÇTİ" : "✗ KAPI DÜŞTÜ") + "  (" + dk + " = " + SURE(toplam) + " · duvar " + SURE(Date.now() - bas) + ")");
-  console.log("ÇIKTI: " + TAM_DOSYA + "  " + (readFileSync(TAM_DOSYA, "utf8").match(/\n/g) || []).length + " satır  (tam çıktı korundu)"); /* wc -l ile aynı sayım */
-  process.exit(hepsi ? 0 : 1);
+/* ——— MOD 3: kapanış kapısı ——— */
+function tam() {
+  console.log("=== KAPANIŞ KAPISI (tam test + statik) ===");
+  const t1 = kos("test.mjs", [], { bas: true });
+  console.log(`\n→ test.mjs: ${t1.r.status === 0 ? "✓ GEÇTİ" : "✗ BAŞARISIZ"}  ${SURE(t1.sure)}`);
+  const t2 = kos("statik-eksiksizlik.mjs", [], { bas: true });
+  console.log(`→ statik-eksiksizlik.mjs: ${t2.r.status === 0 ? "✓ GEÇTİ" : "✗ BAŞARISIZ"}  ${SURE(t2.sure)}`);
+  const gecti = t1.r.status === 0 && t2.r.status === 0;
+  console.log(
+    `\nKAPANIŞ: ${gecti ? "✓ TÜM KAPILAR GEÇTİ" : "✗ KAPI DÜŞTÜ"}  (test ${SURE(t1.sure)} + statik ${SURE(t2.sure)} = ${SURE(t1.sure + t2.sure)})`
+  );
+  process.exit(gecti ? 0 : 1);
 }
 
 /* ——— MOD 4: profil ——— */
@@ -194,7 +146,7 @@ function profil() {
 
 /* ——— YÖNLENDİRME ——— */
 const [mod, arg] = process.argv.slice(2);
-if (mod === "--tam" || mod === "tam") tam(arg === "--hizli");
+if (mod === "--tam" || mod === "tam") tam();
 else if (mod === "--profil" || mod === "profil") profil();
 else if (mod === "mutasyon") {
   if (!arg) { console.error("Kullanım: node hizli-test.mjs mutasyon <ad>"); process.exit(1); }
@@ -204,8 +156,7 @@ else if (mod === "mutasyon") {
     "HIZ PROTOKOLÜ koşum seçicisi:\n" +
     "  node hizli-test.mjs <süit>          tek süit + süre (ör. ks-ders-karti)\n" +
     "  node hizli-test.mjs mutasyon <ad>   yalnız ilgili mutasyon script'i\n" +
-    "  node hizli-test.mjs --tam           kapanış kapısı: test.mjs + statik-eksiksizlik.mjs (çıktı → /tmp/tam.txt)\n" +
-    "  node hizli-test.mjs --tam --hizli   aynı kapılar/assertion'lar; yalnız kısa özet\n" +
+    "  node hizli-test.mjs --tam           kapanış kapısı: test.mjs + statik-eksiksizlik.mjs\n" +
     "  node hizli-test.mjs --profil        tüm süitler sıralı + süre + EN YAVAŞ 10 (yazmaz)"
   );
 } else tekSuit(mod);

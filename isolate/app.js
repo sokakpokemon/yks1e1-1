@@ -3449,7 +3449,9 @@ function planla() {
     if (!k) hatalar.push("Ders saati kısa kod saatlerinden biri olmalı (örn. 8 · 15:30-16:10).");
     
   }
-  /* Grup modu: 2+ ek öğrenci seçiliyse tek kayıt ogrenciIds dizisiyle; aksi hâlde birebir akış aynen */
+  /* D32-GRUP-2UYE: İKİ öğrencili grup (ana + 1 ek) form kaydı da grup olmalı — havuz ortak grup
+     isteği en az 2 TOPLAM üye kabul ediyor; form eşiği >=2 EK ile asimetrik kalıp 2. üyeyi düşürüyordu.
+     0 ek → eski birebir akış AYNEN. */
   var grupOgrenciIds = Array.isArray(ui.ekOgrenciIds) ? ui.ekOgrenciIds.filter(function (oid, i) {
     return oid != null && ui.ekOgrenciIds.indexOf(oid) === i;
   }) : [];
@@ -3458,7 +3460,7 @@ function planla() {
     var _gr = DB.istekler.find(function (x) { return x.id === ui.aktifIstekId; });
     return !!_gr && istekOgrenciIds(_gr).length > 1;
   })();
-  var grupModu = grupOgrenciIds.length >= 2 || (grupIstekAktif && grupOgrenciIds.length >= 1);
+  var grupModu = grupOgrenciIds.length >= 1; /* D32-GRUP-2UYE: ≥1 ek = ≥2 katılımcı = grup */
   if (grupModu) {
     var eksikler = grupOgrenciIds.filter(function (oid) { return !DB.ogrenciler.some(function (x) { return x.id === oid; }); });
     if (eksikler.length) hatalar.push("Grup öğrencisi bulunamadı (öğrenci silinmiş olabilir). Listeden çıkarıp tekrar ekleyin.");
@@ -3477,7 +3479,7 @@ function planla() {
   }
   /* GRUP PANEL: ana öğrenci grup listesinde iki kez olamaz (ana değişse bile) */
   grupOgrenciIds = grupOgrenciIds.filter(function (oid) { return oid !== o.id; });
-  grupModu = grupOgrenciIds.length >= 2 || (grupIstekAktif && grupOgrenciIds.length >= 1);
+  grupModu = grupOgrenciIds.length >= 1; /* D32-GRUP-2UYE: ana çıkarıldıktan sonra ≥1 ek = grup */
   var t = DB.ogretmenler.find(function (x) { return kucuk(x.ad) === kucuk(ogretmenAd); });
   if (!t) {
     t = { id: uid(), ad: ogretmenAd, brans: dersId, avail: { sinif: {}, musait: [] } };

@@ -1,12 +1,12 @@
-/* ks-d35-ad-sinif.mjs — D35-AD-SINIF kalıcı süiti (23 assertion)
+/* ks-d35-ad-sinif.mjs — D35-AD-SINIF kalıcı süiti (26 assertion)
    KAPSAM: çizelge hücresinde HER öğrenci için "Ad Soyad + Sınıf" (havuz kartındaki
    birebirEtiketHTML ile AYNI tipografi), üyeler ALT ALTA; uzun soyadlı adlar kisaAdlik ile kısalır.
    Etki sınırı: WhatsApp mesajı, PNG kartı, havuz chip'i TAM adla kalır.
-   SUITE_DONE kapısı: tam 1 marker, kosan === beklenen === 23. app.js'e YAZMAZ. */
+   SUITE_DONE kapısı: tam 1 marker, kosan === beklenen === 26. app.js'e YAZMAZ. */
 import { readFileSync } from "node:fs";
 
 let __kosan = 0;
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 23) { console.error("SUITE_DONE UYUŞMAZLIK: ks-d35-ad-sinif.mjs kosan=" + __kosan + " beklenen=23"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-d35-ad-sinif.mjs:" + __kosan + ":23"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 26) { console.error("SUITE_DONE UYUŞMAZLIK: ks-d35-ad-sinif.mjs kosan=" + __kosan + " beklenen=26"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-d35-ad-sinif.mjs:" + __kosan + ":26"); } });
 
 const html = readFileSync("index.html", "utf8");
 const appKaynak = readFileSync("app.js", "utf8");
@@ -47,7 +47,7 @@ global.Chart = function () { this.destroy = () => {}; };
 let fail = 0;
 const t = (name, cond, extra) => { __kosan++; console.log((cond ? "  ✓ " : "  ✗ ") + name); if (!cond) { fail = 1; if (extra !== undefined) console.log("     ↳ " + extra); } };
 
-const EXPORTS = "{ DB, ui, haftalikOgrtTablo, gunlukTablo, birebirHucreHTML, kisaAdlik, adHarfSayisi, gorselAd, dersOgrenciIds, MAX_SOYAD_HARF, MAX_AD_UZUNLUK, ogrenciMesajMetni, pngAc, renderHavuz }";
+const EXPORTS = "{ DB, ui, haftalikOgrtTablo, gunlukTablo, birebirHucreHTML, birebirEtiketHTML, kisaAdlik, adHarfSayisi, gorselAd, dersOgrenciIds, MAX_SOYAD_HARF, MAX_AD_UZUNLUK, ogrenciMesajMetni, pngAc, renderHavuz }";
 let P;
 try {
   P = new Function(scripts + "\n  yenile();\n  return " + EXPORTS + ";\n")();
@@ -56,7 +56,7 @@ try {
   console.error(e.stack ? e.stack.split("\n").slice(0, 8).join("\n") : e);
   throw e;
 }
-const { DB, ui, haftalikOgrtTablo, gunlukTablo, kisaAdlik, adHarfSayisi, gorselAd, MAX_SOYAD_HARF, MAX_AD_UZUNLUK, ogrenciMesajMetni, pngAc, renderHavuz } = P;
+const { DB, ui, haftalikOgrtTablo, gunlukTablo, birebirEtiketHTML, kisaAdlik, adHarfSayisi, gorselAd, MAX_SOYAD_HARF, MAX_AD_UZUNLUK, ogrenciMesajMetni, pngAc, renderHavuz } = P;
 
 /* ---------- FIXTURE (demo öğrenciler + kısaltma sınavı için sentetik adlar) ---------- */
 const ana = DB.ogrenciler.find((o) => o.ad === "Ayşe Demir");
@@ -76,14 +76,16 @@ DB.dersler = [
   Object.assign({ id: "d35-grup", ogrenciId: ana.id, ogrenciAd: ana.ad, ogrenciIds: [ek1.id, uzun.id, kisa.id, bosSinif.id, GHOST], konu: "Grup konusu", saat: "15:30", kod: "8" }, ortak),
   Object.assign({ id: "d35-tekli", ogrenciId: tek.id, ogrenciAd: tek.ad, konu: "Tek konu", saat: "10:30", kod: "3" }, ortak)
 ];
-DB.istekler = [{ id: "d35-istek", ogrenciId: uzun.id, ogrenciAd: uzun.ad, dersId: "mat", konu: "", durum: "bekliyor", olusturma: "2026-09-25", donemId: DB.aktifDonemId }];
+DB.istekler = [{ id: "d35-istek", ogrenciId: uzun.id, ogrenciAd: uzun.ad, dersId: "mat", konu: "", durum: "bekliyor", olusturma: "2026-09-25", donemId: DB.aktifDonemId },
+  /* RİSK B: sınıfı BOŞ DB öğrencisi için de havuz chip'i üretilsin (chip davranışı ayrı assertion). */
+  { id: "d35-istek-bos", ogrenciId: bosSinif.id, ogrenciAd: bosSinif.ad, dersId: "mat", konu: "", durum: "bekliyor", olusturma: "2026-09-25", donemId: DB.aktifDonemId }];
 ui.istekFiltre = "";
 const hafta = () => { ui.filtre = "hafta"; ui.anchor = pzt; ui.gunSecim = ""; ui.haftalikOgrtId = ogr.id; return haftalikOgrtTablo(); };
 const gun = () => { ui.filtre = "gun"; ui.anchor = pzt; ui.gunSecim = pzt; ui.haftalikOgrtId = null; return gunlukTablo(); };
 const tdAl = (h, anahtar) => { const i = h.indexOf(anahtar); if (i < 0) return ""; const b = h.lastIndexOf("<td", i); const e = h.indexOf("</td>", i); return h.slice(b, e < 0 ? h.length : e); };
-/* üye satırı = <div class="min-w-0 whitespace-nowrap" title="AD"> ... </div> (hücrenin dış kabuğu class="rounded-lg ... min-w-0" ile karışmaz).
-   D35-DUZELTME: nowrap ORTAK formatter'dan çıkarıldı → hücre üye sarmalayıcısına taşındı. */
-const uyeSatirlari = (h) => (h.match(/<div class="min-w-0 whitespace-nowrap" title="[^"]*">[\s\S]*?<\/div>/g) || []);
+/* üye satırı = <div class="min-w-0" title="AD"> ... </div> (hücrenin dış kabuğu class="rounded-lg ... min-w-0" ile karışmaz).
+   D35-RISK: sarmalayıcı nowrap TAŞIMAZ → AD serbest sarar; nowrap YALNIZ sınıf spanına basılır. */
+const uyeSatirlari = (h) => (h.match(/<div class="min-w-0" title="[^"]*">[\s\S]*?<\/div>/g) || []);
 
 /* ================= A) kisaAdlik birimi ================= */
 t("kisaAdlik: 'Ahmet Kızılırmak' → 'Ahmet K.'", kisaAdlik("Ahmet Kızılırmak") === "Ahmet K.", kisaAdlik("Ahmet Kızılırmak"));
@@ -125,13 +127,34 @@ const pngHTML = reg["pngRapor"] ? reg["pngRapor"].innerHTML : "";
 t("ETKİ SINIRI: PNG/rapor kartı TAM ad (kısaltma sızmadı)", pngHTML.includes(uzun.ad) && !pngHTML.includes("Ahmet K."), pngHTML.length + " B");
 renderHavuz();
 const havuzHTML = reg["havuzBolum"] ? reg["havuzBolum"].innerHTML : "";
-t("ETKİ SINIRI: havuz chip'i TAM ad (kısaltma yok)", havuzHTML.includes(gorselAd(uzun.ad)) && !havuzHTML.includes("Ahmet K."));
-t("havuz chip'i sarma SERBEST (whitespace-nowrap YOK) — nowrap YALNIZ çizelge hücresi üye satırında",
+t("ETKİ SINIRI: havuz chip'i TAM ad (kısaltma yok)", havuzHTML.includes(gorselAd(uzun.ad)) && !havuzHTML.includes("Ahmet K."));t("nowrap kapsamı: havuz chip'i + hücre üye SARMALAYICISI sarma SERBEST · nowrap YALNIZ hücre SINIF spanında",
   !havuzHTML.includes("whitespace-nowrap") &&
   (havuzHTML.match(/birebir-etiket/g) || []).length >= 1 &&
   !appKaynak.includes("text-slate-400 shrink-0 whitespace-nowrap") &&
-  uyeSatirlari(gTD).length === 5 && uyeSatirlari(gTD).every((s) => s.includes("whitespace-nowrap")),
-  "havuz nowrap=" + havuzHTML.includes("whitespace-nowrap") + " · satır nowrap=" + uyeSatirlari(gTD).filter((s) => s.includes("whitespace-nowrap")).length + "/" + uyeSatirlari(gTD).length);
+  uyeSatirlari(gTD).length === 5 &&
+  uyeSatirlari(gTD).every((s) => !/^<div class="[^"]*whitespace-nowrap/.test(s)) &&
+  (function () { var sp = gTD.match(/<span class="text-\[10px\] font-medium text-slate-400 shrink-0[^"]*">/g) || []; return sp.length >= 4 && sp.every((x) => x.includes("whitespace-nowrap")); })(),
+  "havuz nowrap=" + havuzHTML.includes("whitespace-nowrap") + " · sarmalayıcı nowrap=" + uyeSatirlari(gTD).filter((s) => /^<div class="[^"]*whitespace-nowrap/.test(s)).length + "/" + uyeSatirlari(gTD).length);
+
+/* RİSK A fixture: DAR HÜCRE — kısaltılmamış uzun ad + sınıf; AD serbest sarar, SINIF kırılmaz, kırpma YOK. */
+const riskSatir = uyeSatirlari(gTD).find((s) => s.includes(kisa.ad)) || "";
+t("RİSK A dar hücre fixture (uzun ad + sınıf): sarmalayıcı nowrap YOK · AD spanı whitespace-normal break-words · SINIF spanı nowrap · truncate/overflow-hidden YOK",
+  !!riskSatir &&
+  riskSatir.startsWith('<div class="min-w-0" title=') &&
+  riskSatir.includes("text-[12px] font-semibold normal-case tracking-normal text-slate-800 whitespace-normal break-words") &&
+  riskSatir.includes('text-[10px] font-medium text-slate-400 shrink-0 whitespace-nowrap') &&
+  !riskSatir.includes("truncate") && !riskSatir.includes("overflow-hidden"),
+  riskSatir.slice(0, 220));
+
+/* RİSK B: sınıfı BOŞ üye — HÜCREDE sınıf spanı HİÇ yok (yer tutucu YOK); havuz chip'inde davranış KORUNUR. */
+t("RİSK B hücre: sınıfı BOŞ üyede sınıf spanı HİÇ basılmaz (text-slate-400 spanı YOK)",
+  !!bosSatir && bosSatir.includes(bosSinif.ad) && !bosSatir.includes("text-slate-400"),
+  bosSatir);
+t("RİSK B havuz chip'i: sınıfı boş DB öğrencisi → 'Sınıf belirtilmemiş' (chip davranışı KORUNDU — DOKUNULMAZ)",
+  birebirEtiketHTML(bosSinif.ad, "").includes("Sınıf belirtilmemiş") &&
+  birebirEtiketHTML(bosSinif.ad, null).indexOf("text-slate-400") === -1 &&
+  havuzHTML.includes("Sınıf belirtilmemiş"),
+  "chip yer tutucu=" + (havuzHTML.match(/Sınıf belirtilmemiş/g) || []).length);
 
 /* ================= E) statik sözleşme ================= */
 const blok = (fn) => { const i = appKaynak.indexOf(fn); let j = appKaynak.indexOf("\nfunction ", i + 10); if (j === -1) j = appKaynak.length; return appKaynak.slice(i, j); };

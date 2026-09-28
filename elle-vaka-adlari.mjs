@@ -42,7 +42,7 @@ offsetDuzelt(
    kontrol hâlâ DİNAMİK (index.html ?v= ↔ dosya SHA-16), adı ise app.js her değiştiğinde
    elle güncelleme GEREKTİRMEZ. */
 elleVakaAdlari["ks-kart-kolon.mjs"].push(
-  "index.html damga = app.js/ek-ders.js SHA-256 ilk 16 hane (DİNAMİK — ada gömülü elle pin YOK)",
+  "index.html damgası = app.js/ek-ders.js SHA-256 ilk 16 hane (DİNAMİK karşılaştırma — ada gömülü elle pin YOK)",
 );
 
 /* D34-GRUP-UYE-YAZ: ADIM-4 istek.ogrenciIds SENKRON davranışı nedeniyle ks-grup-istegi.mjs'te
@@ -121,10 +121,11 @@ offsetDuzelt("ks-ekders-gorunum.mjs", "haftalik grup satırı (grupUyeler) aynen
 offsetDuzelt("ks-ekders-gorunum.mjs", "haftalik grup üye satırı hücrede kullanılıyor (DÖNGÜ-26: ölü hucreUst kaldırıldı)", "haftalik grup üyeleri hücre İÇİNDE kendi satırında (D35: virgüllü alt satır kaldırıldı)");
 offsetDuzelt("ks-ekders-ozet-csv.mjs", "haftalikOgrtTablo grup üye satırı KORUNDU", "haftalikOgrtTablo grup üyeleri ortak hücreden (D35: ayrı grupUyeEtiketleri satırı kaldırıldı)");
 
-/* D35-AD-SINIF KALICI SÜİT (ks-d35-ad-sinif.mjs): 23 assertion (D35-DUZELTME turu) — çizelge
+/* D35-AD-SINIF KALICI SÜİT (ks-d35-ad-sinif.mjs): 26 assertion (D35 DÜZELTME + RİSK turu) — çizelge
    hücresinde her üye kendi satırında ad+sınıf (havuz tipografisi), kisaAdlik eşikleri (10/22),
-   sınıf yer tutucusunun KALDIRILMASI, nowrap kapsamı (yalnız hücre) ve etki sınırı (WA/PNG/havuz
-   TAM ad) + statik sözleşme. Adlar ELLE yazılır (koşumdan türetme YOK). */
+   sınıf yer tutucusunun KALDIRILMASI (hücrede span YOK), nowrap kapsamı (yalnız hücre SINIF spanı;
+   sarmalayıcı serbest), dar hücre fixture'ı (RISK A) ve havuz chip'i boş-sınıf davranışı (RISK B,
+   DOKUNULMAZ) + etki sınırı (WA/PNG/havuz TAM ad) + statik sözleşme. Adlar ELLE yazılır (koşumdan türetme YOK). */
 elleVakaAdlari["ks-d35-ad-sinif.mjs"] = [
   "boot hatasız",
   "kisaAdlik: 'Ahmet Kızılırmak' → 'Ahmet K.'",
@@ -147,7 +148,10 @@ elleVakaAdlari["ks-d35-ad-sinif.mjs"] = [
   "ETKİ SINIRI: WhatsApp mesajı TAM ad (kısaltma sızmadı)",
   "ETKİ SINIRI: PNG/rapor kartı TAM ad (kısaltma sızmadı)",
   "ETKİ SINIRI: havuz chip'i TAM ad (kısaltma yok)",
-  "havuz chip'i sarma SERBEST (whitespace-nowrap YOK) — nowrap YALNIZ çizelge hücresi üye satırında",
+  "nowrap kapsamı: havuz chip'i + hücre üye SARMALAYICISI sarma SERBEST · nowrap YALNIZ hücre SINIF spanında",
+  "RİSK A dar hücre fixture (uzun ad + sınıf): sarmalayıcı nowrap YOK · AD spanı whitespace-normal break-words · SINIF spanı nowrap · truncate/overflow-hidden YOK",
+  "RİSK B hücre: sınıfı BOŞ üyede sınıf spanı HİÇ basılmaz (text-slate-400 spanı YOK)",
+  "RİSK B havuz chip'i: sınıfı boş DB öğrencisi → 'Sınıf belirtilmemiş' (chip davranışı KORUNDU — DOKUNULMAZ)",
   "statik: ad/sınıf için İKİNCİ formatter YOK (kisaAdlik tek tanım · hücre birebirEtiketHTML · çizelge hücrelerinde ayrı üye satırı kalmadı)",
 ];
 

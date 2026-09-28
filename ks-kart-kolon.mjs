@@ -243,15 +243,18 @@ function kartParentId(env, kid) {
 
   /* H) İÇERİK DAMGASI (?v=<sha16>): index.html'deki statik varlık URL'leri,
      ilgili dosyanın SHA-256 ilk 16 hanesini taşımalı — damga eksik/yanlışsa KIRMIZI.
-     (Kendini doğrular: beklenen değerler dosyalardan CANLI hesaplanır.)
-     D35-DUZELTME: vaka ADINDAN gömülü SHA-16 pini KALDIRILDI — kontrol hâlâ DİNAMİK,
-     ama app.js her değiştiğinde ada elle pin güncellemesi BİTMİŞTİR. */
+     D35-RİSK C: ada gömülü elle pin KALKTI. Kontrol GERÇEKTEN DİNAMİK:
+       (1) index.html'den src="app.js?v=<değer>" regex ile ÇIKARILIR,
+       (2) app.js'nin SHA-256 ilk 16 hanesi dosyadan CANLI hesaplanır,
+       (3) ikisi === ile KARŞILAŞTIRILIR (aynı mantık ek-ders.js için).
+       Çıkarım boşsa veya 16 hex değilse de KIRMIZI → pin silinse bile test ZAYIFLAMAZ. */
   {
-    const appSha16 = createHash("sha256").update(readFileSync("app.js")).digest("hex").slice(0, 16);
-    const ekSha16 = createHash("sha256").update(readFileSync("ek-ders.js")).digest("hex").slice(0, 16);
+    const sha16 = (p) => createHash("sha256").update(readFileSync(p)).digest("hex").slice(0, 16);
+    const appV = ((html.match(/src="app\.js\?v=([0-9a-f]+)"/) || [])[1] || "");
+    const ekV = ((html.match(/src="ek-ders\.js\?v=([0-9a-f]+)"/) || [])[1] || "");
     t(
-      "index.html damga = app.js/ek-ders.js SHA-256 ilk 16 hane (DİNAMİK — ada gömülü elle pin YOK)",
-      html.includes('src="app.js?v=' + appSha16 + '"') && html.includes('src="ek-ders.js?v=' + ekSha16 + '"')
+      "index.html damgası = app.js/ek-ders.js SHA-256 ilk 16 hane (DİNAMİK karşılaştırma — ada gömülü elle pin YOK)",
+      appV.length === 16 && ekV.length === 16 && appV === sha16("app.js") && ekV === sha16("ek-ders.js")
     );
   }
 

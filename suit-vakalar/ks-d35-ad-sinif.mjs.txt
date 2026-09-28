@@ -19,5 +19,8 @@ günlük TEKLİ hücre: sınıf VAR (tek öğrencili ders de sınıfı gösterir
 ETKİ SINIRI: WhatsApp mesajı TAM ad (kısaltma sızmadı)
 ETKİ SINIRI: PNG/rapor kartı TAM ad (kısaltma sızmadı)
 ETKİ SINIRI: havuz chip'i TAM ad (kısaltma yok)
-havuz chip'i sarma SERBEST (whitespace-nowrap YOK) — nowrap YALNIZ çizelge hücresi üye satırında
+nowrap kapsamı: havuz chip'i + hücre üye SARMALAYICISI sarma SERBEST · nowrap YALNIZ hücre SINIF spanında
+RİSK A dar hücre fixture (uzun ad + sınıf): sarmalayıcı nowrap YOK · AD spanı whitespace-normal break-words · SINIF spanı nowrap · truncate/overflow-hidden YOK
+RİSK B hücre: sınıfı BOŞ üyede sınıf spanı HİÇ basılmaz (text-slate-400 spanı YOK)
+RİSK B havuz chip'i: sınıfı boş DB öğrencisi → 'Sınıf belirtilmemiş' (chip davranışı KORUNDU — DOKUNULMAZ)
 statik: ad/sınıf için İKİNCİ formatter YOK (kisaAdlik tek tanım · hücre birebirEtiketHTML · çizelge hücrelerinde ayrı üye satırı kalmadı)

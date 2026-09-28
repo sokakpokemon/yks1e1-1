@@ -226,11 +226,14 @@ function avatar(ad, i) {
    - sinif === ""    → gerçek DB öğrencisi, sınıf boş: "Sınıf belirtilmemiş"
    - sinif dolu      → gerçek DB öğrencisi, sınıf etiketi adın yanında
    Ad gorselAd() ile Türkçe güvenli normal harf düzeninde; iki satıra sarar; kırpmasız.
-   D35-DUZELTME: bu formatter'da whitespace-nowrap YOK — havuz chip'i/öneri satırlarında sarma SERBEST.
-   nowrap yalnız ÇİZELGE hücresi üye sarmalayıcısında (birebirHucreHTML) uygulanır. */
-function birebirEtiketHTML(ad, sinif) {
+   D35-RISK: bu formatter'ın KENDİSİ nowrap taşımaz — havuz chip'i/öneri satırlarında sarma SERBEST.
+   nowrap YALNIZ sinifNowrap=true ile çağrıldığında SINIF spanına basılır (çizelge hücresi).
+   AD spanı her durumda whitespace-normal break-words → AD serbest sarar, SINIF kırılmaz. */
+function birebirEtiketHTML(ad, sinif, sinifNowrap) {
   var snfSpan = "";
-  if (sinif !== null) snfSpan = '<span class="text-[10px] font-medium text-slate-400 shrink-0">' + esc(sinif ? sinif : "Sınıf belirtilmemiş") + "</span>";
+  /* D35-RISK: nowrap YALNIZ çizelge hücresinden (sinifNowrap=true) geçirilir → SINIF spanı kırılmaz;
+     havuz chip'i/öneri satırları sinifNowrap'sız çağırır → sarma SERBEST kalır. */
+  if (sinif !== null) snfSpan = '<span class="text-[10px] font-medium text-slate-400 shrink-0' + (sinifNowrap ? " whitespace-nowrap" : "") + '">' + esc(sinif ? sinif : "Sınıf belirtilmemiş") + "</span>";
   return '<span class="birebir-etiket inline-flex items-baseline gap-2 min-w-0 flex-wrap"><span class="text-[12px] font-semibold normal-case tracking-normal text-slate-800 whitespace-normal break-words leading-snug">' + esc(gorselAd(ad)) + "</span>" + snfSpan + "</span>";
 }
 /* DÖNGÜ-19: TEK ortak custom suggestion satırı renderer'ı — TÜM autocomplete hostları bu renderer'ı kullanır.
@@ -4078,12 +4081,13 @@ function birebirHucreHTML(ders, ogrenci, ogrenciAd, sinif, durumRenk) {
   /* D35-AD-SINIF: HER üye (ana + ekler) KENDİ satırında — ad + sınıf YAN YANA, havuz kartındaki
      birebirEtiketHTML ile AYNI tipografi; ad/sınıf için İKİNCİ formatter YOK. Ek üyenin kaydı
      yoksa ad/sınıf YAZILMAZ (uydurma YOK). Uzun soyadlı adlar kisaAdlik ile kısalır (tam ad title'da). */
-  var hucreUyeleri = ['<div class="min-w-0 whitespace-nowrap" title="' + esc(tamAd) + '">' + birebirEtiketHTML(kisaAdlik(tamAd), anaSinif) + "</div>"];
+  /* D35-RISK: sarmalayıcıda nowrap YOK — uzun ad dar hücrede SERBEST sarar; nowrap YALNIZ sınıf spanında. */
+  var hucreUyeleri = ['<div class="min-w-0" title="' + esc(tamAd) + '">' + birebirEtiketHTML(kisaAdlik(tamAd), anaSinif, true) + "</div>"];
   dersOgrenciIds(ders).forEach(function (oid) {
     if (oid === (anaO ? anaO.id : ders.ogrenciId)) return;
     var uo = DB.ogrenciler.find(function (x) { return x.id === oid; });
     if (!uo) return;
-    hucreUyeleri.push('<div class="min-w-0 whitespace-nowrap" title="' + esc(uo.ad) + '">' + birebirEtiketHTML(kisaAdlik(uo.ad), uo.sinif ? uo.sinif : null) + "</div>");
+    hucreUyeleri.push('<div class="min-w-0" title="' + esc(uo.ad) + '">' + birebirEtiketHTML(kisaAdlik(uo.ad), uo.sinif ? uo.sinif : null, true) + "</div>");
   });
   return '<div class="rounded-lg border ' + (durumRenk || "bg-blue-50 border-blue-200") + ' px-1 py-1.5 min-w-0" title="Dolu — kilitli">' +
     hucreUyeleri.join("") +

@@ -16,6 +16,10 @@
 
 **ROLLING KURAL:** yeni kapanış kaydı → `SON TURLAR (TAM)` bölümünün **BAŞINA** tam metin eklenir; bölümdeki **EN ESKİ** tam kayıt bir satırlık **ÖZET**'e indirilir (→ ayrıntı: `CHECKPOINT-ARSIV.md`). Böylece `CHECKPOINT.md` daima ~<120 KB kalır; TAM geçmiş yalnız `CHECKPOINT-ARSIV.md`'de büyür. Her turda: **+1 tam kayıt · +1 özet satırı · 1 eski tam kayıt → özet.**
 
+**SIRA (D44):** bir kapanış kaydını ÖZET'e indirmeden ÖNCE, o kaydın TAM metnini `CHECKPOINT-ARSIV-2.md`'ye ekle ve doğrula (satır/satır içerik). Ancak ondan SONRA `CHECKPOINT.md`'deki tam kayıt özete indirilir. Kural: **ÖNCE ARŞİV → DOĞRULA → SONRA ÖZETE İNDİR.** Arşiv yazımı doğrulanmadan demote YAPILMAZ.
+
+> **Not:** D43 öncesi kayıtlar için tam metin `CHECKPOINT-ARSIV.md`'dedir (D43 snapshot).
+
 > **D43 SONRASI tam kayıtlar:** `CHECKPOINT-ARSIV-2.md` — D43'ten sonraki turların TAM kayıtları bu **EKLEMELİ** dosyada birikir (D43 ve öncesi: `CHECKPOINT-ARSIV.md`, byte-birebir kopya · not: `CHECKPOINT-ARSIV-NOT.md`).
 
 ---

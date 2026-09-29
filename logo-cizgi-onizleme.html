@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>D51 · Turuncu Çizgi — Çoklu Varyant Önizleme</title>
+<style>
+  /* —— ÖLÇEK KİLİDİ: kart fontu = gömülü MontsKart ile BİREBİR aynı dosya
+        (vendor/fonts/montserrat-900-italic.woff2 · sha16 7084156f0b371b85) —— */
+  @font-face{
+    font-family:MontsKart;font-style:italic;font-weight:900;
+    src:url(vendor/fonts/montserrat-900-italic.woff2) format("woff2");
+    font-display:block;
+  }
+  :root{ --cizgi:#f29222; --marka:#d31d24; --alt:#1a1a1a; }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; padding:28px 26px 60px;
+    font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+    background:#0f172a; color:#e2e8f0;
+  }
+  h1{ font-size:20px; font-weight:800; margin:0 0 6px; letter-spacing:.2px; }
+  h2{ font-size:14px; font-weight:800; margin:34px 0 10px; color:#94a3b8;
+      text-transform:uppercase; letter-spacing:.9px; }
+  .not{ background:#1e293b; border-left:3px solid var(--cizgi); border-radius:8px;
+        padding:12px 14px; font-size:13.5px; line-height:1.6; max-width:1160px; margin-bottom:10px; }
+  .not b{ color:#fdba74; }
+  .kart-dis{ background:#f4f6fa; border-radius:16px; padding:24px;
+             display:inline-block; vertical-align:top; }
+  .beyaz{ background:#fff; border-radius:14px; padding:24px 26px; }
+  .satir{ display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  .grid{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px;
+         max-width:1160px; }
+  .hucre{ background:#fff; border-radius:12px; padding:14px 16px 16px;
+          border:1px solid #e2e8f0; }
+  .hucre h3{ margin:0 0 2px; font-size:12.5px; font-weight:800; color:#0f172a;
+             font-family:Inter,system-ui,sans-serif; }
+  .hucre .p{ font-size:11px; color:#64748b; font-family:ui-monospace,Menlo,monospace;
+             margin:0 0 10px; }
+  .hucre.sec h3{ color:#b45309; }
+  .zoomBox{ height:210px; overflow:hidden; margin-top:2px; }
+  .zoomBox .ic{ transform:scale(3); transform-origin:0 0; }
+  .olcum{ border-collapse:collapse; font-size:12.5px; margin:6px 0 0; max-width:1160px; }
+  .olcum th,.olcum td{ border:1px solid #334155; padding:6px 9px; text-align:left;
+                       font-family:ui-monospace,Menlo,monospace; }
+  .olcum th{ background:#1e293b; color:#94a3b8; font-weight:700; }
+  .kilit{ font-family:ui-monospace,Menlo,monospace; font-size:11.5px; color:#94a3b8;
+          max-width:1160px; line-height:1.7; }
+  footer{ margin-top:40px; font-size:12.5px; color:#94a3b8; max-width:1160px; line-height:1.7; }
+  code{ background:#1e293b; padding:1px 5px; border-radius:4px; color:#e2e8f0; }
+</style>
+</head>
+<body>
+  <h1>Turuncu çift çizgi — görsel doğrulama (D51)</h1>
+  <div class="not">
+    <b>İki ayrı soru var: (1) GÖRÜNÜRLÜK, (2) POZİSYON.</b><br>
+    <b>1) Görünürlük — HTML:</b> aşağıdaki 4 varyantta (özellikle ×3 ızgarada) turuncu çift çizgi
+    <b>görünüyor mu</b>?<br>
+    <b>1) Görünürlük — PNG:</b> uygulamada haftalık/günlük çizelgede ders hücresine gelip
+    <b>🖼 görsel ikonuna</b> (title: “Ders Kartı görseli (PNG) üret”) tıkla → inen PNG'de
+    çizgiler <b>var mı</b>? İki cevabı ayrı ver (HTML ↔ PNG), çünkü D51 kararı buna bağlı.<br>
+    <b>2) Pozisyon:</b> hangisi doğru — V1 / V2 / V3 / V4? (Yalnız <code>right</code> ve
+    <code>top</code> değişiyor; diğer her şey kilitli.)
+  </div>
+
+  <h2>Ölçüm (D50 ADIM 1 · fonttan hesaplandı, upem 1000)</h2>
+  <table class="olcum">
+    <tr><th>kalem</th><th>değer</th><th>nereden</th></tr>
+    <tr><td>SVG render yüksekliği</td><td>8.4 px</td><td>viewBox 0 0 100 40 · width 21 · height:auto → 21 ÷ (100/40)</td></tr>
+    <tr><td>ölçek (viewBox → px)</td><td>0.21 px/birim</td><td>21 ÷ 100</td></tr>
+    <tr><td>çizgi 1 (y=10) merkez / mürekkep</td><td>2.60 px / 1.13–4.07 px</td><td>top 0.5 + 10×0.21 · ± stroke 14/2×0.21=1.47</td></tr>
+    <tr><td>çizgi 2 (y=29) merkez / mürekkep</td><td>6.59 px / 5.12–8.06 px</td><td>top 0.5 + 29×0.21</td></tr>
+    <tr><td>baseline (satır kutusu tepesinden)</td><td>28.21 px</td><td>half-leading −6.642 + ascender 34.848</td></tr>
+    <tr><td>“u” x-height bandı</td><td>8.51 → 28.21 px</td><td>xHeight 547/1000 × 36 px</td></tr>
+    <tr><td>“u” yatay bandı</td><td>89.33 → 113.41 px</td><td>f+o+r+m advance + 4×(−1.05)</td></tr>
+    <tr><td>çizgi yatay bandı (V1)</td><td>98.24 → 115.04 px</td><td>V1 right 8 → SVG sol 95.09</td></tr>
+    <tr><td>çizgi yatay bandı (V2/V4)</td><td>92.97 → 109.77 px</td><td>right 13.27 → çizgi merkezi 101.37 = “u” merkezi</td></tr>
+  </table>
+
+  <h2>Gerçek bağlam — kart başlık satırı (1:1 ve ×2)</h2>
+  <div class="kart-dis" style="width:640px">
+    <div class="beyaz">
+      <div class="satir">
+        <div style="display:flex;gap:12px;align-items:center">
+          <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="12" fill="#6366f1"/><rect x="11" y="12" width="18" height="16" rx="2" fill="none" stroke="#ffffff" stroke-width="2"/><line x1="11" y1="17" x2="29" y2="17" stroke="#ffffff" stroke-width="2"/><line x1="17" y1="10" x2="17" y2="14" stroke="#ffffff" stroke-width="2"/><line x1="23" y1="10" x2="23" y2="14" stroke="#ffffff" stroke-width="2"/></svg>
+          <div style="min-width:0"><div style="font-size:16px;font-weight:800;color:#0f172a">Birebir Ders Kartı</div></div>
+        </div>
+        <span data-logolar data-v="V1"></span>
+        <span style="background:#dcfce7;color:#166534;font-size:11px;font-weight:800;padding:4px 12px;border-radius:99px">Planlandı</span>
+      </div>
+    </div>
+  </div>
+  <div class="kart-dis" style="width:640px;zoom:2;margin-left:8px">
+    <div class="beyaz">
+      <div class="satir">
+        <div style="display:flex;gap:12px;align-items:center">
+          <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="12" fill="#6366f1"/><rect x="11" y="12" width="18" height="16" rx="2" fill="none" stroke="#ffffff" stroke-width="2"/><line x1="11" y1="17" x2="29" y2="17" stroke="#ffffff" stroke-width="2"/><line x1="17" y1="10" x2="17" y2="14" stroke="#ffffff" stroke-width="2"/><line x1="23" y1="10" x2="23" y2="14" stroke="#ffffff" stroke-width="2"/></svg>
+          <div style="min-width:0"><div style="font-size:16px;font-weight:800;color:#0f172a">Birebir Ders Kartı</div></div>
+        </div>
+        <span data-logolar data-v="V1"></span>
+        <span style="background:#dcfce7;color:#166534;font-size:11px;font-weight:800;padding:4px 12px;border-radius:99px">Planlandı</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>Varyantlar · 1:1 (kart ölçeği ×0.2647)</h2>
+  <div class="grid" id="grid11"></div>
+
+  <h2>Varyantlar · ×3 (mürekkep konumu okunur)</h2>
+  <div class="grid" id="grid3"></div>
+
+  <h2>Kilitli değerler (DEĞİŞMEZ)</h2>
+  <div class="kilit">
+    formul metni · font MontsKart/Montserrat 900 italic · #d31d24 · #f29222 · #1a1a1a ·
+    path <code>M15 10 L95 10</code> / <code>M14 29 L94 29</code> · viewBox <code>0 0 100 40</code> ·
+    stroke-width 14 · stroke-linecap round · SVG <b>width 21</b> · height:auto · overflow:visible · z-index:1 ·
+    marka 2.25rem / −1.05px / line-height 0.85 · alt yazı 0.74rem / −0.4px / margin-top 2px /
+    margin-right 14px · sarmalayıcı padding 5px · ölçek çarpanı <b>0.2647</b>.
+    Yalnız <b>right</b> ve <b>top</b> varyant parametresidir.
+  </div>
+
+  <footer>
+    V1 = bugünkü üretim değeri (referans). V2 = çizgi merkezi “u” merkezine oturur.
+    V3 = 2 px daha aşağı. V4 = hem ortalı hem aşağı.<br>
+    Not: <code>id="fk-logo"</code> sayfada YALNIZ “Gerçek bağlam · 1:1” bloğunda var (id tekrarı
+    olmasın diye); diğer bütün bloklarda aynı yerde <code>data-logo="fk-logo"</code> kullanıldı —
+    yani <b>markup onun dışında birebir aynıdır</b>.<br>
+    Not: bu sayfa <code>isolate/</code> altında DEĞİL, kökte durur — çünkü <code>isolate/</code>
+    her publish'te silinip yeniden üretiliyor (D51'de ölçüldü). Yalnız görsel doğrulama içindir;
+    app.js'e ve master'a dokunmaz.
+  </footer>
+
+<script>
+/* ——— LOGO MARKUP'ININ TEK KAYNAĞI (app.js:4871-4878 ile birebir) ———
+   Varyant yalnız svg'nin right/top değerini değiştirir; id tekrarı olmasın diye
+   yalnız ilk bağlam bloğunda id="fk-logo", diğerlerinde data-logo="fk-logo". */
+var SVG_YOLLARI =
+  '<path d="M15 10 L95 10" fill="none" stroke="#f29222" stroke-width="14" stroke-linecap="round"/>' +
+  '<path d="M14 29 L94 29" fill="none" stroke="#f29222" stroke-width="14" stroke-linecap="round"/>';
+
+function logoHTML(right, top, idKullan) {
+  return '<div style="display:inline-flex;flex-direction:column;align-items:flex-end;padding:5px;white-space:nowrap;flex-shrink:0;margin-left:12px">' +
+    '<div style="position:relative;display:flex;align-items:flex-start;white-space:nowrap">' +
+      '<div style="font-family:MontsKart,serif;font-size:2.25rem;font-weight:900;font-style:italic;letter-spacing:-1.05px;color:#d31d24;line-height:0.85;white-space:nowrap">formul</div>' +
+      '<svg ' + (idKullan ? 'id="fk-logo"' : 'data-logo="fk-logo"') +
+        ' width="21" viewBox="0 0 100 40" xmlns="http://www.w3.org/2000/svg"' +
+        ' style="position:absolute;right:' + right + 'px;top:' + top + 'px;height:auto;display:block;overflow:visible;z-index:1">' +
+        SVG_YOLLARI +
+      '</svg>' +
+    '</div>' +
+    '<div style="font-family:MontsKart,serif;font-size:0.74rem;font-weight:900;font-style:italic;letter-spacing:-0.4px;margin-top:2px;margin-right:14px;color:#1a1a1a;white-space:nowrap">kurs merkezi</div>' +
+  '</div>';
+}
+
+var VARYANTLAR = [
+  { kod: "V1", right: 8,    top: 0.5, aciklama: "mevcut / referans" },
+  { kod: "V2", right: 13.27, top: 0.5, aciklama: "yatay ortalı (çizgi merkezi = “u” merkezi)" },
+  { kod: "V3", right: 8,    top: 2.5, aciklama: "2 px daha aşağı" },
+  { kod: "V4", right: 13.27, top: 2.5, aciklama: "ortalı + aşağı" }
+];
+
+/* Gerçek bağlam bloklarındaki yer tutucuları doldur.
+   id="fk-logo" YALNIZ ilk (1:1) blokta: sayfada id tekrarı olmasın; diğerleri data-logo. */
+var baglamSayac = 0;
+document.querySelectorAll("[data-logolar]").forEach(function (yer) {
+  var v = VARYANTLAR.find(function (x) { return x.kod === yer.getAttribute("data-v"); });
+  yer.outerHTML = logoHTML(v.right, v.top, baglamSayac++ === 0);
+});
+
+function panel(v, i, zoomlu) {
+  var govde = '<div class="kart-dis" style="padding:18px;border-radius:12px">' + logoHTML(v.right, v.top, false) + '</div>';
+  return '<div class="hucre' + (i === 0 ? ' sec' : '') + '">' +
+    '<h3>' + v.kod + (i === 0 ? ' · REFERANS' : '') + '</h3>' +
+    '<p class="p">right:' + v.right + 'px · top:' + v.top + 'px</p>' +
+    '<p class="p" style="color:#0f172a">' + v.aciklama + '</p>' +
+    (zoomlu ? '<div class="zoomBox"><div class="ic">' + govde + '</div></div>' : govde) +
+  '</div>';
+}
+
+document.getElementById("grid11").innerHTML = VARYANTLAR.map(function (v, i) { return panel(v, i, false); }).join("");
+document.getElementById("grid3").innerHTML = VARYANTLAR.map(function (v, i) { return panel(v, i, true); }).join("");
+</script>
+</body>
+</html>

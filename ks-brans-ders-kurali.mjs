@@ -7,6 +7,23 @@ process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 54) { console.e
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 
+/* ——— TEST TEMİZLİĞİ (JET-TURBO FAZ 1B) ———
+   app.js'teki toast() her çağrıda 3200 ms'lik bir setTimeout kurar (app.js:1066). Bu süitte
+   toast/3200 hakkında HİÇBİR assertion YOK; bekleyen bu timer'lar Node olay döngüsünü boş yere
+   ~3.5 sn açık tutuyordu (assertion'lar ~66 ms'de bitiyor, süreç 3585 ms'de kapanıyordu).
+   Yalnız >=1000 ms zamanlayıcılar kurulum anında kaydedilir ve TÜM assertion'lar bittikten
+   SONRA clearTimeout ile kapatılır. Assertion semantiği/sayılar/çıktı DEĞİŞMEZ;
+   process.exit() KULLANILMAZ → SUITE_DONE marker'ı doğal exit hook'unda basılmaya devam eder. */
+const bekleyenUzunZamanlayicilar = [];
+{
+  const gercekSetTimeout = globalThis.setTimeout;
+  globalThis.setTimeout = function (fn, ms, ...kalan) {
+    const h = gercekSetTimeout(fn, ms, ...kalan);
+    if (typeof ms === "number" && ms >= 1000) bekleyenUzunZamanlayicilar.push(h);
+    return h;
+  };
+}
+
 const html = readFileSync("index.html", "utf8");
 const scripts = [readFileSync("app.js", "utf8"),
   ...[...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)].map(m => m[1])].join("\n;\n");
@@ -253,3 +270,6 @@ t("eski süit listesi korundu (ks-harness hâlâ 1. süit)", tm.includes('"ks-ha
 
 if (fail) { console.log("BAŞARISIZ"); process.exit(1); }
 console.log("HEPSİ GEÇTİ");
+
+/* TEST TEMİZLİĞİ: assertion'lar bitti — bekleyen uzun zamanlayıcıları (app.js toast) kapat. */
+bekleyenUzunZamanlayicilar.forEach((h) => clearTimeout(h));

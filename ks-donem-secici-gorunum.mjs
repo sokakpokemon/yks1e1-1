@@ -10,6 +10,24 @@ process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 44) { console.e
    qSA('[id=...]') gerçek sayı; async flush microtask+timer (defer sırası taklidi). */
 import { readFileSync } from "node:fs";
 
+/* ——— TEST TEMİZLİĞİ (JET-TURBO FAZ 1B) ———
+   app.js'teki toast() her çağrıda 3200 ms'lik bir setTimeout kurar (app.js:1066). Bu süitte
+   toast/3200 hakkında HİÇBİR assertion YOK (yalnız 0 ms'lik flush timer'ı kullanılır);
+   bekleyen bu timer'lar Node olay döngüsünü boş yere ~3.5 sn açık tutuyordu (assertion'lar
+   ~76 ms'de bitiyor, süreç 3591 ms'de kapanıyordu). Bu yüzden YALNIZ >=1000 ms zamanlayıcılar
+   kurulum anında kaydedilir ve TÜM assertion'lar bittikten SONRA clearTimeout ile kapatılır.
+   Assertion semantiği/sayılar/çıktı DEĞİŞMEZ; process.exit() KULLANILMAZ → SUITE_DONE
+   marker'ı doğal exit hook'unda basılmaya devam eder. */
+const bekleyenUzunZamanlayicilar = [];
+{
+  const gercekSetTimeout = globalThis.setTimeout;
+  globalThis.setTimeout = function (fn, ms, ...kalan) {
+    const h = gercekSetTimeout(fn, ms, ...kalan);
+    if (typeof ms === "number" && ms >= 1000) bekleyenUzunZamanlayicilar.push(h);
+    return h;
+  };
+}
+
 const appKaynak = readFileSync("app.js", "utf8");
 const ekKaynak = readFileSync("ek-ders.js", "utf8");
 const html = readFileSync("index.html", "utf8");
@@ -200,4 +218,7 @@ const tsrc = readFileSync("test.mjs", "utf8");
 t("ks-donem-secici-gorunum.mjs test.mjs'te tam 1 kez", (tsrc.match(/"ks-donem-secici-gorunum\.mjs"/g) || []).length === 1);
 
 console.log(n === 0 ? "" : (process.exitCode === 1 ? "BAŞARISIZ" : n + "/" + n + " OK"));
+
+/* TEST TEMİZLİĞİ: assertion'lar bitti — bekleyen uzun zamanlayıcıları (app.js toast) kapat. */
+bekleyenUzunZamanlayicilar.forEach((h) => clearTimeout(h));
 })();

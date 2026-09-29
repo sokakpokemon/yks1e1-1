@@ -8,6 +8,8 @@
      node hizli-test.mjs --tam               → kapanış kapısı: node test.mjs + node statik-eksiksizlik.mjs
                                                TAM çıktı → /tmp/tam.txt (akıtılır, kesilse bile kalır);
                                                ekrana ≤ ~10 satır özet + kapı başına ilerleme izi
+                                               (statik kapı yalnız BURADA --paralel koşar; kanıt/sayımlar
+                                               ve çıktı sırası DEĞİŞMEZ, yalnız süre düşer)
      node hizli-test.mjs --tam --hizli       → aynı kapılar/assertion'lar; YALNIZ özet (iz + hata kuyruğu yok)
      node hizli-test.mjs --profil            → tüm süitleri AYRI Node süreçlerinde SIRALI koşar;
                                                her süitin süresi + toplam + EN YAVAŞ 10 süit
@@ -115,6 +117,10 @@ function kosMutasyon(dosya) {
    - hizli=true (--tam --hizli): aynı koşum; yalnız özet (ilerleme izi + hata kuyruğu basılmaz). */
 const TAM_DOSYA = "/tmp/tam.txt";
 const TAM_KAPILAR = ["test.mjs", "statik-eksiksizlik.mjs"];
+/* statik kapı kapanışta YALNIZ burada paralel koşar: kanıtlar/sayımlar ve basılan satırlar
+   seri ile birebir aynıdır (FAZ 1 kapı-1 ile kanıtlı), tek fark duvar süresi. Diğer tüm
+   çağrılar (doğrudan `node statik-eksiksizlik.mjs`) seri DEFAULT'ta kalır. */
+const KAPI_EK_ARGV = { "statik-eksiksizlik.mjs": ["--paralel"] };
 
 function tam(hizli = false) {
   const bas = Date.now();
@@ -136,7 +142,7 @@ function tam(hizli = false) {
     const fd = openSync(TAM_DOSYA, "a");
     let r;
     try {
-      r = spawnSync(process.execPath, [kapi], { stdio: ["ignore", fd, fd] }); /* akış: çıktı doğrudan dosyaya */
+      r = spawnSync(process.execPath, [kapi, ...(KAPI_EK_ARGV[kapi] || [])], { stdio: ["ignore", fd, fd] }); /* akış: çıktı doğrudan dosyaya */
     } finally {
       closeSync(fd);
     }

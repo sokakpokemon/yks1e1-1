@@ -116,6 +116,8 @@ ORİJİNALDİR ve ASLA DEĞİŞTİRİLMEZ.
 - TEK KAYNAK: `logo-master/formul-kurs-logo.html` (master/orijinal HTML, 8.5rem tabanı). Logo işi
   başlamadan ÖNCE bu dosyaya bak; ölçek gerekiyorsa çarpanı buradan hesapla, karta elle yazma.
 
+# ✅ TEMİZLİK #6 (FAZ 2 /tmp) — arşiv: `/home/daytona/tmp-arsiv-d30-d42/` · **394 dosya / 18.668.637 B** · MANIFEST-SHA256: `b322b77179abd05fd546ee2dfde63f39f18d8c56baf27dc5287d5f7b715fd40c` · kapsam dışı: **29 çakışan** (21 byte-ayni ∪ 8 codebase-arsiv-adı; 4 KE-38 adı ikisinde ortak → 29) + `daytona-daemon.log` + `vly-stats/*` (açık fd) + node/convex/bunx tooling dir'leri · **silinen = 0** · kapılar (kopya öncesi/sonrası) 4/4 YEŞİL · no-drift: app.js `231cf09fef286267` · damga `app.js?v=231cf09fef286267` · ek-ders.js `3d2dd38ff517c64f`.
+
 # ✅ CHECKPOINT: TEMİZLİK — D30–D42 Artıklarının Güvenli Arşivlenmesi (FAZ 2)
 
 **Tarih:** 29 Eylül 2026 · **Durum:** ✅ Tamamlandı — SİLME YOK, doğrulanmış kopya sonrası taşıma · **Publish YOK**

@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":110"); return; } if (__kosan !== 110) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ders-karti.mjs kosan=" + __kosan + " beklenen=110"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":110"); } });
+process.on("exit", (c) => { if (c !== 0) { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":113"); return; } if (__kosan !== 113) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ders-karti.mjs kosan=" + __kosan + " beklenen=113"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":113"); } });
 /* ks-ders-karti.mjs — DERS-KARTI-YAMASI süiti
    Doğruladıkları:
     1) Kart üretimi: dersKartiHTML/dersKartiVeri doğru alanlarla çalışır (ad, ders, konu, öğretmen, tarih+saat, sınıf, durum).
@@ -229,6 +229,13 @@ const LS_ONCE = JSON.stringify(store);
 let akisHata=null;
 try { dersKartiAc(birebir.id); } catch (e) { akisHata = e; }
 t("telefon yoksa akış çökmez", akisHata === null, akisHata && akisHata.message);
+
+/* ---- D46-KART-EMOJI: öğrenci kartı bento alan etiketlerine emoji öneki eklendi (EK emoji).
+   ADIM 0 ölçümü N=0: pinler include()/indexOf() tabanlı → önek eklemek kırmızı üretmez.
+   svgKart (nötr inline SVG) ve fk-logo DEĞİŞMEDİ; renk/ölçek/kademe DEĞİŞMEDİ; yeni yapı/üretici YOK. */
+t("D46 kart bento etiketleri emoji önekli (TARİH/SAAT/DERS/KONU/ÖĞRETMEN/SINIF altısı da)", (() => { const h = dersKartiHTML(birebir); return ["📅 TARİH", "⏰ SAAT", "📚 DERS", "📝 KONU", "👤 ÖĞRETMEN", "🏫 SINIF"].every(s => h.includes(s)); })());
+t("D46 bento etiket metinleri KORUNDU (emoji yalnız önek — 'TARİH'…'SINIF' tam etiketler hâlâ VAR; D30 etiket kapısı bozulmadı)", (() => { const h = dersKartiHTML(birebir); return ["TARİH","SAAT","DERS","KONU","ÖĞRETMEN","SINIF"].every(b => h.includes(b)); })());
+t("D46 kartta TAM 2 inline SVG (nötr ikon + fk-logo) — emoji SVG'nin YERİNE GEÇMEDİ, fk-logo id sabit", (() => { const h = dersKartiHTML(birebir); return (h.match(/<svg/g) || []).length === 2 && (h.match(/id="fk-logo"/g) || []).length === 1; })());
 setTimeout(() => {
   t("telefon yoksa html2canvas ÇAĞRILMAZ", h2cCagrildi === 0, "h2c=" + h2cCagrildi);
   t("telefon yoksa localStorage değişmedi", JSON.stringify(store) === LS_ONCE);

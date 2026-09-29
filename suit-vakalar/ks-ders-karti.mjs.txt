@@ -63,6 +63,9 @@ waAliciBilgisi baba→babaTel
 kartta telefon YOK
 kartta başka öğrenci adı GEÇMEZ
 telefon yoksa akış çökmez
+D46 kart bento etiketleri emoji önekli (TARİH/SAAT/DERS/KONU/ÖĞRETMEN/SINIF altısı da)
+D46 bento etiket metinleri KORUNDU (emoji yalnız önek — 'TARİH'…'SINIF' tam etiketler hâlâ VAR; D30 etiket kapısı bozulmadı)
+D46 kartta TAM 2 inline SVG (nötr ikon + fk-logo) — emoji SVG'nin YERİNE GEÇMEDİ, fk-logo id sabit
 telefon yoksa html2canvas ÇAĞRILMAZ
 telefon yoksa localStorage değişmedi
 canShare dalı: navigator.share çağrıldı

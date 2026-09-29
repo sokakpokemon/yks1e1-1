@@ -49,7 +49,7 @@ export const elleManifest = {
   "ks-kadro-telefon3.mjs": 57,
   "ks-ders-tasi.mjs": 90,
   "ks-gunluk-ders-tasi.mjs": 121, /* D36-BOS-AD-KILIT: elle sayım (120 → 121) */
-  "ks-ders-karti.mjs": 110, /* D33-LOGO-KİLİDİ: 109 + 1 yeni master-kaynak kapısı (logo-master/formul-kurs-logo.html) */
+  "ks-ders-karti.mjs": 113, /* D33-LOGO-KİLİDİ: 109 + 1 yeni master-kaynak kapısı (logo-master/formul-kurs-logo.html) · D46-KART-EMOJI: 110 + 3 (bento emoji öneki + etiket metni korundu + SVG yerine geçmedi) */
   "ks-ders-karti-tasima.mjs": 56,
   "ks-ogrt-ders-karti.mjs": 91,
   "ks-ogrt-denetim.mjs": 42, /* OGRT-TAMGUN-KART: elle sayım */

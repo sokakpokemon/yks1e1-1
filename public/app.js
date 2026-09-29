@@ -4843,6 +4843,7 @@ function dersKartiVeri(d) {
   })(d.saat);
   return { o: o, ad: (o && o.ad) || d.ogrenciAd || "", ders: D.ad, konu: d.konu || "", ogr: ogrAd || "", tarih: fmtTR(d.tarih) + " " + GUNLER[dowIdx(d.tarih)], saat: saatEtiket(d.saat), saatKisa: kartSaati, sinif: (o && o.sinif) || "Sınıf belirtilmemiş", durum: rozet };
 }
+/* D46-KART-EMOJI: bento alan etiketlerine EMOJİ ÖNEKİ (ek emoji) — svgKart/fk-logo/renk/ölçek/kademe DEĞİŞMEZ. */
 function dersKartiHTML(d) {
   /* DÖNGÜ-15: BENTO tasarım — zemin #f4f6fa, beyaz yuvarlak kart, salt inline style (class= YOK).
      Rozet 3 durum: Planlandı #ecfdf5/#047857 · Yapıldı #eff6ff/#1d4ed8 · İptal Edildi #fef2f2/#b91c1c.
@@ -4876,18 +4877,18 @@ function dersKartiHTML(d) {
       '<div style="border-bottom:1px solid #f1f5f9;margin:16px 0"></div>' +
       '<div style="background:#f8fafc;border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:14px">' +
         '<div><div style="' + etiketStil + '">Değerli Öğrencimiz</div><div style="font-size:20px;font-weight:800;color:#0f172a">' + esc(v.ad) + "</div></div>" +
-        '<div style="text-align:right"><div style="' + etiketStil + '">SINIF</div><div style="font-size:13px;font-weight:800;color:#4338ca;background:#eef2ff;display:inline-block;padding:3px 10px;border-radius:99px">' + esc(v.sinif) + "</div></div>" +
+        '<div style="text-align:right"><div style="' + etiketStil + '">🏫 SINIF</div><div style="font-size:13px;font-weight:800;color:#4338ca;background:#eef2ff;display:inline-block;padding:3px 10px;border-radius:99px">' + esc(v.sinif) + "</div></div>" +
       "</div>" +
       '<div style="display:flex;gap:12px;margin-top:12px">' +
-        kutu("#f0f4fa", "#6366f1", "TARİH", v.tarih) +
-        kutu("#fff8f2", "#f59e0b", "SAAT", v.saatKisa) +
+        kutu("#f0f4fa", "#6366f1", "📅 TARİH", v.tarih) +
+        kutu("#fff8f2", "#f59e0b", "⏰ SAAT", v.saatKisa) +
       "</div>" +
       '<div style="display:flex;gap:12px;margin-top:12px">' +
-        kutu("#eff9f7", "#14b8a6", "DERS", v.ders) +
-        kutu("#f9f5fc", "#8b5cf6", "KONU", v.konu || "Genel tekrar") +
+        kutu("#eff9f7", "#14b8a6", "📚 DERS", v.ders) +
+        kutu("#f9f5fc", "#8b5cf6", "📝 KONU", v.konu || "Genel tekrar") +
       "</div>" +
       '<div style="margin-top:12px">' +
-        kutu("#f8fafc", "#94a3b8", "ÖĞRETMEN", v.ogr) +
+        kutu("#f8fafc", "#94a3b8", "👤 ÖĞRETMEN", v.ogr) +
       "</div>" +
       '<div style="margin-top:14px;border-top:1px solid #e2e8f0;padding-top:10px;color:#64748b;font-size:10.5px;line-height:1.6;text-align:left">Bu dersler, eksiklerini tamamlaman ve hedeflerine biraz daha yaklaşman için planlandı. Ders saatinden birkaç dakika önce hazır olman yeterli. Anlamadığın veya zorlandığın konuları öğretmeninle paylaşmayı unutma. Sen çalışmaya devam et, biz de bu süreçte yanında olalım. Güzel çalışmalar, başarılar dileriz. — FORMÜL KURS REHBERLİK SERVİSİ</div>' +
       /* DÖNGÜ-16: öğrenci kartı footer KALDIRILDI (öğretmen kartlarındaki footer korunur) · DÖNGÜ-30: not şeridi eklendi */

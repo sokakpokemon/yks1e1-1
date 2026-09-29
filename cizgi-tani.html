@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Turuncu çizgi — statik tanı (D51)</title>
+<style>
+  /* Bu sayfada JAVASCRIPT YOK, @font-face YOK, harici dosya YOK.
+     Hepsi sabit HTML — hiçbir şey yüklenemezse bile render edilmeli. */
+  body{ margin:0; padding:24px; background:#0f172a; color:#e2e8f0;
+        font-family:system-ui,-apple-system,"Segoe UI",sans-serif; }
+  h1{ font-size:18px; margin:0 0 8px; }
+  .aciklama{ font-size:13.5px; line-height:1.65; max-width:900px; color:#cbd5e1; }
+  .blok{ background:#fff; color:#111; padding:16px 18px; border-radius:10px;
+         margin:0 0 14px; max-width:900px; }
+  .baslik{ font-size:13px; font-weight:800; color:#b45309; margin:0 0 4px; }
+  .kod{ font-family:ui-monospace,Menlo,monospace; font-size:11px; color:#475569;
+        margin:0 0 12px; word-break:break-all; }
+  .etiket{ font-size:11px; color:#64748b; margin:10px 0 0; font-family:ui-monospace,Menlo,monospace; }
+</style>
+</head>
+<body>
+  <h1>Turuncu çizgi — statik tanı (JavaScript yok)</h1>
+  <p class="aciklama">
+    Bu sayfa <b>sabit HTML</b> — script, font dosyası, harici kaynak YOK. Amacı tek şeyi ayırmak:
+    <b>inline SVG bu tarayıcıda boyanıyor mu, yoksa hiç mi render edilmiyor?</b>
+    A–E kutularında ne gördüğünü yaz. Her kutuda ilk satır bir açıklama, sonra örnek durur.
+  </p>
+
+  <!-- A · üretimdeki markup'ın BİREBİR kopyası (yalnız font serif'e düştü) -->
+  <div class="blok">
+    <p class="baslik">A · ÜRETİMDEKİ TAM MARKUP — inline SVG · position:absolute;right:8px;top:0.5px;height:auto</p>
+    <p class="kod">svg id="fk-logo" width="21" viewBox="0 0 100 40" · style="position:absolute;right:8px;top:0.5px;height:auto;display:block;overflow:visible;z-index:1"</p>
+    <div style="display:inline-flex;flex-direction:column;align-items:flex-end;padding:5px;white-space:nowrap">
+      <div style="position:relative;display:flex;align-items:flex-start;white-space:nowrap">
+        <div style="font-family:serif;font-size:2.25rem;font-weight:900;font-style:italic;letter-spacing:-1.05px;color:#d31d24;line-height:0.85;white-space:nowrap">formul</div>
+        <svg id="fk-logo" width="21" viewBox="0 0 100 40" xmlns="http://www.w3.org/2000/svg" style="position:absolute;right:8px;top:0.5px;height:auto;display:block;overflow:visible;z-index:1"><path d="M15 10 L95 10" fill="none" stroke="#f29222" stroke-width="14" stroke-linecap="round"/><path d="M14 29 L94 29" fill="none" stroke="#f29222" stroke-width="14" stroke-linecap="round"/></svg>
+      </div>
+      <div style="font-family:serif;font-size:0.74rem;font-weight:900;font-style:italic;letter-spacing:-0.4px;margin-top:2px;margin-right:14px;color:#1a1a1a;white-space:nowrap">kurs merkezi</div>
+    </div>
+    <p class="etiket">A’da beklenen: “formul” + altında “kurs merkezi”, “u”nun üstünde 2 turuncu çizgi.</p>
+  </div>
+
+  <!-- B · aynı yerleşim, ama çizgiler KIRMIZI ve çok kalın (görünürlük abartıldı) -->
+  <div class="blok">
+    <p class="baslik">B · A ile AYNI yerleşim — çizgiler kırmızı (stroke #ff0000) ve stroke-width 30</p>
+    <p class="kod">aynı position:absolute;right:8px;top:0.5px;height:auto · yalnız renk ve kalınlık değişti</p>
+    <div style="display:inline-flex;flex-direction:column;align-items:flex-end;padding:5px;white-space:nowrap">
+      <div style="position:relative;display:flex;align-items:flex-start;white-space:nowrap">
+        <div style="font-family:serif;font-size:2.25rem;font-weight:900;font-style:italic;letter-spacing:-1.05px;color:#d31d24;line-height:0.85;white-space:nowrap">formul</div>
+        <svg width="21" viewBox="0 0 100 40" xmlns="http://www.w3.org/2000/svg" style="position:absolute;right:8px;top:0.5px;height:auto;display:block;overflow:visible;z-index:1"><path d="M15 10 L95 10" fill="none" stroke="#ff0000" stroke-width="30" stroke-linecap="round"/><path d="M14 29 L94 29" fill="none" stroke="#ff0000" stroke-width="30" stroke-linecap="round"/></svg>
+      </div>
+      <div style="font-family:serif;font-size:0.74rem;font-weight:900;font-style:italic;color:#1a1a1a;white-space:nowrap">kurs merkezi</div>
+    </div>
+    <p class="etiket">B’de beklenen: kırmızı, kalın iki çizgi (kaçırılması imkânsız).</p>
+  </div>
+
+  <!-- C · en sade inline SVG (absolute yok, küçültme yok) -->
+  <div class="blok">
+    <p class="baslik">C · sade inline SVG — absolute YOK · 120×48 (büyük, yerleşim hilesi yok)</p>
+    <p class="kod">svg width="120" height="48" viewBox="0 0 100 40" · iki path #f29222 stroke-width 14</p>
+    <svg width="120" height="48" viewBox="0 0 100 40" xmlns="http://www.w3.org/2000/svg"><path d="M15 10 L95 10" fill="none" stroke="#f29222" stroke-width="14" stroke-linecap="round"/><path d="M14 29 L94 29" fill="none" stroke="#f29222" stroke-width="14" stroke-linecap="round"/></svg>
+    <p class="etiket">C’de beklenen: iki turuncu yatay çizgi.</p>
+  </div>
+
+  <!-- D · aynı çizgiler <img> olarak (SVG data URI) -->
+  <div class="blok">
+    <p class="baslik">D · çizgiler &lt;img&gt; olarak (SVG data URI) — raster/resim yolu</p>
+    <p class="kod">img width="120" height="48" src="data:image/svg+xml,…"</p>
+    <img width="120" height="48" alt="iki turuncu cizgi"
+      src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 40'%3E%3Cpath d='M15 10 L95 10' fill='none' stroke='%23f29222' stroke-width='14' stroke-linecap='round'/%3E%3Cpath d='M14 29 L94 29' fill='none' stroke='%23f29222' stroke-width='14' stroke-linecap='round'/%3E%3C/svg%3E">
+    <p class="etiket">D’de beklenen: C ile aynı iki turuncu çizgi (resim olarak).</p>
+  </div>
+
+  <!-- E · CSS kutusu: turuncu renk ve sayfa yolu sağlamlık kontrolü -->
+  <div class="blok">
+    <p class="baslik">E · kıyas — düz turuncu CSS kutusu (SVG değil)</p>
+    <p class="kod">div style="width:120px;height:8px;background:#f29222"</p>
+    <div style="width:120px;height:8px;background:#f29222"></div>
+    <p class="etiket">E’de beklenen: turuncu dikdörtgen. Bu görünmüyorsa sayfa/tarayıcı sorunudur.</p>
+  </div>
+</body>
+</html>

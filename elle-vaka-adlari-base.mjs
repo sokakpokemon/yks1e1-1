@@ -2205,6 +2205,8 @@ export const elleVakaAdlari = {
     "D33 logo master birebir: inline-flex sarmalayıcı · relative/flex marka kutusu · 'formul' 2.25rem · -1.05px · 0.85 · #d31d24 · çift #f29222 çizgi width 21 · right 8 · top 0.5 · viewBox 0 0 100 40 · stroke-width 14 · 'kurs merkezi' 0.74rem · -0.4px · margin-top 0 (çakışma) · margin-right 14 · #1a1a1a · padding 5px · nowrap/flex-shrink:0/min-width:0/margin-left:12px",
     "D30 logo stroke literal #f29222 (var() YOK) + xmlns VAR",
     "D33 logo master kaynağı logo-master/formul-kurs-logo.html VAR (8.5rem tabanı · kilitli path/viewBox/stroke-width/renkler/900-italik) + kademe = master × 0.2647 (2.25rem ≈ 8.5×0.2647)",
+    "D47 logo hiza: 'kurs merkezi' marka kutusunun DIŞINDA (brand-container <div>/</div> dengesi) — sarmalayıcının 2. çocuğu",
+    "D47 logo hiza: iki path #f29222 + fk-logo SVG marka kutusunda + görünürlük engeli YOK (overflow:hidden yok · z-index var · height:auto)",
     "D33 gömülü font ailesi = MontsKart (italic 900 base64 @font-face) · Montserrat/CDN referansı YOK",
     "D30 etiket 'Değerli Öğrencimiz' VAR + düz 'ÖĞRENCİ' etiketi YOK",
     "D30 FROZEN not şeridi TEK tam-dizi eşitliği (6 cümle birebir, • ayracı yok)",

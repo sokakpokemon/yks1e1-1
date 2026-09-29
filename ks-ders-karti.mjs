@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":113"); return; } if (__kosan !== 113) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ders-karti.mjs kosan=" + __kosan + " beklenen=113"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":113"); } });
+process.on("exit", (c) => { if (c !== 0) { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":115"); return; } if (__kosan !== 115) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ders-karti.mjs kosan=" + __kosan + " beklenen=115"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":115"); } });
 /* ks-ders-karti.mjs — DERS-KARTI-YAMASI süiti
    Doğruladıkları:
     1) Kart üretimi: dersKartiHTML/dersKartiVeri doğru alanlarla çalışır (ad, ders, konu, öğretmen, tarih+saat, sınıf, durum).
@@ -139,7 +139,7 @@ t("konu boş → tam 'Genel tekrar' (HTML)", dersKartiHTML(Object.assign({}, bir
 t("kart bento zemin #f4f6fa taşıyor", dersKartiHTML(birebir).includes("background:#f4f6fa"));
 t("D30 kart başlığı 'Birebir Ders Kartı' VAR + 'Formül Kurs' METİN alt yazısı YOK + fk-logo VAR", (() => { const h = dersKartiHTML(birebir); return h.includes("Birebir Ders Kartı") && h.includes("fk-logo") && !h.includes(">Formül Kurs</div>"); })());
 /* D33: logo MASTER kod BİREBİR (yalnız 2 değişiklik: gömülü font + ölçek).
-   ESKİ→YENİ kademe haritası (markup app.js:4642-4650):
+   ESKİ→YENİ kademe haritası (markup app.js:4865-4872):
      sarmalayıcı  padding:7px → inline-flex · column · align-items:flex-end · padding:5px · margin-left:12px
      marka kutusu position:relative;nowrap → + display:flex · align-items:flex-start
      marka        2rem/-0.95px/0.95 → 2.25rem · -1.05px · line-height 0.85 (master)
@@ -165,6 +165,28 @@ t("D33 logo master kaynağı logo-master/formul-kurs-logo.html VAR (8.5rem taban
   /* master dosyası 'ÖLÇEK' başlığıyla ölçek kuralını da taşır (yarım uygulama koruması) */
   return kademe && m.includes("ÖLÇEK") && m.includes("logo-wrapper") && m.includes("brand-container");
 })());
+
+/* ---- D47-LOGO-HIZA: 'kurs merkezi' alt yazısı marka kutusunun (brand-container) DIŞINA alındı →
+   artık sarmalayıcının 2. çocuğu (column + align-items:flex-end). KUSUR: sub-text kutu İÇİNDE (row)
+   iken SVG'nin right:8px ölçüsü kutunun SAĞ KENARINA (sub-text bitişine) göre hesaplanıyordu →
+   turuncu çift çizgi 'u' harfinin üstüne değil ~90-110px sağa düşüyordu. Kilitli değerler/ölçek/renk/
+   path/viewBox/stroke-width DEĞİŞMEDİ; yeni SVG/üretici YOK (SVG sayısı 2 → 2). */
+function fkKutuKapanis(h) {
+  const kutu = '<div style="position:relative;display:flex;align-items:flex-start;white-space:nowrap">';
+  const bas = h.indexOf(kutu);
+  if (bas < 0) return -1;
+  const etiket = /<div\b|<\/div>/g;
+  etiket.lastIndex = bas;
+  let derinlik = 0, m;
+  while ((m = etiket.exec(h)) !== null) {
+    if (m[0] === "</div>") { derinlik--; if (derinlik === 0) return m.index; }
+    else derinlik++;
+  }
+  return -1;
+}
+const D47_KUTU = '<div style="position:relative;display:flex;align-items:flex-start;white-space:nowrap">';
+t("D47 logo hiza: 'kurs merkezi' marka kutusunun DIŞINDA (brand-container <div>/</div> dengesi) — sarmalayıcının 2. çocuğu", (() => { const h = dersKartiHTML(birebir); const kapanis = fkKutuKapanis(h); if (kapanis < 0) return false; const merkezi = h.indexOf(">kurs merkezi</div>"); const logo = h.indexOf('id="fk-logo"'); return merkezi > kapanis && logo > h.indexOf(D47_KUTU) && logo < kapanis; })());
+t("D47 logo hiza: iki path #f29222 + fk-logo SVG marka kutusunda + görünürlük engeli YOK (overflow:hidden yok · z-index var · height:auto)", (() => { const h = dersKartiHTML(birebir); const bas = h.indexOf('id="fk-logo"'); const son = h.indexOf("</svg>", bas); if (bas < 0 || son < 0) return false; const svg = h.slice(bas, son + 6); return (svg.match(/<path /g) || []).length === 2 && (svg.match(/stroke="#f29222"/g) || []).length === 2 && svg.includes("height:auto") && svg.includes("z-index:1") && svg.includes("overflow:visible") && !svg.includes("overflow:hidden") && bas > h.indexOf(D47_KUTU) && bas < fkKutuKapanis(h); })());
 /* D33 font kapısı: gömülü aile MONTSSKART (italic 900) · 'Montserrat' ve CDN referansı YOK.
    D30'da ad "Montserrat ... @font-face" idi; aile adı değişti (MontsKart) → ad ve kontrol güncellendi. */
 t("D33 gömülü font ailesi = MontsKart (italic 900 base64 @font-face) · Montserrat/CDN referansı YOK", (() => { const h = dersKartiHTML(birebir); return h.includes("@font-face") && h.includes("data:font/woff2;base64,") && h.includes("font-family:MontsKart") && h.includes("font-style:italic;font-weight:900") && !h.includes("Montserrat") && !/fonts\.googleapis/.test(h) && !/@import/.test(h); })());

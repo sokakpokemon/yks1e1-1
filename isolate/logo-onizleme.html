@@ -174,9 +174,11 @@
 </div>
 
 <footer>
-  Bu dosya <b>yalnız önizlemedir</b>; <code>app.js</code> değişmedi (SHA16 hâlâ <code>c97b349828cd2e72</code>).
-  Onay verilirse tek idempotent yama (<code>ks-yama-d47-logo-hiza.mjs</code>) ile kart + master aynı düzeltmeyi alır;
-  ardından <code>ks-ders-karti.mjs</code> kapıları yeni assertion’larla güncellenir ve <code>hizli-test.mjs --tam</code> koşulur.
+  Bu dosya <b>yalnız önizlemedir</b>. D47 kararı (öneri = panel ②/③/⑤) <b>UYGULANDI</b>: kart + master aynı
+  taşımayı aldı → <code>app.js</code> SHA16 <code>76cc3152f972f4d1</code> (önceki <code>c97b349828cd2e72</code> = panel ①,
+  <code>app.js.d47-logo-hiza-oncesi.bak</code>).
+  Tek idempotent yama (<code>ks-yama-d47-logo-hiza.mjs</code>) kart + master’da aynı düzeltmeyi yaptı; ardından
+  <code>ks-ders-karti.mjs</code> 113→115 (+2 kapı) ve <code>node hizli-test.mjs --tam</code> → <b>2591/2591 · TAMLIK 48/48</b> ✓.
   <br>
   <b>Not:</b> Master panelindeki yazı tipi master dosyasındaki <code>'Montserrat'</code> yerine gömülü <code>MontsKart</code>’tur —
   master’ın kendi notu/LOGO KİLİDİ gereği kart ile master arasındaki tek font farkı budur, karşılaştırma için eşitlenmiştir.

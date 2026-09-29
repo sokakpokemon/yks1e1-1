@@ -31,11 +31,6 @@
   NOT (master değerlerinin türetilmesi): master'ın 8.5rem tabanı kullanıcı tarafından
   verilmişti; dosyadaki kalan master ölçüleri karttaki D33 değerlerinin 0.2647'ye
   bölünmesiyle birebir geriye çözülmüştür (2.25rem / 0.2647 = 8.5rem — tam).
-
-  D47-LOGO-HIZA: alt yazı ("kurs merkezi") marka kutusunun (brand-container) DIŞINA alındı;
-  artık logo-wrapper'ın 2. çocuğu (sarmalayıcı column + align-items:flex-end → marka kutusunun
-  altında sağa hizalı). Marka kutusu İÇİNDEKİ sıra (formul → SVG) ve tüm kilitli değerler
-  DEĞİŞMEDİ. (YASAK listesindeki "hizalama/sıra" marka kutusunun İÇİ içeriği için geçerlidir.)
   ============================================================================
 -->
 <div class="logo-wrapper"
@@ -52,8 +47,8 @@
       <path d="M14 29 L94 29" fill="none" stroke="#f29222" stroke-width="14" stroke-linecap="round"/>
     </svg>
 
-  </div>
+    <div class="sub-text"
+         style="font-family:'Montserrat',sans-serif;font-size:2.8rem;font-weight:900;font-style:italic;letter-spacing:-1.5px;margin-top:-3px;margin-right:53px;color:#1a1a1a;white-space:nowrap">kurs merkezi</div>
 
-  <div class="sub-text"
-       style="font-family:'Montserrat',sans-serif;font-size:2.8rem;font-weight:900;font-style:italic;letter-spacing:-1.5px;margin-top:-3px;margin-right:53px;color:#1a1a1a;white-space:nowrap">kurs merkezi</div>
+  </div>
 </div>

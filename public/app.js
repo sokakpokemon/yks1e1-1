@@ -4844,6 +4844,8 @@ function dersKartiVeri(d) {
   return { o: o, ad: (o && o.ad) || d.ogrenciAd || "", ders: D.ad, konu: d.konu || "", ogr: ogrAd || "", tarih: fmtTR(d.tarih) + " " + GUNLER[dowIdx(d.tarih)], saat: saatEtiket(d.saat), saatKisa: kartSaati, sinif: (o && o.sinif) || "Sınıf belirtilmemiş", durum: rozet };
 }
 /* D46-KART-EMOJI: bento alan etiketlerine EMOJİ ÖNEKİ (ek emoji) — svgKart/fk-logo/renk/ölçek/kademe DEĞİŞMEZ. */
+/* D47-LOGO-HIZA: "kurs merkezi" alt yazısı marka kutusunun DIŞINA alındı (logo-wrapper'ın 2. çocuğu) —
+   SVG right:8px artık marka METNİ bitişine göre ölçülür; kilitli değer/ölçek/renk/path DEĞİŞMEDİ. */
 function dersKartiHTML(d) {
   /* DÖNGÜ-15: BENTO tasarım — zemin #f4f6fa, beyaz yuvarlak kart, salt inline style (class= YOK).
      Rozet 3 durum: Planlandı #ecfdf5/#047857 · Yapıldı #eff6ff/#1d4ed8 · İptal Edildi #fef2f2/#b91c1c.
@@ -4869,8 +4871,8 @@ function dersKartiHTML(d) {
         '<div style="position:relative;display:flex;align-items:flex-start;white-space:nowrap">' +
         '<div style="font-family:MontsKart,serif;font-size:2.25rem;font-weight:900;font-style:italic;letter-spacing:-1.05px;color:#d31d24;line-height:0.85;white-space:nowrap">formul</div>' +
         '<svg id="fk-logo" width="21" viewBox="0 0 100 40" xmlns="http://www.w3.org/2000/svg" style="position:absolute;right:8px;top:0.5px;height:auto;display:block;overflow:visible;z-index:1"><path d="M15 10 L95 10" fill="none" stroke="#f29222" stroke-width="14" stroke-linecap="round"/><path d="M14 29 L94 29" fill="none" stroke="#f29222" stroke-width="14" stroke-linecap="round"/></svg>' +
-        '<div style="font-family:MontsKart,serif;font-size:0.74rem;font-weight:900;font-style:italic;letter-spacing:-0.4px;margin-top:0;margin-right:14px;color:#1a1a1a;white-space:nowrap">kurs merkezi</div>' +
         '</div>' +
+        '<div style="font-family:MontsKart,serif;font-size:0.74rem;font-weight:900;font-style:italic;letter-spacing:-0.4px;margin-top:0;margin-right:14px;color:#1a1a1a;white-space:nowrap">kurs merkezi</div>' +
         '</div></div>' +
         '<span style="' + durumStil + '">' + esc(v.durum) + "</span>" +
       "</div>" +

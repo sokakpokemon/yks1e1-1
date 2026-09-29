@@ -211,6 +211,8 @@ export const elleVakaAdlari = {
     "birebir mesajda 👥 yok (eski metin)",
     "PNG grup satırında tüm adlar",
     "PNG birebir satırında tek ad (virgülle birleşme yok)",
+    "PNG rapor başlıkları: 7 <th> emoji ÖNEKLİ ve SIRASI birebir (📅 TARİH · ⏰ SAAT · 🎒 ÖĞRENCİ · 📚 DERS · 📝 EKSİK KONU · 👤 ÖĞRETMEN · 🚦 DURUM)",
+    "PNG rapor başlık METİNLERİ önek öncesiyle AYNI (emoji çıkarılınca 7 kelime sırasıyla TARİH|SAAT|ÖĞRENCİ|DERS|EKSİK KONU|ÖĞRETMEN|DURUM)",
     "her üye analizde görünüyor",
     "grup üyelerine ders dağıtıldı (n ≥ 2)",
     "özet: ders tek kez sayılır (donut merkezi)",

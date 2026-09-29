@@ -5376,6 +5376,15 @@ function pngAc() {
   });
   if (!sirali.length) lej = '<div style="color:#94a3b8;font-size:11px;padding:8px 0">Veri yok</div>';
 
+  /* D55-RAPOR-EMOJI: PNG raporu tablo BAŞLIKLARINA yalnız EMOJİ ÖNEKİ eklendi
+     (📅 TARİH · ⏰ SAAT · 🎒 ÖĞRENCİ · 📚 DERS · 📝 EKSİK KONU · 👤 ÖĞRETMEN · 🚦 DURUM).
+     Metin kelimeleri, <th> sayısı (7) ve SIRASI, sütun stil şablonu, tablo markup'ı, PNG akışı
+     (pngAc → cizPngDonut → setTimeout(pngYakala)) ve html2canvas option'ları DEĞİŞMEDİ.
+     EMOJİ EŞLEMESİ öğrenci kartı sözlüğünden: 📅/⏰/📚/📝 aynı kavramlar; 👤 = ÖĞRETMEN (karttaki
+     '👤 ÖĞRETMEN' ile AYNI); ÖĞRENCİ için kartta karşılık yok → 🎒 (marka bloğundaki 🎓 ile
+     ÇAKIŞMASIN); DURUM için kartta karşılık yok → 🚦 (Planlandı/Tamamlandı/İptal durum rozeti).
+     Öğrenci kartı · öğretmen tek-ders kartı · öğretmen günlük kartı · logo bloğu · D49 footer ·
+     günlük çizelge bu yamada DOKUNULMADI. */
   $("pngRapor").innerHTML =
     '<div style="width:900px;background:#fff;font-family:Inter,system-ui,sans-serif;padding:34px 40px">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
@@ -5402,13 +5411,13 @@ function pngAc() {
       '<div style="border-bottom:2px solid #e2e8f0;margin:18px 0"></div>' +
       '<table style="width:100%;border-collapse:collapse">' +
         "<tr style='background:#f8fafc;border-radius:10px'>" +
-          "<th style='text-align:left;padding:8px 10px;font-size:9.5px;font-weight:800;color:#94a3b8;letter-spacing:.06em'>TARİH</th>" +
-          "<th style='text-align:left;padding:8px 10px;font-size:9.5px;font-weight:800;color:#94a3b8;letter-spacing:.06em'>SAAT</th>" +
-          "<th style='text-align:left;padding:8px 10px;font-size:9.5px;font-weight:800;color:#94a3b8;letter-spacing:.06em'>ÖĞRENCİ</th>" +
-          "<th style='text-align:left;padding:8px 10px;font-size:9.5px;font-weight:800;color:#94a3b8;letter-spacing:.06em'>DERS</th>" +
-          "<th style='text-align:left;padding:8px 10px;font-size:9.5px;font-weight:800;color:#94a3b8;letter-spacing:.06em'>EKSİK KONU</th>" +
-          "<th style='text-align:left;padding:8px 10px;font-size:9.5px;font-weight:800;color:#94a3b8;letter-spacing:.06em'>ÖĞRETMEN</th>" +
-          "<th style='text-align:left;padding:8px 10px;font-size:9.5px;font-weight:800;color:#94a3b8;letter-spacing:.06em'>DURUM</th>" +
+          "<th style='text-align:left;padding:8px 10px;font-size:9.5px;font-weight:800;color:#94a3b8;letter-spacing:.06em'>📅 TARİH</th>" +
+          "<th style='text-align:left;padding:8px 10px;font-size:9.5px;font-weight:800;color:#94a3b8;letter-spacing:.06em'>⏰ SAAT</th>" +
+          "<th style='text-align:left;padding:8px 10px;font-size:9.5px;font-weight:800;color:#94a3b8;letter-spacing:.06em'>🎒 ÖĞRENCİ</th>" +
+          "<th style='text-align:left;padding:8px 10px;font-size:9.5px;font-weight:800;color:#94a3b8;letter-spacing:.06em'>📚 DERS</th>" +
+          "<th style='text-align:left;padding:8px 10px;font-size:9.5px;font-weight:800;color:#94a3b8;letter-spacing:.06em'>📝 EKSİK KONU</th>" +
+          "<th style='text-align:left;padding:8px 10px;font-size:9.5px;font-weight:800;color:#94a3b8;letter-spacing:.06em'>👤 ÖĞRETMEN</th>" +
+          "<th style='text-align:left;padding:8px 10px;font-size:9.5px;font-weight:800;color:#94a3b8;letter-spacing:.06em'>🚦 DURUM</th>" +
         "</tr>" + satirlar + "</table>" +
       '<div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center">' +
         '<div style="font-size:10px;color:#94a3b8">Bu rapor YKS Birebir Takip programı tarafından oluşturuldu.</div>' +

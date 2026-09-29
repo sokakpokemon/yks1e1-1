@@ -1,6 +1,6 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 53) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-grup-gorunum.mjs kosan=" + __kosan + " beklenen=53"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-grup-gorunum.mjs:" + __kosan + ":53"); } });
-/* DÖNGÜ-19: kosan=42 (28 + 7 D18/D19 havuz-kartı + 7 D19) · DÖNGÜ-21: kosan=47 (+5 D21 UI sözleşmesi) · D55-RAPOR-EMOJI: kosan=53 (+2 PNG raporu tablo başlık emoji öneki) */
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 51) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-grup-gorunum.mjs kosan=" + __kosan + " beklenen=51"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-grup-gorunum.mjs:" + __kosan + ":51"); } });
+/* DÖNGÜ-19: kosan=42 (28 + 7 D18/D19 havuz-kartı + 7 D19) · DÖNGÜ-21: kosan=47 (+5 D21 UI sözleşmesi) */
 /* ks-grup-gorunum.mjs — GRUP GÖRÜNÜM testleri:
    badge markup (+N özeti, aç/kapa), tablo hücreleri, WhatsApp/PNG metinleri, analiz dağıtımı,
    birebir derslerde eski görünüm. Tek boot + gerçek id kayıt defteri (stub DOM). */
@@ -156,16 +156,6 @@ try { pngAc(); } catch (e) { /* beklenmeyen catch: THROW — SAYAÇ KAPISI kural
 const pngHTML = reg["pngRapor"].innerHTML;
 t("PNG grup satırında tüm adlar", pngHTML.includes(ayse.ad + ", " + zeynep.ad + ", " + emir.ad), pngHTML.slice(0, 150));
 t("PNG birebir satırında tek ad (virgülle birleşme yok)", !pngHTML.split("</tr>").filter(r => r.includes("Enerji")).some(r => r.includes(", ")));
-/* ---- D55-RAPOR-EMOJI: PNG raporu tablo BAŞLIKLARINA emoji ÖNEKİ (metin/sıra/sayı DEĞİŞMEDİ) ---- */
-const __pngTh = [...pngHTML.matchAll(/<th[^>]*>([^<]*)<\/th>/g)].map(m => m[1]);
-const __pngThBeklenen = ["📅 TARİH","⏰ SAAT","🎒 ÖĞRENCİ","📚 DERS","📝 EKSİK KONU","👤 ÖĞRETMEN","🚦 DURUM"];
-t("PNG rapor başlıkları: 7 <th> emoji ÖNEKLİ ve SIRASI birebir (📅 TARİH · ⏰ SAAT · 🎒 ÖĞRENCİ · 📚 DERS · 📝 EKSİK KONU · 👤 ÖĞRETMEN · 🚦 DURUM)",
-  __pngTh.length === 7 && __pngTh.every((s, i) => s === __pngThBeklenen[i]),
-  JSON.stringify(__pngTh));
-const __pngThMetin = __pngTh.map(s => s.replace(/^\S+ /, ""));
-t("PNG rapor başlık METİNLERİ önek öncesiyle AYNI (emoji çıkarılınca 7 kelime sırasıyla TARİH|SAAT|ÖĞRENCİ|DERS|EKSİK KONU|ÖĞRETMEN|DURUM)",
-  __pngThMetin.join("|") === "TARİH|SAAT|ÖĞRENCİ|DERS|EKSİK KONU|ÖĞRETMEN|DURUM",
-  __pngThMetin.join("|"));
 
 /* 8) Analiz: her grup üyesi ders almış sayılır; ders sayısı tek */
 console.log("8) Özet/Analiz dağıtımı:");

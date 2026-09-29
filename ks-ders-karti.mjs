@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":115"); return; } if (__kosan !== 115) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ders-karti.mjs kosan=" + __kosan + " beklenen=115"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":115"); } });
+process.on("exit", (c) => { if (c !== 0) { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":118"); return; } if (__kosan !== 118) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ders-karti.mjs kosan=" + __kosan + " beklenen=118"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":118"); } });
 /* ks-ders-karti.mjs — DERS-KARTI-YAMASI süiti
    Doğruladıkları:
     1) Kart üretimi: dersKartiHTML/dersKartiVeri doğru alanlarla çalışır (ad, ders, konu, öğretmen, tarih+saat, sınıf, durum).
@@ -145,9 +145,9 @@ t("D30 kart başlığı 'Birebir Ders Kartı' VAR + 'Formül Kurs' METİN alt ya
      marka        2rem/-0.95px/0.95 → 2.25rem · -1.05px · line-height 0.85 (master)
      SVG          width 20 · right 8 · top 0 → width 21 · right 8 · top 0.5 · height:auto
                   viewBox 0 0 100 40 · stroke-width 14 (master) · iki path M15 10 L95 10 / M14 29 L94 29
-     alt yazı     0.72rem/-0.35px · margin-top:1px → 0.74rem · -0.4px · margin-top:0 (ÇAKIŞMA KURALI:
-                  master -3px markanın üstüne biniyordu → 0 kullanıldı) · margin-right 14px */
-t("D33 logo master birebir: inline-flex sarmalayıcı · relative/flex marka kutusu · 'formul' 2.25rem · -1.05px · 0.85 · #d31d24 · çift #f29222 çizgi width 21 · right 8 · top 0.5 · viewBox 0 0 100 40 · stroke-width 14 · 'kurs merkezi' 0.74rem · -0.4px · margin-top 0 (çakışma) · margin-right 14 · #1a1a1a · padding 5px · nowrap/flex-shrink:0/min-width:0/margin-left:12px", (() => { const h = dersKartiHTML(birebir); return ["display:inline-flex","flex-direction:column","align-items:flex-end","padding:5px","position:relative","display:flex","align-items:flex-start",">formul</div>",">kurs merkezi</div>","font-size:2.25rem","letter-spacing:-1.05px","line-height:0.85","color:#d31d24","width=\"21\"","viewBox=\"0 0 100 40\"","height:auto","right:8px","top:0.5px","d=\"M15 10 L95 10\"","d=\"M14 29 L94 29\"","stroke-width=\"14\"","stroke-linecap=\"round\"","stroke=\"#f29222\"","font-size:0.74rem","letter-spacing:-0.4px","margin-top:0","margin-right:14px","color:#1a1a1a","white-space:nowrap","flex-shrink:0","min-width:0","margin-left:12px"].every(s => h.includes(s)) && !h.includes("formul kurs") && !h.includes(">merkezi</div>") && !/margin-top:-/.test(h) && (h.match(/id="fk-logo"/g) || []).length === 1 && h.indexOf(">formul</div>") < h.indexOf('id="fk-logo"') && h.indexOf('id="fk-logo"') < h.indexOf(">kurs merkezi</div>"); })());
+     alt yazı     0.72rem/-0.35px · margin-top:1px → 0.74rem · -0.4px · margin-top:2px (D49-LOGO-FOOTER:
+                  7.56px × 0.2647 = 2.00 — eski -3px istisnası kaldırıldı) · margin-right 14px */
+t("D33 logo master birebir: inline-flex sarmalayıcı · relative/flex marka kutusu · 'formul' 2.25rem · -1.05px · 0.85 · #d31d24 · çift #f29222 çizgi width 21 · right 8 · top 0.5 · viewBox 0 0 100 40 · stroke-width 14 · 'kurs merkezi' 0.74rem · -0.4px · margin-top 0 (çakışma) · margin-right 14 · #1a1a1a · padding 5px · nowrap/flex-shrink:0/min-width:0/margin-left:12px", (() => { const h = dersKartiHTML(birebir); return ["display:inline-flex","flex-direction:column","align-items:flex-end","padding:5px","position:relative","display:flex","align-items:flex-start",">formul</div>",">kurs merkezi</div>","font-size:2.25rem","letter-spacing:-1.05px","line-height:0.85","color:#d31d24","width=\"21\"","viewBox=\"0 0 100 40\"","height:auto","right:8px","top:0.5px","d=\"M15 10 L95 10\"","d=\"M14 29 L94 29\"","stroke-width=\"14\"","stroke-linecap=\"round\"","stroke=\"#f29222\"","font-size:0.74rem","letter-spacing:-0.4px","margin-top:2px","margin-right:14px","color:#1a1a1a","white-space:nowrap","flex-shrink:0","min-width:0","margin-left:12px"].every(s => h.includes(s)) && !h.includes("formul kurs") && !h.includes(">merkezi</div>") && !/margin-top:-/.test(h) && (h.match(/id="fk-logo"/g) || []).length === 1 && h.indexOf(">formul</div>") < h.indexOf('id="fk-logo"') && h.indexOf('id="fk-logo"') < h.indexOf(">kurs merkezi</div>"); })());
 t("D30 logo stroke literal #f29222 (var() YOK) + xmlns VAR", (() => { const h = dersKartiHTML(birebir); return h.includes("stroke=\"#f29222\"") && !h.includes("stroke=\"var(") && h.includes("xmlns=\"http://www.w3.org/2000/svg\""); })());
 /* LOGO KİLİDİ (CHECKPOINT.md → "🎨 LOGO KİLİDİ"): master'ın TEK kaynağı
    logo-master/formul-kurs-logo.html. Master değişirse kademe değerleri değişir;
@@ -187,11 +187,43 @@ function fkKutuKapanis(h) {
 const D47_KUTU = '<div style="position:relative;display:flex;align-items:flex-start;white-space:nowrap">';
 t("D47 logo hiza: 'kurs merkezi' marka kutusunun DIŞINDA (brand-container <div>/</div> dengesi) — sarmalayıcının 2. çocuğu", (() => { const h = dersKartiHTML(birebir); const kapanis = fkKutuKapanis(h); if (kapanis < 0) return false; const merkezi = h.indexOf(">kurs merkezi</div>"); const logo = h.indexOf('id="fk-logo"'); return merkezi > kapanis && logo > h.indexOf(D47_KUTU) && logo < kapanis; })());
 t("D47 logo hiza: iki path #f29222 + fk-logo SVG marka kutusunda + görünürlük engeli YOK (overflow:hidden yok · z-index var · height:auto)", (() => { const h = dersKartiHTML(birebir); const bas = h.indexOf('id="fk-logo"'); const son = h.indexOf("</svg>", bas); if (bas < 0 || son < 0) return false; const svg = h.slice(bas, son + 6); return (svg.match(/<path /g) || []).length === 2 && (svg.match(/stroke="#f29222"/g) || []).length === 2 && svg.includes("height:auto") && svg.includes("z-index:1") && svg.includes("overflow:visible") && !svg.includes("overflow:hidden") && bas > h.indexOf(D47_KUTU) && bas < fkKutuKapanis(h); })());
+
+/* ---- D49-LOGO-FOOTER: (1) alt yazı 2px aşağı (ölçek korunur: 7.56 × 0.2647 = 2.00),
+   (2) D30 not şeridi cümlelere bölündü. D30 FROZEN kapısı GEVŞETİLMEDİ — 'includes' yerine
+   etiket-sökümlü TAM EŞİTLİK (daha sıkı) kullanılır; metin birebir, • ayracı yok.
+   Turuncu çizgilere DOKUNULMADI: ölçüm (bkz. ks-yama-d49-logo-footer.mjs) master×0.2647 = kart eşitliğini
+   her noktada ≤ 0.17 px farkla doğruladı → kanıtlanmış kusur yok, tasarım tercihi. */
+t("D49 logo ince ayar: alt yazı 2px aşağı (kart margin-top:2px · master 7.56px = 2/0.2647 · ölçek 0.2647 korunur)", (() => {
+  if (!existsSync("logo-master/formul-kurs-logo.html")) return false;
+  const m = readFileSync("logo-master/formul-kurs-logo.html", "utf8");
+  const h = dersKartiHTML(birebir);
+  return h.includes("letter-spacing:-0.4px;margin-top:2px;margin-right:14px;") && m.includes("letter-spacing:-1.5px;margin-top:7.56px;margin-right:53px;") &&
+    !/margin-top:-/.test(h) && !m.includes("margin-top:-3px") && Math.abs(7.56 * 0.2647 - 2) < 0.01;
+})());
+t("D49 footer modern: 5 cümle + imza AYRI blok hâlinde (6 display:block) · birleşik metin BİREBİR", (() => {
+  const h = dersKartiHTML(birebir);
+  const i = h.indexOf("Bu dersler, eksiklerini");
+  const j = h.indexOf("FORMÜL KURS REHBERLİK SERVİSİ") + "FORMÜL KURS REHBERLİK SERVİSİ".length;
+  if (i < 0 || j < 4) return false;
+  const duz = h.slice(i, j).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  const bekl = "Bu dersler, eksiklerini tamamlaman ve hedeflerine biraz daha yaklaşman için planlandı. Ders saatinden birkaç dakika önce hazır olman yeterli. Anlamadığın veya zorlandığın konuları öğretmeninle paylaşmayı unutma. Sen çalışmaya devam et, biz de bu süreçte yanında olalım. Güzel çalışmalar, başarılar dileriz. — FORMÜL KURS REHBERLİK SERVİSİ";
+  return duz === bekl && (h.match(/<span style="display:block/g) || []).length === 6;
+})());
+t("D49 footer imza: ince ayraç (hairline border-top) + harf aralıklı (letter-spacing) satır", (() => {
+  const h = dersKartiHTML(birebir);
+  const son = h.indexOf("— FORMÜL KURS REHBERLİK SERVİSİ");
+  if (son < 0) return false;
+  const bas = h.lastIndexOf("<span", son);
+  if (bas < 0) return false;
+  const etiket = h.slice(bas, h.indexOf(">", bas));
+  return etiket.includes("display:block") && etiket.includes("border-top:1px solid #e2e8f0") &&
+    /letter-spacing:0\.\d+px/.test(etiket) && etiket.includes("color:#94a3b8");
+})());
 /* D33 font kapısı: gömülü aile MONTSSKART (italic 900) · 'Montserrat' ve CDN referansı YOK.
    D30'da ad "Montserrat ... @font-face" idi; aile adı değişti (MontsKart) → ad ve kontrol güncellendi. */
 t("D33 gömülü font ailesi = MontsKart (italic 900 base64 @font-face) · Montserrat/CDN referansı YOK", (() => { const h = dersKartiHTML(birebir); return h.includes("@font-face") && h.includes("data:font/woff2;base64,") && h.includes("font-family:MontsKart") && h.includes("font-style:italic;font-weight:900") && !h.includes("Montserrat") && !/fonts\.googleapis/.test(h) && !/@import/.test(h); })());
 t("D30 etiket 'Değerli Öğrencimiz' VAR + düz 'ÖĞRENCİ' etiketi YOK", (() => { const h = dersKartiHTML(birebir); return h.includes(">Değerli Öğrencimiz</div>") && !h.includes(">ÖĞRENCİ</div>"); })());
-t("D30 FROZEN not şeridi TEK tam-dizi eşitliği (6 cümle birebir, • ayracı yok)", (() => { const h = dersKartiHTML(birebir); const bekl = "Bu dersler, eksiklerini tamamlaman ve hedeflerine biraz daha yaklaşman için planlandı. Ders saatinden birkaç dakika önce hazır olman yeterli. Anlamadığın veya zorlandığın konuları öğretmeninle paylaşmayı unutma. Sen çalışmaya devam et, biz de bu süreçte yanında olalım. Güzel çalışmalar, başarılar dileriz. — FORMÜL KURS REHBERLİK SERVİSİ"; return h.includes(bekl) && !h.includes("•"); })());
+t("D30 FROZEN not şeridi TEK tam-dizi eşitliği (6 cümle birebir, • ayracı yok)", (() => { const h = dersKartiHTML(birebir); const bekl = "Bu dersler, eksiklerini tamamlaman ve hedeflerine biraz daha yaklaşman için planlandı. Ders saatinden birkaç dakika önce hazır olman yeterli. Anlamadığın veya zorlandığın konuları öğretmeninle paylaşmayı unutma. Sen çalışmaya devam et, biz de bu süreçte yanında olalım. Güzel çalışmalar, başarılar dileriz. — FORMÜL KURS REHBERLİK SERVİSİ"; const i = h.indexOf("Bu dersler, eksiklerini"); const j = h.indexOf("FORMÜL KURS REHBERLİK SERVİSİ") + "FORMÜL KURS REHBERLİK SERVİSİ".length; if (i < 0) return false; const duz = h.slice(i, j).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim(); return duz === bekl && !h.includes("•"); })());
 t("D30 not şeridi stili (10.5px · slate-500 #64748b · border-top #e2e8f0 · sol hizalı)", (() => { const h = dersKartiHTML(birebir); const i = h.indexOf("Bu dersler, eksiklerini"); const bas = h.lastIndexOf("<div", i); return h.slice(bas, i).includes("font-size:10.5px") && h.slice(bas, i).includes("color:#64748b") && h.slice(bas, i).includes("border-top:1px solid #e2e8f0") && h.slice(bas, i).includes("text-align:left"); })());
 t("D30 dersKartiAc document.fonts.ready bekliyor (font render güvencesi)", (() => { const i0 = appKaynak.indexOf("function dersKartiAc("); const i1 = appKaynak.indexOf("\nfunction ", i0 + 10); const blok = appKaynak.slice(i0, i1 > 0 ? i1 : appKaynak.length); return blok.includes("document.fonts.ready") && blok.includes("html2canvas(el,") && blok.indexOf("document.fonts.ready") < blok.indexOf("html2canvas(el,"); })());
 t("D30 etki-sınırı: öğretmen TEK-DERS kartında 'Değerli Öğrencimiz' YOK + fk-logo YOK + öğrenci not şeridi YOK", (() => { const ogrtBas = appKaynak.indexOf("function dersKartiOgrtHTML("); const ogrtSon = appKaynak.indexOf("\nfunction ", ogrtBas + 10); const ogrtKaynak = appKaynak.slice(ogrtBas, ogrtSon > 0 ? ogrtSon : appKaynak.length); const h = dersKartiOgrtHTML(birebir); return !h.includes("Değerli Öğrencimiz") && !h.includes("fk-logo") && !h.includes("Bu dersler, eksiklerini tamamlaman") && !ogrtKaynak.includes("Bu dersler, eksiklerini tamamlaman"); })());

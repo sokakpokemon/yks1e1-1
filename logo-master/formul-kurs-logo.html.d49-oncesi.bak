@@ -19,8 +19,8 @@
     SVG viewBox 0 0 100 40 · stroke-width 14 · stroke-linecap round  → AYNEN
     alt yazı font-size  2.8rem  → 0.74rem
     alt yazı letter-sp. -1.5px  → -0.4px
-    alt yazı margin-top 7.56px  → 2px (D49-LOGO-FOOTER: ölçek 0.2647 korunur
-                                          7.56 × 0.2647 = 2.00 · eski -3px istisnası KALDIRILDI)
+    alt yazı margin-top -3px    → 0   (ÇAKIŞMA KURALI: -3px alt yazıyı
+                                          markanın üstüne bindiriyordu → 0)
     alt yazı margin-right 53px  → 14px
     sarmalayıcı padding  19px   → 5px
 
@@ -36,11 +36,6 @@
   artık logo-wrapper'ın 2. çocuğu (sarmalayıcı column + align-items:flex-end → marka kutusunun
   altında sağa hizalı). Marka kutusu İÇİNDEKİ sıra (formul → SVG) ve tüm kilitli değerler
   DEĞİŞMEDİ. (YASAK listesindeki "hizalama/sıra" marka kutusunun İÇİ içeriği için geçerlidir.)
-
-  D49-LOGO-FOOTER: alt yazı dikey boşluğu ölçeğe oturtuldu — kart margin-top 0 → 2px,
-  master -3px → 7.56px (2 / 0.2647). Böylece tek "ÇAKIŞMA KURALI" istisnası kalktı ve
-  master × 0.2647 = kart eşitliği alt yazıda da birebir sağlandı. Font/renk/ölçek/path/viewBox/
-  stroke-width ve eleman sırası DEĞİŞMEDİ (turuncu çizgilere dokunulmadı: bkz. ks-yama-d49 teşhis notu).
   ============================================================================
 -->
 <div class="logo-wrapper"
@@ -60,5 +55,5 @@
   </div>
 
   <div class="sub-text"
-       style="font-family:'Montserrat',sans-serif;font-size:2.8rem;font-weight:900;font-style:italic;letter-spacing:-1.5px;margin-top:7.56px;margin-right:53px;color:#1a1a1a;white-space:nowrap">kurs merkezi</div>
+       style="font-family:'Montserrat',sans-serif;font-size:2.8rem;font-weight:900;font-style:italic;letter-spacing:-1.5px;margin-top:-3px;margin-right:53px;color:#1a1a1a;white-space:nowrap">kurs merkezi</div>
 </div>

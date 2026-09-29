@@ -26,6 +26,9 @@ D30 logo stroke literal #f29222 (var() YOK) + xmlns VAR
 D33 logo master kaynağı logo-master/formul-kurs-logo.html VAR (8.5rem tabanı · kilitli path/viewBox/stroke-width/renkler/900-italik) + kademe = master × 0.2647 (2.25rem ≈ 8.5×0.2647)
 D47 logo hiza: 'kurs merkezi' marka kutusunun DIŞINDA (brand-container <div>/</div> dengesi) — sarmalayıcının 2. çocuğu
 D47 logo hiza: iki path #f29222 + fk-logo SVG marka kutusunda + görünürlük engeli YOK (overflow:hidden yok · z-index var · height:auto)
+D49 logo ince ayar: alt yazı 2px aşağı (kart margin-top:2px · master 7.56px = 2/0.2647 · ölçek 0.2647 korunur)
+D49 footer modern: 5 cümle + imza AYRI blok hâlinde (6 display:block) · birleşik metin BİREBİR
+D49 footer imza: ince ayraç (hairline border-top) + harf aralıklı (letter-spacing) satır
 D33 gömülü font ailesi = MontsKart (italic 900 base64 @font-face) · Montserrat/CDN referansı YOK
 D30 etiket 'Değerli Öğrencimiz' VAR + düz 'ÖĞRENCİ' etiketi YOK
 D30 FROZEN not şeridi TEK tam-dizi eşitliği (6 cümle birebir, • ayracı yok)

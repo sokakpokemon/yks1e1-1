@@ -4846,6 +4846,8 @@ function dersKartiVeri(d) {
 /* D46-KART-EMOJI: bento alan etiketlerine EMOJİ ÖNEKİ (ek emoji) — svgKart/fk-logo/renk/ölçek/kademe DEĞİŞMEZ. */
 /* D47-LOGO-HIZA: "kurs merkezi" alt yazısı marka kutusunun DIŞINA alındı (logo-wrapper'ın 2. çocuğu) —
    SVG right:8px artık marka METNİ bitişine göre ölçülür; kilitli değer/ölçek/renk/path DEĞİŞMEDİ. */
+/* D49-LOGO-FOOTER: alt yazı dikey boşluğu ölçeğe oturtuldu (kart margin-top 0 → 2px; master -3px → 7.56px = 2/0.2647).
+   SVG/çizgi/path/viewBox/stroke/renk/font/ölçek DEĞİŞMEDİ. */
 function dersKartiHTML(d) {
   /* DÖNGÜ-15: BENTO tasarım — zemin #f4f6fa, beyaz yuvarlak kart, salt inline style (class= YOK).
      Rozet 3 durum: Planlandı #ecfdf5/#047857 · Yapıldı #eff6ff/#1d4ed8 · İptal Edildi #fef2f2/#b91c1c.
@@ -4872,7 +4874,7 @@ function dersKartiHTML(d) {
         '<div style="font-family:MontsKart,serif;font-size:2.25rem;font-weight:900;font-style:italic;letter-spacing:-1.05px;color:#d31d24;line-height:0.85;white-space:nowrap">formul</div>' +
         '<svg id="fk-logo" width="21" viewBox="0 0 100 40" xmlns="http://www.w3.org/2000/svg" style="position:absolute;right:8px;top:0.5px;height:auto;display:block;overflow:visible;z-index:1"><path d="M15 10 L95 10" fill="none" stroke="#f29222" stroke-width="14" stroke-linecap="round"/><path d="M14 29 L94 29" fill="none" stroke="#f29222" stroke-width="14" stroke-linecap="round"/></svg>' +
         '</div>' +
-        '<div style="font-family:MontsKart,serif;font-size:0.74rem;font-weight:900;font-style:italic;letter-spacing:-0.4px;margin-top:0;margin-right:14px;color:#1a1a1a;white-space:nowrap">kurs merkezi</div>' +
+        '<div style="font-family:MontsKart,serif;font-size:0.74rem;font-weight:900;font-style:italic;letter-spacing:-0.4px;margin-top:2px;margin-right:14px;color:#1a1a1a;white-space:nowrap">kurs merkezi</div>' +
         '</div></div>' +
         '<span style="' + durumStil + '">' + esc(v.durum) + "</span>" +
       "</div>" +
@@ -4892,7 +4894,16 @@ function dersKartiHTML(d) {
       '<div style="margin-top:12px">' +
         kutu("#f8fafc", "#94a3b8", "👤 ÖĞRETMEN", v.ogr) +
       "</div>" +
-      '<div style="margin-top:14px;border-top:1px solid #e2e8f0;padding-top:10px;color:#64748b;font-size:10.5px;line-height:1.6;text-align:left">Bu dersler, eksiklerini tamamlaman ve hedeflerine biraz daha yaklaşman için planlandı. Ders saatinden birkaç dakika önce hazır olman yeterli. Anlamadığın veya zorlandığın konuları öğretmeninle paylaşmayı unutma. Sen çalışmaya devam et, biz de bu süreçte yanında olalım. Güzel çalışmalar, başarılar dileriz. — FORMÜL KURS REHBERLİK SERVİSİ</div>' +
+      /* D49-LOGO-FOOTER: D30 not şeridi cümlelere bölündü (6 ayrı display:block blok) — imza satırında
+         ince ayraç (hairline) + harf aralığı. METİN BİREBİR: kelime ekleme/çıkarma YOK, yeni emoji YOK, • YOK. */
+      '<div style="margin-top:14px;border-top:1px solid #e2e8f0;padding-top:10px;color:#64748b;font-size:10.5px;line-height:1.6;text-align:left">' +
+        '<span style="display:block">Bu dersler, eksiklerini tamamlaman ve hedeflerine biraz daha yaklaşman için planlandı.</span>' +
+        '<span style="display:block">Ders saatinden birkaç dakika önce hazır olman yeterli.</span>' +
+        '<span style="display:block">Anlamadığın veya zorlandığın konuları öğretmeninle paylaşmayı unutma.</span>' +
+        '<span style="display:block">Sen çalışmaya devam et, biz de bu süreçte yanında olalım.</span>' +
+        '<span style="display:block">Güzel çalışmalar, başarılar dileriz.</span>' +
+        '<span style="display:block;margin-top:7px;padding-top:7px;border-top:1px solid #e2e8f0;letter-spacing:0.55px;color:#94a3b8">— FORMÜL KURS REHBERLİK SERVİSİ</span>' +
+      '</div>' +
       /* DÖNGÜ-16: öğrenci kartı footer KALDIRILDI (öğretmen kartlarındaki footer korunur) · DÖNGÜ-30: not şeridi eklendi */
     "</div>" +
   "</div>";

@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":119"); return; } if (__kosan !== 119) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ders-karti.mjs kosan=" + __kosan + " beklenen=119"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":119"); } });
+process.on("exit", (c) => { if (c !== 0) { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":121"); return; } if (__kosan !== 121) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ders-karti.mjs kosan=" + __kosan + " beklenen=121"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":121"); } });
 /* ks-ders-karti.mjs — DERS-KARTI-YAMASI süiti
    Doğruladıkları:
     1) Kart üretimi: dersKartiHTML/dersKartiVeri doğru alanlarla çalışır (ad, ders, konu, öğretmen, tarih+saat, sınıf, durum).
@@ -237,6 +237,46 @@ t("D52 SVG yükseklik: style'da height:auto YOK + açık yükseklik (kart 8.4px 
   const kartOk = svg.includes("height:" + 8.4 + "px") && !svg.includes("top:0.5px;height:auto");
   const mstOk = m.includes("top:2px;height:" + 32 + "px") && !m.includes("top:2px;height:auto");
   return kartOk && mstOk && Math.abs(32 * 0.2647 - 8.4) < 0.1;
+})());
+
+/* ---- D53-SVG-RASTER: turuncu çizgiler GERÇEK PNG'de hâlâ YOK. Statik cizgi-tani.html'de A–E bloklarının
+   HEPSİ görünüyor (inline SVG boyanıyor, koordinat V1 = right 8 / top 0.5 doğru) ⇒ kusur html2canvas'ın
+   inline SVG'yi data:image/svg+xml'e SERİLEŞTİRME adımında. Çözüm: klonda (onclone) YALNIZ svg#fk-logo,
+   konum stili AYNEN taşınan bir img ile değiştirilir; kaynak SVG zaten TEMİZ standalone (açık width/height
+   attribute + viewBox + iki path) olduğu için serileştirme adımı devre dışı kalır. html2canvas option'ları,
+   scale/callback akışı ve tüm kilitli değerler DEĞİŞMEDİ (diğer SVG'lere DOKUNULMAZ). */
+t("D53 SVG raster: html2canvas onclone VAR + klonda YALNIZ #fk-logo hedeflenir + img konum stili klondaki SVG'den AYNEN (yedek literal kart SVG style'ıyla birebir)", (() => {
+  const i0 = appKaynak.indexOf("function fkLogoRaster(");
+  if (i0 < 0) return false;
+  const i1 = appKaynak.indexOf("\n}", i0);
+  const blok = appKaynak.slice(i0, i1 > 0 ? i1 : appKaynak.length);
+  const h = dersKartiHTML(birebir);
+  const svgStil = (h.match(/<svg id="fk-logo"[^>]*style="([^"]*)"/) || [])[1] || "";
+  const yedek = (blok.match(/"position:absolute;[^"]*"/) || [])[0] || "";
+  return (appKaynak.match(/onclone:/g) || []).length === 1 &&
+    appKaynak.includes("onclone: fkLogoRaster") &&
+    (blok.match(/getElementById\(/g) || []).length === 1 &&
+    blok.includes('getElementById("fk-logo")') &&
+    blok.includes('klon.getAttribute("style")') &&
+    blok.includes("replaceChild(img, klon)") &&
+    svgStil === "position:absolute;right:8px;top:0.5px;height:8.4px;display:block;overflow:visible;z-index:1" &&
+    yedek.length > 2 && yedek.slice(1, -1) === svgStil;
+})());
+t("D53 SVG raster: standalone data-URI SVG'de position/right/top/overflow/height:auto YOK + width 21 + height 8.4 + viewBox AÇIK + 2 path #f29222 stroke-width 14 linecap round", (() => {
+  const m = appKaynak.match(/var FK_LOGO_RASTER_SVG = '([^']*)'/);
+  if (!m) return false;
+  const s = m[1];
+  const yasak = ["position:", "absolute", "right:", "top:", "overflow", "height:auto", "style=", "display:block", "z-index"];
+  const kart = (dersKartiHTML(birebir).match(/<svg id="fk-logo"[^>]*>/) || [])[0] || "";
+  return !yasak.some(y => s.includes(y)) &&
+    s.includes('width="21"') && s.includes('height="8.4"') &&
+    s.includes('viewBox="0 0 100 40"') && s.includes('xmlns="http://www.w3.org/2000/svg"') &&
+    (s.match(/<path /g) || []).length === 2 &&
+    (s.match(/stroke="#f29222"/g) || []).length === 2 &&
+    (s.match(/stroke-width="14"/g) || []).length === 2 &&
+    (s.match(/stroke-linecap="round"/g) || []).length === 2 &&
+    s.includes('d="M15 10 L95 10"') && s.includes('d="M14 29 L94 29"') &&
+    kart.includes('width="21"') && Math.abs(32 * 0.2647 - 8.4) < 0.1;
 })());
 /* D33 font kapısı: gömülü aile MONTSSKART (italic 900) · 'Montserrat' ve CDN referansı YOK.
    D30'da ad "Montserrat ... @font-face" idi; aile adı değişti (MontsKart) → ad ve kontrol güncellendi. */

@@ -49,11 +49,6 @@
   satır-içi "height:auto" o attribute'u ezdiği için tek başına SVG belgesinde yükseklik çözülemiyor ve
   turuncu çizgiler PNG'de kayboluyordu — aynı markup HTML'de görünüyordu (statik cizgi-tani.html A–E).
   width/viewBox/path/stroke-width/renk/right/top/ölçek DEĞİŞMEDİ.
-
-  D53-SVG-RASTER: master'da ölçü DEĞİŞİKLİĞİ YOK (bu dosya html2canvas'a hiç girmez). Kart tarafında PNG
-  yolu düzeltildi: html2canvas klonunda (onclone) YALNIZ svg#fk-logo, konum stili AYNEN taşınan standalone
-  data-URI img ile değiştirilir (açık width 21 / height 8.4 + viewBox + iki path; position/right/top/overflow/
-  height:auto İÇERMEZ) → serileştirme adımı devre dışı kalır. Kilitli değerler ve eleman sırası DEĞİŞMEDİ.
   ============================================================================
 -->
 <div class="logo-wrapper"

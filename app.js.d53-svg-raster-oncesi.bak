@@ -4918,26 +4918,6 @@ function dersKartiHTML(d) {
    - localhost/https: canShare true → share(); share() REJECT olursa zaten indirme tamamlanmıştır (tekrar inmez).
    - pano izni reddedilirse: catch → indir yolu sürer. "Her durumda PNG iner" garantisi: toBlob null olursa
      tek hata yolu dışında indirme bitmeden akış kapanmaz. */
-/* D53-SVG-RASTER: html2canvas klonunda (onclone) inline SVG yerine TEMİZ standalone data-URI img.
-   SEBEP (kanıtlı): D52'den sonra indirilen GERÇEK PNG'de turuncu çizgi yine yok. Statik cizgi-tani.html'de
-   A–E bloklarının HEPSİ tarayıcıda görünüyor (inline SVG boyanıyor, koordinat V1 = right 8 / top 0.5 doğru)
-   ⇒ kusur html2canvas'ın inline SVG'yi data:image/svg+xml'e SERİLEŞTİRME adımında. Klonda YALNIZ
-   svg#fk-logo hedeflenir ve konum stili AYNEN taşınan bir img ile değiştirilir; kaynak SVG zaten TEMİZ
-   standalone (açık width/height attribute + viewBox + iki path) olduğu için serileştirme adımı devre dışı kalır.
-   DEĞİŞMEZ: path/viewBox/stroke #f29222/stroke-width 14/linecap round/width 21/right 8/top 0.5/0.2647,
-   footer, D46 emojileri, alt yazı 2px; html2canvas option'ları ve akış (scale/callback) DEĞİŞMEDİ. */
-var FK_LOGO_RASTER_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="21" height="8.4" viewBox="0 0 100 40"><path d="M15 10 L95 10" fill="none" stroke="#f29222" stroke-width="14" stroke-linecap="round"/><path d="M14 29 L94 29" fill="none" stroke="#f29222" stroke-width="14" stroke-linecap="round"/></svg>';
-function fkLogoRaster(klonDoc) {
-  var klon = klonDoc.getElementById("fk-logo");
-  if (!klon || !klon.parentNode) { return; }
-  var img = klonDoc.createElement("img");
-  img.setAttribute("alt", "");
-  img.setAttribute("src", "data:image/svg+xml;charset=utf-8," + encodeURIComponent(FK_LOGO_RASTER_SVG));
-  /* Konum stili klondaki SVG'den AYNEN alınır (yedek: kart SVG'sinin kendi style'ı) — koordinat TEK kaynaktan. */
-  img.setAttribute("style", klon.getAttribute("style") || "position:absolute;right:8px;top:0.5px;height:8.4px;display:block;overflow:visible;z-index:1");
-  klon.parentNode.replaceChild(img, klon);
-}
-
 var dersKartiIndirildi = false;
 function dersKartiAc(dersId) {
   var d = DB.dersler.find(function (x) { return x.id === dersId; });
@@ -4971,7 +4951,7 @@ function dersKartiAc(dersId) {
       .toLowerCase() + "-" + d.tarih + ".png";
   }
   document.fonts.ready.then(function () {
-  return html2canvas(el, { scale: 2, backgroundColor: "#f4f6fa", useCORS: false, allowTaint: false, foreignObjectRendering: false, logging: false, onclone: fkLogoRaster });
+  return html2canvas(el, { scale: 2, backgroundColor: "#f4f6fa", useCORS: false, allowTaint: false, foreignObjectRendering: false, logging: false });
   })
     .then(function (canvas) {
       canvas.toBlob(function (blob) {

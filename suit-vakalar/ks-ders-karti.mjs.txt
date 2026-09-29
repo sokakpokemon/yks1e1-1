@@ -30,6 +30,8 @@ D49 logo ince ayar: alt yazı 2px aşağı (kart margin-top:2px · master 7.56px
 D49 footer modern: 5 cümle + imza AYRI blok hâlinde (6 display:block) · birleşik metin BİREBİR
 D49 footer imza: ince ayraç (hairline border-top) + harf aralıklı (letter-spacing) satır
 D52 SVG yükseklik: style'da height:auto YOK + açık yükseklik (kart 8.4px · master 32px = width × 40/100) — html2canvas PNG yolu
+D53 SVG raster: html2canvas onclone VAR + klonda YALNIZ #fk-logo hedeflenir + img konum stili klondaki SVG'den AYNEN (yedek literal kart SVG style'ıyla birebir)
+D53 SVG raster: standalone data-URI SVG'de position/right/top/overflow/height:auto YOK + width 21 + height 8.4 + viewBox AÇIK + 2 path #f29222 stroke-width 14 linecap round
 D33 gömülü font ailesi = MontsKart (italic 900 base64 @font-face) · Montserrat/CDN referansı YOK
 D30 etiket 'Değerli Öğrencimiz' VAR + düz 'ÖĞRENCİ' etiketi YOK
 D30 FROZEN not şeridi TEK tam-dizi eşitliği (6 cümle birebir, • ayracı yok)

@@ -79,6 +79,15 @@
     <b>PNG (önceki cevap kayıtlı):</b> çizgiler yok → bu sonuç bu sayfadan bağımsızdı.
   </div>
 
+  <div class="not uyari">
+    <b>D52 SONRASI GERÇEK PNG:</b> kullanıcının indirdiği PNG'de çizgi <b>yine yok</b> → D52'nin
+    <code>height:8.4px</code> düzeltmesi raster yolunu çözmedi. D53'te farklı bir yöntem uygulandı:
+    html2canvas klonunda (<code>onclone</code>) yalnız <code>svg#fk-logo</code>, konum stili AYNEN
+    taşınan <b>standalone data-URI <code>img</code></b> ile değiştirilir (açık width 21 / height 8.4,
+    viewBox + iki path; serileştirme adımı devre dışı). Bu yol bu sayfada <b>ölçülemez</b>;
+    teyit yalnız uygulamadan indirilen YENİ PNG ile yapılır.
+  </div>
+
   <h2>TEK BÜYÜK PANEL · V1 (üretim değeri) ×4</h2>
   <div class="kart-dis">
     <div class="beyaz"><div class="satir">

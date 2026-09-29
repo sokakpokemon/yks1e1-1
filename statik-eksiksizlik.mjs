@@ -12,9 +12,19 @@
       b) koşum kendi doğal özet satırıyla bitti ve exit=0 (erken exit yok)
       c) vakaSayisi === koşumdaki assertion satır sayısı (tam sayım)
    Bu üçü birlikte: suit-vakalar listesi, süitin üretebileceği TÜM assertion'ları
-   içeriyor; manifest = bu listenin uzunluğu → bağımsız, elle ayarlanamaz. */
+   içeriyor; manifest = bu listenin uzunluğu → bağımsız, elle ayarlanamaz.
+
+   KOŞUM MODU:
+     node statik-eksiksizlik.mjs              → SERİ (varsayılan; davranış/çıktı birebir eski)
+     node statik-eksiksizlik.mjs --paralel    → en fazla 2 işçi ile eşzamanlı koşum.
+                                                Kanıtlar/sayımlar AYNI; sonuçlar tamponlanır ve
+                                                MANIFEST SIRASINA göre basılır → çıktı seri ile
+                                                BİREBİR. Kaynak dosyalar salt-okunur kalır;
+                                                her işçi KENDİ benzersiz geçici dizinini kullanır
+                                                (paylaşılan geçici dosya yok → kaynak yarışı yok)
+                                                ve koşum sonunda hepsi silinir (kalan = 0). */
 import fs from "node:fs";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import * as acorn from "acorn";
 import { manifest } from "./suit-manifest.mjs";
 
@@ -37,12 +47,8 @@ function sitesTopla(ad) {
   return siteler;
 }
 
-let hepsiOk = true;
-const rapor = [];
-for (const ad of Object.keys(manifest)) {
-  const siteler = sitesTopla(ad);
-  siteler.forEach((s, i) => { s.id = i + 1; });
-  const src = fs.readFileSync(ad, "utf8");
+/* Enstrümante kopya METNİ üretir; kaynak dosyaya HİÇBİR ŞEY yazılmaz (salt-okuma). */
+function enstrumanteMetni(siteler, src) {
   let enst = src;
   const parcalar = [...siteler].sort((a, b) => b.start - a.start);
   for (const s of parcalar) {
@@ -53,11 +59,49 @@ for (const ad of Object.keys(manifest)) {
        gelirse kayıt hiç yapılmaz (kök neden: /tmp/enst-test.mjs izole deneyiyle kanıtlandı) */
     'process.on("exit", () => { try { console.log("SITELER:" + [...globalThis.__sites].sort((a,b)=>a-b).join(",")); } catch {} });\n' +
     enst;
-  const gecici = "/tmp/enst-" + ad;
-  fs.writeFileSync(gecici, enst);
+  return enst;
+}
+
+/* Süit hazırlığı: site listesi (+id) + kaynak + enstrümante metin. */
+function tekSuitHazirla(ad) {
+  const siteler = sitesTopla(ad);
+  siteler.forEach((s, i) => { s.id = i + 1; });
+  const src = fs.readFileSync(ad, "utf8");
+  return { siteler, src, enst: enstrumanteMetni(siteler, src) };
+}
+
+/* Süiti koşturur (SERİ, senkron). */
+function kosSeri(gecici) {
   const r = spawnSync(process.execPath, [gecici], { encoding: "utf8", timeout: 120000, cwd: process.cwd() });
-  fs.rmSync(gecici, { force: true });
-  const c = (r.stdout || "") + (r.stderr || "");
+  return { cikti: (r.stdout || "") + (r.stderr || ""), status: r.status };
+}
+
+/* Süiti koşturur (ASENKRON; eşzamanlı işçiler için). Çıktı bayt olarak toplanır,
+   utf8 çözümü tek seferde yapılır (çok baytlı karakterler bölünmesin). */
+function kosAsenkron(gecici) {
+  return new Promise((resolve) => {
+    const p = spawn(process.execPath, [gecici], { cwd: process.cwd() });
+    const ciktiParcalari = [], hataParcalari = [];
+    let bitti = false;
+    const zamanAsimi = setTimeout(() => { try { p.kill("SIGKILL"); } catch {} }, 120000);
+    p.stdout.on("data", (d) => ciktiParcalari.push(d));
+    p.stderr.on("data", (d) => hataParcalari.push(d));
+    const bitir = (status) => {
+      if (bitti) return;
+      bitti = true;
+      clearTimeout(zamanAsimi);
+      resolve({
+        cikti: Buffer.concat(ciktiParcalari).toString("utf8") + Buffer.concat(hataParcalari).toString("utf8"),
+        status
+      });
+    };
+    p.on("close", (kod) => bitir(kod));
+    p.on("error", () => bitir(null));
+  });
+}
+
+/* Kanıt kontrolleri (a/b/c) — İKİ modda da AYNI fonksiyon kullanılır. */
+function dogrula(ad, siteler, src, c, status) {
   const m = c.match(/^SITELER:(.*)$/m);
   const hitSet = new Set(m && m[1] ? m[1].split(",").filter(Boolean).map(Number) : []);
   const vaka = fs.readFileSync("suit-vakalar/" + ad + ".txt", "utf8").split("\n").filter(Boolean).length;
@@ -67,7 +111,7 @@ for (const ad of Object.keys(manifest)) {
      Son satır yerine TÜM çıktıda aranır: son satır bazı süitlerde enstrümante kaynaklı
      bilgi log'udur (ör. [DONEM-DOM-SELF-CHECK]); erken-exit ile karışmasın diye
      ayrıca exit===0 ve hit sayısı zaten kanıt zincirinde var. */
-  const dogalSon = /GEÇTİ|KIRMIZI|BAŞARISIZ|TAMAM|HATALAR VAR|SUITE_DONE/.test(c) && r.status === 0;
+  const dogalSon = /GEÇTİ|KIRMIZI|BAŞARISIZ|TAMAM|HATALAR VAR|SUITE_DONE/.test(c) && status === 0;
   /* a) kanıtı: koşumda üretilen assertion sayısı (kosumSatirlari) <= statik site sayısı VE
      her assertion satırı bir siteye denk geliyor. Koşullu dal siteleri koşumda 0 kez
      ateşlenebilir (üretilmedi ≠ atlandı); kritik olan: üretilen her assertion'ın
@@ -100,7 +144,7 @@ for (const ad of Object.keys(manifest)) {
     { suit: "ks-dongu29.mjs", siteNo: 2, satir: 59, gerekce: "DÖNGÜ-29: boot hatası catch dalı — normal koşumda boot hatasız → catch 0 hit DOĞRU (catch-içi t( THROW'a çevrildiği için gizli test yok; onu kapatan test koşumun kendisidir)" },
   ];
   /* İstisna bütünlüğü: listedeki her suit/site ikilisi GERÇEK bir hit=0 site olmalı —
-     gereksiz giriş da FAIL sayılır (sessiz genişleme yok). */
+     gereksiz giriş de FAIL sayılır (sessiz genişleme yok). */
   /* sifir-hit siteleri tespit: hangi id'ler hiç ateşlenmedi? */
   const eksikSiteler = siteler.filter(s => !hitSet.has(s.id));
   const buSuitIstisnalar = sifirHitIstisnalar.filter(x => x.suit === ad);
@@ -108,17 +152,71 @@ for (const ad of Object.keys(manifest)) {
   /* gereksiz istisna: bu süitte hit=0 olmayıp listede olan site */
   const gereksizIstisna = buSuitIstisnalar.filter(x => !eksikSiteler.some(s => s.id === x.siteNo));
   const a = !gecersizHit && hitSet.size >= 1 && kosumSatirlari >= 1 && istisnaDisi.length === 0 && gereksizIstisna.length === 0;
+  const satirlar = [];
   if (istisnaDisi.length > 0) {
-    rapor.push(`  [SIFIR-HIT] ${ad}: ${istisnaDisi.map(s => "site#" + s.id + " L" + (src.slice(0, s.start).split("\n").length)).join(", ")} — istisna listesinde DEĞİL → FAIL`);
+    satirlar.push(`  [SIFIR-HIT] ${ad}: ${istisnaDisi.map(s => "site#" + s.id + " L" + (src.slice(0, s.start).split("\n").length)).join(", ")} — istisna listesinde DEĞİL → FAIL`);
   }
   if (gereksizIstisna.length > 0) {
-    rapor.push(`  [GEREKSİZ-İSTİSNA] ${ad}: ${gereksizIstisna.map(x => "site#" + x.siteNo).join(", ")} — listede ama hit>0 → FAIL`);
+    satirlar.push(`  [GEREKSİZ-İSTİSNA] ${ad}: ${gereksizIstisna.map(x => "site#" + x.siteNo).join(", ")} — listede ama hit>0 → FAIL`);
   }
-  const b = dogalSon && r.status === 0;
+  const b = dogalSon && status === 0;
   const cOk = vaka === kosumSatirlari;
   const ok = a && b && cOk;
-  if (!ok) hepsiOk = false;
-  rapor.push(`${ok ? "OK " : "KALDI"} ${ad} site=${siteler.length} hit=${hitSet.size} vaka=${vaka} koşum=${kosumSatirlari} doğalSon=${dogalSon} exit=${r.status}`);
+  satirlar.push(`${ok ? "OK " : "KALDI"} ${ad} site=${siteler.length} hit=${hitSet.size} vaka=${vaka} koşum=${kosumSatirlari} doğalSon=${dogalSon} exit=${status}`);
+  return { ok, satirlar };
+}
+
+let hepsiOk = true;
+const rapor = [];
+const PARALEL = process.argv.includes("--paralel");
+const ISCI_SAYISI = 2; /* kabul: en fazla 2 işçi */
+
+if (!PARALEL) {
+  /* ——— SERİ YOL (varsayılan; bayraksız koşum AYNEN bunu çalıştırır) ——— */
+  for (const ad of Object.keys(manifest)) {
+    const { siteler, src, enst } = tekSuitHazirla(ad);
+    const gecici = "/tmp/enst-" + ad;
+    fs.writeFileSync(gecici, enst);
+    const r = kosSeri(gecici);
+    fs.rmSync(gecici, { force: true });
+    const s = dogrula(ad, siteler, src, r.cikti, r.status);
+    rapor.push(...s.satirlar);
+    if (!s.ok) hepsiOk = false;
+  }
+} else {
+  /* ——— PARALEL YOL (yalnız --paralel): ≤2 işçi · benzersiz geçici dizin · tamponlu sıra ——— */
+  const adlar = Object.keys(manifest);
+  const sonuclar = new Array(adlar.length);
+  const dizinler = [];
+  for (let i = 0; i < ISCI_SAYISI; i++) {
+    const d = "/tmp/enst-isl-" + process.pid + "-" + i;
+    fs.mkdirSync(d, { recursive: true });
+    dizinler.push(d);
+  }
+  let sirada = 0;
+  async function isci(slot) {
+    const dizin = dizinler[slot];
+    for (;;) {
+      const i = sirada++;
+      if (i >= adlar.length) return;
+      const ad = adlar[i];
+      const { siteler, src, enst } = tekSuitHazirla(ad);
+      const gecici = dizin + "/" + ad;
+      fs.writeFileSync(gecici, enst);
+      const r = await kosAsenkron(gecici);
+      fs.rmSync(gecici, { force: true });
+      sonuclar[i] = dogrula(ad, siteler, src, r.cikti, r.status);
+    }
+  }
+  try {
+    await Promise.all(dizinler.map((_d, slot) => isci(slot)));
+  } finally {
+    for (const d of dizinler) fs.rmSync(d, { recursive: true, force: true });
+  }
+  for (const s of sonuclar) {
+    rapor.push(...s.satirlar);
+    if (!s.ok) hepsiOk = false;
+  }
 }
 console.log(rapor.join("\n"));
 console.log(hepsiOk ? "\nTAMLIK KANITI: 48/48 süitte her statik t( noktası koştu; vaka listesi tam." : "\nEKSİK VAR — yukarıda.");

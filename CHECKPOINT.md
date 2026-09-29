@@ -16,6 +16,8 @@
 
 **ROLLING KURAL:** yeni kapanış kaydı → `SON TURLAR (TAM)` bölümünün **BAŞINA** tam metin eklenir; bölümdeki **EN ESKİ** tam kayıt bir satırlık **ÖZET**'e indirilir (→ ayrıntı: `CHECKPOINT-ARSIV.md`). Böylece `CHECKPOINT.md` daima ~<120 KB kalır; TAM geçmiş yalnız `CHECKPOINT-ARSIV.md`'de büyür. Her turda: **+1 tam kayıt · +1 özet satırı · 1 eski tam kayıt → özet.**
 
+> **D43 SONRASI tam kayıtlar:** `CHECKPOINT-ARSIV-2.md` — D43'ten sonraki turların TAM kayıtları bu **EKLEMELİ** dosyada birikir (D43 ve öncesi: `CHECKPOINT-ARSIV.md`, byte-birebir kopya · not: `CHECKPOINT-ARSIV-NOT.md`).
+
 ---
 
 # PROJE REHBERİ — önce burayı oku

@@ -12,6 +12,10 @@
 - No-drift (değişmedi): `app.js` `231cf09fef286267` · `ek-ders.js` `3d2dd38ff517c64f`.
 - Ayrıntılı kapılar: bu turun raporu (Kapı-1..6 YEŞİL). Tam metin: `CHECKPOINT-ARSIV.md`.
 
+## 📌 ROLLING KURAL (D43'ten itibaren kalıcı)
+
+**ROLLING KURAL:** yeni kapanış kaydı → `SON TURLAR (TAM)` bölümünün **BAŞINA** tam metin eklenir; bölümdeki **EN ESKİ** tam kayıt bir satırlık **ÖZET**'e indirilir (→ ayrıntı: `CHECKPOINT-ARSIV.md`). Böylece `CHECKPOINT.md` daima ~<120 KB kalır; TAM geçmiş yalnız `CHECKPOINT-ARSIV.md`'de büyür. Her turda: **+1 tam kayıt · +1 özet satırı · 1 eski tam kayıt → özet.**
+
 ---
 
 # PROJE REHBERİ — önce burayı oku

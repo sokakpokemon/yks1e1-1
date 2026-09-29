@@ -108,6 +108,8 @@ Her turun sonunda zorunlu satır:
 
 Hedef bütçe: T0 ≤5 · T1 ≤12 · T2 ≤25 · T3 ≤40 · Doğrulama ≤2 dk.
 
+**KAPANIŞ KAPISI BASELINE (D44 sonrası):** `--tam` ≈14.4s (test ~7.9s seri + statik ~6.4s paralel). Eski 30s hedefi geçersiz — hedefler bu tabana göre değerlendirilir.
+
 ---
 
 ## ⚡ HIZLI TUR PROTOKOLÜ (her turda OTOMATİK — kullanıcı hatırlatmaz)
@@ -193,6 +195,7 @@ Yedek biçimi (`yedekAl` → `yks-birebir-yedek-YYYY-MM-DD.json`): `{"uygulama":
 
 # 🗂️ KAPANIŞ KAYITLARI — ÖZET (tur başına 1 satır · tam metin: CHECKPOINT-ARSIV.md)
 
+- ✅ KAPANIŞ KAYDI: JET-TURBO (FAZ 0/1/1B/2) — kapanış kapısı 30.07s → ~14.4s (%52); statik paralel + toast dead-wait temizliği; FAZ 2 paralel denendi/hedef tutmadı/geri alındı. app.js DEĞİŞMEDİ → ayrıntı: CHECKPOINT-ARSIV-2.md
 - ✅ TEMİZLİK #6 (FAZ 2 /tmp) — arşiv: `/home/daytona/tmp-arsiv-d30-d42/` · **394 dosya / 18.668.637 B** · MANIFEST-SHA256: `b322b77179abd05fd546ee2dfde63f39f18d8c56baf27dc5287d5f7b715fd40c` · kapsam dışı: **29 çakışan** (21 byte-ayni ∪ 8 codebase-arsiv-adı; 4 KE-38 adı ikisinde ortak → 29) + `daytona-daemon.log` + `vly-stats/*` (açık fd) + node/convex/bunx tooling dir'leri · **silinen = 0** · kapılar (kopya öncesi/sonrası) 4/4 YEŞİL · no-drift: app.js `231cf09fef286267` · damga `app.js?v=231cf09fef286267` · ek-ders.js `3d2dd38ff517c64f`. → ayrıntı: CHECKPOINT-ARSIV.md
 - ✅ CHECKPOINT: TEMİZLİK — D30–D42 Artıklarının Güvenli Arşivlenmesi (FAZ 2) · ✅ Tamamlandı — SİLME YOK, doğrulanmış kopya sonrası ta → ayrıntı: CHECKPOINT-ARSIV.md
 - ✅ KAPANIŞ KAYDI: D41 + D42 (Telefonsuz Öğrenciler / WA Alıcı) KAPANDI · SHA af149eedb804449c→52aff56fe86068c0 · ✅ Kapandı — kullanıcı publish etti + canlı görsel doğr → ayrıntı: CHECKPOINT-ARSIV.md
@@ -257,7 +260,45 @@ Yedek biçimi (`yedekAl` → `yks-birebir-yedek-YYYY-MM-DD.json`): `{"uygulama":
 
 ---
 
-# 📜 SON 5 TUR — TAM KAYIT (D41+D42 · D39 · D38 · D36-BOS-AD-KILIT · DÖNGÜ-36)
+# 📜 SON 5 TUR — TAM KAYIT (JET-TURBO FAZ 0/1/1B/2 · D41+D42 · D39 · D38 · D36-BOS-AD-KILIT)
+
+# ✅ KAPANIŞ KAYDI: JET-TURBO (FAZ 0 · 1 · 1B · 2) KAPANDI
+
+**Tarih:** 29 Eylül 2026 · **Durum:** ✅ Kapandı — test altyapısı turu; **uygulama kodu DEĞİŞMEDİ**, publish GEREKMEZ.
+**Bu turda değişen dosyalar:** `statik-eksiksizlik.mjs` · `ks-donem-secici-gorunum.mjs` · `ks-brans-ders-kurali.mjs` · `hizli-test.mjs` · `test.mjs` (denendi → birebir geri alındı) · `CHECKPOINT.md` / `CHECKPOINT-ARSIV-2.md`.
+
+## 1) FAZ 0 — TEMEL ÖLÇÜM (salt-okuma)
+- Baseline `--tam` **30.07s** · `test.mjs` **14.48s** · statik kapı **15.92s** (medyan) · iki yavaş süit **3.716s / 3.751s** (medyan).
+- Ortam: `nproc=2` · no-drift `app.js 231cf09fef286267` · `ek-ders.js 3d2dd38ff517c64f` · `index.html 13edc44a0784df72`.
+
+## 2) FAZ 1 — STATİK KAPI PARALEL (isteğe bağlı bayrak; seri DEFAULT korundu)
+- `statik-eksiksizlik.mjs --paralel`: **≤2 işçi** · işçi başına **benzersiz** geçici dizin · sonuçlar tamponlanıp **MANIFEST SIRASINA** göre basılır (çıktı seri ile birebir) · temp temizliği (kalan 0) · kaynak dosyalar salt-okuma.
+- **15.92s → 8.34s** (hedef ≤11s ✓) · seri yol **regresyonsuz** · `--tam` 30.07s → 15.16s.
+
+## 3) FAZ 1B — KÖK NEDEN BULUNDU (3.7s EVAL DEĞİL)
+- İki yavaş süitte gerçek iş **~50 ms** (app.js okuma 1.5–2.9 ms · sahte DOM 0.4 ms · `new Function` derleme 4.3/7.4 ms · boot çağrısı 34–46 ms · `console.log` 3.3 ms); kalan **~3.53s ölü bekleme**: `app.js:1066` `toast()` içindeki `setTimeout(…, 3200)` + bu iki süitte **`process.exit()` yok** → Node olay döngüsü 3.2s bekliyor (beforeExit **3591 ms**; hızlı süitlerde beforeExit hiç ateşlenmiyor).
+- ÇÖZÜM: assertion sonrası **hedefli timer temizliği** (`clearTimeout`) — **`process.exit()` KULLANILMADI** (stdout/SUITE_DONE kesilme riski) · global stub KULLANILMADI.
+- SONUÇ: iki süit **3.750/3.751s → 0.155/0.153s** · `--tam` **30.07 → 15.16s** · `test.mjs` **14.48 → 8.10s** (bonus: 2×3.2s dead wait kalktı) · statik **7.00s**.
+
+## 4) FAZ 2 — `test.mjs` PARALEL: DENENDİ, HEDEF TUTMADI, GERİ ALINDI
+- Denenen: `test.mjs --paralel` (**2 işçi**; Sınıf-B **54** süit havuzda, Sınıf-C `ks-excel-k-import.mjs` **seri**) · çıktı seri ile **birebir** (md5 `1afe23653d50162d3beef141d9ac0d55`) · **2586/2586** · yarış/kalıntı **0**.
+- ÖLÇÜM: medyan **6.064s** (seri tabanı 7.778s) → hedef **≤5.5s TUTMADI**. Kök neden: `nproc=2`, cgroup `cpu.max=100000 100000`, ölçülen eşzamanlılık **~1.7×**; kalan iş CPU-ağır.
+- KARAR: seri varsayılan korundu, **paralel yol GERİ ALINDI** (`test.mjs` değişiklik öncesi haline döndü, seri çıktı md5 birebir).
+
+## 5) FAZ 2 ÖN ADIM — SÜİT BAĞIMSIZLIK DENETİMİ (kalıcı kanıt)
+- 55 süitlik I/O haritası (statik AST; süitler KOŞULMADAN) → `/tmp/suit-io-haritasi.txt` (624 satır).
+- **A=0 · B=54 · C=1** · dosya YAZAN süit **0/55** · `/tmp` kullanan süit **0/55** · alt süreç çağıran **1** süit → süitler salt-okuma (gelecekte paralel gerekirse temel).
+- C süiti: `ks-excel-k-import.mjs` → `spawnSync(ks-yama-excel-k-import.mjs)` (çocuk, `ks-excel-k-import-uygulandi.flag` varken no-op / exit 2).
+
+## 6) NOT — TEKRAR DENEMEYİN
+- Aynı 2-işçili `test.mjs` paralel yaklaşımı, **YENİ KANIT** (CPU ≥4 veya iş yükü değişimi) olmadan tekrar denenmesin.
+
+## Kapı / No-drift
+- `node hizli-test.mjs --tam` → **exit 0** · `MANIFEST: 55 süit, toplam 2586 beklenen | RUNNER: 2586 koşan, 2586 geçen — BİREBİR EŞİT ✓` · `HAM Σ: runner=2586 = SUITE_DONE=2586 = donmuş=2586 = ELLE sayı=2586 = ELLE ad=2586 — BİREBİR ✓` · `TAMLIK KANITI: 48/48 süitte her statik t( noktası koştu; vaka listesi tam.`
+- No-drift: `app.js 231cf09fef286267` · `ek-ders.js 3d2dd38ff517c64f` · `index.html 13edc44a0784df72` — **DEĞİŞMEDİ**.
+- Kapandı — **publish YOK** (tamamen test altyapısı).
+
+---
 
 # ✅ KAPANIŞ KAYDI: D41 + D42 (Telefonsuz Öğrenciler / WA Alıcı) KAPANDI
 
@@ -549,69 +590,6 @@ Yedek biçimi (`yedekAl` → `yks-birebir-yedek-YYYY-MM-DD.json`): `{"uygulama":
 ## Kapı / No-drift
 - No-drift: `app.js feecb17b82d067c2…` · `index.html` damga `feecb17b82d067c2` · `ek-ders.js 3d2dd38f…` — **DEĞİŞMEDİ** (bu tur yalnız `CHECKPOINT.md`).
 - Commit'i Vly alır · **publish GEREKMEZ** (CHECKPOINT canlıya servis edilmiyor).
-
----
-
-# ✅ KAPANIŞ KAYDI: DÖNGÜ-36 + DÖNGÜ-36 KALANI KAPANDI
-
-**Tarih:** 28 Eylül 2026 · **Durum:** ✅ Kapandı — kullanıcı görsel doğrulaması + canlı damga teyidi
-**Bu turda değişen tek dosya:** `CHECKPOINT.md` (uygulama kodu ve testler DEĞİŞMEDİ).
-
-*(Not: bu kayıt HIZ PROTOKOLÜ / JET 2.0 bloğunun hemen ardına, TEK append olarak alındı — içerik birebir.)*
-
-## 1) D36 ilk tur — günlük kilitli satırdaki literal "Sınıf" → gerçek sınıf chip'i
-- Tek üretici: `function sinifChipHTML(sinifAd)` (`app.js:3747`) — TEK markup literali
-  (`bg-rose-100 border border-rose-200`) + `esc((sinifAd || "Sınıf").substring(0,14))`;
-  `"Sınıf"` yer tutucusu YALNIZ haftalık davranışı korur.
-- Çağrı yerleri: haftalık `app.js:3832` (`sinifChipHTML(avail.sinif[key])`) · günlük "Boş" satırı `app.js:4282` (`sinifChipHTML(snf28)`).
-- Kaynakta `sinifChipHTML(` = 1 tanım + 3 çağrı (haftalık + günlük Boş + günlük ANA); chip markup literali = 1 (tek üretici kanıtı).
-- Yama: `ks-yama-gunluk-sinif-chip.mjs` (marker `GUNLUK-SINIF-CHIP`; yedek `app.js.gunluk-sinif-chip-oncesi.bak` 386299 B `ed0cc06c…`).
-
-## 2) D36 kalanı — günlük ANA satır sınıf-dersi slotu
-- Günlük ANA satır sınıf-dersi slotu `dnd-bos` (drop-zone) dalından ÇIKARILDI.
-- `app.js:4246-4250`: `avail.sinif` dolu ise hücre KİLİTLİ `td` + AYNI chip
-  (`sinifChipHTML(ogrtAvail.avail.sinif[dowIdx28 + "-" + slot.no])`).
-- Veri alanı haftalık/"Boş" ile AYNI: `ogrtAvail` (`app.js:4203`, `ogrtId ? DB.ogretmenler.find(x => x.id === ogrtId) : null`); `dowIdx28 = dowIdx(gunKey)` (`app.js:4152`).
-- Kilit ÖNCEDEN vardı: `istekBurak` (`app.js:3892` / kilit `:3910`) ve `dersBurak` (`app.js:4018` / kilit `:4053`) — ikisi de `(t.avail.sinif && key in t.avail.sinif)` içerir.
-- Yama: `ks-yama-d36-ana-satir.mjs` (marker `D36-ANA-SATIR`, 2 çapa, `index.html` damgasını yeniden yazar — idempotent, 2. koşu exit 2).
-- Yedek: `app.js.d36-ana-satir-oncesi.bak` (387594 B, `02a81143…`).
-
-## 3) Sayı zinciri
-- Toplam assertion: **2536 → 2542 (+6) → 2548 (+6)**.
-- Süit: **55 SABİT** (değişmedi).
-- `ks-dongu28.mjs`: **20 → 26** · `ks-gunluk-ders-tasi.mjs`: **114 → 120**.
-
-## 4) SHA zinciri (no-drift)
-- `app.js`: **386299 → 387594 → 388693 B** · `ed0cc06c…` → `02a81143…` → `aa94ed0b…`
-  (tam: `aa94ed0b2b7226287742431b5bddc451ce9c5f82c8d3d2b420ffeff5153b2ad5`).
-- `index.html` damga: `app.js?v=aa94ed0b2b722628` (+ `ek-ders.js?v=3d2dd38ff517c64f`); `ks-index-kimlik.mjs` / `ks-kart-kolon.mjs:246-258` bunu DİNAMİK doğrular (ada gömülü elle SHA pin YOK).
-- `ek-ders.js 3d2dd38f…` **DEĞİŞMEDİ** (`3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f`, 30405 B).
-
-## 5) GÖRSEL DOĞRULAMA (kullanıcı onayı)
-- Günlük **PAZARTESİ** çizelgesinde sınıf-dersi slotları pembe chip + GERÇEK sınıf adı:
-  **12.DİL · MEZUN SAY 1 · 11 EA 1 · MEZUN EA 1 · 12 SAY 2** — haftalıkla TUTARLI.
-- Grup dersinde iki üye KENDİ satırında ad+sınıf: **ŞAHİN DOĞANAY slot 8 → "Emir Aydın MEZUN SAY 1" + "Yusuf Can MEZUN SAY 2"**.
-- → **D36 + grup üyesi görünümü KAPANDI.**
-
-## 6) DÜRÜST NOT
-- Sınıf kaydı VAR ama **adı BOŞ** olan slotta hücre hâlâ "+" drop-zone görünüyor — **YALNIZ görsel**.
-- `istekBurak` / `dersBurak` kilidi (`key in avail.sinif`) drop'u REDDETTİĞİ için **veri bozulmuyor**.
-- Bu durum sonraki tura AÇIK KALEM olarak kaydedildi (aşağıda).
-
-## 7) CANLI-YAYIM KURALI
-- Kullanıcı **publish etti**; canlı damga `app.js?v=aa94ed0b2b722628`.
-- Bu tur YALNIZ `CHECKPOINT.md` değiştiği için **publish GEREKMEZ** (CHECKPOINT canlıya servis edilmiyor).
-- **D36 teyidi:** publish sonrası canlıda görsel doğrulama yapıldı (canlı damga `feecb17b82d067c2`) — KAPANDI.
-
-## AÇIK KALEMLER
-- **(a)** Boş adlı sınıf kaydı slotu görsel sertleştirmesi — `key in avail.sinif` VARSA hücreyi kilitle (drop-zone gösterme). *Görsel; veri zaten güvenli.*
-- **(b)** LOGO ince ayarı — **askıda** (LOGO KİLİDİ kuralı yürürlükte).
-- **(c)** Eski Pazar grup kaydı kontrolü — **opsiyonel**, yalnız kullanıcı isterse.
-
-## Kapı / No-drift
-- `node hizli-test.mjs --tam` → **exit 0** · `MANIFEST: 55 süit, toplam 2548 beklenen | RUNNER: 2548 koşan, 2548 geçen — BİREBİR EŞİT ✓` · `TAMLIK KANITI: 48/48`.
-- No-drift: `app.js aa94ed0b2b722628…` · `index.html` · `ek-ders.js 3d2dd38f…` — **DEĞİŞMEDİ**.
-- Bu turda (kapanış kaydı) değişen dosya: **yalnız `CHECKPOINT.md`**. Commit'i Vly alır; **publish YOK**.
 
 ---
 

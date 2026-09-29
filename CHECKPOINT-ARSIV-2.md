@@ -49,3 +49,41 @@ not: `CHECKPOINT-ARSIV-NOT.md`) — bu yüzden **D43'ten SONRAKİ** kayıtları 
 - Kök neden: ortam `nproc=2` ve ölçülen eşzamanlılık kazancı ~1.7× (2 eşzamanlı süit ölçümü 0.219s → 0.254s); kalan iş CPU-ağırlıklı olduğu için 2 işçi ~5.6–6.4s tabanının altına inmiyor.
 - **Kural uygulandı:** paralel yol geri alındı, `test.mjs` değişiklik öncesi haline döndü (seri çıktı md5 birebir aynı) · `hizli-test.mjs` `--tam` içinde `test.mjs` SERİ kalır, yalnız statik kapı `--paralel`.
 - **`--tam` ölçümü (geri alma sonrası, 1 koşum):** 14.377s (test 7.89s + statik 6.43s) → hedef ≤13.0s TUTMADI · MANIFEST 55 süit / 2586 birebir · TAMLIK 48/48 · exit 0.
+
+---
+
+## ✅ KAPANIŞ KAYDI: JET-TURBO (FAZ 0 · 1 · 1B · 2) KAPANDI
+
+**Tarih:** 29 Eylül 2026 · **Durum:** ✅ Kapandı — test altyapısı turu; **uygulama kodu DEĞİŞMEDİ**, publish GEREKMEZ.
+**Kapsam:** `statik-eksiksizlik.mjs` · `test.mjs` (geri alındı) · `hizli-test.mjs` · `ks-donem-secici-gorunum.mjs` · `ks-brans-ders-kurali.mjs` · `CHECKPOINT.md` / `CHECKPOINT-ARSIV-2.md`.
+
+### 1) FAZ 0 — TEMEL ÖLÇÜM (salt-okuma)
+- Baseline `--tam` **30.07s** · `test.mjs` **14.48s** · statik kapı **15.92s** (medyan) · iki yavaş süit **3.716s / 3.751s** (medyan).
+- Ortam: `nproc=2` · no-drift `app.js 231cf09fef286267` · `ek-ders.js 3d2dd38ff517c64f` · `index.html 13edc44a0784df72`.
+
+### 2) FAZ 1 — STATİK KAPI PARALEL (isteğe bağlı bayrak; seri DEFAULT korundu)
+- `statik-eksiksizlik.mjs --paralel`: **≤2 işçi** · işçi başına **benzersiz** geçici dizin · sonuçlar tamponlanıp **MANIFEST SIRASINA** göre basılır (çıktı seri ile birebir) · temp temizliği (kalan 0) · kaynak dosyalar salt-okuma.
+- **15.92s → 8.34s** (hedef ≤11s ✓) · seri yol **regresyonsuz** · `--tam` 30.07s → 15.16s.
+
+### 3) FAZ 1B — KÖK NEDEN BULUNDU (3.7s EVAL DEĞİL)
+- İki yavaş süitte gerçek iş **~50 ms** (app.js okuma 1.5–2.9 ms · sahte DOM 0.4 ms · `new Function` derleme 4.3/7.4 ms · boot çağrısı 34–46 ms · `console.log` 3.3 ms); kalan **~3.53s ölü bekleme**: `app.js:1066` `toast()` içindeki `setTimeout(…, 3200)` + bu iki süitte **`process.exit()` yok** → Node olay döngüsü 3.2s bekliyor (beforeExit **3591 ms**; hızlı süitlerde beforeExit hiç ateşlenmiyor).
+- ÇÖZÜM: assertion sonrası **hedefli timer temizliği** (`clearTimeout`) — **`process.exit()` KULLANILMADI** (stdout/SUITE_DONE kesilme riski) · global stub KULLANILMADI.
+- SONUÇ: iki süit **3.750/3.751s → 0.155/0.153s** · `--tam` **30.07 → 15.16s** · `test.mjs` **14.48 → 8.10s** (bonus: 2×3.2s dead wait kalktı) · statik **7.00s**.
+
+### 4) FAZ 2 — `test.mjs` PARALEL: DENENDİ, HEDEF TUTMADI, GERİ ALINDI
+- Denenen: `test.mjs --paralel` (**2 işçi**; Sınıf-B **54** süit havuzda, Sınıf-C `ks-excel-k-import.mjs` **seri**) · çıktı seri ile **birebir** (md5 `1afe23653d50162d3beef141d9ac0d55`) · **2586/2586** · yarış/kalıntı **0**.
+- ÖLÇÜM: medyan **6.064s** (7.778s seri tabanı) → hedef **≤5.5s TUTMADI**. Kök neden: `nproc=2`, cgroup `cpu.max=100000 100000`, ölçülen eşzamanlılık **~1.7×**; kalan iş CPU-ağır.
+- KARAR: seri varsayılan korundu, **paralel yol GERİ ALINDI** (`test.mjs` değişiklik öncesi haline döndü).
+
+### 5) FAZ 2 ÖN ADIM — SÜİT BAĞIMSIZLIK DENETİMİ (kalıcı kanıt)
+- 55 süitlik I/O haritası (statik AST; süitler KOŞULMADAN) → `/tmp/suit-io-haritasi.txt` (624 satır).
+- **A=0 · B=54 · C=1** · dosya YAZAN süit **0/55** · `/tmp` kullanan süit **0/55** · alt süreç çağıran **1** süit → süitler salt-okuma (gelecekte paralel gerekirse temel).
+- C süiti: `ks-excel-k-import.mjs` → `spawnSync(ks-yama-excel-k-import.mjs)` (çocuk, `ks-excel-k-import-uygulandi.flag` varken no-op / exit 2).
+
+### 6) NOT — TEKRAR DENEMEYİN
+- Aynı 2-işçili `test.mjs` paralel yaklaşımı, **YENİ KANIT** (CPU ≥4 veya iş yükü değişimi) olmadan tekrar denenmesin.
+
+### Kapı / No-drift
+- `node hizli-test.mjs --tam` → **exit 0** · `MANIFEST: 55 süit, toplam 2586 beklenen | RUNNER: 2586 koşan, 2586 geçen — BİREBİR EŞİT ✓` · `HAM Σ: runner=2586 = SUITE_DONE=2586 = donmuş=2586 = ELLE sayı=2586 = ELLE ad=2586 — BİREBİR ✓` · `TAMLIK KANITI: 48/48 süitte her statik t( noktası koştu; vaka listesi tam.`
+- No-drift: `app.js 231cf09fef286267` · `ek-ders.js 3d2dd38ff517c64f` · `index.html 13edc44a0784df72` — **DEĞİŞMEDİ**.
+- Kapandı — **publish YOK** (tamamen test altyapısı).

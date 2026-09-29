@@ -16,7 +16,6 @@
     SVG width           80      → 21
     SVG right           30px    → 8px
     SVG top             2px     → 0.5px
-    SVG height          32px    → 8.4px (width × 40/100 · D52-SVG-HEIGHT: height:auto KALDIRILDI)
     SVG viewBox 0 0 100 40 · stroke-width 14 · stroke-linecap round  → AYNEN
     alt yazı font-size  2.8rem  → 0.74rem
     alt yazı letter-sp. -1.5px  → -0.4px
@@ -42,13 +41,6 @@
   master -3px → 7.56px (2 / 0.2647). Böylece tek "ÇAKIŞMA KURALI" istisnası kalktı ve
   master × 0.2647 = kart eşitliği alt yazıda da birebir sağlandı. Font/renk/ölçek/path/viewBox/
   stroke-width ve eleman sırası DEĞİŞMEDİ (turuncu çizgilere dokunulmadı: bkz. ks-yama-d49 teşhis notu).
-
-  D52-SVG-HEIGHT: SVG'nin satır-içi "height:auto" bildirimi KALDIRILDI, yerine AÇIK ölçü konuldu
-  (master 32px = 80 × 40/100 · kart 8.4px = 21 × 40/100 · 32 × 0.2647 = 8.47 ≈ 8.4 → ölçek korunur).
-  Sebep: html2canvas 1.4.1 SVGElementContainer kopyaya width/height ATTRIBUTE'u yazıp serileştiriyor;
-  satır-içi "height:auto" o attribute'u ezdiği için tek başına SVG belgesinde yükseklik çözülemiyor ve
-  turuncu çizgiler PNG'de kayboluyordu — aynı markup HTML'de görünüyordu (statik cizgi-tani.html A–E).
-  width/viewBox/path/stroke-width/renk/right/top/ölçek DEĞİŞMEDİ.
   ============================================================================
 -->
 <div class="logo-wrapper"
@@ -60,7 +52,7 @@
          style="font-family:'Montserrat',sans-serif;font-size:8.5rem;font-weight:900;font-style:italic;letter-spacing:-4px;color:#d31d24;line-height:0.85;white-space:nowrap">formul</div>
 
     <svg class="u-to-ü-lines" width="80" viewBox="0 0 100 40" xmlns="http://www.w3.org/2000/svg"
-         style="position:absolute;right:30px;top:2px;height:32px;display:block;overflow:visible">
+         style="position:absolute;right:30px;top:2px;height:auto;display:block;overflow:visible">
       <path d="M15 10 L95 10" fill="none" stroke="#f29222" stroke-width="14" stroke-linecap="round"/>
       <path d="M14 29 L94 29" fill="none" stroke="#f29222" stroke-width="14" stroke-linecap="round"/>
     </svg>

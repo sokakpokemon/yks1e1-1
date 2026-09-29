@@ -89,7 +89,7 @@
   <h2>Ölçüm (D50 ADIM 1 · fonttan hesaplandı, upem 1000)</h2>
   <table class="olcum">
     <tr><th>kalem</th><th>değer</th><th>nereden</th></tr>
-    <tr><td>SVG render yüksekliği (beklenen)</td><td>8.4 px</td><td>viewBox 0 0 100 40 · width 21 · height:auto → 21 ÷ (100/40)</td></tr>
+    <tr><td>SVG render yüksekliği</td><td>8.4 px</td><td>viewBox 0 0 100 40 · width 21 · <b>açık height:8.4px</b> (D52; eski height:auto) → 21 ÷ (100/40)</td></tr>
     <tr><td>ölçek (viewBox → px)</td><td>0.21 px/birim</td><td>21 ÷ 100</td></tr>
     <tr><td>çizgi 1 (y=10) merkez / mürekkep</td><td>2.60 px / 1.13–4.07 px</td><td>top 0.5 + 10×0.21 · ± stroke 14/2×0.21=1.47</td></tr>
     <tr><td>çizgi 2 (y=29) merkez / mürekkep</td><td>6.59 px / 5.12–8.06 px</td><td>top 0.5 + 29×0.21</td></tr>
@@ -181,7 +181,8 @@ function logoHTML(secenek) {
   '</div>';
 }
 
-var URETIM = { right: 8, top: 0.5, stilHeight: "auto" };   /* karttaki gerçek hâl */
+/* karttaki gerçek hâl — D52-SVG-HEIGHT: satır-içi height AUTO KALDIRILDI, açık ölçü konuldu. */
+var URETIM = { right: 8, top: 0.5, stilHeight: "8.4px" };
 
 var VARYANTLAR = [
   { kod: "V1", s: URETIM,                                        aciklama: "mevcut / seçilen" },
@@ -192,11 +193,12 @@ var VARYANTLAR = [
 
 var TANI = [
   { kod: "D0", s: { right: 8, top: 0.5, stilHeight: "32px" },        aciklama: "sağlamlık kontrolü: abartılı yükseklik (32px)" },
-  { kod: "D1", s: URETIM,                                            aciklama: "ÜRETİM: style height:auto (attribute yok)" },
+  { kod: "D1", s: URETIM,                                            aciklama: "ÜRETİM (D52 sonrası): style height:8.4px" },
   { kod: "D2", s: { right: 8, top: 0.5, stilHeight: null },          aciklama: "height bildirimi YOK (ne style ne attribute)" },
   { kod: "D3", s: { right: 8, top: 0.5, stilHeight: null, attrHeight: "8.4" },  aciklama: 'attribute height="8.4" (style height yok)' },
   { kod: "D4", s: { right: 8, top: 0.5, stilHeight: "8.4px" },       aciklama: "style height:8.4px (attribute yok)" },
-  { kod: "D5", s: { right: 8, top: 0.5, stilHeight: "auto", attrHeight: "8.4" }, aciklama: 'ÜRETİM + attribute height="8.4" (html2canvas yolu)' }
+  { kod: "D5", s: { right: 8, top: 0.5, stilHeight: "auto", attrHeight: "8.4" }, aciklama: 'D52 ÖNCESİ üretim + attribute height="8.4" (html2canvas yolu)' },
+  { kod: "D6", s: { right: 8, top: 0.5, stilHeight: "auto" },        aciklama: "D52 ÖNCESİ üretim: style height:auto (PNG'de kayboluyordu)" }
 ];
 
 /* Tek büyük panel (V1) */

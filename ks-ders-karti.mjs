@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":118"); return; } if (__kosan !== 118) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ders-karti.mjs kosan=" + __kosan + " beklenen=118"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":118"); } });
+process.on("exit", (c) => { if (c !== 0) { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":119"); return; } if (__kosan !== 119) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-ders-karti.mjs kosan=" + __kosan + " beklenen=119"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-ders-karti.mjs:" + __kosan + ":119"); } });
 /* ks-ders-karti.mjs — DERS-KARTI-YAMASI süiti
    Doğruladıkları:
     1) Kart üretimi: dersKartiHTML/dersKartiVeri doğru alanlarla çalışır (ad, ders, konu, öğretmen, tarih+saat, sınıf, durum).
@@ -143,11 +143,11 @@ t("D30 kart başlığı 'Birebir Ders Kartı' VAR + 'Formül Kurs' METİN alt ya
      sarmalayıcı  padding:7px → inline-flex · column · align-items:flex-end · padding:5px · margin-left:12px
      marka kutusu position:relative;nowrap → + display:flex · align-items:flex-start
      marka        2rem/-0.95px/0.95 → 2.25rem · -1.05px · line-height 0.85 (master)
-     SVG          width 20 · right 8 · top 0 → width 21 · right 8 · top 0.5 · height:auto
+     SVG          width 20 · right 8 · top 0 → width 21 · right 8 · top 0.5 · height 8.4px (D52-SVG-HEIGHT: height:auto KALDIRILDI)
                   viewBox 0 0 100 40 · stroke-width 14 (master) · iki path M15 10 L95 10 / M14 29 L94 29
      alt yazı     0.72rem/-0.35px · margin-top:1px → 0.74rem · -0.4px · margin-top:2px (D49-LOGO-FOOTER:
                   7.56px × 0.2647 = 2.00 — eski -3px istisnası kaldırıldı) · margin-right 14px */
-t("D33 logo master birebir: inline-flex sarmalayıcı · relative/flex marka kutusu · 'formul' 2.25rem · -1.05px · 0.85 · #d31d24 · çift #f29222 çizgi width 21 · right 8 · top 0.5 · viewBox 0 0 100 40 · stroke-width 14 · 'kurs merkezi' 0.74rem · -0.4px · margin-top 0 (çakışma) · margin-right 14 · #1a1a1a · padding 5px · nowrap/flex-shrink:0/min-width:0/margin-left:12px", (() => { const h = dersKartiHTML(birebir); return ["display:inline-flex","flex-direction:column","align-items:flex-end","padding:5px","position:relative","display:flex","align-items:flex-start",">formul</div>",">kurs merkezi</div>","font-size:2.25rem","letter-spacing:-1.05px","line-height:0.85","color:#d31d24","width=\"21\"","viewBox=\"0 0 100 40\"","height:auto","right:8px","top:0.5px","d=\"M15 10 L95 10\"","d=\"M14 29 L94 29\"","stroke-width=\"14\"","stroke-linecap=\"round\"","stroke=\"#f29222\"","font-size:0.74rem","letter-spacing:-0.4px","margin-top:2px","margin-right:14px","color:#1a1a1a","white-space:nowrap","flex-shrink:0","min-width:0","margin-left:12px"].every(s => h.includes(s)) && !h.includes("formul kurs") && !h.includes(">merkezi</div>") && !/margin-top:-/.test(h) && (h.match(/id="fk-logo"/g) || []).length === 1 && h.indexOf(">formul</div>") < h.indexOf('id="fk-logo"') && h.indexOf('id="fk-logo"') < h.indexOf(">kurs merkezi</div>"); })());
+t("D33 logo master birebir: inline-flex sarmalayıcı · relative/flex marka kutusu · 'formul' 2.25rem · -1.05px · 0.85 · #d31d24 · çift #f29222 çizgi width 21 · right 8 · top 0.5 · viewBox 0 0 100 40 · stroke-width 14 · 'kurs merkezi' 0.74rem · -0.4px · margin-top 0 (çakışma) · margin-right 14 · #1a1a1a · padding 5px · nowrap/flex-shrink:0/min-width:0/margin-left:12px", (() => { const h = dersKartiHTML(birebir); return ["display:inline-flex","flex-direction:column","align-items:flex-end","padding:5px","position:relative","display:flex","align-items:flex-start",">formul</div>",">kurs merkezi</div>","font-size:2.25rem","letter-spacing:-1.05px","line-height:0.85","color:#d31d24","width=\"21\"","viewBox=\"0 0 100 40\"","height:8.4px","right:8px","top:0.5px","d=\"M15 10 L95 10\"","d=\"M14 29 L94 29\"","stroke-width=\"14\"","stroke-linecap=\"round\"","stroke=\"#f29222\"","font-size:0.74rem","letter-spacing:-0.4px","margin-top:2px","margin-right:14px","color:#1a1a1a","white-space:nowrap","flex-shrink:0","min-width:0","margin-left:12px"].every(s => h.includes(s)) && !h.includes("formul kurs") && !h.includes(">merkezi</div>") && !/margin-top:-/.test(h) && (h.match(/id="fk-logo"/g) || []).length === 1 && h.indexOf(">formul</div>") < h.indexOf('id="fk-logo"') && h.indexOf('id="fk-logo"') < h.indexOf(">kurs merkezi</div>"); })());
 t("D30 logo stroke literal #f29222 (var() YOK) + xmlns VAR", (() => { const h = dersKartiHTML(birebir); return h.includes("stroke=\"#f29222\"") && !h.includes("stroke=\"var(") && h.includes("xmlns=\"http://www.w3.org/2000/svg\""); })());
 /* LOGO KİLİDİ (CHECKPOINT.md → "🎨 LOGO KİLİDİ"): master'ın TEK kaynağı
    logo-master/formul-kurs-logo.html. Master değişirse kademe değerleri değişir;
@@ -186,7 +186,7 @@ function fkKutuKapanis(h) {
 }
 const D47_KUTU = '<div style="position:relative;display:flex;align-items:flex-start;white-space:nowrap">';
 t("D47 logo hiza: 'kurs merkezi' marka kutusunun DIŞINDA (brand-container <div>/</div> dengesi) — sarmalayıcının 2. çocuğu", (() => { const h = dersKartiHTML(birebir); const kapanis = fkKutuKapanis(h); if (kapanis < 0) return false; const merkezi = h.indexOf(">kurs merkezi</div>"); const logo = h.indexOf('id="fk-logo"'); return merkezi > kapanis && logo > h.indexOf(D47_KUTU) && logo < kapanis; })());
-t("D47 logo hiza: iki path #f29222 + fk-logo SVG marka kutusunda + görünürlük engeli YOK (overflow:hidden yok · z-index var · height:auto)", (() => { const h = dersKartiHTML(birebir); const bas = h.indexOf('id="fk-logo"'); const son = h.indexOf("</svg>", bas); if (bas < 0 || son < 0) return false; const svg = h.slice(bas, son + 6); return (svg.match(/<path /g) || []).length === 2 && (svg.match(/stroke="#f29222"/g) || []).length === 2 && svg.includes("height:auto") && svg.includes("z-index:1") && svg.includes("overflow:visible") && !svg.includes("overflow:hidden") && bas > h.indexOf(D47_KUTU) && bas < fkKutuKapanis(h); })());
+t("D47 logo hiza: iki path #f29222 + fk-logo SVG marka kutusunda + görünürlük engeli YOK (overflow:hidden yok · z-index var · height:8.4px)", (() => { const h = dersKartiHTML(birebir); const bas = h.indexOf('id="fk-logo"'); const son = h.indexOf("</svg>", bas); if (bas < 0 || son < 0) return false; const svg = h.slice(bas, son + 6); return (svg.match(/<path /g) || []).length === 2 && (svg.match(/stroke="#f29222"/g) || []).length === 2 && svg.includes("height:8.4px") && svg.includes("z-index:1") && svg.includes("overflow:visible") && !svg.includes("overflow:hidden") && bas > h.indexOf(D47_KUTU) && bas < fkKutuKapanis(h); })());
 
 /* ---- D49-LOGO-FOOTER: (1) alt yazı 2px aşağı (ölçek korunur: 7.56 × 0.2647 = 2.00),
    (2) D30 not şeridi cümlelere bölündü. D30 FROZEN kapısı GEVŞETİLMEDİ — 'includes' yerine
@@ -218,6 +218,25 @@ t("D49 footer imza: ince ayraç (hairline border-top) + harf aralıklı (letter-
   const etiket = h.slice(bas, h.indexOf(">", bas));
   return etiket.includes("display:block") && etiket.includes("border-top:1px solid #e2e8f0") &&
     /letter-spacing:0\.\d+px/.test(etiket) && etiket.includes("color:#94a3b8");
+})());
+
+/* ---- D52-SVG-HEIGHT: kart SVG style'ındaki "height:auto" KALDIRILDI, açık ölçü konuldu.
+   SEBEP (kanıtlı): statik cizgi-tani.html'de A–E bloklarının HEPSİ tarayıcıda görünüyor (inline SVG
+   boyanıyor, koordinat doğru) ama uygulamadan inen PNG'de çizgi yok → kusur html2canvas yolunda.
+   html2canvas 1.4.1 SVGElementContainer kopyaya width/height ATTRIBUTE'u yazar; satır-içi
+   "height:auto" o attribute'u ezer ve tek başına SVG'de yükseklik çözülemez → raster'da çizgi kaybolur.
+   Açık ölçü: kart 8.4px (21×40/100) · master 32px (80×40/100) · 32×0.2647 = 8.47 ≈ 8.4.
+   width/viewBox/path/stroke/right/top/renk/ölçek DEĞİŞMEDİ; html2canvas option'ları DEĞİŞMEDİ. */
+t("D52 SVG yükseklik: style'da height:auto YOK + açık yükseklik (kart 8.4px · master 32px = width × 40/100) — html2canvas PNG yolu", (() => {
+  if (!existsSync("logo-master/formul-kurs-logo.html")) return false;
+  const h = dersKartiHTML(birebir);
+  const m = readFileSync("logo-master/formul-kurs-logo.html", "utf8");
+  const bas = h.indexOf('id="fk-logo"'), son = h.indexOf("</svg>", bas);
+  if (bas < 0 || son < 0) return false;
+  const svg = h.slice(bas, son + 6);
+  const kartOk = svg.includes("height:" + 8.4 + "px") && !svg.includes("top:0.5px;height:auto");
+  const mstOk = m.includes("top:2px;height:" + 32 + "px") && !m.includes("top:2px;height:auto");
+  return kartOk && mstOk && Math.abs(32 * 0.2647 - 8.4) < 0.1;
 })());
 /* D33 font kapısı: gömülü aile MONTSSKART (italic 900) · 'Montserrat' ve CDN referansı YOK.
    D30'da ad "Montserrat ... @font-face" idi; aile adı değişti (MontsKart) → ad ve kontrol güncellendi. */

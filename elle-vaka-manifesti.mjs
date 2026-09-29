@@ -49,7 +49,7 @@ export const elleManifest = {
   "ks-kadro-telefon3.mjs": 57,
   "ks-ders-tasi.mjs": 90,
   "ks-gunluk-ders-tasi.mjs": 121, /* D36-BOS-AD-KILIT: elle sayım (120 → 121) */
-  "ks-ders-karti.mjs": 118, /* D33-LOGO-KİLİDİ: 109 + 1 yeni master-kaynak kapısı (logo-master/formul-kurs-logo.html) · D46-KART-EMOJI: 110 + 3 (bento emoji öneki + etiket metni korundu + SVG yerine geçmedi) · D47-LOGO-HIZA: 113 + 2 (alt yazı marka kutusunun DIŞINDA/denge + çizgi görünürlük) · D49-LOGO-FOOTER: 115 + 3 (alt yazı 2px ölçek kapısı + footer 6 blok/birebir + imza ayraç-harf aralığı) */
+  "ks-ders-karti.mjs": 119, /* D33-LOGO-KİLİDİ: 109 + 1 yeni master-kaynak kapısı (logo-master/formul-kurs-logo.html) · D46-KART-EMOJI: 110 + 3 (bento emoji öneki + etiket metni korundu + SVG yerine geçmedi) · D47-LOGO-HIZA: 113 + 2 (alt yazı marka kutusunun DIŞINDA/denge + çizgi görünürlük) · D49-LOGO-FOOTER: 115 + 3 (alt yazı 2px ölçek kapısı + footer 6 blok/birebir + imza ayraç-harf aralığı) · D52-SVG-HEIGHT: 118 + 1 (height:auto kaldırıldı → açık ölçü: kart 8.4px / master 32px) */
   "ks-ders-karti-tasima.mjs": 56,
   "ks-ogrt-ders-karti.mjs": 91,
   "ks-ogrt-denetim.mjs": 42, /* OGRT-TAMGUN-KART: elle sayım */

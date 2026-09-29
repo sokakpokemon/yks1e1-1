@@ -29,7 +29,7 @@
 
   <!-- A · üretimdeki markup'ın BİREBİR kopyası (yalnız font serif'e düştü) -->
   <div class="blok">
-    <p class="baslik">A · ÜRETİMDEKİ TAM MARKUP — inline SVG · position:absolute;right:8px;top:0.5px;height:auto</p>
+    <p class="baslik">A · D52 ÖNCESİ üretim markup'ı — inline SVG · right:8px;top:0.5px;height:auto (PNG'de çizgi kayboluyordu)</p>
     <p class="kod">svg id="fk-logo" width="21" viewBox="0 0 100 40" · style="position:absolute;right:8px;top:0.5px;height:auto;display:block;overflow:visible;z-index:1"</p>
     <div style="display:inline-flex;flex-direction:column;align-items:flex-end;padding:5px;white-space:nowrap">
       <div style="position:relative;display:flex;align-items:flex-start;white-space:nowrap">
@@ -39,6 +39,20 @@
       <div style="font-family:serif;font-size:0.74rem;font-weight:900;font-style:italic;letter-spacing:-0.4px;margin-top:2px;margin-right:14px;color:#1a1a1a;white-space:nowrap">kurs merkezi</div>
     </div>
     <p class="etiket">A’da beklenen: “formul” + altında “kurs merkezi”, “u”nun üstünde 2 turuncu çizgi.</p>
+  </div>
+
+  <!-- F · D52 SONRASI üretim markup'ı: height:auto KALDIRILDI → açık height:8.4px -->
+  <div class="blok">
+    <p class="baslik">F · D52 SONRASI üretim markup'ı — height:auto YOK · açık height:8.4px (width 21 × 40/100)</p>
+    <p class="kod">svg data-logo="fk-logo" width="21" viewBox="0 0 100 40" · style="position:absolute;right:8px;top:0.5px;height:8.4px;display:block;overflow:visible;z-index:1"</p>
+    <div style="display:inline-flex;flex-direction:column;align-items:flex-end;padding:5px;white-space:nowrap">
+      <div style="position:relative;display:flex;align-items:flex-start;white-space:nowrap">
+        <div style="font-family:serif;font-size:2.25rem;font-weight:900;font-style:italic;letter-spacing:-1.05px;color:#d31d24;line-height:0.85;white-space:nowrap">formul</div>
+        <svg data-logo="fk-logo" width="21" viewBox="0 0 100 40" xmlns="http://www.w3.org/2000/svg" style="position:absolute;right:8px;top:0.5px;height:8.4px;display:block;overflow:visible;z-index:1"><path d="M15 10 L95 10" fill="none" stroke="#f29222" stroke-width="14" stroke-linecap="round"/><path d="M14 29 L94 29" fill="none" stroke="#f29222" stroke-width="14" stroke-linecap="round"/></svg>
+      </div>
+      <div style="font-family:serif;font-size:0.74rem;font-weight:900;font-style:italic;letter-spacing:-0.4px;margin-top:2px;margin-right:14px;color:#1a1a1a;white-space:nowrap">kurs merkezi</div>
+    </div>
+    <p class="etiket">F’de beklenen: A ile AYNI görünüm (yalnız yükseklik açıkça yazıldı; id tekrarı olmasın diye data-logo).</p>
   </div>
 
   <!-- B · aynı yerleşim, ama çizgiler KIRMIZI ve çok kalın (görünürlük abartıldı) -->

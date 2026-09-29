@@ -116,6 +116,44 @@ ORİJİNALDİR ve ASLA DEĞİŞTİRİLMEZ.
 - TEK KAYNAK: `logo-master/formul-kurs-logo.html` (master/orijinal HTML, 8.5rem tabanı). Logo işi
   başlamadan ÖNCE bu dosyaya bak; ölçek gerekiyorsa çarpanı buradan hesapla, karta elle yazma.
 
+# ✅ CHECKPOINT: TEMİZLİK — D30–D42 Artıklarının Güvenli Arşivlenmesi (FAZ 2)
+
+**Tarih:** 29 Eylül 2026 · **Durum:** ✅ Tamamlandı — SİLME YOK, doğrulanmış kopya sonrası taşıma · **Publish YOK**
+
+*(Not: bu kayıt LOGO KİLİDİ bloğunun hemen ardına, mevcut kapanış kayıtlarının EN ÜSTÜNE, TEK append olarak alındı.)*
+
+## Ne yapıldı
+- **92 dosya (6.702.498 byte)** codebase'den KOPYALANDI → her dosya byte + SHA-256 ile kaynakla BİREBİR doğrulandı (`kopyalanan+doğrulanan=92 · mismatch=0 · guard-red=0`) → ancak SONRA kaynaktan kaldırıldı (taşıma). Arşiv (codebase DIŞI): **/home/daytona/codebase-arsiv-d30-d42/**.
+- **MANIFEST.txt** (orijinal-yol|byte|sha256, 92 veri satırı) üretildi; **MANIFEST-SHA256: `68d1fbe74f8a4f46c3ab302bb049ca76fa63996c5d4df71692a31a5130e7f250`** (`MANIFEST-SHA.txt`).
+- Kategoriler (92): D30–D42 `.bak`/`*-oncesi.*` 48 · kök `ks-yama-d3x-*` 21 · `mutasyon-dongu30cache.mjs` 1 · `ks-cp-append-*`+`cp` ailesi 3 · `ks-teshis*`/`ks-gecici-*` 8 · G2 komşu script'ler 11.
+
+## KE — codebase'de KALAN aile (dokunulmadı)
+D29 KE-37 aynen (dongu22–29 backup ×10 · index.html dongu22 ×1 · süit `.bak` ×7 · `ks-yama-dongu22/26/26b/27/28/29` ×6 · `mutasyon-dongu12`+`dongu22–27` ×7 · I/O-referanslı 5 · suit-vakalar yedek ×2). **+1**: `ks-stale-temizlik-oncesi.yedek.json` — `ks-stale-temizlik-uygulandi.flag` bu dosyanın SHA'sını (`5db76c8e…`) pinliyor ⇒ fixture referansı VAR ⇒ adaylıktan ÇIKARILDI, KE'ye alındı. Aktifler: app.js · ek-ders.js · index.html · vendor/* · public/* · dist/* · isolate/* · scripts/* · logo-master/* · 55 manifest süiti · I/O fixture'ları (ks-excel-k* · program-guncel.xml · TABAN-….kopya · elle-vaka-* · suit-vakalar/*.txt).
+
+## Kapılar — taşıma ÖNCESİ (genişletilmiş liste 93→92 aday)
+- Kapı-1 benzersizlik: **92 satır / 92 benzersiz ad**, `uniq -d` boş ✅
+- Kapı-2 KE ∩ aday = **0** ✅
+- Kapı-3 5 desen (`app.js` · `ek-ders.js` · `index.html` · `suit-manifest.mjs` · `test.mjs`) → **0 hit** ✅
+- Kapı-4 no-drift: app.js `231cf09fef286267` · damga `app.js?v=231cf09fef286267` · ek-ders.js `3d2dd38ff517c64f` ✅
+- Kanıt: 92/92 adayın adı hiçbir AKTİF `.mjs/.json/.html` içinde geçmiyor (grep 0 hit; kendi yama/`cp` script'leri ve CHECKPOINT hariç) · hiçbiri manifest süiti değil.
+
+## Kapılar — taşıma SONRASI (hepsi YEŞİL)
+- `node --check app.js` / `ek-ders.js` → OK
+- `node hizli-test.mjs --tam` → **55 süit / 2586 birebir** (HAM Σ beşli BİREBİR, exit 0) + `statik-eksiksizlik.mjs` → **48/48 TAMLIK KANITI** (test 14.92s + statik 15.36s)
+- **No-drift DEĞİŞMEDİ:** app.js `231cf09fef286267` · damga · ek-ders.js `3d2dd38ff517c64f`
+- Kalıntı kontrolü: KE dışında kökte kalan aday = **0**; kökte yalnız KE (22 backup + ks-yama/mutasyon ailesi) kaldı.
+
+## Dürüst notlar
+- **G1/G2 dahil edildi** (kullanıcı listesi): G1'in 7 maddesi zaten Faz-1 adayıydı; G2'nin 11 komşu script'i (`ks-cp-gunluk-ders-tasi` · `ks-checkpoint-dongu28/29` · `yama-d15-suit` · `yama-ogrt-yatay` · `ks-dom-*` · `ks-izle-sira` · `ks-fix-panel` · `ks-tani-id` · `ks-salt-duzen`) aday kümesine EKLENDİ — hepsi kanıt (a)(b)(c) sağladı. **İSTİSNA:** `ks-stale-temizlik-oncesi.yedek.json` kanıt (c)'yi SAĞLAMADI ⇒ arşivden çıkarıldı, KE'ye alındı.
+- **/tmp çalışma kalıntıları KAPSAM DIŞI** (D29 kararı aynen): codebase dışı, sandbox ömrüyle silinir — bu turda taşınmadı.
+- Eski CHECKPOINT satırları DEĞİŞTİRİLMEDİ — bu bölüm TEK append. **SİLME YOK** (92 dosya arşivde byte+SHA birebir; geri alma tek `cp`).
+
+## Kalan Risk / Sonraki adım
+- `public/app.js` hâlâ eski (`009d03d7…`) olabilir — build zinciri kökten kopyalar; publish öncesi `bun run build` + publish-guard teyidi.
+- Commit + publish kullanıcı işi (Vly yönetir). **Bu turda publish YOK.**
+
+---
+
 # ✅ KAPANIŞ KAYDI: D41 + D42 (Telefonsuz Öğrenciler / WA Alıcı) KAPANDI
 
 **Tarih:** 29 Eylül 2026 · **Durum:** ✅ Kapandı — kullanıcı publish etti + canlı görsel doğrulama TEMİZ

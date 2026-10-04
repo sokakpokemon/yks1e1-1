@@ -35,6 +35,14 @@ offsetDuzelt(
   "İstek havuzu ALT panelde (statik parent) → sag=15293 havuz=15402 kapa=19790",
   "İstek havuzu ALT panelde (statik parent) → sag=15312 havuz=15421 kapa=19809",
 );
+/* D56-WA-GUN-FILTRE: index.html'e waGunBar bloğu (128 karakter) eklendi. Ek blok
+   sol/sag/havuz işaretlerinden SONRA düştüğü için o offsetler DEĞİŞMEDİ; yalnız
+   kapanış (kapa) offseti +128 kaydı. Sayı/sıra değişmedi. */
+offsetDuzelt(
+  "ks-kart-kolon.mjs",
+  "İstek havuzu ALT panelde (statik parent) → sag=15312 havuz=15421 kapa=19809",
+  "İstek havuzu ALT panelde (statik parent) → sag=15312 havuz=15421 kapa=19937",
+);
 
 /* DÖNGÜ-30-CACHE (SHA16 damgası): ks-donem-ilk damga assertion'ı KALDIRILDI;
    damga artık DİNAMİK olarak ks-index-kimlik.mjs süitinde doğrulanır.
@@ -313,4 +321,17 @@ elleVakaAdlari["ks-wa-alici.mjs"].push(
   "D42: waAliciDegistir listeyi TEK kez yeniler (waAliciListeTazele · tek innerHTML)",
   "D42: tazeleme ÇİFT SATIR üretmez (satır sayısı sabit)",
   "D42: waGonder çözücü yolu korunur (!a.varMi → toast; fallback yok)",
+);
+
+/* D56-WA-GUN-FILTRE: ks-wa-alici'ye 7 assertion eklendi (Bugün/Yarın/Tümü alıcı filtresi:
+   waGunKaynak gün daraltması + waGunBarHTML üretimi + waAc bar'ı yeniden çizimi).
+   Koşum sırasıyla ELLE yazıldı; 62 → 69. D41/D42 push'larINDAN SONRA gelir. */
+elleVakaAdlari["ks-wa-alici.mjs"].push(
+  "D56: index.html'de waGunBar kapsayıcısı tam 1 kez (tek üretici)",
+  "D56: waGunKaynak 'tumu' seçiminde null döner (pencere genişletilmez)",
+  "D56: waGunBarHTML tam 3 seçenek üretir (Tümü/Bugün/Yarın)",
+  "D56: waGunBarHTML tam 1 aktif düğme gösterir ve ui.waGun'a uyar",
+  "D56: waAc her açılışta #waGunBar'ı yeniden çizer (3 düğme)",
+  "D56: Bugün filtresi yalnız bugünün planlı dersini verir (iptal elenir)",
+  "D56: Yarın filtresi yalnız yarının planlı dersini verir (iptal elenir)",
 );

@@ -319,9 +319,7 @@
       </div>
       <button onclick="waKapat()" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <!-- D56-WA-GUN-FILTRE -->
-      <div id="waGunBar" class="px-3 pt-2.5 pb-0.5 flex flex-wrap gap-1.5 items-center"></div>
-      <div id="waIcerik" class="p-3 max-h-[60vh] overflow-y-auto"></div>
+    <div id="waIcerik" class="p-3 max-h-[60vh] overflow-y-auto"></div>
       <!-- WA-ONIZLEME-YAMASI: ortak TEK onizleme paneli (id'ler sabit ve tekillik sırasında korunur) -->
       <div id="waOnizlemePanel" class="mx-3 mb-3 rounded-xl border border-indigo-100 bg-indigo-50/60">
         <div class="flex items-center justify-between px-3.5 pt-2.5 pb-1.5">
@@ -348,7 +346,7 @@
 <!-- ============ BİLDİRİM ============ -->
 <div id="toastAlan" class="no-print fixed bottom-5 right-5 z-[60] flex flex-col gap-2 items-end"></div>
 
-<script src="app.js?v=5c76ba2ea685fea9"></script>
+<script src="app.js?v=9a88f38c259e076b"></script>
 
 <script>
 /* ============ ATLAMALI MENÜ DAVRANIŞI (eklendi — mevcut fonksiyonlara dokunmaz) ============ */

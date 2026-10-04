@@ -1,5 +1,5 @@
 let __kosan = 0; /* SAYAÇ KAPISI: yalnız t() assertion çağrıları sayılır (catch-only dahil, kosan=beklenen manifest) */
-process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 69) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-wa-alici.mjs kosan=" + __kosan + " beklenen=69"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-wa-alici.mjs:" + __kosan + ":69"); } });
+process.on("exit", (c) => { if (c !== 0) return; if (__kosan !== 62) { console.error("SUITE_DONE UYUŞMAZLIĞI: ks-wa-alici.mjs kosan=" + __kosan + " beklenen=62"); process.exitCode = 1; } else { console.log("SUITE_DONE:ks-wa-alici.mjs:" + __kosan + ":62"); } });
 /* ks-wa-alici.mjs — WA-ALICI-YAMASI süiti
    Doğruladıkları:
     1) #waAlici select modal-genel TEK (id tam 1 kez; waSatir/Öğrenciler sekmesi onu KULLANMAZ).
@@ -55,14 +55,14 @@ const t = (name, cond, extra) => { __kosan++;  console.log((cond ? "  ✓" : "  
 const scripts = [appKaynak, ...[...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)].map(m => m[1])].join("\n;\n");
 let P;
 try {
-  P = new Function(scripts + "\n  return { DB, ui, waAc, waOnizle, waGonder, waKopyalaMesaj, waUrl, waKapat, waAliciDegistir, waAliciBilgisi, waAliciTipiOf: () => waAliciTipi, waAktifIdOf: () => waAktifOgrenciId, waSatir, ogrenciMesajMetni, penceredeDersler, waGunKaynak, waGunBarHTML, todayKey, addDaysKey };")();
+  P = new Function(scripts + "\n  return { DB, ui, waAc, waOnizle, waGonder, waKopyalaMesaj, waUrl, waKapat, waAliciDegistir, waAliciBilgisi, waAliciTipiOf: () => waAliciTipi, waAktifIdOf: () => waAktifOgrenciId, waSatir, ogrenciMesajMetni, penceredeDersler };")();
   t("boot hatasız", true);
 } catch (e) {
   /* beklenmeyen catch: THROW — SAYAÇ KAPISI kuralları */
   console.error(e.stack ? e.stack.split("\n").slice(0, 6).join("\n") : e);
   throw e;
 }
-const { DB, ui, waAc, waOnizle, waGonder, waUrl, waKapat, waAliciDegistir, waAliciBilgisi, waAliciTipiOf, waAktifIdOf, waSatir, ogrenciMesajMetni, waGunKaynak, waGunBarHTML, todayKey, addDaysKey } = P;
+const { DB, ui, waAc, waOnizle, waGonder, waUrl, waKapat, waAliciDegistir, waAliciBilgisi, waAliciTipiOf, waAktifIdOf, waSatir, ogrenciMesajMetni } = P;
 
 /* ---- test verisi: tel/anneTel/babaTel doldur (yalnız bellek içi; kayıt atılmaz) ---- */
 const ogr1 = DB.ogrenciler[0], ogr2 = DB.ogrenciler[1];
@@ -244,36 +244,6 @@ const sOnce = waSatirSay();
 waAliciDegistir("baba"); waAliciDegistir("ogrenci");
 t("D42: tazeleme ÇİFT SATIR üretmez (satır sayısı sabit)", waSatirSay() === sOnce && sOnce >= 1, "önce=" + sOnce + " sonra=" + waSatirSay());
 t("D42: waGonder çözücü yolu korunur (!a.varMi → toast; fallback yok)", /var a = waAliciBilgisi\(ogrenciId, waAliciTipi\)/.test(appKaynak) && appKaynak.includes("a.varMi") && appKaynak.includes("telefonu kayitli degil"));
-
-/* 12) D56-WA-GUN-FILTRE: Bugün/Yarın/Tümü alıcı filtresi */
-console.log("12) D56 gun filtresi:");
-const bugunK = todayKey(), yarinK = addDaysKey(todayKey(), 1);
-ui.waGun = "tumu";
-t("D56: index.html'de waGunBar kapsayıcısı tam 1 kez (tek üretici)", (html.match(/id="waGunBar"/g) || []).length === 1);
-t("D56: waGunKaynak 'tumu' seçiminde null döner (pencere genişletilmez)", waGunKaynak() === null);
-const barH = waGunBarHTML();
-t("D56: waGunBarHTML tam 3 seçenek üretir (Tümü/Bugün/Yarın)", (barH.match(/data-gun=/g) || []).length === 3 && ["tumu", "bugun", "yarin"].every(function (g) { return barH.includes('data-gun="' + g + '"'); }));
-ui.waGun = "bugun";
-const barB = waGunBarHTML();
-const bBtn = (barB.match(/<button[^>]*data-gun="bugun"[^>]*>/) || [""])[0];
-t("D56: waGunBarHTML tam 1 aktif düğme gösterir ve ui.waGun'a uyar", (barB.match(/bg-teal-600 text-white/g) || []).length === 1 && bBtn.indexOf("bg-teal-600 text-white") >= 0, barB);
-waAc();
-t("D56: waAc her açılışta #waGunBar'ı yeniden çizer (3 düğme)", (reg.get("waGunBar").innerHTML.match(/data-gun=/g) || []).length === 3);
-/* Gün filtresi: mevcut BİR dersi JSON klonlayıp bugün/yarın/iptal kayıtları EKLER — klon
-   donem ve diğer alanları taşıdığı için aktifDonemKayitlari elemesi sahte veri düşürmez.
-   ui.filtre="tum" → pencere() {start:null,end:null} döner, yani her tarih pencere içindedir. */
-const f56 = ui.filtre, a56 = ui.anchor, d56 = DB.dersler;
-ui.filtre = "tum"; ui.anchor = bugunK;
-const sablon56 = d56[0] || { id: "", dersId: "", saat: "1", ogrenciId: ogr1.id, ogrenciAd: ogr1.ad };
-const klon56 = function (id, tarih, durum) { return Object.assign(JSON.parse(JSON.stringify(sablon56)), { id: id, tarih: tarih, durum: durum }); };
-DB.dersler = d56.concat([klon56("d56-bugun", bugunK, "planli"), klon56("d56-yarin", yarinK, "planli"), klon56("d56-iptal", bugunK, "iptal")]);
-ui.waGun = "bugun";
-const gB = waGunKaynak();
-ui.waGun = "yarin";
-const gY = waGunKaynak();
-DB.dersler = d56; ui.filtre = f56; ui.anchor = a56; ui.waGun = "tumu";
-t("D56: Bugün filtresi yalnız bugünün planlı dersini verir (iptal elenir)", gB.some(function (l) { return l.id === "d56-bugun"; }) && !gB.some(function (l) { return l.id === "d56-iptal"; }) && !gB.some(function (l) { return l.id === "d56-yarin"; }) && gB.every(function (l) { return l.durum !== "iptal" && l.tarih === bugunK; }), gB.map(function (l) { return l.id; }).join(","));
-t("D56: Yarın filtresi yalnız yarının planlı dersini verir (iptal elenir)", gY.some(function (l) { return l.id === "d56-yarin"; }) && !gY.some(function (l) { return l.id === "d56-bugun"; }) && !gY.some(function (l) { return l.id === "d56-iptal"; }) && gY.every(function (l) { return l.durum !== "iptal" && l.tarih === yarinK; }), gY.map(function (l) { return l.id; }).join(","));
 
 console.log(fail ? "\nKIRMIZI TEST VAR" : "\nHEPSİ GEÇTİ");
 process.exit(fail ? 1 : 0);

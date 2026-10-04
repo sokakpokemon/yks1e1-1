@@ -5,7 +5,7 @@ Plan kartı tam bir kez
 İstek havuzu tam bir kez
 Wrapper TAM 2 çocuklu (üst→alt, kaynak sırası) → ["ks-kart-kolon-sol","ks-kart-kolon-sag"]
 Plan kartı ÜST panelde (statik parent) → sol=9454 plan=9510 sag=15312
-İstek havuzu ALT panelde (statik parent) → sag=15312 havuz=15421 kapa=19809
+İstek havuzu ALT panelde (statik parent) → sag=15312 havuz=15421 kapa=19937
 Üst panel ilk (plan üstte)
 Alt panel ikinci (havuz altta)
 Wrapper CSS TEK kolon (grid-template-columns: minmax(0,1fr) tek değer)

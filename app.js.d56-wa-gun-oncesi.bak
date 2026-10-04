@@ -4699,28 +4699,8 @@ function waAliciListeTazele() {
   if (el.insertAdjacentHTML) el.insertAdjacentHTML("afterbegin", waAliciSeciciHTML());
 }
 
-/* ===== D56-WA-GUN-FILTRE: Bugün/Yarın/Tümü alıcı filtresi =====
-   waAc akışı korunur: filtre yalnız waGunKaynak() ile ders kaynağını daraltır;
-   satır üretimi TEK waAliciListeHTML, mesaj ogrenciMesajMetni — D25/D41/D42 dokunulmadı. */
-function waGunKaynak() {
-  var g = ui.waGun || "tumu";
-  if (g === "bugun") return penceredeDersler().filter(function (l) { return l.durum !== "iptal" && l.tarih === todayKey(); });
-  if (g === "yarin") return penceredeDersler().filter(function (l) { return l.durum !== "iptal" && l.tarih === addDaysKey(todayKey(), 1); });
-  return null;
-}
-function waGunBarHTML() {
-  var g = ui.waGun || "tumu";
-  var h = "";
-  [["tumu", "Tümü"], ["bugun", "Bugün"], ["yarin", "Yarın"]].forEach(function (s) {
-    var aktif = g === s[0];
-    h += "<button data-gun=\"" + s[0] + "\" onclick='waGunSec(this.getAttribute(\"data-gun\"))' class=\"" + (aktif ? "bg-teal-600 text-white border-teal-600" : "text-slate-500 border-slate-200 hover:bg-slate-50") + "\">" + s[1] + "</button>";
-  });
-  return h;
-}
-function waGunSec(g) { ui.waGun = g; waAc(); }
-/* ===== /D56-WA-GUN-FILTRE ===== */
 function waAc() {
-  var liste = (waGunKaynak() || penceredeDersler()).filter(function (l) { return l.durum !== "iptal"; });
+  var liste = penceredeDersler().filter(function (l) { return l.durum !== "iptal"; });
   var sayac = {};
   liste.forEach(function (l) {
     /* DONGU-27: grup dersinde sayaç yalnız ana öğrenciye giderdi; artık dersOgrenciIds(l)
@@ -4738,13 +4718,12 @@ function waAc() {
     });
   });
   var dizi = Object.keys(sayac).map(function (k) { return sayac[k]; }).sort(function (a, b) { return b.n - a.n; });
-  $("waAlt").textContent = pencereAdi() + (ui.waGun === "bugun" ? " · Bugün" : (ui.waGun === "yarin" ? " · Yarın" : "")) + " · " + dizi.length + " öğrenci";
+  $("waAlt").textContent = pencereAdi() + " · " + dizi.length + " öğrenci";
   /* WA-ALICI-YAMASI: her açılışta alıcı varsayılan "ogrenci"; D42: satır durumu bu alıcıya göre çizilir. */
   waAliciTipi = "ogrenci";
   waAktifOgrenciId = null;
   waSonDizi = dizi; /* D42-WA-ALICI-TIP: alıcı değişince satırlar bu diziden YENİDEN çizilir (sayaç korunur) */
-  $("waIcerik").innerHTML = waAliciListeHTML(dizi);
-  var __waBar = $("waGunBar"); if (__waBar) __waBar.innerHTML = waGunBarHTML(); /* D42-WA-ALICI-TIP: satır TEK üreticiden + SEÇİLİ ALICIYA göre */
+  $("waIcerik").innerHTML = waAliciListeHTML(dizi); /* D42-WA-ALICI-TIP: satır TEK üreticiden + SEÇİLİ ALICIYA göre */
   /* seçici bar: innerHTML yazımı her açılışta eskiyi temizlediği için yalnız burada TEK kez kurulur
      (duplicate imkânsız); gerçek DOM'da yoksa afterbegin eklenir, mini-DOM stub'larda noop. */
   if (document.getElementById("waIcerik") && document.getElementById("waIcerik").insertAdjacentHTML) {

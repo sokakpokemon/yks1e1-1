@@ -263,7 +263,6 @@ Yedek biçimi (`yedekAl` → `yks-birebir-yedek-YYYY-MM-DD.json`): `{"uygulama":
 - ✅ CHECKPOINT: DÖNGÜ-30-CACHE — app.js CDN Önbelleğini Aşma (?v= Damgası) · ✅ Tamamlandı, `node test.mjs` →  → ayrıntı: CHECKPOINT-ARSIV.md
 
 ---
-- **D56** — WA modal Bugün/Yarın/Tümü alıcı filtresi (waGunKaynak/waGunBarHTML/waGunSec · D25/D41/D42 dokunulmadı) · ks-wa-alici 62→69 · toplam 2599→2606 · app.js 9a88f38c→5c76ba2e · kapı zinciri YEŞİL · publish/görsel kontrol YAPILMADI (renderer yok) · Tam kayıt: CHECKPOINT-ARSIV-2.md
 
 # 📜 SON 5 TUR — TAM KAYIT (JET-TURBO FAZ 0/1/1B/2 · D41+D42 · D39 · D38 · D36-BOS-AD-KILIT)
 
@@ -530,6 +529,13 @@ Yedek biçimi (`yedekAl` → `yks-birebir-yedek-YYYY-MM-DD.json`): `{"uygulama":
 - Commit'i Vly alır · **publish GEREKMEZ** (CHECKPOINT canlıya servis edilmiyor).
 
 ---
+
+# ✅ KAPANIŞ KAYDI: D36-BOS-AD-KILIT KAPANDI
+
+**Tarih:** 28 Eylül 2026 · **Durum:** ✅ Kapandı — publish sonrası canlı görsel doğrulama
+**Bu turda değişen tek dosya:** `CHECKPOINT.md` (uygulama kodu ve testler DEĞİŞMEDİ).
+
+*(Not: bu kayıt HIZ PROTOKOLÜ / JET 2.0 / LOGO KİLİDİ bloğunun hemen ardına, TEK append olarak alındı — içerik birebir.)*
 
 ## 1) KEŞİF — "ad dolu mu" ≠ "anahtar var mı"
 - HAFTALIK: `app.js:3826` `sinifVar = avail.sinif && key in avail.sinif` DOĞRUYDU (anahtar var) ama

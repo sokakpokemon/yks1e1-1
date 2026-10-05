@@ -228,7 +228,7 @@ t("waUrl/waGonder/waSatir/waKopyalaMesaj tanımlı", ["function waUrl(", "functi
 t("D25 saat aralığı KISA_KOD'dan (kaynakta)", appKaynak.includes('kk.b + " - " + kk.e') && !appKaynak.includes('"   👥 "'));
 const suiteSayisi = testKaynak.split('"ks-wa-sablon.mjs"').length - 1;
 t("ks-wa-sablon.mjs test.mjs'te tam 1 kez", suiteSayisi === 1, String(suiteSayisi));
-const suites = (testKaynak.match(/const suites = \[(.*)\];/) || [])[1];
+const suites = (testKaynak.match(/const suites = \[([\s\S]*?)\];/m) || [])[1];
 t("mevcut 34 süit listede korundu", ["ks-harness.mjs", "ks-excel-ui-kontrol.mjs", "ks-kart-kolon.mjs"].every((s) => suites.includes('"' + s + '"')) && (suites.match(/,/g) || []).length >= 33);
 
 console.log(fail ? "\nHATALAR VAR" : "\nHEPSİ GEÇTİ");

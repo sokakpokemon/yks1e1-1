@@ -180,7 +180,7 @@ P.saveDB();
 t("tek localStorage anahtarı yksOto_arsiv_v1", Object.keys(store).every(k => k === "yksOto_arsiv_v1"), JSON.stringify(Object.keys(store)));
 t("D25-SABLON-YAMASI işareti app.js'te", appKaynak.includes("D25-SABLON-YAMASI"));
 t("ks-wa-durum.mjs test.mjs'te tam 1 kez", testKaynak.split('"ks-wa-durum.mjs"').length - 1 === 1);
-const suites = (testKaynak.match(/const suites = \[(.*)\];/) || [])[1];
+const suites = (testKaynak.match(/const suites = \[([\s\S]*?)\];/m) || [])[1];
 t("süit sayısı düşmüyor (≥38)", (suites.match(/,/g) || []).length >= 37);
 
 console.log(fail ? "\nHATALAR VAR" : "\nHEPSİ GEÇTİ");

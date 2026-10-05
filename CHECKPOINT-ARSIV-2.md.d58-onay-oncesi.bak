@@ -160,8 +160,3 @@ not: `CHECKPOINT-ARSIV-NOT.md`) — bu yüzden **D43'ten SONRAKİ** kayıtları 
 - KAPI: hizli-test --tam EXIT 0 · 56 süit / 2621 birebir · TAMLIK ✓ · guard YEŞİL · ek-ders.js 3d2dd38f DEĞİŞMEDİ.
 - DÜRÜST NOT: __kurtarmaDurumu refresh'te tekrar açılır (tasarım tercihi) · D58-4 yedekAl try/catch AÇIK KALDI · elle-vaka-adlari yedekli.
 - AÇIK KALEMLER: (a) D58-4 yedekAl hata bildirimi · (b) D59 ders planlama hızlı ekranı (P1) · (c) Excel içe aktarma önizlemesi (P2) · (d) öğrenci analizi paketi (P3).
-
-
-### CANLI DOĞRULAMA — GÖRSEL ONAY TAMAMLANDI (D58-GORSEL-ONAY-TAMAM)
-- Kullanıcı publish etti (2026-10-05) ve canlı uygulamada görsel kontrol yaptı: TEMİZ → D58 KAPANDI.
-- Dürüst not: görsel doğrulama KULLANICI beyanıdır; asistan bağımsız gözlem yapmadı (ortamda renderer yok).

@@ -90,7 +90,7 @@ not: `CHECKPOINT-ARSIV-NOT.md`) — bu yüzden **D43'ten SONRAKİ** kayıtları 
 
 ## ✅ KAPANIŞ KAYDI: D56 (WA BUGÜN/YARIN FİLTRESİ) KAPANDI
 
-**Tarih:** 2026-10-04 · **Durum:** ✅ Kapandı — kapı zinciri tam yeşil; publish EDİLMEDİ; görsel kontrol KULLANICI TARAFINDAN Preview'da yapıldı ve TEMİZ (bkz. §6).
+**Tarih:** 2026-10-04 · **Durum:** ✅ Kapandı — kapı zinciri tam yeşil; publish EDİLMEDİ, canlı görsel kontrol YAPILAMADI (ortamda renderer yok).
 
 ### 1) KEŞİF (dosya:satır, salt-okuma)
 - app.js: todayKey 203 · addDaysKey 205 · penceredeDersler 1046 · waAliciSatirHTML 4661 · waAliciListeHTML 4681 · waAliciListeTazele 4695 · waAc 4702 · bugunTarih/yarinTarih 3479-3480 (mevcut Bugün/Yarın deseni).
@@ -117,33 +117,26 @@ not: `CHECKPOINT-ARSIV-NOT.md`) — bu yüzden **D43'ten SONRAKİ** kayıtları 
 - Test zinciri (test.mjs/hizli-test/statik/suit-manifest/elle-*) vite.config.ts OKUMUYOR → 2599 kapı sonucu geçerli kaldı. server/hmr bloğu dokunulmadı.
 - Teşhis notu (dürüst): platform build log'u kesildiği için manualChunks'ın asıl hatayı çözüp çözmediği kanıtlanamadı; ölü konfig temizliği olarak kayda geçti.
 
-### 6) CANLI DOĞRULAMA — KULLANICI GÖZÜYLE YAPILDI (Preview)
-- Kullanıcı beyanı (2026-10-04): "Preview'da baktım, görsel kontrol yapıldı."
-  Buna göre #waGunBar bar'ının görünümü, aktif düğme vurgusu ve TIKLAMA akışı
-  (Tümü / Bugün / Yarın → waGunSec) kullanıcı tarafından gözle kontrol EDİLDİ ve TEMİZ
-  bulundu → bu kayıtta AÇIK kalan görsel onay maddesi KAPANDI.
-- publish EDİLMEDİ: kullanıcı kontrolü yalnız PREVIEW (dev) üzerinde yaptığını belirtti;
-  yayın (publish) yapılmadığı bu kayda ÖZENLE yazıldı. Bu turda production build çıktısı
-  alınamadığı için yayın iddiası KANITSIZ olurdu ve yazılmadı.
-- Dürüstlük notu: ortamda renderer YOKTUR; yukarıdaki onay BENİM gözlemim değil,
-  kullanıcının beyanıdır. Kapıların kapsamı DEĞİŞMEDİ — aşağıdaki kapı düzeyi kanıtlar
-  geçerlidir ve tıklama için kalıcı regresyon kapısı hâlâ YOKTUR (bkz. 7-b).
-- Kapı düzeyinde doğrulanan (aynen): 3 buton üretimi, tam 1 aktif düğme, waAc'nin #waGunBar'ı
+### 6) CANLI DOĞRULAMA — YAPILAMADI (renderer yok)
+- Bu turda publish YAPILMADI ve ortamda tarayıcı/renderer BULUNMADI; bar'ın görünümü,
+  aktif vurgu ve waGunSec TIKLAMASI gözle doğrulanmadı. Kapılar yalnız ÜRETİLEN veriyi
+  (HTML metni + filtre kümesi) doğrular; tıklama davranışının kalıcı kapısı YOKTUR.
+- Kapı düzeyinde doğrulanan: 3 buton üretimi, tam 1 aktif düğme, waAc'nin #waGunBar'ı
   yeniden çizmesi, Bugün/Yarın filtrelerinin iptal elemesi ve gün eşitliği.
-<!-- D56-GORSEL-ONAY-TAMAM — yukarıdaki maddeler kapanış kaydının son hâlidir; elle geri almayın. -->
+- Bu turda kullanıcıya 'göründü/düzeldi' DENMEDİ; publish sonrası görsel onay AÇIK kaldı.
 
 ### 7) DÜRÜST NOT
 - (a) elle-vaka-adlari.mjs yedeği ALINMADI (yedek döngüsü dışında elle düzenlendi; değişiklik = dosya sonuna tek D56 push bloğu; geri alma = bloğu silmek). Diğer 5 kapi-dosyasında *.d56-kapi-oncesi.bak VAR.
-- (b) Tıklama (waGunSec) ve bar görünümü KULLANICI TARAFINDAN Preview'da gözle onaylandı (2026-10-04 beyanı — renderer'ım yok, bu benim gözlemim değildir). Buna rağmen tıklama davranışının kalıcı regresyon kapısı hâlâ YOKTUR; kapılar yalnız üretilen veriyi doğrular.
+- (b) Tıklama (waGunSec) ve bar görünümü tarayıcıda DOĞRULANMADI (ortamda renderer yok); bu yüzden kalıcı tıklama kapısı da eklenmedi.
 - (c) bun run build CLI sandbox'ta bloklu → Vite JS API + node node_modules/vite/bin/vite.js ile aynı pipeline doğrulandı.
 - (d) Bugün/Yarın kapıları takvim günü kullanır (tarih kaymasına dayanıklı; dünü değil bugünü filtreler).
 - (e) Bu kayıt betiğinin kendisi düzeltildi: D36H artık TAM SATIR eşleşmesiyle sayılıyor
       (özgün hâli üç geçişten dolayı guard'ı kaçırıp yazma sonrası exit 1 veriyordu) ve
-      yayın/görsel-doğrulama iddiaları gerçeğe çevrildi. Bu kapanış kaydı da AYNI ilkeyle
-      yazıldı: tarih 2026-10-04'te geriye gitmedi, publish iddiası EKLENMEDİ, §6 ile §7
-      birbiriyle çelişmiyor, açık kalemdeki görsel onay maddesi gerçeğe göre kapandı.
+      yayın/görsel-doğrulama iddiaları gerçeğe çevrildi.
 
 ### AÇIK KALEMLER
+- (0) D56 publish sonrası GÖRSEL ONAY — renderer yok; kullanıcı publish edip bar'ı ve
+      tıklama akışını gözle kontrol etmeli.
 - (a) D57 — WA modal telefonsuz öğrenciler toplu listesi (rozet → düzenlemeye atla).
 - (b) Yedek/geri yükleme sertleştirme (P0 — veri kaybı korkusu; yedekAl/yedekOku denetimi).
 - (c) Ders planlama hızlı ekranı (sık kullanılan + son öğrenciler; P1).

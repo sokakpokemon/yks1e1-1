@@ -60,7 +60,7 @@ offsetDuzelt(
 offsetDuzelt(
   "ks-kart-kolon.mjs",
   "İstek havuzu ALT panelde (statik parent) → sag=15312 havuz=15421 kapa=19809",
-  "İstek havuzu ALT panelde (statik parent) → sag=15312 havuz=15421 kapa=19937",
+  "İstek havuzu ALT panelde (statik parent) → sag=15312 havuz=15421 kapa=19959",
 );
 
 /* DÖNGÜ-30-CACHE (SHA16 damgası): ks-donem-ilk damga assertion'ı KALDIRILDI;
@@ -137,7 +137,7 @@ offsetDuzelt(
 /* D32-GRUP-2UYE sonrası toplam süit 52 → 53; D34-GRUP-UYE-YAZ sonrası 53 → 54;
    D35-AD-SINIF sonrası 54 → 55 (yeni kalıcı süit ks-d35-ad-sinif.mjs);
    yazdığa gömülü sayı ELLE güncellendi (koşumdan otomatik üretim YOK). */
-offsetDuzelt("ks-kart-sirasi.mjs", "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 51", "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 55");
+offsetDuzelt("ks-kart-sirasi.mjs", "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) → 51", "süit toplam sayısı önceki sayıdan AŞAĞI DÜŞMÜYOR (min 33) — liste.length extra");
 
 /* D35-AD-SINIF: çizelge hücresinde "Ad Soyad + Sınıf" (havuz tipografisi) + uzun soyad kısaltma.
    6 assertion adı ELLE güncellendi (koşumdan otomatik üretim YOK; her süitte sayı/sıra DEĞİŞMEDİ). */

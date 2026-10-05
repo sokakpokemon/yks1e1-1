@@ -264,6 +264,7 @@ Yedek biçimi (`yedekAl` → `yks-birebir-yedek-YYYY-MM-DD.json`): `{"uygulama":
 
 ---
 - **D56** — WA modal Bugün/Yarın/Tümü alıcı filtresi (waGunKaynak/waGunBarHTML/waGunSec · D25/D41/D42 dokunulmadı) · ks-wa-alici 62→69 · toplam 2599→2606 · app.js 9a88f38c→5c76ba2e · kapı zinciri YEŞİL · publish EDİLMEDİ · görsel kontrol kullanıcı tarafından Preview'da yapıldı, TEMİZ · Tam kayıt: CHECKPOINT-ARSIV-2.md
+- **D58** — Yedek/geri yükleme güvenliği (boot kurtarma + zarf kontrolü + onay hata mesajı) · yeni süit ks-yedek-guvenlik 15 · toplam 2606→2621 · app.js 5c76ba2e→b6cb0485 · 4 süit meta onarımı · Tam kayıt: CHECKPOINT-ARSIV-2.md
 
 # 📜 SON 5 TUR — TAM KAYIT (JET-TURBO FAZ 0/1/1B/2 · D41+D42 · D39 · D38 · D36-BOS-AD-KILIT)
 

@@ -150,3 +150,13 @@ not: `CHECKPOINT-ARSIV-NOT.md`) — bu yüzden **D43'ten SONRAKİ** kayıtları 
 - (d) LOGO ince ayar (askıda) · (e) eski Pazar grup kaydı (opsiyonel).
 
 **Kapı / No-drift:** node hizli-test.mjs --tam EXIT 0 · MANIFEST 55 süit / 2606 · RUNNER 2606/2606 BİREBİR · TAMLIK 48/48 · no-drift app.js 5c76ba2ea685fea9 · ek-ders.js 3d2dd38ff517c64f DEĞİŞMEDİ · damga üç index.html aynı.
+
+## ✅ KAPANIŞ KAYDI: D58 (YEDEK/GÜVENLİK + META ONARIM) KAPANDI
+
+**Durum:** ✅ Kapandı — P0 yedek/geri yükleme güvenliği paketi.
+- UYGULAMA (app.js 5c76ba2e→b6cb048514087835): boot kurtarma IIFE (bozuk LS → LS_KEY_KURTARMA kopya + __kurtarmaDurumu + uyarı modalı, boş kayıt → sessiz seed KORUNDU) · yedekOku asama bayrağı (onay-DOM hatası artık 'Dosya okunamadı' demez) · zarf kontrolü (uygulama/sürüm uyuşmazsa RED; zarfsız eski yedekler geriye-uyumlu) · index.html L286 bayat metin.
+- YENİ SÜİT: ks-yedek-guvenlik.mjs 15 assertion (salt-okuma sözleşme) · txt = ELLE = koşum adları SÜİTTEN üretildi (üç-liste birebir kuralı) · toplam 2606 → 2621 · 56 süit.
+- META ONARIM: ks-wa-sablon + ks-wa-durum çok-satırlı suites regex çökmesi (standalone 49/49 · 38/38) · ks-kart-sirasi #33 ad sabitleme · ks-kart-kolon donmuş offset kapa=19937→19959 (D58 boot IIFE +22, meşru kayma).
+- KAPI: hizli-test --tam EXIT 0 · 56 süit / 2621 birebir · TAMLIK ✓ · guard YEŞİL · ek-ders.js 3d2dd38f DEĞİŞMEDİ.
+- DÜRÜST NOT: __kurtarmaDurumu refresh'te tekrar açılır (tasarım tercihi) · D58-4 yedekAl try/catch AÇIK KALDI · elle-vaka-adlari yedekli.
+- AÇIK KALEMLER: (a) D58-4 yedekAl hata bildirimi · (b) D59 ders planlama hızlı ekranı (P1) · (c) Excel içe aktarma önizlemesi (P2) · (d) öğrenci analizi paketi (P3).

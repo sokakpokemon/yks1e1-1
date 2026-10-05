@@ -1,0 +1,15 @@
+D58 marker TAM 3 bölgede (LS_KEY + boot IIFE + modal)
+LS_KEY_KURTARMA tanımı VAR + değer birebir
+eski boot satırı KALDIRILDI ('loadDB() || seedDB()' literal YOK)
+kurtarma IIFE: kopya LS_KEY_KURTARMA'ya + durum global'i kurulur
+BOŞ kayıt → sessiz seedDB (uyarı YOK — sağlıklı boot davranışı korunur)
+kopyalama BAŞARISIZ olsa bile durum kurulur (kopya-yok dalı)
+uyarı modalı YALNIZ kurtarma durumunda açılır (koşullu)
+modal: indirme aksiyonu + dosya adı + hamVeri alanı
+modal metni: 'silinmedi' güvencesi VAR (panik önleyici)
+asama bayrağı: 'okuma' → 'onay' (yanıltıcı mesaj kökten çözüldü)
+hata toast'u koşullu (onay-DOM hatası 'Dosya okunamadı' DEMEZ)
+zarf kontrolü: uygulama/sürüm uyuşmazsa RED + return
+GERİYE-UYUM: sarmalayıcı açma satırı korundu (zarfsız eski ham yedek hâlâ kabul)
+saveDB tek-setItem sözleşmesi korundu (LS_KEY'e yazan TAM 1 nokta)
+index.html: bayat 'Ayarlar sekmesi' YOK + 'Yedek Al / Yedek Yükle' VAR + damga = app.js SHA16

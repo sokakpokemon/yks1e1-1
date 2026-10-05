@@ -182,8 +182,7 @@ function ksRaporHTML() {
 }
 function ksRaporKapat() { ui.ksRaporKapat = true; renderDersler(); }
 
-var LS_KEY = "yksOto_arsiv_v1"; /* D58-YEDEK-GUVENLIK: bozuk kayıt kurtarma alanı */
-  var LS_KEY_KURTARMA = "yksOto_arsiv_kurtarma_v1";
+var LS_KEY = "yksOto_arsiv_v1";
 
 // ===== SECTION: YARDIMCILAR VE VERİ KATMANI =====
 // ---------- Yardımcılar ----------
@@ -823,42 +822,9 @@ function loadDB() {
   } catch (e) { /* bozuk kayıt -> yeniden kur */ }
   return null;
 }
-/* D58-YEDEK-GUVENLIK: bozuk kayıt sessiz seed'e YOL YOK — kurtar, sonra uyar */
-var DB = (function () {
-  var _d = loadDB();
-  if (_d) return _d;
-  var _raw = '';
-  try { _raw = localStorage.getItem(LS_KEY) || ''; } catch (_e) { _raw = ''; }
-  if (!_raw) return seedDB(); /* boş kurulum — normal yol, uyarı YOK */
-  var _kurtarildi = false;
-  try { localStorage.setItem(LS_KEY_KURTARMA, _raw); _kurtarildi = true; } catch (_e) {}
-  globalThis.__kurtarmaDurumu = { varMi: true, kurtarildi: _kurtarildi, boyut: _raw.length, raw: _raw };
-  return seedDB();
-})();
+var DB = loadDB() || seedDB();
 kimlikleriTamamla(DB); /* KİMLİK-YAMASI: seed/restore sonrası eksik kimlikler ilk açılışta kapanır ve kaydedilir */
-sinifOgrtUyumOnar(DB); sinifOgrtUyumOnar(DB, true);
-
-/* D58-YEDEK-GUVENLIK: bozuk kayıt uyarısı — yalnız kurtarma yolu tetiklendiyse */
-if (globalThis.__kurtarmaDurumu) {
-  var _kd = globalThis.__kurtarmaDurumu;
-  onayAc({ baslik: 'Veri kurtarma uyarısı',
-    metin: 'Kayıtlı veriniz (<b>' + _kd.boyut + ' bayt</b>) okunamadı — hasarlı görünüyor. ' +
-      (_kd.kurtarildi ? 'İçeriği <b>silinmedi</b>: kopyası kurtarma alanına alındı (yksOto_arsiv_kurtarma_v1). ' : 'Kopyalama alanı yazılamadı, ancak veri hâlâ yerinde. ') +
-      'Uygulama şimdilik boş/demo veriyle açıldı. Kurtarma kopyasını dosya olarak indirmek için onaylayın.',
-    onay: 'Kurtarma kopyasını indir', tehlikeli: true },
-    function () {
-      try {
-        var _paket = JSON.stringify({ uygulama: 'YKS Birebir Takip', kurtarma: true, surum: 1, tarih: new Date().toISOString(), hamVeri: _kd.raw });
-        var _b = new Blob([_paket], { type: 'application/json' });
-        var _u = URL.createObjectURL(_b);
-        var _a = document.createElement('a');
-        _a.href = _u; _a.download = 'yks-kurtarma-' + todayKey() + '.json';
-        document.body.appendChild(_a); _a.click(); _a.remove();
-        setTimeout(function () { URL.revokeObjectURL(_u); }, 4000);
-        toast('Kurtarma kopyası indirildi ✓');
-      } catch (e) { toast('Kurtarma kopyası indirilemedi: ' + e.message, 'hata'); }
-    });
-} /* SINIF-OGRT-UYUM-YAMASI + GENISLETME: boot'ta TAM onarım (tüm dönemler) */
+sinifOgrtUyumOnar(DB); sinifOgrtUyumOnar(DB, true); /* SINIF-OGRT-UYUM-YAMASI + GENISLETME: boot'ta TAM onarım (tüm dönemler) */
 
 /* SINIF-OGRT-UYUM-YAMASI: Sınıf programı ↔ öğretmen haftalık program uyumu (tek kaynaklı yazım, idempotent).
    Kural: öğretmenin avail.sinif["G-K"]=sınıfAd kaydı VARSA, aynı G-K o sınıfın aktif dönem
@@ -2843,21 +2809,16 @@ function yedekOku(input) {
   var f = input.files && input.files[0];
   input.value = "";
   if (!f) return;
-
-  var asama = 'okuma';
   var oku = new FileReader();
   oku.onload = function () {
     try {
       var p = JSON.parse(oku.result);
       var v = p.veri && p.veri.dersler ? p.veri : p;
-      if (p.veri && p.veri.dersler && (p.uygulama !== 'YKS Birebir Takip' || p.surum !== 1)) { toast('Bu yedek dosyası bu uygulamaya ait değil veya sürümü desteklenmiyor — yüklenmedi.', 'hata'); return; }
       if (!v || !Array.isArray(v.dersler)) throw new Error("format");
-      asama = 'onay';
       onayAc({
         baslik: "Yedekten veri yüklensin mi?",
         metin: "Dosyadaki arşiv (<b>" + esc(f.name) + "</b>) yüklenecek ve <b>mevcut tüm veriler</b> bununla değiştirilecek. Bu işlem geri alınamaz.",
-        onay: "Evet, Yükle",
-        tehlikeli: true
+        onay: "Evet, Yükle", tehlikeli: true
       }, function () {
         DB = normalize(v);
         ksGec();
@@ -2867,7 +2828,7 @@ function yedekOku(input) {
         toast("Arşiv başarıyla yüklendi ✓ (" + DB.dersler.length + " ders kaydı)");
       });
     } catch (e) {
-      toast(asama === 'okuma' ? "Dosya okunamadı — geçerli bir YKS Birebir Takip yedek dosyası seçin." : "Beklenmeyen bir hata oluştu (dosya okundu, onay adımı başarısız) — sayfayı yenileyip tekrar deneyin.", "hata");
+      toast("Dosya okunamadı — geçerli bir YKS Birebir Takip yedek dosyası seçin.", "hata");
     }
   };
   oku.readAsText(f);

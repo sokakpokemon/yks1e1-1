@@ -283,7 +283,7 @@
   <section id="derslerBolum"></section>
 
   <footer class="no-print text-center text-[11px] text-slate-400 pt-2">
-    <p><i class="fa-solid fa-database mr-1"></i> Bütün öğretmen, öğrenci, istek ve ders arşivi bu bilgisayarın tarayıcısında saklanır — sayfa kapansa da silinmez. <b class="text-slate-500">Sağ üstteki Yedek Al / Yedek Yükle butonları</b> sekmesinden düzenli yedek alın.</p>
+    <p><i class="fa-solid fa-database mr-1"></i> Bütün öğretmen, öğrenci, istek ve ders arşivi bu bilgisayarın tarayıcısında saklanır — sayfa kapansa da silinmez. <b class="text-slate-500">Yedekleme &gt; Ayarlar</b> sekmesinden düzenli yedek alın.</p>
   </footer>
 </main>
 
@@ -348,7 +348,7 @@
 <!-- ============ BİLDİRİM ============ -->
 <div id="toastAlan" class="no-print fixed bottom-5 right-5 z-[60] flex flex-col gap-2 items-end"></div>
 
-<script src="app.js?v=b6cb048514087835"></script>
+<script src="app.js?v=5c76ba2ea685fea9"></script>
 
 <script>
 /* ============ ATLAMALI MENÜ DAVRANIŞI (eklendi — mevcut fonksiyonlara dokunmaz) ============ */

@@ -17,7 +17,7 @@ const appSha = createHash("sha256").update(readFileSync("app.js")).digest("hex")
 
 /* ================= A) Boot kurtarma sözleşmesi ================= */
 console.log("A) Boot kurtarma:");
-t("D58 marker TAM 3 bölgede (LS_KEY + boot IIFE + modal)", (appKaynak.match(/D58-YEDEK-GUVENLIK/g) || []).length === 3, String((appKaynak.match(/D58-YEDEK-GUVENLIK/g) || []).length));
+t("D58: boot kurtarma marker 3 bölgede (LS_KEY + boot IIFE + modal)", (appKaynak.match(/D58-YEDEK-GUVENLIK/g) || []).length === 3, String((appKaynak.match(/D58-YEDEK-GUVENLIK/g) || []).length));
 t("LS_KEY_KURTARMA tanımı VAR + değer birebir", appKaynak.includes('var LS_KEY_KURTARMA = "yksOto_arsiv_kurtarma_v1";'));
 t("eski boot satırı KALDIRILDI ('loadDB() || seedDB()' literal YOK)", !appKaynak.includes("var DB = loadDB() || seedDB();"));
 t("kurtarma IIFE: kopya LS_KEY_KURTARMA'ya + durum global'i kurulur", appKaynak.includes("localStorage.setItem(LS_KEY_KURTARMA, _raw)") && appKaynak.includes("globalThis.__kurtarmaDurumu = { varMi: true, kurtarildi: _kurtarildi, boyut: _raw.length, raw: _raw };"));

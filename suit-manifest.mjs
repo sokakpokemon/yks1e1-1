@@ -5,6 +5,7 @@
    Marker yoksa / duplicate ise süit FAIL sayılır. Catch-only assert'ler normal sayıma girmez. */
 
 export const manifest = {
+  "ks-yedek-guvenlik.mjs": 15, /* D58-YEDEK-GUVENLIK: 15 assertion — manifest beklenen sayısı (elle ile tutarlı) */
   "ks-harness.mjs": 34,
   "ks-test-render.mjs": 14,
   "ks-durum-fn.mjs": 20,

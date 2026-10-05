@@ -12,6 +12,25 @@ import { elleVakaAdlari as taban } from "./elle-vaka-adlari-base.mjs";
 
 export const elleVakaAdlari = structuredClone(taban);
 
+/* D58-YEDEK-GUVENLIK: ks-yedek-guvenlik.mjs 15 assertion (ELLE yazıldı — koşumdan türetilmedi) */
+elleVakaAdlari["ks-yedek-guvenlik.mjs"] = [
+  "D58: boot kurtarma marker 3 bölgede (LS_KEY + boot IIFE + modal)",
+  "D58: LS_KEY_KURTARMA tanımı VAR + değer birebir (yksOto_arsiv_kurtarma_v1)",
+  "D58: eski boot satırı KALDIRILDI (var DB = loadDB() || seedDB() literal YOK)",
+  "D58: kurtarma IIFE kopya LS_KEY_KURTARMA + durum global (kurtarildi, boyut, raw)",
+  "D58: boş kayıt sessiz seedDB (uyarı YOK — sağlıklı boot korunur)",
+  "D58: kopyalama başarısız olsa bile durum global kurulur (catch boş => durum kurulur)",
+  "D58: uyarı modalı yalnız kurtarma durumunda açılır (koşullu if (globalThis.__kurtarmaDurumu))",
+  "D58: modal indirme aksiyonu + yks-kurtarma-<todayKey>.json + hamVeri: _kd.raw",
+  "D58: modal metni silinmedi güvencesi (İçeriği <b>silinmedi</b>)",
+  "D58: yedekOku asama bayrağı (okuma → onay); onay-DOM hatası yanlış mesaj demez",
+  "D58: hata toast koşullu (asama === okuma mi?)",
+  "D58: zarf kontrolü RED + return (uygulama !== YKS Birebir Takip || surum !== 1)",
+  "D58: geriye-uyum: sarmalayıcı açma var v = p.veri && p.veri.dersler ? p.veri : p korundu",
+  "D58: saveDB tek-setItem sözleşmesi korundu (LS_KEY, JSON.stringify(DB)) TAM 1",
+  "D58: index.html bayat Ayarlar sekmesi gibi bir şey YOK + Yedek Al / Yedek Yükle + damga=SHA16",
+];
+
 function offsetDuzelt(suit, eski, yeni) {
   const liste = elleVakaAdlari[suit];
   if (!Array.isArray(liste)) throw new Error("D30-CACHE offset düzeltmesi: süit yok: " + suit);

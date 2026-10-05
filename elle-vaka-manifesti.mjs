@@ -6,6 +6,7 @@
    Elle fark girişleri: DÖNGÜ-8'de eklendi: birebir +1 (#16), d1 +1 (#14),
    ekders +1 (#41), kart-kolon +1 (#45), etiket +3 (#6/#10/#12), tasima +1 (#56). */
 export const elleManifest = {
+  "ks-yedek-guvenlik.mjs": 15, /* D58-YEDEK-GUVENLIK: 15 assertion (ELLE yazıldı, suit-manifest da 15 ile tutarlı) */
   "ks-harness.mjs": 34,
   "ks-test-render.mjs": 14,
   "ks-durum-fn.mjs": 20,

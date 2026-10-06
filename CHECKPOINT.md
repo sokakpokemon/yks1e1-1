@@ -1162,3 +1162,11 @@ L4224 | ## Uygulama (yalnız index.html + test pin/offset dosyaları) | ACIKCA-K
 L4235 | ## Kapılar (tek koşu) | ACIKCA-KAPSAM-DISI
 L4241 | ## Kalıcı kural + sonraki adım | ACIKCA-KAPSAM-DISI
 L4245 | ## Kalan Risk | ACIKCA-KAPSAM-DISI
+
+## D59-OGRENCI-SLOT-KURALI — KAPANIS (gorsel onay temiz)
+- app.js SHA16: 51878050ec5bd60f
+- Fix 1: ogrenci ayni gun+saatte tek ogretmen (ana + grup uyeleri); 'Yoksay' bunu gecemez
+- Fix 2: yeni grup dersinde panel kosulsuz bos acilir
+- test uyumu: ks-istekten-grup.mjs, ks-grup-istegi.mjs
+- --tam: TAM_EXIT=0 · 56 suit · 2621/2621 birebir
+- Gorsel kontrol: KULLANICI ONAYI TEMIZ

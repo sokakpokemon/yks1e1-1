@@ -165,3 +165,11 @@ not: `CHECKPOINT-ARSIV-NOT.md`) — bu yüzden **D43'ten SONRAKİ** kayıtları 
 ### CANLI DOĞRULAMA — GÖRSEL ONAY TAMAMLANDI (D58-GORSEL-ONAY-TAMAM)
 - Kullanıcı publish etti (2026-10-05) ve canlı uygulamada görsel kontrol yaptı: TEMİZ → D58 KAPANDI.
 - Dürüst not: görsel doğrulama KULLANICI beyanıdır; asistan bağımsız gözlem yapmadı (ortamda renderer yok).
+
+## D59-OGRENCI-SLOT-KURALI — KAPANIS (gorsel onay temiz)
+- app.js SHA16: 51878050ec5bd60f
+- Fix 1: ogrenci ayni gun+saatte tek ogretmen (ana + grup uyeleri); 'Yoksay' bunu gecemez
+- Fix 2: yeni grup dersinde panel kosulsuz bos acilir
+- test uyumu: ks-istekten-grup.mjs, ks-grup-istegi.mjs
+- --tam: TAM_EXIT=0 · 56 suit · 2621/2621 birebir
+- Gorsel kontrol: KULLANICI ONAYI TEMIZ

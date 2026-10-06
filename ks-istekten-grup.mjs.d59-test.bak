@@ -148,8 +148,6 @@ t("tekli kayıt oluştu", DB.dersler.length === nOnce3 + 1);
 t("ogrenciIds YAZILMAZ (birebir)", tekKayit && !("ogrenciIds" in tekKayit));
 t("ogrenciId = Zeynep", tekKayit && tekKayit.ogrenciId === zeynep.id);
 t("istek durumu planlandı (tekli dal)", r2.durum === "planlandi");
-/* D59-TEST-UYUM: ayni ogrenci-slot cift kaydi engellenir; tekli akisi izole et */
-DB.dersler = DB.dersler.filter(l => l !== tekKayit);
 const nOnce4 = DB.dersler.length;
 grupPanelSec(zeynep.id); /* 1 ek — grup değil */
 reg["f-ogrenci"].value = "Zeynep Kaya"; reg["f-ders"].value = "mat"; reg["f-ogretmen"].value = "TAHSİN ASLAN";

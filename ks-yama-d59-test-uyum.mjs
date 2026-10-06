@@ -16,7 +16,7 @@ function yama(dosya, esk, yen) {
   console.log("  + " + dosya);
 }
 
-yama("ks-istekten_grup.mjs",
+yama("ks-istekten-grup.mjs",
   "const nOnce4 = DB.dersler.length;",
   "/* " + MARK + ": ayni ogrenci-slot cift kaydi engellenir; tekli akisi izole et */\n" +
   "DB.dersler = DB.dersler.filter(l => l !== tekKayit);\n" +

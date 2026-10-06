@@ -217,8 +217,6 @@ formaAktar("gi-tekli");
 t("tekli istekte seçim BOŞ kalır (eski davranış)", Array.isArray(ui.ekOgrenciIds) && ui.ekOgrenciIds.length === 0 && ui.panelSecim.acik === false);
 reg["f-ogrenci"].value = "Zeynep Kaya"; reg["f-ders"].value = "mat"; reg["f-konu"].value = "Paragraf";
 reg["f-ogretmen"].value = "TAHSİN ASLAN"; reg["f-tarih"].value = gelecekPzt; reg["f-saat"].value = "15:30"; reg["f-yoksay"].checked = true;
-/* D59-TEST-UYUM: test-8 grup kaydi slotu tutuyor; tekli akisi izole et */
-DB.dersler = DB.dersler.filter(l => l !== ders);
 const nOnce3 = DB.dersler.length;
 planla();
 const tek = DB.dersler[nOnce3];

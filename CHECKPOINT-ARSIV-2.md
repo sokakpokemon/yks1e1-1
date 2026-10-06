@@ -189,3 +189,4 @@ not: `CHECKPOINT-ARSIV-NOT.md`) — bu yüzden **D43'ten SONRAKİ** kayıtları 
 - `vite.config.ts` closeBundle: aynı atomik yardımcı + kopya sonrası dist doğrulaması (var/size>0/sha256) → uyuşmazsa build KIRMIZI
 - Kök neden: emptyOutDir=true + non-atomik copyFileSync, build yarıda kesilince 2. sıradaki ek-ders.js 0 bayt kalıyordu
 - Doğrulama: tsc 0 · copy-static 0 · guard 0 · 0-bayt+tmp taraması temiz
+- Gercek build (vite build / publish) DOGRULANDI: build yesil · closeBundle dogrulamasi gecti · tarama temiz · guard yesil · 2026-10-06 (D62-BUILD-DOGRULANDI)

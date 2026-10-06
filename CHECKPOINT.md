@@ -1170,3 +1170,12 @@ L4245 | ## Kalan Risk | ACIKCA-KAPSAM-DISI
 - test uyumu: ks-istekten-grup.mjs, ks-grup-istegi.mjs
 - --tam: TAM_EXIT=0 · 56 suit · 2621/2621 birebir
 - Gorsel kontrol: KULLANICI ONAYI TEMIZ
+
+## D61-VELI-TEL + D61-DIS-LISTE — KAPANIS (gorsel onay temiz)
+- app.js SHA16: b88e61c451cb3bb2
+- Fix 1: ogrenci formlarinda tek 'Veli Telefonu' (o-veli-tel / d-veli-tel); modelde veliTel, legacy anneTel/babaTel korunur
+- Fix 2: Yonetim -> Dis Liste Yukle (Ogrenciler): CSV onizleme (Yeni/Guncellenecek/Atlanacak/Hatali) -> atomik Ice Aktar -> Geri Al
+- Yeni suit: ks-dis-liste 38 · toplam 57 suit / 2678
+- --tam: TAM_EXIT=0 · 2678/2678 birebir · TAMLIK 48/48
+- guard: GUARD_EXIT=0
+- Gorsel kontrol: KULLANICI ONAYI TEMIZ

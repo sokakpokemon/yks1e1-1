@@ -62,9 +62,9 @@ D42: tazeleme ÇİFT SATIR üretmez (satır sayısı sabit)
 D42: waGonder çözücü yolu korunur (!a.varMi → toast; fallback yok)
 D56: index.html'de waGunBar kapsayıcısı tam 1 kez (tek üretici)
 D56: waGunKaynak 'tumu' seçiminde null döner (pencere genişletilmez)
-D56: waGunBarHTML tam 3 seçenek üretir (Tümü/Bugün/Yarın)
-D56: waGunBarHTML tam 1 aktif düğme gösterir ve ui.waGun'a uyar
-D56: waAc her açılışta #waGunBar'ı yeniden çizer (3 düğme)
+D56: waGunBarHTML Tümü + varsa tarihli pill'ler üretir ve Tümü veriliyor
+D56: ui.waGun='tumu' iken Tümü aktif gösterilir
+D56: ui.waGun='bugun' iken uygun tarihli secici aktif (bg-teal-600 text-white) gösterilir
+D56: waAc her açılışta #waGunBar'ı yeniden çizer (en az Tümü)
 D56: Bugün filtresi yalnız bugünün planlı dersini verir (iptal elenir)
 D56: Yarın filtresi yalnız yarının planlı dersini verir (iptal elenir)
-D60B: waGunBarHTML bugun/yarin tarihsel etiket aktivasyonu geçerli

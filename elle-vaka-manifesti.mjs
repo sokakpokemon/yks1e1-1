@@ -62,4 +62,5 @@ export const elleManifest = {
   "ks-d32-grup-birebir-e2e.mjs": 20, /* D32-GRUP-2UYE: elle sayım (gerçek form akışı + eşik regresyonu) */
   "ks-grup-uye-yaz.mjs": 49, /* D34-GRUP-UYE-YAZ: elle sayım (TEK KAPI invariant: 4 yazım yolu + düzenleme koruması + havuz editörü + WA) · D37-HUCRE-GRUP +6 (havuz kartı DOM yerleşimi: TEK dış grid hücresi) · D38-UYE-BUTON-TOGGLE +5 (buton aç/kapa: "Kapat" · aynı buton kapatır · TEK açık editör) · D39-UYE-ARAMA +13 (editörde öğrenci arama: NFC+tr-TR normalize · seçili üye filtre dışında da görünür/İŞARETLİ · odak korunur) */
   "ks-d35-ad-sinif.mjs": 26, /* D35-AD-SINIF + RİSK: elle sayım (çizelge hücresi ad+sınıf · uzun soyad kısaltma · nowrap kapsamı · dar hücre fixture · boş sınıf hücre/chip · etki sınırı) */
+  "ks-dis-liste.mjs": 38, /* D61-DIS-LISTE: elle sayım (ayraç otomatik · başlık normalizasyonu · zorunlu kolon dosya hatası · satır düzeyi boş Ad · dört sayaç · boş hücre ezmez · telefon aynen · sinifProg anahtarı açılmaz · Geri Al birebir · idempotent bölüm · disListeTetik) */
 };

@@ -3406,7 +3406,7 @@ function grupPanelAnaDegisti() {
   if (grupPanelBaglami() === "havuz") { if (ui.panelSecim) ui.panelSecim.anaId = ui.havuzAnaId || null; return ui.havuzAnaId || null; }
   var ana = grupAnaOgrenciId();
   var eski = ui.panelSecim ? ui.panelSecim.anaId : null;
-  if ((ui.editId || ui.aktifIstekId) && eski && eski !== ana && DB.ogrenciler.some(function (x) { return x.id === eski; })) {
+  if (eski && eski !== ana && DB.ogrenciler.some(function (x) { return x.id === eski; })) {
     if (!Array.isArray(ui.ekOgrenciIds)) ui.ekOgrenciIds = [];
     if (ui.ekOgrenciIds.indexOf(eski) === -1) ui.ekOgrenciIds.push(eski);
   }
@@ -3556,44 +3556,22 @@ function temizleForm() {
   $("f-yoksay").checked = false;
   $("cakismaUyari").classList.add("hidden");
   ui.uyeDegisti = false;
-  /* D59-GRUP-BOS: yeni ders/iptal sonrasi grup paneli KOSULSUZ bosalir — onceki/ana ogrenci secili kalmaz */
-  ui.ekOgrenciIds = [];
-  ui.grupPanelSira = [];
-  ui.havuzAnaId = null;
-  ui.grupPanelBaglam = "plan";
-  ui.panelSecim = { acik: false, arama: "", sinif: "", anaId: null };
-  renderFormDestek();
+  var panelKirli = ui.panelSecim && (ui.panelSecim.acik || ui.panelSecim.arama || ui.panelSecim.sinif);
+  if ((ui.ekOgrenciIds && ui.ekOgrenciIds.length) || panelKirli) {
+    ui.ekOgrenciIds = [];
+    ui.panelSecim = { acik: false, arama: "", sinif: "" };
+    renderFormDestek();
+  }
 }
-function hataKart(liste, sert) {
+function hataKart(liste) {
   $("cakismaUyari").classList.remove("hidden");
   $("cakismaUyari").innerHTML =
     '<div class="flex items-start gap-3.5 bg-rose-50 border border-rose-200 rounded-2xl px-4 py-3.5 belir">' +
     '<span class="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center shrink-0 mt-0.5"><i class="fa-solid fa-triangle-exclamation"></i></span>' +
     '<div class="flex-1"><b class="text-[13px] text-rose-700 block">Çakışma tespit edildi — ders kaydedilmedi</b>' +
     '<ul class="text-[12.5px] text-rose-600/90 mt-1.5 space-y-1 list-disc list-inside">' + liste.map(function (m) { return "<li>" + m + "</li>"; }).join("") + "</ul>" +
-    (sert ? '<p class="text-[11px] text-rose-400 mt-2">Bu bir ogrenci cakismasidir — <b>yoksayilamaz</b>. Ders kaydedilmedi.</p>' : '<p class="text-[11px] text-rose-400 mt-2">Gerçekten planlamak istiyorsanız <b>“Çakışmayı Yoksay / Ekstra Kontenjan”</b> kutusunu işaretleyip tekrar kaydedin.</p>') + '</div></div>';
+    '<p class="text-[11px] text-rose-400 mt-2">Gerçekten planlamak istiyorsanız <b>“Çakışmayı Yoksay / Ekstra Kontenjan”</b> kutusunu işaretleyip tekrar kaydedin.</p></div></div>';
   $("cakismaUyari").scrollIntoView({ behavior: "smooth", block: "nearest" });
-}
-/* D59-OGRENCI-SLOT-KURALI: ayni tarih+saat kodunda bir ogrenci (ana + grup uyeleri) en fazla 1 aktif derste olur. Cakismayi Yoksay bunu GECEMEZ. */
-function ogrenciSlotCakismasiBul(adet, katilimcilar) {
-  var saatKod = ksKodOf(adet.saat);
-  var idler = (Array.isArray(katilimcilar) ? katilimcilar : []).filter(function (v, i, a) {
-    return v != null && v !== "" && a.indexOf(v) === i;
-  });
-  var uyari = [];
-  idler.forEach(function (oid) {
-    var o = DB.ogrenciler.find(function (x) { return x.id === oid; });
-    if (!o) return;
-    var mevcut = DB.dersler.find(function (l) {
-      return l.id !== (adet.id || "") && l.tarih === adet.tarih &&
-        ksKodOf(l.saat) === saatKod && l.durum !== "iptal" &&
-        dersOgrenciIds(l).indexOf(oid) >= 0;
-    });
-    if (mevcut) {
-      uyari.push("<b>" + esc(gorselAd(o.ad)) + "</b> bu saatte (" + GUN_KISA[dowIdx(adet.tarih)] + " " + saatEtiket(adet.saat) + ") zaten <b>" + esc(gorselAd(mevcut.ogretmenAd || "?")) + "</b> ogretmeniyle planli. Bir ogrenci ayni saatte yalniz bir ogretmenden ders alabilir.");
-    }
-  });
-  return uyari;
 }
 function duzeltmeBul(adet, yokSay, grupOgrenciIds) {
   var saatKod = ksKodOf(adet.saat);
@@ -3710,8 +3688,6 @@ function planla() {
     t.avail.sinif = _sObj;
   }
   if (!t.avail.sinif || typeof t.avail.sinif !== "object") t.avail.sinif = {};
-  var sertCakisma = ogrenciSlotCakismasiBul({ tarih: tarih, saat: saat, id: ui.editId || "" }, [o.id].concat(grupOgrenciIds));
-  if (sertCakisma.length) { hataKart(sertCakisma, true); return; }
   var cakisma = duzeltmeBul({ ogrenciId: o.id, ogretmenId: t.id, tarih: tarih, saat: saat, id: ui.editId || "" }, yoksay, grupModu ? grupOgrenciIds : null);
   if (cakisma.length && !yoksay) { hataKart(cakisma); return; }
   $("cakismaUyari").classList.add("hidden");

@@ -6,11 +6,18 @@
 
    D41: kök → dist/ **ve** public/ senkronlanır (aynı 8 varlık). Böylece
    app.js güncellenince public/app.js bayat kalmaz; publish-guard'ın
-   "public kökle senkron" kontrolü yanlış alarm üretmez. */
-import { copyFileSync, mkdirSync, statSync } from "node:fs";
+   "public kökle senkron" kontrolü yanlış alarm üretmez.
+
+   D62: kopyalama ATOMİK. Eski copyFileSync hedefi yerinde açıp yazıdığı
+   için (ağ/pan/zaman aşımı durumunda) 0-bayt/kısmi hedef kalabiliyordu —
+   dist/ek-ders.js 0 BAYT olayının kök nedeni. Artık: hedefle AYNI dizinde
+   benzersiz geçici dosya → writeFileSync → boyut+sha256 doğrula →
+   renameSync (tek atomik adım). Kaynak 0 bayt ya da doğrulama başarısızsa
+   geçici silinir, MEVCUT HEDEF KORUNUR, script throw/exit ile kırmızı düşer. */
+import { mkdirSync, statSync, writeFileSync, renameSync, rmSync, readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
-import { join, dirname } from "node:path";
+import { join, dirname, basename } from "node:path";
 
 const DOSYALAR = [
   "app.js",
@@ -23,15 +30,37 @@ const DOSYALAR = [
   "vendor/fonts/montserrat-900-italic.woff2",
 ];
 
-const sha = async (p) =>
-  createHash("sha256").update(new Uint8Array(await readFile(p))).digest("hex");
+const shaBuf = (b) => createHash("sha256").update(b).digest("hex");
+const sha = async (p) => shaBuf(new Uint8Array(await readFile(p)));
+
+/* ATOMİK KOPYA: geçici dosya hedefle AYNI dizinde (aynı FSY içinde rename
+   atomiktir). Yazı → DOĞRULA → RENAME sırası: hedefe asla yarı
+   yazılmış/0-bayt içerik ulaşmaz. */
+const kopyalaAtomik = (kaynak, hedef) => {
+  const icerik = readFileSync(kaynak); // Buffer
+  if (icerik.length === 0) {
+    throw new Error("0 BAYT KAYNAK REDDEDİLDİ: " + kaynak + " → " + hedef + " (mevcut hedef korundu)");
+  }
+  const gecici = join(dirname(hedef), "." + basename(hedef) + ".tmp-" + process.pid);
+  try {
+    writeFileSync(gecici, icerik);
+    const geri = readFileSync(gecici);
+    if (geri.length !== icerik.length || shaBuf(geri) !== shaBuf(icerik)) {
+      throw new Error("DOĞRULAMA BAŞARISIZ: " + gecici + " → " + hedef);
+    }
+    renameSync(gecici, hedef); // atomik: hedef yalnız bu noktada değişir
+  } catch (e) {
+    rmSync(gecici, { force: true }); // geçiciyi sil, mevcut hedefi KORU
+    throw e;
+  }
+};
 
 const HEDEFLER = ["dist", "public"]; /* D41: kök → dist + public senkron */
 
 for (const hedef of HEDEFLER) {
   for (const dosya of DOSYALAR) {
-    mkdirSync(dirname(join(hedef, dosya)), { recursive: true });
-    copyFileSync(dosya, join(hedef, dosya));
+    mkdirSync(join(hedef, dirname(dosya)), { recursive: true });
+    kopyalaAtomik(dosya, join(hedef, dosya));
   }
 }
 
@@ -46,4 +75,4 @@ for (const dosya of DOSYALAR) {
   }
 }
 if (!tamam) process.exit(1);
-console.log("copy-static: " + DOSYALAR.length + " dosya × " + HEDEFLER.length + " hedef (dist+public) byte-birebir kopyalandı.");
+console.log("copy-static: " + DOSYALAR.length + " dosya × " + HEDEFLER.length + " hedef (dist+public) ATOMİK kopyalandı (yazı→doğrula→rename).");

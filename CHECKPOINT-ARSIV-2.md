@@ -182,3 +182,10 @@ not: `CHECKPOINT-ARSIV-NOT.md`) — bu yüzden **D43'ten SONRAKİ** kayıtları 
 - --tam: TAM_EXIT=0 · 2678/2678 birebir · TAMLIK 48/48
 - guard: GUARD_EXIT=0
 - Gorsel kontrol: KULLANICI ONAYI TEMIZ
+
+## D62-ATOMIK-KOPYA — KAPANIS (dist 0-bayt kök neden kapatıldı)
+- app.js SHA16: b88e61c451cb3bb2 (app.js değişmedi)
+- `scripts/copy-static.mjs`: hedefle aynı dizinde .tmp-PID → yaz → boyut+sha256 doğrula → renameSync; başarısızlıkta hedef korunur + throw
+- `vite.config.ts` closeBundle: aynı atomik yardımcı + kopya sonrası dist doğrulaması (var/size>0/sha256) → uyuşmazsa build KIRMIZI
+- Kök neden: emptyOutDir=true + non-atomik copyFileSync, build yarıda kesilince 2. sıradaki ek-ders.js 0 bayt kalıyordu
+- Doğrulama: tsc 0 · copy-static 0 · guard 0 · 0-bayt+tmp taraması temiz

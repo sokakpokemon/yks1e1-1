@@ -46,7 +46,7 @@ export const manifest = {
  /* D41-TELEFON +7 → 56 (telefonsuz satır rozeti + Gönder disabled); D42-WA-ALICI-TIP +6 → 62 (satır durumu SEÇİLİ ALICIYA göre + liste tazeleme); D56-WA-GUN-FILTRE +7 → 69 (waGunKaynak gün filtresi + waGunBar üretimi/çizimi) */
   "ks-excel-k-import.mjs": 23,
   "ks-kadro-kolon.mjs": 62,
-  "ks-kadro-telefon3.mjs": 57,
+  "ks-kadro-telefon3.mjs": 75, /* D61-VELI-TEL: 57 → 75 (tek canonical veli telefonu modeli: veliTel migration + tek "Veli Telefonu" formu + legacy ayna + WA veli çözücüsü + round-trip/boş-kolon/geriye-uyum assert'leri) */
   "ks-ders-tasi.mjs": 90,
   "ks-gunluk-ders-tasi.mjs": 121, /* D36-ANA-SATIR +6 → 120; D36-BOS-AD-KILIT +1 → 121 (haftalık boş ad → kilitli hücre) */
   "ks-ders-karti.mjs": 121, /* D47-LOGO-HIZA: 113 + 2 (alt yazı marka kutusunun DIŞINDA/denge + çizgi görünürlük) · D49-LOGO-FOOTER: 115 + 3 (alt yazı 2px ölçek kapısı + footer 6 blok/birebir + imza ayraç-harf aralığı) · D52-SVG-HEIGHT: 118 + 1 (height:auto kaldırıldı → açık ölçü: kart 8.4px / master 32px) · D53-SVG-RASTER: 119 + 2 (onclone klonunda YALNIZ #fk-logo → standalone data-URI img · raster SVG'de konum/height:auto YOK + açık width/height) */

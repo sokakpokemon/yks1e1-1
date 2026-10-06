@@ -47,7 +47,7 @@ export const elleManifest = {
   "ks-wa-alici.mjs": 70, /* D41-TELEFON 49 → 56; D42-WA-ALICI-TIP 56 → 62 (elle sayım: seçili alıcıya göre satır durumu + alıcı değişince liste tazeleme); D56-WA-GUN-FILTRE 62 → 69 (elle sayım: gün filtresi + gün barı üretimi/çizimi); D60B 69 → 70 (dinamik gün pill'leri + tarihsel etiket aktivasyonu — elle sayım koşumla birebir) */
   "ks-excel-k-import.mjs": 23,
   "ks-kadro-kolon.mjs": 62,
-  "ks-kadro-telefon3.mjs": 57,
+  "ks-kadro-telefon3.mjs": 75, /* D61-VELI-TEL: elle sayım 57 → 75 (veliTel canonical modeli; donmuş liste + koşum ile birebir) */
   "ks-ders-tasi.mjs": 90,
   "ks-gunluk-ders-tasi.mjs": 121, /* D36-BOS-AD-KILIT: elle sayım (120 → 121) */
   "ks-ders-karti.mjs": 121, /* D33-LOGO-KİLİDİ: 109 + 1 yeni master-kaynak kapısı (logo-master/formul-kurs-logo.html) · D46-KART-EMOJI: 110 + 3 (bento emoji öneki + etiket metni korundu + SVG yerine geçmedi) · D47-LOGO-HIZA: 113 + 2 (alt yazı marka kutusunun DIŞINDA/denge + çizgi görünürlük) · D49-LOGO-FOOTER: 115 + 3 (alt yazı 2px ölçek kapısı + footer 6 blok/birebir + imza ayraç-harf aralığı) · D52-SVG-HEIGHT: 118 + 1 (height:auto kaldırıldı → açık ölçü: kart 8.4px / master 32px) · D53-SVG-RASTER: 119 + 2 (onclone klonunda YALNIZ #fk-logo → standalone data-URI img · raster SVG'de konum/height:auto YOK + açık width/height) */

@@ -4616,7 +4616,10 @@ function ogrenciMesajMetni(ogrenciId) {
   /* DONGU-27: ek grup üyesi için grup dersi (l.ogrenciId = ana) bu filtrede görünmüyordu;
      dersOgrenciIds(l) ana + tüm ek üyeleri döner → her üyenin mesajında grup dersi VAR.
      Tekli derste [ogrenciId] döner → eski eşleşme birebir korunur. İptal filtresi aynen. */
+  /* D60-WA-GUN-DATES: WA modalinda gun seciliyse mesaj da yalniz o gunun derslerini icerir. */
+  var _waGunSec = (typeof waGunKaynak === "function") ? waGunKaynak() : null;
   var liste = penceredeDersler().filter(function (l) {
+    if (_waGunSec && _waGunSec.indexOf(l) === -1) return false;
     return (dersOgrenciIds(l).indexOf(o.id) !== -1 || l.ogrenciAd === o.ad) && l.durum !== "iptal";
   });
   if (!liste.length) return null;
@@ -4668,14 +4671,15 @@ var waAktifOgrenciId = null;
 var waAliciTipi = "ogrenci";
 function waAliciBilgisi(ogrenciId, aliciTipi) {
   var o = DB.ogrenciler.find(function (x) { return x.id === ogrenciId; });
-  var tip = aliciTipi === "anne" || aliciTipi === "baba" ? aliciTipi : "ogrenci";
-  var etiket = tip === "anne" ? "Anne" : tip === "baba" ? "Baba" : "Öğrenci";
-  var telefon = o ? (tip === "anne" ? o.anneTel : tip === "baba" ? o.babaTel : o.tel) : "";
+  /* D60-ALICI-VELI: veli → anne veya baba telefonu (ilk dolu); anne/baba geriye-uyumlu korunur. */
+  var tip = aliciTipi === "anne" || aliciTipi === "baba" || aliciTipi === "veli" ? aliciTipi : "ogrenci";
+  var etiket = tip === "anne" ? "Anne" : tip === "baba" ? "Baba" : tip === "veli" ? "Veli" : "Öğrenci";
+  var telefon = o ? (tip === "veli" ? (o.anneTel || o.babaTel || "") : (tip === "anne" ? o.anneTel : tip === "baba" ? o.babaTel : o.tel)) : "";
   if (aliciTipi === "ogretmen") { var t = DB.ogretmenler.find(function (x) { return x.id === ogrenciId; }); return { ogrenci: o || null, tip: "ogretmen", etiket: "Öğretmen", telefon: t && t.tel != null ? String(t.tel) : "", varMi: !!(t && t.tel) }; }
   return { ogrenci: o || null, tip: tip, etiket: etiket, telefon: telefon == null ? "" : String(telefon), varMi: !!(o && telefon) };
 }
 function waAliciDegistir(tip) {
-  waAliciTipi = (tip === "anne" || tip === "baba") ? tip : "ogrenci";
+  waAliciTipi = (tip === "anne" || tip === "baba" || tip === "veli") ? tip : "ogrenci";
   waAliciListeTazele(); /* D42-WA-ALICI-TIP: rozet + Gönder durumu ANINDA seçili alıcıya göre güncellenir */
   waAliciPanelGuncelle();
   if (waAktifOgrenciId) waOnizle(waAktifOgrenciId);
@@ -4702,7 +4706,7 @@ function waAliciSeciciHTML() {
   return '<div class="flex flex-wrap items-center gap-2 px-3 pt-3" id="waAliciBar">' +
     '<label class="text-[10.5px] font-extrabold uppercase tracking-wide text-slate-400 whitespace-nowrap"><i class="fa-solid fa-address-book mr-1"></i>Alıcı</label>' +
     '<select id="waAlici" onchange="waAliciDegistir(this.value)" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[12px] font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-green-400/40">' +
-    '<option value="ogrenci">Öğrenci</option><option value="anne">Anne</option><option value="baba">Baba</option></select>' +
+    '<option value="ogrenci">Öğrenci</option><option value="veli">Veli</option></select>' + /* D60-ALICI-VELI */
     '<span id="waAliciBilgi" class="text-[11.5px] inline-flex items-center gap-1.5"></span>' +
     '<span id="waAliciUyari" class="text-[11px] font-semibold text-rose-500"></span>' +
     "</div>";
@@ -4766,17 +4770,32 @@ function waAliciListeTazele() {
    waAc akışı korunur: filtre yalnız waGunKaynak() ile ders kaynağını daraltır;
    satır üretimi TEK waAliciListeHTML, mesaj ogrenciMesajMetni — D25/D41/D42 dokunulmadı. */
 function waGunKaynak() {
+  /* D60-WA-GUN-DATES: 'bugun'/'yarin' geriye-uyumlu; ayrica bir TARIH (YYYY-AA-GG) seciliyse yalniz o gun. */
   var g = ui.waGun || "tumu";
-  if (g === "bugun") return penceredeDersler().filter(function (l) { return l.durum !== "iptal" && l.tarih === todayKey(); });
-  if (g === "yarin") return penceredeDersler().filter(function (l) { return l.durum !== "iptal" && l.tarih === addDaysKey(todayKey(), 1); });
+  if (g === "bugun") g = todayKey();
+  else if (g === "yarin") g = addDaysKey(todayKey(), 1);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(g)) return penceredeDersler().filter(function (l) { return l.durum !== "iptal" && l.tarih === g; });
   return null;
+}
+function waGunListe() {
+  /* D60-WA-GUN-DATES: mevcut pencerede dersi olan benzersiz tarihler (sirali). */
+  var varsa = {};
+  penceredeDersler().filter(function (l) { return l.durum !== "iptal"; }).forEach(function (l) { if (l.tarih) varsa[l.tarih] = 1; });
+  var t = Object.keys(varsa).sort();
+  if (t.length > 31) t = t.slice(0, 31);
+  return t;
+}
+function waGunEtiket(k) {
+  var d = fromKey(k);
+  return GUN_KISA[dowIdx(k)] + " " + d.getDate() + " " + AYLAR[d.getMonth()].slice(0, 3);
 }
 function waGunBarHTML() {
   var g = ui.waGun || "tumu";
-  var h = "";
-  [["tumu", "Tümü"], ["bugun", "Bugün"], ["yarin", "Yarın"]].forEach(function (s) {
-    var aktif = g === s[0];
-    h += "<button data-gun=\"" + s[0] + "\" onclick='waGunSec(this.getAttribute(\"data-gun\"))' class=\"" + (aktif ? "bg-teal-600 text-white border-teal-600" : "text-slate-500 border-slate-200 hover:bg-slate-50") + "\">" + s[1] + "</button>";
+  var cls = "text-[10px] font-semibold border rounded-full px-2 py-1 mr-1 mb-1 inline-block ";
+  var h = "<button data-gun=\"tumu\" onclick='waGunSec(this.getAttribute(\"data-gun\"))' class=\"" + cls + (g === "tumu" ? "bg-teal-600 text-white border-teal-600" : "text-slate-500 border-slate-200 hover:bg-slate-50") + "\">Tümü</button>";
+  waGunListe().forEach(function (k) {
+    var aktif = g === k;
+    h += "<button data-gun=\"" + k + "\" onclick='waGunSec(this.getAttribute(\"data-gun\"))' title=\"" + gunAdi(k) + "\" class=\"" + cls + (aktif ? "bg-teal-600 text-white border-teal-600" : "text-slate-500 border-slate-200 hover:bg-slate-50") + "\">" + waGunEtiket(k) + "</button>";
   });
   return h;
 }
@@ -4801,7 +4820,7 @@ function waAc() {
     });
   });
   var dizi = Object.keys(sayac).map(function (k) { return sayac[k]; }).sort(function (a, b) { return b.n - a.n; });
-  $("waAlt").textContent = pencereAdi() + (ui.waGun === "bugun" ? " · Bugün" : (ui.waGun === "yarin" ? " · Yarın" : "")) + " · " + dizi.length + " öğrenci";
+  $("waAlt").textContent = pencereAdi() + (/^\d{4}-\d{2}-\d{2}$/.test(ui.waGun || "") ? " · " + waGunEtiket(ui.waGun) : (ui.waGun === "bugun" ? " · Bugün" : (ui.waGun === "yarin" ? " · Yarın" : ""))) + " · " + dizi.length + " öğrenci";
   /* WA-ALICI-YAMASI: her açılışta alıcı varsayılan "ogrenci"; D42: satır durumu bu alıcıya göre çizilir. */
   waAliciTipi = "ogrenci";
   waAktifOgrenciId = null;

@@ -4790,7 +4790,10 @@ function waGunEtiket(k) {
   return GUN_KISA[dowIdx(k)] + " " + d.getDate() + " " + AYLAR[d.getMonth()].slice(0, 3);
 }
 function waGunBarHTML() {
+  /* D60B-BAR-UYUM: eski 'bugun'/'yarin' degerleri tarihe cevrilir; ilgili tarih pill'i aktif olur. */
   var g = ui.waGun || "tumu";
+  if (g === "bugun") g = todayKey();
+  else if (g === "yarin") g = addDaysKey(todayKey(), 1);
   var cls = "text-[10px] font-semibold border rounded-full px-2 py-1 mr-1 mb-1 inline-block ";
   var h = "<button data-gun=\"tumu\" onclick='waGunSec(this.getAttribute(\"data-gun\"))' class=\"" + cls + (g === "tumu" ? "bg-teal-600 text-white border-teal-600" : "text-slate-500 border-slate-200 hover:bg-slate-50") + "\">Tümü</button>";
   waGunListe().forEach(function (k) {

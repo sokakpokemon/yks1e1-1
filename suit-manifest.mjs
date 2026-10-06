@@ -42,8 +42,8 @@ export const manifest = {
   "ks-excel-ui-kontrol.mjs": 34,
   "ks-wa-sablon.mjs": 49,
   "ks-wa-onizleme.mjs": 36,
-  "ks-wa-durum.mjs": 38,
-  "ks-wa-alici.mjs": 69, /* D41-TELEFON +7 → 56 (telefonsuz satır rozeti + Gönder disabled); D42-WA-ALICI-TIP +6 → 62 (satır durumu SEÇİLİ ALICIYA göre + liste tazeleme); D56-WA-GUN-FILTRE +7 → 69 (waGunKaynak gün filtresi + waGunBar üretimi/çizimi) */
+  "ks-wa-durum.mjs": 38,  "ks-wa-alici.mjs": 70,
+ /* D41-TELEFON +7 → 56 (telefonsuz satır rozeti + Gönder disabled); D42-WA-ALICI-TIP +6 → 62 (satır durumu SEÇİLİ ALICIYA göre + liste tazeleme); D56-WA-GUN-FILTRE +7 → 69 (waGunKaynak gün filtresi + waGunBar üretimi/çizimi) */
   "ks-excel-k-import.mjs": 23,
   "ks-kadro-kolon.mjs": 62,
   "ks-kadro-telefon3.mjs": 57,

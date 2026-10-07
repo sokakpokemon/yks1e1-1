@@ -190,3 +190,12 @@ not: `CHECKPOINT-ARSIV-NOT.md`) — bu yüzden **D43'ten SONRAKİ** kayıtları 
 - Kök neden: emptyOutDir=true + non-atomik copyFileSync, build yarıda kesilince 2. sıradaki ek-ders.js 0 bayt kalıyordu
 - Doğrulama: tsc 0 · copy-static 0 · guard 0 · 0-bayt+tmp taraması temiz
 - Gercek build (vite build / publish) DOGRULANDI: build yesil · closeBundle dogrulamasi gecti · tarama temiz · guard yesil · 2026-10-06 (D62-BUILD-DOGRULANDI)
+
+## D63-CAKISMA-RAPORU — KAPANIS (Öğrenci Saat Çakışma Raporu · SALT-OKUMA)
+- app.js SHA16: de3f478e73d8c851
+- `cakismaRaporuBul()`: aktifDonemKayitlari(DB.dersler) (iptal hariç) · katılımcı = dersOgrenciIds (ana + grup üyeleri) · anahtar = ogrenciId|tarih|ksKodOf(saat) · 2+ kayıt → çakışma (öğretmen aynı olsa bile) · ek dersler (DB.ekDersler) rapora GİRMEZ · dönüş [{ ogrenciId, ad, tarih, saatKod, kayitlar }] · tarih↑ sonra ad↑ · DB'ye YAZMAZ
+- `cakismaRaporuHTML()`: csvYonetimKartHTML() görsel diliyle aynı kart · başlık 'Öğrenci Saat Çakışma Raporu' · alt not birebir 'Salt-okuma ekran — hiçbir kaydı silmez veya değiştirmez.' · özet 'N çakışma · M öğrenci' (N=0 → yeşil 'Çakışma yok') · tüm adlar esc() · buton yok
+- Kart, ayarTab() içinde csvYonetimKartHTML() çağrısının HEMEN SONRASINA eklendi (aynı '+' zinciri)
+- Yeni suit: ks-cakisma-raporu.mjs 33 assertion (a-j davranışları + HTML sözleşmesi + ayarTab entegrasyonu) · toplam 58 suit / 2711
+- Kanıt: node --check SYNTAX OK · copy-static 0 · guard 0 · --tam TAM_EXIT=0 (MANIFEST = RUNNER = donmuş = ELLE = 2711, BİREBİR)
+- Damga/senkron: app.js?v=de3f478e73d8c851 (index.html + dist/index.html + isolate/index.html) · kök = dist = public = isolate byte-birebir

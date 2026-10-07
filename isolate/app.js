@@ -2532,6 +2532,86 @@ function csvYonetimKartHTML() {
     "</div>";
 }
 
+/* ---- D63-CAKISMA-RAPORU: Öğrenci Saat Çakışma Raporu (SALT-OKUMA) ----
+   Tek kaynak: aktifDonemKayitlari(DB.dersler) — iptal edilenler hariç. Ek dersler
+   (DB.ekDersler) BİLİNÇLİ olarak rapora GİRMEZ: ayrı veri kümesidir.
+   Katılımcılar: dersOgrenciIds(l) → ana öğrenci + grup üyeleri.
+   Anahtar: ogrenciId + "|" + l.tarih + "|" + ksKodOf(l.saat).
+   Aynı anahtarda 2+ kayıt varsa ÇAKIŞMA (öğretmen aynı olsa bile çakışma sayılır).
+   Dönüş: [{ ogrenciId, ad, tarih, saatKod, kayitlar: [{ id, dersId, ogretmenAd, sinif, durum }] }]
+   Sıralama: tarih artan, sonra öğrenci adı (tr-TR) artan. Bu fonksiyon DB'ye YAZMAZ. */
+function cakismaRaporuBul() {
+  var harita = {};
+  aktifDonemKayitlari(DB.dersler).forEach(function (l) {
+    if (!l || typeof l !== "object" || l.durum === "iptal") return;
+    var kod = ksKodOf(l.saat);
+    dersOgrenciIds(l).forEach(function (oid) {
+      if (oid == null || oid === "") return;
+      var anahtar = oid + "|" + l.tarih + "|" + kod;
+      if (!harita[anahtar]) harita[anahtar] = { ogrenciId: oid, tarih: l.tarih, saatKod: kod, kayitlar: [] };
+      harita[anahtar].kayitlar.push(l);
+    });
+  });
+  var sonuc = [];
+  Object.keys(harita).forEach(function (anahtar) {
+    var h = harita[anahtar];
+    if (h.kayitlar.length < 2) return;
+    var ogr = DB.ogrenciler.find(function (o) { return o && o.id === h.ogrenciId; });
+    sonuc.push({
+      ogrenciId: h.ogrenciId,
+      ad: ogr ? (ogr.ad || "") : "",
+      tarih: h.tarih,
+      saatKod: h.saatKod,
+      kayitlar: h.kayitlar.map(function (k) {
+        return {
+          id: k.id != null ? k.id : "",
+          dersId: k.dersId || "",
+          ogretmenAd: k.ogretmenAd || "",
+          sinif: k.sinif != null ? k.sinif : (ogr && ogr.sinif ? ogr.sinif : ""),
+          durum: k.durum || ""
+        };
+      })
+    });
+  });
+  sonuc.sort(function (a, b) {
+    if (a.tarih !== b.tarih) return a.tarih < b.tarih ? -1 : 1;
+    var aa = kucuk(a.ad), bb = kucuk(b.ad);
+    if (aa !== bb) return aa < bb ? -1 : 1;
+    return 0;
+  });
+  return sonuc;
+}
+/* Salt-okuma kart: yalnız innerHTML üretir; buton YOK, DB/localStorage'a dokunmaz.
+   Görsel dil csvYonetimKartHTML() ile aynı (rounded-2xl border + başlık/ikon satırı). */
+function cakismaRaporuHTML() {
+  var cakismalar = cakismaRaporuBul();
+  var N = cakismalar.length;
+  var ogrenciSet = {};
+  cakismalar.forEach(function (c) { ogrenciSet[c.ogrenciId] = 1; });
+  var M = Object.keys(ogrenciSet).length;
+  var govde = N === 0
+    ? '<div class="mt-3 rounded-xl border border-green-200 bg-green-50 px-3.5 py-2.5 text-[12px] font-bold text-green-700"><i class="fa-solid fa-circle-check mr-1.5"></i>Çakışma yok</div>'
+    : cakismalar.map(function (c) {
+        var kayitlarHTML = c.kayitlar.map(function (k) {
+          return '<span class="inline-block rounded-full bg-white border border-slate-200 px-2 py-0.5 text-[10.5px] font-bold text-slate-600 mr-1 mb-1">' + esc(k.ogretmenAd) + " · " + esc(k.dersId) + "</span>";
+        }).join("");
+        /* saatKod (KS no) → kanonik saat -> saatEtiket(): "9 · 16:20-17:00" */
+        var _kk = KISA_KOD.filter(function (x) { return x.no === c.saatKod; })[0];
+        return '<div class="mt-3 rounded-xl border border-slate-200 bg-white p-3.5">' +
+          '<div class="text-[12.5px] font-bold text-slate-800">' + esc(c.ad) + '</div>' +
+          '<div class="text-[11px] text-slate-400 mt-0.5">' + GUN_KISA[dowIdx(c.tarih)] + " " + fmtTR(c.tarih) + " · " + saatEtiket(_kk ? _kk.b : c.saatKod) + '</div>' +
+          '<div class="mt-2">' + kayitlarHTML + '</div>' +
+        '</div>';
+      }).join("");
+  return '<div class="rounded-2xl border border-teal-100 bg-teal-50/40 p-5 mt-4">' +
+      '<div class="flex items-center gap-3 mb-1"><div class="w-9 h-9 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center text-[15px]"><i class="fa-solid fa-clock"></i></div>' +
+      '<h4 class="text-[14px] font-bold text-slate-900">Öğrenci Saat Çakışma Raporu</h4></div>' +
+      '<p class="text-[11.5px] text-slate-500 mt-1 leading-relaxed">Salt-okuma ekran — hiçbir kaydı silmez veya değiştirmez.</p>' +
+      '<p class="text-[11.5px] font-bold text-slate-600 mt-2">' + N + " çakışma · " + M + " öğrenci</p>" +
+      govde +
+    "</div>";
+}
+
 /* WA-SABLON-YAMASI: WhatsApp Mesaj Şablonu — TEK nesne DB.ayarlar.whatsappSablon; yeni localStorage anahtarı YOK. */
 var WA_SABLON_ALANLAR = [
   ["baslik", "Pencere başlığı", "Ders listesinden önceki başlık satırı. Yer tutucular: {pencereAdi}, {dersSayisi}"],
@@ -2790,7 +2870,7 @@ function ayarTab() {
         '<button onclick="tumunuSil()" class="rounded-full border-2 border-rose-200 text-rose-500 hover:bg-rose-50 text-[13px] font-bold px-5 py-2 transition-colors"><i class="fa-solid fa-trash-can mr-1.5"></i>Tüm Verileri Sıfırla</button>' +
       "</div>" +
       '<p class="text-[10.5px] text-slate-400 mt-3"><i class="fa-solid fa-shield-halved mr-1"></i>Sıfırlamadan önce mutlaka yedek alın.</p>' +
-    "</div>" + waSablonKartHTML() + csvYonetimKartHTML() + '<div id="disListeKok">' + disListeBolumHTML() + "</div>" + "</div>"; /* D61-DIS-LISTE: csvYonetimKartHTML DIŞINDA (o kart ayrı assert edilir) */
+    "</div>" + waSablonKartHTML() + csvYonetimKartHTML() + cakismaRaporuHTML() + /* D63-CAKISMA-RAPORU: CSV kartının HEMEN SONRASI */ '<div id="disListeKok">' + disListeBolumHTML() + "</div>" + "</div>"; /* D61-DIS-LISTE: csvYonetimKartHTML DIŞINDA (o kart ayrı assert edilir) */
 }
 
 /* ================================================================

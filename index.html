@@ -574,6 +574,105 @@
   var takipIcerik = document.getElementById("takipIcerik");
   var altButonlar = document.querySelectorAll(".takip-alt-btn");
   if (altButonlar.length) {
+    function tarihSeciciHTML(secili) {
+      var d = new Date();
+      if (secili) {
+        var p = secili.split('-');
+        if (p.length === 3) {
+          d = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
+        }
+      }
+      var yil = d.getFullYear();
+      var ay = String(d.getMonth() + 1).padStart(2, "0");
+      var gun = String(d.getDate()).padStart(2, "0");
+      return '<div class="flex flex-wrap items-center gap-2 mb-4">' +
+        '<label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Tarih:</label>' +
+        '<input type="date" id="yoklamaTarih" value="' + yil + '-' + ay + '-' + gun + '" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-teal-400/40" onchange="yoklamaTarihDegisti()" />' +
+      '</div>';
+    }
+
+    function yoklamaButonHTML(secili, id) {
+      var renkler = {
+        geldi: { arka: "bg-green-500", text: "text-white", hover: "hover:bg-green-600" },
+        gelmedi: { arka: "bg-red-500", text: "text-white", hover: "hover:bg-red-600" },
+        gec: { arka: "bg-amber-400", text: "text-white", hover: "hover:bg-amber-500" },
+        iptal: { arka: "bg-slate-400", text: "text-white", hover: "hover:bg-slate-500" }
+      };
+      var butonlar = ["geldi", "gelmedi", "gec", "iptal"];
+      return '<div class="flex flex-wrap gap-2 mt-2">' +
+        butonlar.map(function (b) {
+          var seciliMi = secili === b;
+          var r = renkler[b];
+          var arkaPlan = seciliMi ? r.arka : "bg-slate-100";
+          var textRengi = seciliMi ? r.text : "text-slate-500";
+          var hover = seciliMi ? r.hover : "hover:bg-slate-200";
+          var alpha = seciliMi ? "" : "opacity-60";
+          return '<button type="button" onclick="yoklamaSec(\'' + id + '\', \'' + b + '\')" class="shrink-0 rounded-xl px-4 py-2 text-[13px] font-bold ' + arkaPlan + " " + textRengi + " " + hover + " " + alpha + ' transition-colors">' +
+            (b === "geldi" ? "✅ Geldi" : b === "gelmedi" ? "❌ Gelmedi" : b === "gec" ? "⏰ Geç" : "⛔ İptal") +
+          "</button>";
+        }).join("") +
+      "</div>";
+    }
+
+    function yoklamaSatirHTML(l, id) {
+      var yoklamaSecimi = localStorage.getItem("yoklama_" + id) || "";
+      var sonucRengi = {
+        geldi: "text-green-600",
+        gelmedi: "text-red-600",
+        gec: "text-amber-600",
+        iptal: "text-slate-400"
+      }[yoklamaSecimi] || "";
+      var sonucEtiket = yoklamaSecimi ? '<span class="inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold ' + sonucRengi + ' ml-1">' + yoklamaSecimi.toUpperCase() + "</span>" : "";
+      var D = typeof DERS !== 'undefined' ? DERS : {};
+      var dersAd = (D[l.dersId] && D[l.dersId].ad) ? D[l.dersId].ad : (l.dersId || "");
+      var ogrAd = l.ogrenciAd || "";
+      var ogrtAd = l.ogretmenAd || "";
+      if (typeof esc !== 'undefined') {
+        ogrAd = esc(ogrAd);
+        dersAd = esc(dersAd);
+        ogrtAd = esc(ogrtAd);
+      }
+      return '<div class="rounded-xl border border-slate-200 bg-white p-3.5">' +
+        '<div class="flex flex-wrap items-center justify-between gap-2">' +
+        '<div class="flex-1 min-w-0">' +
+          '<div class="flex items-center gap-2 flex-wrap">' +
+            '<span class="font-semibold text-slate-800 text-[13px]">' + ogrAd + "</span>" +
+            '<span class="rounded-full px-2 py-0.5 text-[10px] font-bold bg-slate-100 text-slate-600">' + dersAd + "</span>" +
+          "</div>" +
+          '<div class="text-[11px] text-slate-500 mt-0.5">' + ogrtAd + sonucEtiket + "</div>" +
+        "</div>" +
+        yoklamaButonHTML(yoklamaSecimi, id) +
+        "</div>";
+    }
+
+    function yoklamaEkrani(tarih) {
+      var dersler = [], key = tarih || todayKey();
+      try {
+        var LS_K = typeof LS_KEY !== 'undefined' ? LS_KEY : 'yksOto_arsiv_v1';
+        var veri = JSON.parse(localStorage.getItem(LS_K) || "{}");
+        if (veri && veri.dersler && veri.dersler.length) {
+          dersler = veri.dersler.filter(function (d) { return d.tarih === key; });
+        }
+      } catch (e) {}
+
+      var html = tarihSeciciHTML(key);
+
+      if (!dersler.length) {
+        html += '<div class="cark kart p-6 md:p-8 text-center"><p class="text-slate-500 text-[14px] font-medium">Bu tarihte planlanmış ders bulunmuyor.</p></div>';
+      } else {
+        html += '<div class="space-y-2">';
+        dersler.forEach(function (d, i) { html += yoklamaSatirHTML(d, d.id || "ders-" + i + "-" + Date.now()); });
+        html += "</div>";
+      }
+
+      return html;
+    }
+
+    function todayKey() {
+      var d = new Date();
+      return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    }
+
     function gosterAlt(alt) {
       altButonlar.forEach(function (b) {
         if (b.getAttribute("data-alt") === alt) {
@@ -582,15 +681,33 @@
           b.classList.remove("aktif");
         }
       });
-      var mesajAlani = {
-        "yoklama": "Bu bölüm yakinda eklenecek.",
-        "odevler": "Bu bölüm yakinda eklenecek.",
-        "kutuphane": "Bu bölüm yakinda eklenecek."
-      }[alt] || "Bu bölüm yakinda eklenecek.";
+
       if (takipIcerik) {
-        takipIcerik.innerHTML = '<div class="cark kart p-6 md:p-8 text-center"><p class="text-slate-500 text-[14px] font-medium">' + mesajAlani + '</p></div>';
+        if (alt === "yoklama") {
+          takipIcerik.innerHTML = yoklamaEkrani();
+        } else {
+          var mesajAlani = {
+            "odevler": "Bu bölüm yakinda eklenecek.",
+            "kutuphane": "Bu bölüm yakinda eklenecek."
+          }[alt] || "Bu bölüm yakinda eklenecek.";
+          takipIcerik.innerHTML = '<div class="cark kart p-6 md:p-8 text-center"><p class="text-slate-500 text-[14px] font-medium">' + mesajAlani + '</p></div>';
+        }
       }
     }
+
+    window.yoklamaSec = function (id, deger) {
+      localStorage.setItem("yoklama_" + id, deger);
+      yoklamaEkrani(localStorage.getItem("yoklamaTarih") || todayKey());
+    };
+
+    window.yoklamaTarihDegisti = function () {
+      var el = document.getElementById("yoklamaTarih");
+      if (el) {
+        localStorage.setItem("yoklamaTarih", el.value);
+        takipIcerik.innerHTML = yoklamaEkrani(el.value);
+      }
+    };
+
     altButonlar.forEach(function (buton) {
       buton.addEventListener("click", function () {
         var alt = buton.getAttribute("data-alt");

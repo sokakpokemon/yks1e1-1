@@ -224,6 +224,180 @@
   <!-- ============ 2) VERİ YÖNETİMİ ============ -->
   <section id="yonetimBolum" class="no-print"></section>
 
+  <!-- ============ KUTUPAHAANE GÜNLERİ KARTI ============ -->
+  <section id="yonetimBolum" class="no-print"></section>
+
+  <!-- ============ KÜTÜPHANE GÜNLERİ AYAR KARTI (eklendi — mevcut yapıya dokunmaz) ============ -->
+  <section class="no-print" id="kutuphaneGunleriBolum">
+    <div class="kart p-5 md:p-6">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div>
+          <h3 class="font-bold text-slate-900 text-[15px]">Kütüphane Günleri</h3>
+          <p class="text-[13px] text-slate-500 mt-1">Kütüphane yoklaması alınacak günleri seçin.</p>
+        </div>
+      </div>
+      <div id="kutuphaneGunleriList" class="space-y-2">
+        <div class="kutuphane-gunu-satis flex items-center justify-between gap-4 py-2" data-gun="pzt">
+          <span class="font-semibold text-slate-700 text-[13px]">Pazartesi</span>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" checked />
+            <div class="w-10 h-6 bg-slate-300 rounded-full peer-checked:bg-teal-500 transition-colors"></div>
+            <div class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform peer-checked:translate-x-4 shadow-sm"></div>
+          </label>
+        </div>
+        <div class="kutuphane-gunu-satis flex items-center justify-between gap-4 py-2" data-gun="sal">
+          <span class="font-semibold text-slate-700 text-[13px]">Salı</span>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" checked />
+            <div class="w-10 h-6 bg-slate-300 rounded-full peer-checked:bg-teal-500 transition-colors"></div>
+            <div class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform peer-checked:translate-x-4 shadow-sm"></div>
+          </label>
+        </div>
+        <div class="kutuphane-gunu-satis flex items-center justify-between gap-4 py-2" data-gun="car">
+          <span class="font-semibold text-slate-700 text-[13px]">Çarşamba</span>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" checked />
+            <div class="w-10 h-6 bg-slate-300 rounded-full peer-checked:bg-teal-500 transition-colors"></div>
+            <div class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform peer-checked:translate-x-4 shadow-sm"></div>
+          </label>
+        </div>
+        <div class="kutuphane-gunu-satis flex items-center justify-between gap-4 py-2" data-gun="per">
+          <span class="font-semibold text-slate-700 text-[13px]">Perşembe</span>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" checked />
+            <div class="w-10 h-6 bg-slate-300 rounded-full peer-checked:bg-teal-500 transition-colors"></div>
+            <div class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform peer-checked:translate-x-4 shadow-sm"></div>
+          </label>
+        </div>
+        <div class="kutuphane-gunu-satis flex items-center justify-between gap-4 py-2" data-gun="cum">
+          <span class="font-semibold text-slate-700 text-[13px]">Cuma</span>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" checked />
+            <div class="w-10 h-6 bg-slate-300 rounded-full peer-checked:bg-teal-500 transition-colors"></div>
+            <div class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform peer-checked:translate-x-4 shadow-sm"></div>
+          </label>
+        </div>
+        <div class="kutuphane-gunu-satis flex items-center justify-between gap-4 py-2" data-gun="cmt">
+          <span class="font-semibold text-slate-700 text-[13px]">Cumartesi</span>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" checked />
+            <div class="w-10 h-6 bg-slate-300 rounded-full peer-checked:bg-teal-500 transition-colors"></div>
+            <div class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform peer-checked:translate-x-4 shadow-sm"></div>
+          </label>
+        </div>
+        <div class="kutuphane-gunu-satis flex items-center justify-between gap-4 py-2" data-gun="paz">
+          <span class="font-semibold text-slate-700 text-[13px]">Pazar</span>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" checked />
+            <div class="w-10 h-6 bg-slate-300 rounded-full peer-checked:bg-teal-500 transition-colors"></div>
+            <div class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform peer-checked:translate-x-4 shadow-sm"></div>
+          </label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KÜTÜPHANE GÜNLERİ - DERİNLEŞTİRİLMİŞ KAYDETME =========== -->
+  <script>
+    (function kutuphaneGunleriDerinlesstirilmisDestegi() {
+      var ARSIVANAH = 'yksOto_arsiv_v1';
+      var ANLAMLI_GUNLER = {
+        pzt: 'Pazartesi',
+        sal: 'Salı',
+        car: 'Çarşamba',
+        per: 'Perşembe',
+        cum: 'Cuma',
+        cmt: 'Cumartesi',
+        paz: 'Pazar'
+      };
+      var VARSIAYDIN = {
+        pzt: true, sal: true, car: true, per: true, cum: true, cmt: true, paz: true
+      };
+      function tumVeriAl() {
+        try {
+          var ham = localStorage.getItem(ARSIVANAH);
+          if (!ham) return { tumDB: {}, secimSayisi: 0 };
+          var parsed = JSON.parse(ham);
+          if (!parsed || typeof parsed !== 'object') return { tumDB: {}, secimSayisi: 0 };
+          return parsed;
+        } catch (e) {
+          return { tumDB: {}, secimSayisi: 0 };
+        }
+      }
+      function tumVeriKaydet(deger) {
+        try {
+          localStorage.setItem(ARSIVANAH, JSON.stringify(deger));
+        } catch (e) {
+          // tarayıcı kotalarında sessizce yönet
+        }
+      }
+      function gunlerinVeriAl() {
+        var tum = tumVeriAl();
+        if (tum && typeof tum === 'object' && tum.kutuphaneGunleri && typeof tum.kutuphaneGunleri === 'object') {
+          var kaynak = tum.kutuphaneGunleri;
+          var sonuc = {};
+          Object.keys(VARSIAYDIN).forEach(function (k) {
+            var deger = kaynak[k];
+            if (typeof deger === 'boolean') {
+              sonuc[k] = deger;
+            } else {
+              sonuc[k] = VARSIAYDIN[k];
+            }
+          });
+          return sonuc;
+        }
+        return Object.assign({}, VARSIAYDIN);
+      }
+      function gunlerinKaydet(gunlerin) {
+        var tum = tumVeriAl();
+        var yeni = Object.assign({}, tum);
+        yeni.kutuphaneGunleri = Object.assign({}, VARSIAYDIN, gunlerin);
+        tumVeriKaydet(yeni);
+      }
+      function kutuphaneTumgunleriniYenile() {
+        var gun = gunlerinVeriAl();
+        var tumSatirlar = document.querySelectorAll('.kutuphane-gunu-satis');
+        for (var i = 0; i < tumSatirlar.length; i++) {
+          var satir = tumSatirlar[i];
+          var anahtar = satir.dataset.gun;
+          var cb = satir.querySelector('input[type="checkbox"]');
+          if (!anahtar || !cb) continue;
+          var degeri = gun[anahtar];
+          cb.checked = !!(degeri === true);
+          var etiketici = satir.querySelector('span.font-semibold');
+          if (etiketici) etiketici.textContent = (ANLAMLI_GUNLER[anahtar] || anahtar);
+        }
+      }
+      function kutuphaneTugEventİdeleriYap() {
+        var cbButonlar = document.querySelectorAll('.kutuphane-gunu-satis input[type="checkbox"]');
+        for (var j = 0; j < cbButonlar.length; j++) {
+          (function(cb) {
+            cb.addEventListener('change', function(tug) {
+              var anc = tug.target.closest('.kutuphane-gunu-satis');
+              if (!anc) return;
+              var anahtar = anc.dataset.gun;
+              if (!anahtar) return;
+              var yeni = !!tug.target.checked;
+              var mevcut = gunlerinVeriAl();
+              var guncel = Object.assign({}, mevcut);
+              guncel[anahtar] = yeni;
+              gunlerinKaydet(guncel);
+            });
+          })(cbButonlar[j]);
+        }
+      }
+      function tumIslemTamamlandiginda() {
+        kutuphaneTumgunleriniYenile();
+        kutuphaneTugEventİdeleriYap();
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', tumIslemTamamlandiginda);
+      } else {
+        tumIslemTamamlandiginda();
+      }
+    })();
+  </script>
+
 
   <!-- ============ 4) BİREBİR DERS PLANLA ============ -->
   <div class="hidden" id="ks-kilavuz"><div class="no-print rounded-xl border border-teal-100 bg-teal-50/60 px-3.5 py-2.5 text-[11px] text-teal-800 leading-relaxed mb-3"><b class="font-extrabold"><i class="fa-solid fa-circle-info mr-1"></i>Ders Saati Kılavuzu:</b> Dersler 40 dakikadır ve kısa kod saatleriyle işler. 1 · 08:50-09:30 · 2 · 09:40-10:20 · 3 · 10:30-11:10 · 4 · 11:20-12:00 · 5 · 13:00-13:40 · 6 · 13:50-14:30 · 7 · 14:40-15:20 · 8 · 15:30-16:10 · 9 · 16:20-17:00 · 10 · 17:10-17:50 · 11 · 18:00-18:40. <span class="text-teal-600">Mola (12:00-13:00) ders için kullanılmaz.</span></div></div>

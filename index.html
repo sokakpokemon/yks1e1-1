@@ -116,8 +116,41 @@
       outline: 2px solid #14b8a6;
       outline-offset: 2px;
     }
-    #ozetBolum, #analizBolum, #yonetimBolum, #havuzBolum, #planKart, #derslerBolum {
+    #ozetBolum, #analizBolum, #yonetimBolum, #havuzBolum, #planKart, #derslerBolum, #takipBolum {
       scroll-margin-top: calc(var(--atlamaTop, 66px) + 50px);
+    }
+    .takip-alt-btn {
+      flex: 0 0 auto;
+      white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+      cursor: pointer;
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1;
+      padding: 8px 20px;
+      border-radius: 999px;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .takip-alt-btn:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      color: #0f172a;
+    }
+    .takip-alt-btn.aktif {
+      background: #14b8a6;
+      border-color: #14b8a6;
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(20, 184, 166, 0.35);
+    }
+    .takip-alt-btn:focus-visible {
+      outline: 2px solid #14b8a6;
+      outline-offset: 2px;
+    }
+    .takip-icerik {
+      min-height: 100px;
     }
     @media print {
       #atlamaMenu { display: none; }
@@ -164,6 +197,7 @@
     <button type="button" class="atlama-btn" data-hedef="planKart">Ders Planla</button>
     <button type="button" class="atlama-btn" data-hedef="havuzBolum">İstekler</button>
     <button type="button" class="atlama-btn" data-hedef="analizBolum">Ek Ders</button>
+    <button type="button" class="atlama-btn" data-hedef="takipBolum">Takip</button>
     <button type="button" class="atlama-btn" data-hedef="ozetBolum">Bakış</button>
     <button type="button" class="atlama-btn" data-hedef="yonetimBolum">Yönetim</button>
   </div>
@@ -176,6 +210,16 @@
 
   <!-- ============ DETAYLI ANALİZ ============ -->
   <section id="analizBolum" class="no-print"></section>
+
+  <!-- ============ TAKİP ============ -->
+  <section id="takipBolum" class="no-print">
+    <div id="takipSecimleri" class="flex flex-wrap gap-2 mb-6">
+      <button type="button" id="takip-yoklama" class="takip-alt-btn" data-alt="yoklama">Yoklama</button>
+      <button type="button" id="takip-odevler" class="takip-alt-btn" data-alt="odevler">Ödevler</button>
+      <button type="button" id="takip-kutuphanе" class="takip-alt-btn" data-alt="kutuphane">Kütüphane</button>
+    </div>
+    <div id="takipIcerik" class="takip-icerik"></div>
+  </section>
 
   <!-- ============ 2) VERİ YÖNETİMİ ============ -->
   <section id="yonetimBolum" class="no-print"></section>
@@ -351,6 +395,39 @@
 <script src="app.js?v=de3f478e73d8c851"></script>
 
 <script>
+/* ============ TAKİP SEKME DESTEĞİ (eklendi — mevcut fonksiyonlara dokunmaz) ============ */
+(function () {
+  var takipIcerik = document.getElementById("takipIcerik");
+  var altButonlar = document.querySelectorAll(".takip-alt-btn");
+  if (altButonlar.length) {
+    function gosterAlt(alt) {
+      altButonlar.forEach(function (b) {
+        if (b.getAttribute("data-alt") === alt) {
+          b.classList.add("aktif");
+        } else {
+          b.classList.remove("aktif");
+        }
+      });
+      var mesajAlani = {
+        "yoklama": "Bu bölüm yakinda eklenecek.",
+        "odevler": "Bu bölüm yakinda eklenecek.",
+        "kutuphane": "Bu bölüm yakinda eklenecek."
+      }[alt] || "Bu bölüm yakinda eklenecek.";
+      if (takipIcerik) {
+        takipIcerik.innerHTML = '<div class="cark kart p-6 md:p-8 text-center"><p class="text-slate-500 text-[14px] font-medium">' + mesajAlani + '</p></div>';
+      }
+    }
+    altButonlar.forEach(function (buton) {
+      buton.addEventListener("click", function () {
+        var alt = buton.getAttribute("data-alt");
+        gosterAlt(alt);
+      });
+    });
+    /* Öntanımlı olarak ilk alt sekme aktif olsun. */
+    gosterAlt("yoklama");
+  }
+})();
+
 /* ============ ATLAMALI MENÜ DAVRANIŞI (eklendi — mevcut fonksiyonlara dokunmaz) ============ */
 (function () {
   var menu = document.getElementById("atlamaMenu");

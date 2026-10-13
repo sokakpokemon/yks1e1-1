@@ -569,222 +569,199 @@
 <script src="app.js?v=de3f478e73d8c851"></script>
 
 <script>
-/* ============ TAKİP SEKME DESTEĞİ (eklendi — mevcut fonksiyonlara dokunmaz) ============ */
+/* ============ TAKİP SEKME DESTEĞİ — SINIF BAZLI YOKLAMA ============ */
 (function () {
   var takipIcerik = document.getElementById("takipIcerik");
   var altButonlar = document.querySelectorAll(".takip-alt-btn");
-  if (altButonlar.length) {
-    function tarihSeciciHTML(secili) {
-      var d = new Date();
-      if (secili) {
-        var p = secili.split('-');
-        if (p.length === 3) {
-          d = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
-        }
+  if (!altButonlar.length) return;
+
+  var LS_K = (typeof LS_KEY !== 'undefined') ? LS_KEY : 'yksOto_arsiv_v1';
+  var GUNLER = ["paz", "pzt", "sal", "car", "per", "cum", "cmt"];
+  var DURUMLAR = ["geldi", "gelmedi", "gec", "iptal"];
+  var RENKLER = {
+    geldi:   { bg: "#22c55e", label: "Geldi" },
+    gelmedi: { bg: "#ef4444", label: "Gelmedi" },
+    gec:     { bg: "#f59e0b", label: "Geç" },
+    iptal:   { bg: "#94a3b8", label: "İptal" }
+  };
+
+  function bugunKey() {
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  function gunKodu(tarih) {
+    var p = tarih.split("-");
+    var d = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
+    return GUNLER[d.getDay()];
+  }
+
+  function veriOku() {
+    try { return JSON.parse(localStorage.getItem(LS_K) || "{}"); }
+    catch (e) { return {}; }
+  }
+
+  function veriYaz(v) { localStorage.setItem(LS_K, JSON.stringify(v)); }
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']\/g, function (c) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
+    });
+  }
+
+  function oGunSiniflar(tarih) {
+    var veri = veriOku();
+    var prog = veri.sinifProg || {};
+    var gk = gunKodu(tarih);
+    var sonuc = [];
+    Object.keys(prog).forEach(function (sinifAd) {
+      var p = prog[sinifAd];
+      if (!p) return;
+      var gunVeri = p[gk];
+      if (!gunVeri) return;
+      var dolu = false;
+      if (Array.isArray(gunVeri)) {
+        dolu = gunVeri.some(function (x) { return !!x; });
+      } else if (typeof gunVeri === 'object') {
+        dolu = Object.keys(gunVeri).some(function (k) { return !!gunVeri[k]; });
       }
-      var yil = d.getFullYear();
-      var ay = String(d.getMonth() + 1).padStart(2, "0");
-      var gun = String(d.getDate()).padStart(2, "0");
-      return '<div class="flex flex-wrap items-center gap-2 mb-4">' +
-        '<label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Tarih:</label>' +
-        '<input type="date" id="yoklamaTarih" value="' + yil + '-' + ay + '-' + gun + '" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-teal-400/40" onchange="yoklamaTarihDegisti()" />' +
-      '</div>';
+      if (dolu) sonuc.push(sinifAd);
+    });
+    return sonuc.sort();
+  }
+
+  function sinifOgrencileri(sinifAd) {
+    var veri = veriOku();
+    return (veri.ogrenciler || []).filter(function (o) { return o.sinif === sinifAd; });
+  }
+
+  function getY(veri, tarih, sinifAd, ogrId) {
+    try { return veri.yoklamalar[tarih][sinifAd][ogrId] || null; } catch (e) { return null; }
+  }
+
+  function setY(tarih, sinifAd, ogrId, durum, aciklama) {
+    var veri = veriOku();
+    if (!veri.yoklamalar) veri.yoklamalar = {};
+    if (!veri.yoklamalar[tarih]) veri.yoklamalar[tarih] = {};
+    if (!veri.yoklamalar[tarih][sinifAd]) veri.yoklamalar[tarih][sinifAd] = {};
+    if (!durum) {
+      delete veri.yoklamalar[tarih][sinifAd][ogrId];
+    } else if (durum === "gelmedi" && aciklama) {
+      veri.yoklamalar[tarih][sinifAd][ogrId] = { durum: durum, aciklama: aciklama };
+    } else {
+      veri.yoklamalar[tarih][sinifAd][ogrId] = durum;
     }
+    veriYaz(veri);
+  }
 
-    function yoklamaButonHTML(secili, id) {
-      var renkler = {
-        geldi: { arka: "bg-green-500", text: "text-white", hover: "hover:bg-green-600" },
-        gelmedi: { arka: "bg-red-500", text: "text-white", hover: "hover:bg-red-600" },
-        gec: { arka: "bg-amber-400", text: "text-white", hover: "hover:bg-amber-500" },
-        iptal: { arka: "bg-slate-400", text: "text-white", hover: "hover:bg-slate-500" }
-      };
-      var butonlar = ["geldi", "gelmedi", "gec", "iptal"];
-      return '<div class="flex flex-wrap gap-2 mt-2">' +
-        butonlar.map(function (b) {
-          var seciliMi = secili === b;
-          var r = renkler[b];
-          var arkaPlan = seciliMi ? r.arka : "bg-slate-100";
-          var textRengi = seciliMi ? r.text : "text-slate-500";
-          var hover = seciliMi ? r.hover : "hover:bg-slate-200";
-          var alpha = seciliMi ? "" : "opacity-60";
-          return '<button type="button" onclick="yoklamaSec(\'' + id + '\', \'' + b + '\')" class="shrink-0 rounded-xl px-4 py-2 text-[13px] font-bold ' + arkaPlan + " " + textRengi + " " + hover + " " + alpha + ' transition-colors">' +
-            (b === "geldi" ? "✅ Geldi" : b === "gelmedi" ? "❌ Gelmedi" : b === "gec" ? "⏰ Geç" : "⛔ İptal") +
-          "</button>";
-        }).join("") +
-      "</div>";
+  function dStr(y) { if (!y) return ""; return typeof y === 'string' ? y : (y.durum || ""); }
+  function dAcik(y) { if (!y || typeof y === 'string') return ""; return y.aciklama || ""; }
+
+  var seciliTarih = null;
+  var seciliSinif = null;
+
+  function ogrAd(ogr) {
+    return ogr.adSoyad || (ogr.ad && ogr.soyad ? ogr.ad + ' ' + ogr.soyad : '') || ogr.ad || ogr.isim || 'Öğrenci';
+  }
+
+  function chipHTML(ogr, y) {
+    var d = dStr(y);
+    var acik = dAcik(y);
+    var stil = d
+      ? 'background:' + RENKLER[d].bg + ';color:#fff;border-color:' + RENKLER[d].bg + ';'
+      : 'background:#fff;color:#475569;border-color:#cbd5e1;';
+    var h = '<button type="button" class="rounded-full border px-3.5 py-1.5 text-[13px] font-semibold transition-colors" style="' + stil + '" onclick="window.__ykChip(\'' + ogr.id + '\')">' +
+      esc(ogrAd(ogr)) + (d ? ' · ' + RENKLER[d].label : '') + '</button>';
+    if (d === "gelmedi") {
+      h += '<button type="button" class="rounded-full border border-slate-200 bg-white px-2 py-1.5 text-[12px] text-slate-600" title="Açıklama" onclick="window.__ykNot(\'' + ogr.id + '\')">📝' +
+        (acik ? '<span class="ml-1">' + esc(acik) + '</span>' : '') + '</button>';
     }
+    return h;
+  }
 
-    function yoklamaSatirHTML(l, id) {
-      var yoklamaSecimi = localStorage.getItem("yoklama_" + id) || "";
-      var sonucRengi = {
-        geldi: "text-green-600",
-        gelmedi: "text-red-600",
-        gec: "text-amber-600",
-        iptal: "text-slate-400"
-      }[yoklamaSecimi] || "";
-      var sonucEtiket = yoklamaSecimi ? '<span class="inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold ' + sonucRengi + ' ml-1">' + yoklamaSecimi.toUpperCase() + "</span>" : "";
-      var D = typeof DERS !== 'undefined' ? DERS : {};
-      var dersAd = (D[l.dersId] && D[l.dersId].ad) ? D[l.dersId].ad : (l.dersId || "");
-      var ogrAd = l.ogrenciAd || "";
-      var ogrtAd = l.ogretmenAd || "";
-      if (typeof esc !== 'undefined') {
-        ogrAd = esc(ogrAd);
-        dersAd = esc(dersAd);
-        ogrtAd = esc(ogrtAd);
-      }
-      return '<div class="rounded-xl border border-slate-200 bg-white p-3.5">' +
-        '<div class="flex flex-wrap items-center justify-between gap-2">' +
-        '<div class="flex-1 min-w-0">' +
-          '<div class="flex items-center gap-2 flex-wrap">' +
-            '<span class="font-semibold text-slate-800 text-[13px]">' + ogrAd + "</span>" +
-            '<span class="rounded-full px-2 py-0.5 text-[10px] font-bold bg-slate-100 text-slate-600">' + dersAd + "</span>" +
-          "</div>" +
-          '<div class="text-[11px] text-slate-500 mt-0.5">' + ogrtAd + sonucEtiket + "</div>" +
-        "</div>" +
-        yoklamaButonHTML(yoklamaSecimi, id) +
-        "</div>";
-    }
+  function ekran() {
+    if (!seciliTarih) seciliTarih = bugunKey();
+    var tarih = seciliTarih;
+    var html = '<div class="flex flex-wrap items-center gap-2 mb-4">' +
+      '<label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Tarih:</label>' +
+      '<input type="date" id="yoklamaTarih" value="' + tarih + '" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-teal-400/40" onchange="window.__ykTarih(this.value)" /></div>';
 
-    function yoklamaEkrani(tarih) {
-      var dersler = [], key = tarih || todayKey();
-      try {
-        var LS_K = typeof LS_KEY !== 'undefined' ? LS_KEY : 'yksOto_arsiv_v1';
-        var veri = JSON.parse(localStorage.getItem(LS_K) || "{}");
-        if (veri && veri.dersler && veri.dersler.length) {
-          dersler = veri.dersler.filter(function (d) { return d.tarih === key; });
-        }
-      } catch (e) {}
-
-      var html = tarihSeciciHTML(key);
-
-      if (!dersler.length) {
-        html += '<div class="cark kart p-6 md:p-8 text-center"><p class="text-slate-500 text-[14px] font-medium">Bu tarihte planlanmış ders bulunmuyor.</p></div>';
-      } else {
-        html += '<div class="space-y-2">';
-        dersler.forEach(function (d, i) { html += yoklamaSatirHTML(d, d.id || "ders-" + i + "-" + Date.now()); });
-        html += "</div>";
-      }
-
+    var siniflar = oGunSiniflar(tarih);
+    if (!siniflar.length) {
+      html += '<div class="rounded-xl border border-slate-200 bg-white p-6 md:p-8 text-center"><p class="text-slate-500 text-[14px] font-medium">Bu tarihte dersi olan sınıf yok.</p></div>';
       return html;
     }
 
-    function todayKey() {
-      var d = new Date();
-      return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    if (!seciliSinif || siniflar.indexOf(seciliSinif) === -1) seciliSinif = siniflar[0];
+
+    html += '<div class="flex flex-wrap gap-2 mb-4">';
+    siniflar.forEach(function (s) {
+      var a = s === seciliSinif;
+      var st = a ? 'background:#14b8a6;color:#fff;border-color:#14b8a6;' : 'background:#fff;color:#0f766e;border-color:#99f6e4;';
+      html += '<button type="button" class="rounded-full border px-3.5 py-1.5 text-[13px] font-bold transition-colors" style="' + st + '" onclick="window.__ykSinif(\'' + s + '\')">' + esc(s) + '</button>';
+    });
+    html += '</div>';
+
+    var ogrenciler = sinifOgrencileri(seciliSinif);
+    var veri = veriOku();
+
+    html += '<div class="rounded-xl border border-slate-200 bg-white p-4">';
+    html += '<div class="flex flex-wrap items-center justify-between gap-2 mb-3"><div class="font-bold text-slate-800 text-[14px]">' + esc(seciliSinif) + ' — ' + ogrenciler.length + ' öğrenci</div>' +
+      '<button type="button" class="rounded-xl border border-teal-200 bg-teal-50 px-3 py-1.5 text-[12px] font-bold text-teal-700 hover:bg-teal-100" onclick="window.__ykTumu()">Tümü Geldi</button></div>';
+
+    if (!ogrenciler.length) {
+      html += '<p class="text-slate-500 text-[13px]">Bu sınıfta kayıtlı öğrenci yok.</p>';
+    } else {
+      html += '<div class="flex flex-wrap gap-2">';
+      ogrenciler.forEach(function (ogr) { html += chipHTML(ogr, getY(veri, tarih, seciliSinif, ogr.id)); });
+      html += '</div>';
     }
+    html += '</div>';
+    return html;
+  }
 
-    function gosterAlt(alt) {
-      altButonlar.forEach(function (b) {
-        if (b.getAttribute("data-alt") === alt) {
-          b.classList.add("aktif");
-        } else {
-          b.classList.remove("aktif");
-        }
-      });
+  function yenile() { if (takipIcerik) takipIcerik.innerHTML = ekran(); }
 
-      if (takipIcerik) {
-        if (alt === "yoklama") {
-          takipIcerik.innerHTML = yoklamaEkrani();
-        } else {
-          var mesajAlani = {
-            "odevler": "Bu bölüm yakinda eklenecek.",
-            "kutuphane": "Bu bölüm yakinda eklenecek."
-          }[alt] || "Bu bölüm yakinda eklenecek.";
-          takipIcerik.innerHTML = '<div class="cark kart p-6 md:p-8 text-center"><p class="text-slate-500 text-[14px] font-medium">' + mesajAlani + '</p></div>';
-        }
-      }
+  window.__ykTarih = function (v) { seciliTarih = v; seciliSinif = null; yenile(); };
+  window.__ykSinif = function (s) { seciliSinif = s; yenile(); };
+  window.__ykChip = function (ogrId) {
+    var veri = veriOku();
+    var y = getY(veri, seciliTarih, seciliSinif, ogrId);
+    var d = dStr(y);
+    var idx = DURUMLAR.indexOf(d);
+    var yeni = idx === -1 ? DURUMLAR[0] : (idx === DURUMLAR.length - 1 ? "" : DURUMLAR[idx + 1]);
+    setY(seciliTarih, seciliSinif, ogrId, yeni, dAcik(y));
+    yenile();
+  };
+  window.__ykNot = function (ogrId) {
+    var veri = veriOku();
+    var y = getY(veri, seciliTarih, seciliSinif, ogrId);
+    var yeni = window.prompt("Gelmedi açıklaması:", dAcik(y) || "");
+    if (yeni === null) return;
+    setY(seciliTarih, seciliSinif, ogrId, "gelmedi", yeni.trim());
+    yenile();
+  };
+  window.__ykTumu = function () {
+    sinifOgrencileri(seciliSinif).forEach(function (ogr) { setY(seciliTarih, seciliSinif, ogr.id, "geldi"); });
+    yenile();
+  };
+
+  function gosterAlt(alt) {
+    altButonlar.forEach(function (b) {
+      if (b.getAttribute("data-alt") === alt) b.classList.add("aktif");
+      else b.classList.remove("aktif");
+    });
+    if (!takipIcerik) return;
+    if (alt === "yoklama") { yenile(); }
+    else {
+      takipIcerik.innerHTML = '<div class="rounded-xl border border-slate-200 bg-white p-6 md:p-8 text-center"><p class="text-slate-500 text-[14px] font-medium">Bu bölüm yakinda eklenecek.</p></div>';
     }
-
-    window.yoklamaSec = function (id, deger) {
-      localStorage.setItem("yoklama_" + id, deger);
-      yoklamaEkrani(localStorage.getItem("yoklamaTarih") || todayKey());
-    };
-
-    window.yoklamaTarihDegisti = function () {
-      var el = document.getElementById("yoklamaTarih");
-      if (el) {
-        localStorage.setItem("yoklamaTarih", el.value);
-        takipIcerik.innerHTML = yoklamaEkrani(el.value);
-      }
-    };
-
-    altButonlar.forEach(function (buton) {
-      buton.addEventListener("click", function () {
-        var alt = buton.getAttribute("data-alt");
-        gosterAlt(alt);
-      });
-    });
-    /* Öntanımlı olarak ilk alt sekme aktif olsun. */
-    gosterAlt("yoklama");
-  }
-})();
-
-/* ============ ATLAMALI MENÜ DAVRANIŞI (eklendi — mevcut fonksiyonlara dokunmaz) ============ */
-(function () {
-  var menu = document.getElementById("atlamaMenu");
-  if (!menu) return;
-  var butonlar = Array.prototype.slice.call(menu.querySelectorAll(".atlama-btn"));
-  if (!butonlar.length) return;
-  var ustBar = document.querySelector("header");
-
-  /* Üst bar yapışkan olduğu için menü tam altına yapışsın. */
-  function ustYuksekligi() {
-    return (ustBar && ustBar.offsetHeight) ? ustBar.offsetHeight : 64;
-  }
-  function guncelleTop() {
-    document.documentElement.style.setProperty("--atlamaTop", (ustYuksekligi() + 2) + "px");
-  }
-  guncelleTop();
-  window.addEventListener("resize", guncelleTop);
-  setTimeout(guncelleTop, 600);
-
-  function vurgula(buton) {
-    butonlar.forEach(function (b) {
-      if (buton && b === buton) {
-        b.classList.add("aktif");
-        b.setAttribute("aria-current", "true");
-      } else {
-        b.classList.remove("aktif");
-        b.removeAttribute("aria-current");
-      }
-    });
   }
 
-  /* Tıklayınca ilgili bölüme yumuşak kaydır. */
-  butonlar.forEach(function (buton) {
-    buton.addEventListener("click", function () {
-      var hedef = document.getElementById(buton.getAttribute("data-hedef"));
-      if (!hedef) return;
-      vurgula(buton);
-      hedef.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+  altButonlar.forEach(function (buton) {
+    buton.addEventListener("click", function () { gosterAlt(buton.getAttribute("data-alt")); });
   });
-
-  /* Kaydırma sırasında hangi bölümdeysek o buton vurgulu olsun. */
-  var bekleyen = false;
-  function spy() {
-    if (bekleyen) return;
-    bekleyen = true;
-    requestAnimationFrame(function () {
-      bekleyen = false;
-      var esik = ustYuksekligi() + menu.offsetHeight + 10;
-      var aktif = null;
-      for (var i = 0; i < butonlar.length; i++) {
-        var hedef = document.getElementById(butonlar[i].getAttribute("data-hedef"));
-        if (hedef && hedef.getBoundingClientRect().top <= esik) aktif = butonlar[i];
-      }
-      /* Sayfa en başındayken ilk bölüm (Bakış) vurgulu görünsün. */
-      var kayma = window.scrollY !== undefined ? window.scrollY : (document.documentElement && document.documentElement.scrollTop) || 0;
-      if (!aktif && kayma < 120) aktif = butonlar[0];
-      /* Sayfa sonuna gelindiyse son bölüm vurgulu olsun. */
-      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
-        aktif = butonlar[butonlar.length - 1];
-      }
-      vurgula(aktif);
-    });
-  }
-  window.addEventListener("scroll", spy, { passive: true });
-  spy();
+  gosterAlt("yoklama");
 })();
 </script>
 </body>

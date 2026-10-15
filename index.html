@@ -207,7 +207,9 @@
 <main class="max-w-[1440px] mx-auto px-4 md:px-6 pt-6 pb-24 space-y-5">
 
   <!-- ============ 1) ÖZET RAPOR ============ -->
-  <section id="ozetBolum" class="no-print"></section>
+  <section id="ozetBolum" class="no-print">
+    <div id="__bkAkordeonlar" class="mt-4"></div>
+  </section>
 
   <!-- ============ DETAYLI ANALİZ ============ -->
   <section id="analizBolum" class="no-print"></section>
@@ -1389,6 +1391,141 @@
     buton.addEventListener("click", function () { gosterAlt(buton.getAttribute("data-alt")); });
   });
   gosterAlt("yoklama");
+
+  // ===== BAKIŞ AKORDEON =====
+  var __BK_ACIK = {};
+
+  window.__bkToggle = function (id) {
+    __BK_ACIK[id] = !__BK_ACIK[id];
+    window.__bkCiz();
+  };
+
+  function __bkToplamYoklama(tarihler, sinifFiltre) {
+    // tarihler: ["2026-10-16", ...] — hangi günlerin verisini toplayacağız
+    var veri = veriOku();
+    var yok = veri.yoklamalar || {};
+    var sayac = { geldi: 0, gelmedi: 0, gec: 0, iptal: 0, toplam: 0 };
+    tarihler.forEach(function (t) {
+      var gun = yok[t];
+      if (!gun) return;
+      Object.keys(gun).forEach(function (sinif) {
+        if (sinifFiltre && sinif !== sinifFiltre) return;
+        var ogrler = gun[sinif] || {};
+        Object.keys(ogrler).forEach(function (ogrId) {
+          var v = ogrler[ogrId];
+          var d = typeof v === "string" ? v : (v && v.durum) || "";
+          if (!d) return;
+          if (sayac[d] !== undefined) sayac[d]++;
+          if (d !== "iptal") sayac.toplam++;
+        });
+      });
+    });
+    return sayac;
+  }
+
+  function __bkSon7Gun() {
+    var arr = [];
+    var bugun = new Date();
+    for (var i = 0; i < 7; i++) {
+      var d = new Date(bugun);
+      d.setDate(d.getDate() - i);
+      arr.push(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"));
+    }
+    return arr;
+  }
+
+  function __bkOran(sayac) {
+    if (!sayac.toplam) return 0;
+    return Math.round(((sayac.geldi + sayac.gec) / sayac.toplam) * 100);
+  }
+
+  window.__bkCiz = function () {
+    var el = document.getElementById("__bkAkordeonlar");
+    if (!el) return;
+
+    var bugun = bugunKey();
+    var son7 = __bkSon7Gun();
+
+    // Bu hafta toplam
+    var haftaToplam = __bkToplamYoklama(son7);
+    var haftaOran = __bkOran(haftaToplam);
+
+    // Bugünkü
+    var bugunToplam = __bkToplamYoklama([bugun]);
+
+    // Sınıf bazlı (bu hafta)
+    var veri = veriOku();
+    var siniflar = Object.keys(veri.sinifProg || {});
+    var sinifOranlari = [];
+    siniflar.forEach(function (s) {
+      var sc = __bkToplamYoklama(son7, s);
+      if (sc.toplam > 0) {
+        sinifOranlari.push({ sinif: s, oran: __bkOran(sc), toplam: sc.toplam });
+      }
+    });
+    sinifOranlari.sort(function (a, b) { return b.oran - a.oran; });
+    var enIyi = sinifOranlari.slice(0, 3);
+    var enKotu = sinifOranlari.slice(-3).reverse();
+
+    var acik = __BK_ACIK["yoklama"];
+
+    var html = '<div class="rounded-xl border border-slate-200 bg-white mb-3">';
+    html += '<button type="button" class="w-full flex items-center justify-between p-4 text-left hover:bg-slate-50" onclick="window.__bkToggle(\'yoklama\')">';
+    html += '<span class="font-bold text-slate-800 text-[14px]">' + (acik ? '▼' : '▶') + ' YOKLAMA ÖZETİ</span>';
+    html += '<span class="text-[12px] font-bold ' + (haftaOran >= 80 ? 'text-green-600' : haftaOran >= 60 ? 'text-amber-600' : 'text-red-600') + '">Bu hafta: %' + haftaOran + '</span>';
+    html += '</button>';
+
+    if (acik) {
+      html += '<div class="px-4 pb-4 border-t border-slate-100 pt-3">';
+
+      // Özet kutuları
+      html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">';
+      html += '<div class="rounded-lg border border-slate-200 p-2.5"><div class="text-[10px] font-bold text-slate-500 uppercase">Bu Hafta</div><div class="text-[18px] font-bold text-slate-800">' + haftaToplam.toplam + '</div><div class="text-[10px] text-slate-500">kayıt</div></div>';
+      html += '<div class="rounded-lg border border-slate-200 p-2.5"><div class="text-[10px] font-bold text-green-600 uppercase">Geldi</div><div class="text-[18px] font-bold text-green-600">' + haftaToplam.geldi + '</div></div>';
+      html += '<div class="rounded-lg border border-slate-200 p-2.5"><div class="text-[10px] font-bold text-red-600 uppercase">Gelmedi</div><div class="text-[18px] font-bold text-red-600">' + haftaToplam.gelmedi + '</div></div>';
+      html += '<div class="rounded-lg border border-slate-200 p-2.5"><div class="text-[10px] font-bold text-amber-600 uppercase">Geç</div><div class="text-[18px] font-bold text-amber-600">' + haftaToplam.gec + '</div></div>';
+      html += '</div>';
+
+      // Bugün
+      html += '<div class="text-[12px] font-bold text-slate-700 mb-2">Bugün (' + bugun + ')</div>';
+      html += '<div class="flex flex-wrap gap-2 mb-3 text-[12px]">';
+      html += '<span style="padding:3px 10px;border-radius:99px;background:#dcfce7;color:#166534;font-weight:700;">Geldi: ' + bugunToplam.geldi + '</span>';
+      html += '<span style="padding:3px 10px;border-radius:99px;background:#fee2e2;color:#991b1b;font-weight:700;">Gelmedi: ' + bugunToplam.gelmedi + '</span>';
+      html += '<span style="padding:3px 10px;border-radius:99px;background:#fef3c7;color:#92400e;font-weight:700;">Geç: ' + bugunToplam.gec + '</span>';
+      html += '</div>';
+
+      // En iyi / en kötü sınıflar
+      if (enIyi.length) {
+        html += '<div class="text-[12px] font-bold text-slate-700 mb-2">Bu Hafta En Yüksek Katılım</div>';
+        html += '<div class="flex flex-wrap gap-2 mb-3">';
+        enIyi.forEach(function (s) {
+          html += '<span style="padding:3px 10px;border-radius:99px;background:#dcfce7;color:#166534;font-weight:700;font-size:12px;">' + esc(s.sinif) + ' — %' + s.oran + '</span>';
+        });
+        html += '</div>';
+      }
+
+      if (enKotu.length) {
+        html += '<div class="text-[12px] font-bold text-slate-700 mb-2">Bu Hafta En Düşük Katılım</div>';
+        html += '<div class="flex flex-wrap gap-2 mb-1">';
+        enKotu.forEach(function (s) {
+          html += '<span style="padding:3px 10px;border-radius:99px;background:#fee2e2;color:#991b1b;font-weight:700;font-size:12px;">' + esc(s.sinif) + ' — %' + s.oran + '</span>';
+        });
+        html += '</div>';
+      }
+
+      if (!haftaToplam.toplam) {
+        html += '<p class="text-slate-500 text-[13px] text-center py-3">Bu hafta için yoklama kaydı yok.</p>';
+      }
+
+      html += '</div>';
+    }
+
+    html += '</div>';
+    el.innerHTML = html;
+  };
+
+  // Sayfa açıldığında bir kez çiz
+  setTimeout(function () { window.__bkCiz(); }, 200);
 })();
 </script>
 </body>

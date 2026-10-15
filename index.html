@@ -995,6 +995,9 @@
       window.__odOgrDegisti();
     }, 50);
 
+    html += '<div id="__odListe" class="mt-4"></div>';
+    setTimeout(function () { window.__odListeCiz(); }, 60);
+
     return html;
   };
 
@@ -1071,6 +1074,172 @@
     veriYaz(veri);
     alert("✅ Ödev kaydedildi.");
     takipIcerik.innerHTML = window.__odEkran();
+    setTimeout(function () { window.__odListeCiz(); }, 60);
+  };
+
+  // ===== Verilen Ödevler listesi =====
+  var __OD_DURUM_RENK = {
+    bekliyor: { bg: "#f1f5f9", fg: "#475569", label: "Bekliyor" },
+    yapildi:  { bg: "#22c55e", fg: "#fff",    label: "Yapıldı" },
+    yapmadi:  { bg: "#ef4444", fg: "#fff",    label: "Yapmadı" },
+    eksik:    { bg: "#f59e0b", fg: "#fff",    label: "Eksik" },
+    gec:      { bg: "#fb923c", fg: "#fff",    label: "Geç" }
+  };
+
+  var __OD_DURUM_SIRA = ["bekliyor", "yapildi", "yapmadi", "eksik", "gec"];
+
+  window.__odFiltre = "hafta";
+  window.__odAcik = {};
+
+  window.__odFiltreDegistir = function (f) {
+    window.__odFiltre = f;
+    window.__odListeCiz();
+  };
+
+  window.__odToggle = function (id) {
+    window.__odAcik[id] = !window.__odAcik[id];
+    window.__odListeCiz();
+  };
+
+  window.__odChip = function (odevId, ogrId) {
+    var veri = veriOku();
+    var odev = (veri.odevler || []).filter(function (o) { return o.id === odevId; })[0];
+    if (!odev) return;
+    var mevcut = odev.durumlar[ogrId] || "bekliyor";
+    var idx = __OD_DURUM_SIRA.indexOf(mevcut);
+    var yeni = __OD_DURUM_SIRA[(idx + 1) % __OD_DURUM_SIRA.length];
+    odev.durumlar[ogrId] = yeni;
+    veriYaz(veri);
+    window.__odListeCiz();
+  };
+
+  window.__odTumuYapildi = function (odevId) {
+    var veri = veriOku();
+    var odev = (veri.odevler || []).filter(function (o) { return o.id === odevId; })[0];
+    if (!odev) return;
+    Object.keys(odev.durumlar).forEach(function (k) { odev.durumlar[k] = "yapildi"; });
+    veriYaz(veri);
+    window.__odListeCiz();
+  };
+
+  window.__odTumuYapmadi = function (odevId) {
+    var veri = veriOku();
+    var odev = (veri.odevler || []).filter(function (o) { return o.id === odevId; })[0];
+    if (!odev) return;
+    Object.keys(odev.durumlar).forEach(function (k) { odev.durumlar[k] = "yapmadi"; });
+    veriYaz(veri);
+    window.__odListeCiz();
+  };
+
+  window.__odSil = function (odevId) {
+    if (!confirm("Bu ödev silinsin mi?")) return;
+    var veri = veriOku();
+    veri.odevler = (veri.odevler || []).filter(function (o) { return o.id !== odevId; });
+    veriYaz(veri);
+    window.__odListeCiz();
+  };
+
+  window.__odOgrenciAd = function (id) {
+    var veri = veriOku();
+    var o = (veri.ogrenciler || []).filter(function (x) { return x.id === id; })[0];
+    return o ? (o.adSoyad || o.ad || o.isim || "Öğrenci") : "?";
+  };
+
+  window.__odFiltrele = function (odevler) {
+    var f = window.__odFiltre;
+    if (f === "tumu") return odevler;
+    var bugun = new Date();
+    bugun.setHours(0,0,0,0);
+    var limit = new Date(bugun);
+    if (f === "bugun") { /* aynı gün */ }
+    else if (f === "hafta") limit.setDate(limit.getDate() - 7);
+    else if (f === "ay") limit.setMonth(limit.getMonth() - 1);
+    return odevler.filter(function (o) {
+      if (!o.olusturmaTarihi) return false;
+      var t = new Date(o.olusturmaTarihi);
+      t.setHours(0,0,0,0);
+      if (f === "bugun") return t.getTime() === bugun.getTime();
+      return t >= limit;
+    });
+  };
+
+  window.__odListeCiz = function () {
+    var el = document.getElementById("__odListe");
+    if (!el) return;
+    var veri = veriOku();
+    var odevler = window.__odFiltrele((veri.odevler || []).slice().reverse());
+
+    var html = '<div class="rounded-xl border border-slate-200 bg-white p-4">';
+    html += '<div class="flex flex-wrap items-center justify-between gap-2 mb-3">';
+    html += '<div class="font-bold text-slate-800 text-[14px]">📋 Verilen Ödevler</div>';
+    html += '<div class="flex gap-1">';
+    ["bugun","hafta","ay","tumu"].forEach(function (f) {
+      var aktif = window.__odFiltre === f;
+      var lbl = f === "bugun" ? "Bugün" : f === "hafta" ? "Bu Hafta" : f === "ay" ? "Bu Ay" : "Tümü";
+      var stil = aktif ? "background:#14b8a6;color:#fff;border-color:#14b8a6;" : "background:#fff;color:#64748b;border-color:#e2e8f0;";
+      html += '<button type="button" class="rounded-full border px-3 py-1 text-[11px] font-bold" style="' + stil + '" onclick="window.__odFiltreDegistir(\'' + f + '\')">' + lbl + '</button>';
+    });
+    html += '</div></div>';
+
+    if (!odevler.length) {
+      html += '<p class="text-slate-500 text-[13px] text-center py-4">Bu dönemde ödev yok.</p>';
+      html += '</div>';
+      el.innerHTML = html;
+      return;
+    }
+
+    odevler.forEach(function (o) {
+      var durumlar = Object.keys(o.durumlar || {});
+      var toplam = durumlar.length;
+      var yapildi = durumlar.filter(function (k) { return o.durumlar[k] === "yapildi"; }).length;
+      var bekleyen = durumlar.filter(function (k) { return o.durumlar[k] === "bekliyor"; }).length;
+      var acik = window.__odAcik[o.id];
+
+      html += '<div class="rounded-xl border border-slate-200 bg-white mb-2">';
+      html += '<div class="p-3">';
+      html += '<div class="flex flex-wrap items-start justify-between gap-2">';
+      html += '<div class="flex-1 min-w-0">';
+      html += '<div class="flex items-center gap-2 flex-wrap">';
+      html += '<span class="font-bold text-slate-800 text-[13px]">' + esc(o.sinif || "Bireysel") + '</span>';
+      html += '<span class="rounded-full px-2 py-0.5 text-[10px] font-bold bg-slate-100 text-slate-600">' + esc(o.ders) + '</span>';
+      if (o.ogretmen) html += '<span class="text-[11px] text-slate-500">' + esc(o.ogretmen) + '</span>';
+      html += '</div>';
+      html += '<div class="text-[11px] text-slate-500 mt-0.5">' + esc(o.konu) + '</div>';
+      html += '<div class="text-[10px] text-slate-400 mt-0.5">Verildi: ' + esc(o.olusturmaTarihi || '-') + (o.teslimTarihi ? ' · Teslim: ' + esc(o.teslimTarihi) : '') + '</div>';
+      html += '</div>';
+      html += '<div class="flex gap-1">';
+      html += '<button type="button" class="rounded-lg border border-teal-200 bg-teal-50 px-2.5 py-1 text-[11px] font-bold text-teal-700" onclick="window.__odToggle(\'' + o.id + '\')">' + (acik ? '▲ Kapat' : '▼ Aç') + '</button>';
+      html += '<button type="button" class="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-slate-500" onclick="window.__odSil(\'' + o.id + '\')">🗑</button>';
+      html += '</div></div>';
+
+      html += '<div class="flex flex-wrap gap-2 mt-2 text-[11px]">';
+      html += '<span style="padding:2px 8px;border-radius:99px;background:#f1f5f9;color:#475569;font-weight:700;">Toplam: ' + toplam + '</span>';
+      html += '<span style="padding:2px 8px;border-radius:99px;background:#dcfce7;color:#166534;font-weight:700;">Yapıldı: ' + yapildi + '</span>';
+      html += '<span style="padding:2px 8px;border-radius:99px;background:#fef3c7;color:#92400e;font-weight:700;">Bekleyen: ' + bekleyen + '</span>';
+      html += '</div>';
+
+      if (acik) {
+        html += '<div class="mt-3 pt-3 border-t border-slate-100">';
+        html += '<div class="flex gap-1 mb-2">';
+        html += '<button type="button" class="rounded-lg border border-teal-200 bg-teal-50 px-2.5 py-1 text-[11px] font-bold text-teal-700" onclick="window.__odTumuYapildi(\'' + o.id + '\')">✅ Tümünü Yapıldı</button>';
+        html += '<button type="button" class="rounded-lg border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-bold text-red-700" onclick="window.__odTumuYapmadi(\'' + o.id + '\')">❌ Tümünü Yapmadı</button>';
+        html += '</div>';
+        html += '<div class="flex flex-wrap gap-2">';
+        durumlar.sort(function (a, b) {
+          return window.__odOgrenciAd(a).localeCompare(window.__odOgrenciAd(b));
+        }).forEach(function (ogrId) {
+          var d = o.durumlar[ogrId] || "bekliyor";
+          var r = __OD_DURUM_RENK[d] || __OD_DURUM_RENK.bekliyor;
+          html += '<button type="button" class="rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-colors" style="background:' + r.bg + ';color:' + r.fg + ';border-color:' + r.bg + ';" onclick="window.__odChip(\'' + o.id + '\',\'' + ogrId + '\')">' + esc(window.__odOgrenciAd(ogrId)) + ' · ' + r.label + '</button>';
+        });
+        html += '</div></div>';
+      }
+
+      html += '</div></div>';
+    });
+
+    html += '</div>';
+    el.innerHTML = html;
   };
 
   var __OD_DERS_AD = {

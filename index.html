@@ -941,6 +941,127 @@
     if (o) o.remove();
   };
 
+  // Ödev ekranı
+  window.__odEkran = function () {
+    var veri = veriOku();
+    var siniflar = Object.keys(veri.sinifProg || {}).sort();
+    var ogrenciler = veri.ogrenciler || [];
+    var ogretmenler = veri.ogretmenler || [];
+    var bugun = bugunKey();
+
+    var html = '<div class="rounded-xl border border-slate-200 bg-white p-4 mb-4">';
+    html += '<div class="flex flex-wrap gap-2 mb-4">';
+    html += '<button type="button" id="__odTabSinif" class="rounded-full border border-teal-500 bg-teal-500 px-4 py-1.5 text-[13px] font-bold text-white" onclick="window.__odTab(\'sinif\')">🎯 Sınıfa Ödev</button>';
+    html += '<button type="button" id="__odTabBireysel" class="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-[13px] font-bold text-slate-600" onclick="window.__odTab(\'bireysel\')">👤 Bireysel Ödev</button>';
+    html += '</div>';
+
+    // SINIFA ÖDEV FORMU
+    html += '<div id="__odFormSinif">';
+    html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-3">';
+    html += '<div><label class="text-[11px] font-semibold text-slate-500 uppercase">Sınıf</label><select id="__odSinif" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium">';
+    siniflar.forEach(function (s) { html += '<option value="' + esc(s) + '">' + esc(s) + '</option>'; });
+    html += '</select></div>';
+    html += '<div><label class="text-[11px] font-semibold text-slate-500 uppercase">Ders</label><input type="text" id="__odDers" placeholder="Örn. Matematik" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium" /></div>';
+    html += '<div><label class="text-[11px] font-semibold text-slate-500 uppercase">Öğretmen</label><input type="text" id="__odOgretmen" placeholder="Örn. Mine Gürkan" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium" /></div>';
+    html += '<div><label class="text-[11px] font-semibold text-slate-500 uppercase">Konu</label><input type="text" id="__odKonu" placeholder="Örn. Türev" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium" /></div>';
+    html += '<div><label class="text-[11px] font-semibold text-slate-500 uppercase">Teslim Tarihi (opsiyonel)</label><input type="date" id="__odTeslim" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium" /></div>';
+    html += '<div><label class="text-[11px] font-semibold text-slate-500 uppercase">Açıklama (opsiyonel)</label><input type="text" id="__odAciklama" placeholder="Ek not" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium" /></div>';
+    html += '</div>';
+    html += '<button type="button" class="mt-4 rounded-xl bg-teal-500 px-5 py-2.5 text-[13px] font-bold text-white hover:bg-teal-600" onclick="window.__odKaydet(\'sinif\')">📝 Ödevi Ver</button>';
+    html += '</div>';
+
+    // BİREYSEL ÖDEV FORMU (başta gizli)
+    html += '<div id="__odFormBireysel" style="display:none;">';
+    html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-3">';
+    html += '<div><label class="text-[11px] font-semibold text-slate-500 uppercase">Öğrenci</label><select id="__odOgr" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium">';
+    ogrenciler.slice().sort(function (a,b) { return (a.adSoyad||'').localeCompare(b.adSoyad||''); }).forEach(function (o) {
+      var ad = o.adSoyad || o.ad || o.isim || 'Öğrenci';
+      html += '<option value="' + esc(o.id) + '">' + esc(ad) + ' (' + esc(o.sinif||'') + ')</option>';
+    });
+    html += '</select></div>';
+    html += '<div><label class="text-[11px] font-semibold text-slate-500 uppercase">Ders</label><input type="text" id="__odDersB" placeholder="Örn. Matematik" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium" /></div>';
+    html += '<div><label class="text-[11px] font-semibold text-slate-500 uppercase">Öğretmen</label><input type="text" id="__odOgretmenB" placeholder="Örn. Mine Gürkan" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium" /></div>';
+    html += '<div><label class="text-[11px] font-semibold text-slate-500 uppercase">Konu</label><input type="text" id="__odKonuB" placeholder="Örn. Türev" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium" /></div>';
+    html += '<div><label class="text-[11px] font-semibold text-slate-500 uppercase">Teslim Tarihi (opsiyonel)</label><input type="date" id="__odTeslimB" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium" /></div>';
+    html += '<div><label class="text-[11px] font-semibold text-slate-500 uppercase">Açıklama (opsiyonel)</label><input type="text" id="__odAciklamaB" placeholder="Ek not" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium" /></div>';
+    html += '</div>';
+    html += '<button type="button" class="mt-4 rounded-xl bg-teal-500 px-5 py-2.5 text-[13px] font-bold text-white hover:bg-teal-600" onclick="window.__odKaydet(\'bireysel\')">📝 Ödevi Ver</button>';
+    html += '</div>';
+
+    html += '</div>';
+    return html;
+  };
+
+  // Tab değiştirme
+  window.__odTab = function (tip) {
+    var s = document.getElementById("__odFormSinif");
+    var b = document.getElementById("__odFormBireysel");
+    var ts = document.getElementById("__odTabSinif");
+    var tb = document.getElementById("__odTabBireysel");
+    if (!s || !b) return;
+    if (tip === "sinif") {
+      s.style.display = "block"; b.style.display = "none";
+      ts.className = "rounded-full border border-teal-500 bg-teal-500 px-4 py-1.5 text-[13px] font-bold text-white";
+      tb.className = "rounded-full border border-slate-300 bg-white px-4 py-1.5 text-[13px] font-bold text-slate-600";
+    } else {
+      s.style.display = "none"; b.style.display = "block";
+      ts.className = "rounded-full border border-slate-300 bg-white px-4 py-1.5 text-[13px] font-bold text-slate-600";
+      tb.className = "rounded-full border border-teal-500 bg-teal-500 px-4 py-1.5 text-[13px] font-bold text-white";
+    }
+  };
+
+  // Ödev kaydet
+  window.__odKaydet = function (tip) {
+    var veri = veriOku();
+    if (!veri.odevler) veri.odevler = [];
+    var bugun = bugunKey();
+    var odev = null;
+
+    if (tip === "sinif") {
+      var sinif = document.getElementById("__odSinif").value;
+      var ders = document.getElementById("__odDers").value.trim();
+      var ogretmen = document.getElementById("__odOgretmen").value.trim();
+      var konu = document.getElementById("__odKonu").value.trim();
+      var teslim = document.getElementById("__odTeslim").value;
+      var aciklama = document.getElementById("__odAciklama").value.trim();
+      if (!ders) { alert("Ders alanı zorunlu."); return; }
+      if (!konu) { alert("Konu alanı zorunlu."); return; }
+      odev = {
+        id: "odev_" + Date.now() + "_" + Math.random().toString(36).slice(2,8),
+        tip: "sinif", sinif: sinif, ogrenciId: null,
+        ders: ders, ogretmen: ogretmen, konu: konu,
+        teslimTarihi: teslim || null, aciklama: aciklama,
+        olusturmaTarihi: bugun, durumlar: {}
+      };
+      // Sınıftaki tüm öğrencilere "bekliyor" ata
+      (veri.ogrenciler || []).forEach(function (o) {
+        if (o.sinif === sinif) odev.durumlar[o.id] = "bekliyor";
+      });
+    } else {
+      var ogrId = document.getElementById("__odOgr").value;
+      var dersB = document.getElementById("__odDersB").value.trim();
+      var ogretmenB = document.getElementById("__odOgretmenB").value.trim();
+      var konuB = document.getElementById("__odKonuB").value.trim();
+      var teslimB = document.getElementById("__odTeslimB").value;
+      var aciklamaB = document.getElementById("__odAciklamaB").value.trim();
+      if (!dersB) { alert("Ders alanı zorunlu."); return; }
+      if (!konuB) { alert("Konu alanı zorunlu."); return; }
+      odev = {
+        id: "odev_" + Date.now() + "_" + Math.random().toString(36).slice(2,8),
+        tip: "bireysel", sinif: null, ogrenciId: ogrId,
+        ders: dersB, ogretmen: ogretmenB, konu: konuB,
+        teslimTarihi: teslimB || null, aciklama: aciklamaB,
+        olusturmaTarihi: bugun, durumlar: {}
+      };
+      odev.durumlar[ogrId] = "bekliyor";
+    }
+
+    veri.odevler.push(odev);
+    veriYaz(veri);
+    alert("✅ Ödev kaydedildi.");
+    takipIcerik.innerHTML = window.__odEkran();
+  };
+
   function gosterAlt(alt) {
     altButonlar.forEach(function (b) {
       if (b.getAttribute("data-alt") === alt) b.classList.add("aktif");
@@ -948,6 +1069,9 @@
     });
     if (!takipIcerik) return;
     if (alt === "yoklama") { yenile(); }
+    else if (alt === "odevler") {
+      takipIcerik.innerHTML = window.__odEkran();
+    }
     else {
       takipIcerik.innerHTML = '<div class="rounded-xl border border-slate-200 bg-white p-6 md:p-8 text-center"><p class="text-slate-500 text-[14px] font-medium">Bu bölüm yakinda eklenecek.</p></div>';
     }

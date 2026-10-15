@@ -810,7 +810,135 @@
   };
 
   window.__ykExcelYukle = function () {
-    alert("Excel yükleme bir sonraki adımda eklenecek.");
+    var input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".xlsx,.xls";
+    input.onchange = function (e) {
+      var dosya = e.target.files[0];
+      if (!dosya) return;
+      var reader = new FileReader();
+      reader.onload = function (evt) {
+        try {
+          var data = new Uint8Array(evt.target.result);
+          var wb = XLSX.read(data, { type: "array" });
+          var ws = wb.Sheets[wb.SheetNames[0]];
+          var rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false });
+          window.__ykExcelOnizle(rows, dosya.name);
+        } catch (err) {
+          alert("Excel okunamadı: " + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(dosya);
+    };
+    input.click();
+  };
+
+  window.__ykExcelOnizle = function (rows, dosyaAdi) {
+    // Boş satırları temizle
+    rows = rows.filter(function (r) {
+      return r && r.some(function (c) { return c !== "" && c != null; });
+    });
+    if (rows.length < 2) {
+      alert("Excel boş veya geçersiz.");
+      return;
+    }
+
+    // İlk satır başlık mı? Kontrol et
+    var ilkSatir = rows[0].map(function (c) { return String(c || "").toLowerCase(); });
+    var baslikVar = ilkSatir.indexOf("tarih") !== -1;
+    var veriSatirlari = baslikVar ? rows.slice(1) : rows;
+
+    // Format algıla: sütun sayısına göre
+    var sutunSayisi = rows[0].length;
+    var format = sutunSayisi >= 5 ? "B" : "A";
+
+    // Format A: A=tarih/boş, B=öğrenci, C=açıklama
+    // Format B: A=tarih, B=sınıf, C=öğrenci, D=durum, E=açıklama
+    var tarihler = {};
+    var toplamOgrenci = 0;
+
+    if (format === "A") {
+      var aktifTarih = null;
+      veriSatirlari.forEach(function (r) {
+        var a = String(r[0] || "").trim();
+        var b = String(r[1] || "").trim();
+        var c = String(r[2] || "").trim();
+        if (a && !b) {
+          // Tarih satırı
+          aktifTarih = a.replace(/\s+\d{2}:\d{2}:\d{2}.*$/, "");
+          if (!tarihler[aktifTarih]) tarihler[aktifTarih] = 0;
+        } else if (b && aktifTarih) {
+          tarihler[aktifTarih]++;
+          toplamOgrenci++;
+        }
+      });
+    } else {
+      veriSatirlari.forEach(function (r) {
+        var t = String(r[0] || "").trim().replace(/\s+\d{2}:\d{2}:\d{2}.*$/, "");
+        var ogr = String(r[2] || "").trim();
+        if (t && ogr) {
+          if (!tarihler[t]) tarihler[t] = 0;
+          tarihler[t]++;
+          toplamOgrenci++;
+        }
+      });
+    }
+
+    // Modal HTML
+    var tarihListesi = Object.keys(tarihler).sort();
+    var html = '<div style="font-family:system-ui;padding:8px;">' +
+      '<div style="font-size:15px;font-weight:700;margin-bottom:4px;color:#0f172a;">Excel Önizleme</div>' +
+      '<div style="font-size:12px;color:#64748b;margin-bottom:14px;">Dosya: ' + dosyaAdi + '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">' +
+        '<div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:10px;">' +
+          '<div style="font-size:10px;color:#0f766e;font-weight:700;text-transform:uppercase;">Format</div>' +
+          '<div style="font-size:18px;font-weight:700;color:#0f766e;margin-top:2px;">' + format + '</div>' +
+        '</div>' +
+        '<div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:10px;">' +
+          '<div style="font-size:10px;color:#0f766e;font-weight:700;text-transform:uppercase;">Tarih Sayısı</div>' +
+          '<div style="font-size:18px;font-weight:700;color:#0f766e;margin-top:2px;">' + tarihListesi.length + '</div>' +
+        '</div>' +
+        '<div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:10px;">' +
+          '<div style="font-size:10px;color:#0f766e;font-weight:700;text-transform:uppercase;">Öğrenci Kaydı</div>' +
+          '<div style="font-size:18px;font-weight:700;color:#0f766e;margin-top:2px;">' + toplamOgrenci + '</div>' +
+        '</div>' +
+        '<div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:10px;">' +
+          '<div style="font-size:10px;color:#0f766e;font-weight:700;text-transform:uppercase;">Toplam Satır</div>' +
+          '<div style="font-size:18px;font-weight:700;color:#0f766e;margin-top:2px;">' + veriSatirlari.length + '</div>' +
+        '</div>' +
+      '</div>';
+
+    if (tarihListesi.length) {
+      html += '<div style="font-size:11px;font-weight:700;color:#0f172a;text-transform:uppercase;margin-bottom:6px;">Tarih Dağılımı</div>';
+      html += '<div style="max-height:180px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:10px;padding:8px;margin-bottom:14px;background:#f8fafc;">';
+      tarihListesi.forEach(function (t) {
+        html += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid #f1f5f9;">' +
+          '<span style="color:#475569;">' + t + '</span>' +
+          '<span style="font-weight:700;color:#0f766e;">' + tarihler[t] + ' kayıt</span>' +
+        '</div>';
+      });
+      html += '</div>';
+    }
+
+    html += '<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:10px;margin-bottom:14px;font-size:11px;color:#78350f;">' +
+      '⚠ Bu sadece önizleme. Kaydetme özelliği bir sonraki adımda eklenecek.' +
+    '</div>';
+
+    html += '<button type="button" onclick="window.__ykExcelKapat()" style="display:block;width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;cursor:pointer;font-family:inherit;color:#64748b;font-size:12px;font-weight:600;">Kapat</button>';
+
+    var overlay = document.createElement("div");
+    overlay.id = "__ykExcelOverlay";
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(15,23,42,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;";
+    var kutu = document.createElement("div");
+    kutu.style.cssText = "background:#fff;border-radius:16px;padding:18px;max-width:480px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);";
+    kutu.innerHTML = html;
+    overlay.appendChild(kutu);
+    document.body.appendChild(overlay);
+  };
+
+  window.__ykExcelKapat = function () {
+    var o = document.getElementById("__ykExcelOverlay");
+    if (o) o.remove();
   };
 
   function gosterAlt(alt) {

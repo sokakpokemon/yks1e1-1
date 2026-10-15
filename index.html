@@ -28,6 +28,7 @@
 <link rel="stylesheet" href="vendor/fontawesome.css">
 <script src="vendor/chart.js"></script>
 <script src="vendor/html2canvas.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 
 <style>
   html { scroll-behavior: smooth; }
@@ -679,7 +680,10 @@
     var tarih = seciliTarih;
     var html = '<div class="flex flex-wrap items-center gap-2 mb-4">' +
       '<label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Tarih:</label>' +
-      '<input type="date" id="yoklamaTarih" value="' + tarih + '" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-teal-400/40" onchange="window.__ykTarih(this.value)" /></div>';
+      '<input type="date" id="yoklamaTarih" value="' + tarih + '" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-teal-400/40" onchange="window.__ykTarih(this.value)" />' +
+      '<button type="button" class="rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-[12px] font-bold text-teal-700 hover:bg-teal-100" onclick="window.__ykSablonMenu()">📥 Şablon İndir</button>' +
+      '<button type="button" class="rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-[12px] font-bold text-teal-700 hover:bg-teal-100" onclick="window.__ykExcelYukle()">📤 Excel Yükle</button>' +
+      '</div>';
 
     var siniflar = oGunSiniflar(tarih);
     if (!siniflar.length) {
@@ -739,6 +743,74 @@
   window.__ykTumu = function () {
     sinifOgrencileri(seciliSinif).forEach(function (ogr) { setY(seciliTarih, seciliSinif, ogr.id, "geldi"); });
     yenile();
+  };
+
+  window.__ykSablonMenu = function () {
+    var html = '<div style="font-family:system-ui;padding:8px;">' +
+      '<div style="font-size:14px;font-weight:700;margin-bottom:12px;color:#0f172a;">Hangi formatta şablon indirmek istiyorsunuz?</div>' +
+      '<button type="button" onclick="window.__ykSablonSec(\'A\')" style="display:block;width:100%;text-align:left;padding:14px;margin-bottom:10px;border:2px solid #14b8a6;border-radius:12px;background:#fff;cursor:pointer;font-family:inherit;">' +
+        '<div style="font-weight:700;color:#0f766e;font-size:13px;">A) Basit Format</div>' +
+        '<div style="font-size:11px;color:#64748b;margin-top:4px;">Tarih | Öğrenci | Açıklama — Gelmeyenleri listelemek için</div>' +
+      '</button>' +
+      '<button type="button" onclick="window.__ykSablonSec(\'B\')" style="display:block;width:100%;text-align:left;padding:14px;margin-bottom:10px;border:2px solid #14b8a6;border-radius:12px;background:#fff;cursor:pointer;font-family:inherit;">' +
+        '<div style="font-weight:700;color:#0f766e;font-size:13px;">B) Detaylı Format</div>' +
+        '<div style="font-size:11px;color:#64748b;margin-top:4px;">Tarih | Sınıf | Öğrenci | Durum | Açıklama — Tam kontrol için</div>' +
+      '</button>' +
+      '<button type="button" onclick="window.__ykSablonKapat()" style="display:block;width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;cursor:pointer;font-family:inherit;color:#64748b;font-size:12px;">İptal</button>' +
+    '</div>';
+    var overlay = document.createElement("div");
+    overlay.id = "__ykSablonOverlay";
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(15,23,42,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;";
+    var kutu = document.createElement("div");
+    kutu.style.cssText = "background:#fff;border-radius:16px;padding:16px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);";
+    kutu.innerHTML = html;
+    overlay.appendChild(kutu);
+    document.body.appendChild(overlay);
+  };
+
+  window.__ykSablonKapat = function () {
+    var o = document.getElementById("__ykSablonOverlay");
+    if (o) o.remove();
+  };
+
+  window.__ykSablonSec = function (tip) {
+    window.__ykSablonKapat();
+    if (tip === "A") window.__ykSablonA();
+    else if (tip === "B") window.__ykSablonB();
+  };
+
+  window.__ykSablonA = function () {
+    var wb = XLSX.utils.book_new();
+    var data = [
+      ["Tarih", "Öğrenci", "Açıklama"],
+      ["2026-10-15", "", ""],
+      ["", "BAŞAK SAĞLAMER", "RAHATSIZ"],
+      ["", "İREM ATIZ", "RAHATSIZ"],
+      ["2026-10-16", "", ""],
+      ["", "ÖRNEK ÖĞRENCİ", "AÇMADI"]
+    ];
+    var ws = XLSX.utils.aoa_to_sheet(data);
+    ws["!cols"] = [{ wch: 15 }, { wch: 25 }, { wch: 30 }];
+    XLSX.utils.book_append_sheet(wb, ws, "Yoklama");
+    XLSX.writeFile(wb, "yoklama-sablon-A.xlsx");
+  };
+
+  window.__ykSablonB = function () {
+    var wb = XLSX.utils.book_new();
+    var data = [
+      ["Tarih", "Sınıf", "Öğrenci", "Durum", "Açıklama"],
+      ["2026-10-15", "11FEN", "Başak Sağlamer", "gelmedi", "RAHATSIZ"],
+      ["2026-10-15", "11FEN", "Ali Veli", "geldi", ""],
+      ["2026-10-15", "12 DİL", "Ayşe Demir", "gec", "GEÇ KALMIŞ"]
+    ];
+    var ws = XLSX.utils.aoa_to_sheet(data);
+    ws["!cols"] = [{ wch: 15 }, { wch: 12 }, { wch: 25 }, { wch: 10 }, { wch: 30 }];
+    XLSX.utils.book_append_sheet(wb, ws, "Yoklama");
+    XLSX.writeFile(wb, "yoklama-sablon-B.xlsx");
+  };
+
+  window.__ykExcelYukle = function () {
+    alert("Excel yükleme bir sonraki adımda eklenecek.");
   };
 
   function gosterAlt(alt) {

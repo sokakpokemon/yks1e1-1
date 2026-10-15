@@ -590,10 +590,10 @@
     return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
 
-  function gunKodu(tarih) {
+  function tarihGunIdx(tarih) {
     var p = tarih.split("-");
     var d = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
-    return GUNLER[d.getDay()];
+    return (d.getDay() + 6) % 7;
   }
 
   function veriOku() {
@@ -612,20 +612,15 @@
   function oGunSiniflar(tarih) {
     var veri = veriOku();
     var prog = veri.sinifProg || {};
-    var gk = gunKodu(tarih);
+    var gunIdx = tarihGunIdx(tarih);
     var sonuc = [];
     Object.keys(prog).forEach(function (sinifAd) {
-      var p = prog[sinifAd];
-      if (!p) return;
-      var gunVeri = p[gk];
-      if (!gunVeri) return;
-      var dolu = false;
-      if (Array.isArray(gunVeri)) {
-        dolu = gunVeri.some(function (x) { return !!x; });
-      } else if (typeof gunVeri === 'object') {
-        dolu = Object.keys(gunVeri).some(function (k) { return !!gunVeri[k]; });
-      }
-      if (dolu) sonuc.push(sinifAd);
+      var slotlar = prog[sinifAd];
+      if (!Array.isArray(slotlar)) return;
+      var buGunVar = slotlar.some(function (s) {
+        return String(s).indexOf(gunIdx + "-") === 0;
+      });
+      if (buGunVar) sonuc.push(sinifAd);
     });
     return sonuc.sort();
   }

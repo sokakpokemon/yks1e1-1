@@ -41,4 +41,66 @@
       takipBolum.insertAdjacentHTML('afterbegin', baslikHTML);
     }
   }, 150);
+
+  // === KÜTÜPHANE: TÜMÜNÜ GİRİŞ YAP BUTONU ===
+  setInterval(function() {
+    var ktListe = document.getElementById("__ktListe");
+    if (ktListe && !document.getElementById("__ktTopluGirisBtn")) {
+
+      // Butonu oluştur
+      var btn = document.createElement("button");
+      btn.id = "__ktTopluGirisBtn";
+      btn.className = "rounded-xl border border-teal-200 bg-teal-50 px-3 py-1.5 text-[12px] font-bold text-teal-700 hover:bg-teal-100 mb-3";
+      btn.style.marginRight = "8px";
+      btn.textContent = "✅ Tümünü Giriş Yap";
+
+      btn.onclick = function() {
+        if(!confirm("Bugün kütüphaneye gelen tüm öğrencileri 'Giriş' olarak işaretlemek istiyor musunuz? (Zaten işaretli olanlara dokunulmaz)")) return;
+
+        var LS_K = "yksOto_arsiv_v1";
+        var veri = JSON.parse(localStorage.getItem(LS_K) || "{}");
+
+        // Tarihi input'tan al (sayfadaki tarih seçici)
+        var tarihInput = document.getElementById("yoklamaTarih") || document.getElementById("__ktTarihInput");
+        var tarih = tarihInput ? tarihInput.value : new Date().toISOString().slice(0,10);
+
+        var d = new Date();
+        var saat = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+
+        if (!veri.kutuphane) veri.kutuphane = {};
+        if (!veri.kutuphane[tarih]) veri.kutuphane[tarih] = {};
+
+        var ogrenciler = veri.ogrenciler || [];
+        var sayac = 0;
+
+        ogrenciler.forEach(function(o) {
+           var mevcut = veri.kutuphane[tarih][o.id];
+           // Eğer kayıt yoksa veya "gelmedi" ise giriş yap
+           if (!mevcut || mevcut === "gelmedi") {
+               veri.kutuphane[tarih][o.id] = { giris: saat };
+               sayac++;
+           }
+        });
+
+        localStorage.setItem(LS_K, JSON.stringify(veri));
+
+        // Ekranı yenile
+        if (window.__ktListeCiz) {
+            window.__ktListeCiz();
+        } else {
+            window.location.reload();
+        }
+
+        alert(sayac + " öğrenci için giriş kaydı oluşturuldu.");
+      };
+
+      // Butonu listenin en üstüne (arama çubuğundan hemen sonraya) ekle
+      var aramaKutusu = document.getElementById("__ktArama");
+      if(aramaKutusu && aramaKutusu.parentNode) {
+         aramaKutusu.parentNode.parentNode.insertBefore(btn, aramaKutusu.parentNode.nextSibling);
+      } else {
+         ktListe.insertBefore(btn, ktListe.firstChild);
+      }
+    }
+  }, 500);
 })();

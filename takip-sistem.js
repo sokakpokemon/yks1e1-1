@@ -103,4 +103,32 @@
       }
     }
   }, 500);
+
+  // === ALT SEKMELERİ GÜNCELLE ===
+  setInterval(function() {
+    var btnYoklama = document.querySelector('.takip-alt-btn[data-alt="yoklama"]');
+    var btnOdevler = document.querySelector('.takip-alt-btn[data-alt="odevler"]');
+    var btnKutuphane = document.querySelector('.takip-alt-btn[data-alt="kutuphane"]');
+    
+    // İsim değiştirme
+    if (btnYoklama && btnYoklama.textContent !== "Ders Yoklaması") {
+      btnYoklama.textContent = "Ders Yoklaması";
+    }
+    
+    // Sıra değiştirme: Ödevler'i Ders Yoklaması'nın önüne al
+    if (btnYoklama && btnOdevler && btnYoklama.previousElementSibling !== btnOdevler) {
+        btnYoklama.parentNode.insertBefore(btnOdevler, btnYoklama);
+    }
+    
+    // Sınav Yoklaması ekleme
+    if (btnKutuphane && !document.querySelector('.takip-alt-btn[data-alt="sinav"]')) {
+      var btnSinav = document.createElement("button");
+      btnSinav.type = "button";
+      btnSinav.className = "takip-alt-btn";
+      btnSinav.setAttribute("data-alt", "sinav");
+      btnSinav.setAttribute("onclick", "window.gosterAlt('sinav')");
+      btnSinav.textContent = "Sınav Yoklaması";
+      btnKutuphane.parentNode.insertBefore(btnSinav, btnKutuphane.nextSibling);
+    }
+  }, 200);
 })();

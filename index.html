@@ -625,6 +625,81 @@
   ciz();
 })();
 
+/* ============ TAKİP SEKMELERİ: gosterAlt (Yoklama / Ödevler / Kütüphane) ============ */
+function gosterAlt(alt) {
+  var butonlar = document.querySelectorAll(".takip-alt-btn");
+  for (var i = 0; i < butonlar.length; i++) {
+    if (butonlar[i].getAttribute("data-alt") === alt) butonlar[i].classList.add("aktif");
+    else butonlar[i].classList.remove("aktif");
+  }
+  var kutu = document.getElementById("takipIcerik");
+  if (!kutu) return;
+  function esc(s) {
+    if (s == null) return "";
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  var veri = { yoklamalar: [], odevler: [] };
+  try {
+    if (!localStorage.getItem("yksOto_arsiv_v1_lock")) {
+      var ham = localStorage.getItem("yksOto_arsiv_v1");
+      if (ham) { var p = JSON.parse(ham); if (p) veri = p; }
+    }
+  } catch (e) { veri = { yoklamalar: [], odevler: [] }; }
+  var html = "";
+  if (alt === "yoklama") {
+    var yok = veri.yoklamalar || [];
+    html += '<div class="text-[12px] font-bold text-slate-700 mb-2">Son Yoklama Kayıtları (' + yok.length + ')</div>';
+    if (!yok.length) {
+      html += '<p class="text-slate-500 text-[13px] text-center py-4">Henüz yoklama kaydı yok.</p>';
+    } else {
+      html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;text-align:left"><tr style="background:#f8fafc">';
+      html += '<th style="padding:7px 10px;font-size:10.5px;font-weight:800;color:#94a3b8">TARİH</th>';
+      html += '<th style="padding:7px 10px;font-size:10.5px;font-weight:800;color:#94a3b8">SINIF</th>';
+      html += '<th style="padding:7px 10px;font-size:10.5px;font-weight:800;color:#94a3b8">DURUM</th></tr>';
+      yok.slice(-20).reverse().forEach(function (y) {
+        var d = (y.durum || "").toString().toLowerCase();
+        var renk = d === "geldi" ? ["#dcfce7", "#166534"] : (d === "gecmedi" ? ["#fee2e2", "#991b1b"] : ["#fef3c7", "#92400e"]);
+        var etiket = d === "geldi" ? "Geldi" : (d === "gecmedi" ? "Gelmedi" : (y.durum ? String(y.durum) : "—"));
+        html += '<tr style="border-bottom:1px solid #f1f5f9">';
+        html += '<td style="padding:7px 10px;font-size:11.5px;color:#334155;white-space:nowrap">' + esc(y.tarih || "—") + '</td>';
+        html += '<td style="padding:7px 10px;font-size:11.5px;color:#475569">' + esc(y.sinifAd || y.sinif || y.sinifKod || "—") + '</td>';
+        html += '<td style="padding:7px 10px"><span style="background:' + renk[0] + ';color:' + renk[1] + ';font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;display:inline-block">' + esc(etiket) + '</span></td></tr>';
+      });
+      html += '</table></div>';
+    }
+  } else if (alt === "odevler") {
+    var od = veri.odevler || [];
+    html += '<div class="text-[12px] font-bold text-slate-700 mb-2">Son Ödevler (' + od.length + ')</div>';
+    if (!od.length) {
+      html += '<p class="text-slate-500 text-[13px] text-center py-4">Henüz ödev kaydı yok.</p>';
+    } else {
+      html += '<div style="display:flex;flex-wrap:wrap;gap:10px">';
+      od.slice(-12).reverse().forEach(function (o) {
+        var yapildi = 0, toplam = 0;
+        Object.keys(o.durumlar || {}).forEach(function (k) {
+          toplam++;
+          if (String(o.durumlar[k]).toLowerCase() === "yapildi") yapildi++;
+        });
+        var renk = (toplam && yapildi === toplam) ? "#047857" : "#b45309";
+        html += '<div style="border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;min-width:180px;flex:1">';
+        html += '<div style="font-size:13px;font-weight:700;color:#0f172a">' + esc(o.odev || o.konu || "Ödev") + '</div>';
+        html += '<div style="font-size:11px;color:#94a3b8;margin-top:2px">' + esc(o.olusturmaTarihi || "") + (o.ogretmen ? " · " + esc(o.ogretmen) : "") + '</div>';
+        html += '<div style="font-size:12px;font-weight:700;color:' + renk + ';margin-top:5px">Yapıldı: ' + yapildi + '/' + toplam + '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+  } else {
+    html += '<p class="text-slate-500 text-[13px] text-center py-6">Kütüphane modülü — henüz kayıt yok.</p>';
+  }
+  kutu.innerHTML = html;
+}
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", function () { gosterAlt("yoklama"); });
+} else {
+  gosterAlt("yoklama");
+}
+
 /* ============ ATLAMALI MENÜ DAVRANIŞI (eklendi — mevcut fonksiyonlara dokunmaz) ============ */
 (function () {
   var menu = document.getElementById("atlamaMenu");
@@ -698,6 +773,5 @@
 
 
 
-</body>
 </body>
 </html>

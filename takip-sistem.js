@@ -131,4 +131,14 @@
       btnKutuphane.parentNode.insertBefore(btnSinav, btnKutuphane.nextSibling);
     }
   }, 200);
+
+  window.gosterAlt = function (alt) {
+    var btn = document.querySelectorAll(".takip-alt-btn");
+    btn.forEach(function (b) { if (b.getAttribute("data-alt") === alt) b.classList.add("aktif"); else b.classList.remove("aktif"); });
+    var icerik = document.getElementById("takipIcerik"); if (!icerik) return;
+    if (alt === "yoklama") icerik.innerHTML = window.__sysYoklamaEkran();
+    else if (alt === "odevler") icerik.innerHTML = window.__sysOdevEkran();
+    else if (alt === "kutuphane") icerik.innerHTML = window.__sysKutuphaneEkran();
+    else if (alt === "sinav") icerik.innerHTML = window.__sysSinavEkran();
+  };
 })();

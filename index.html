@@ -9,6 +9,20 @@
      Planlama (planKart) DOM sırasıyla ÜSTTE; havuz (havuzBolum) ALTTA. İki kolon kuralı tamamen kaldırıldı. */
   #ks-kart-kolon { display: grid; grid-template-columns: minmax(0,1fr); gap: 1rem; align-items: start; }
   #ks-kart-kolon > div { min-width: 0; max-width: 100%; overflow-wrap: break-word; }
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
   </style>
 <script src="ek-ders.js?v=3d2dd38ff517c64f" defer></script>
 <meta name="description" content="YKS Kurs/Etüt merkezleri için birebir ders, istek havuzu ve öğrenci eksik takip otomasyonu. Tüm veriler bu bilgisayarda saklanır." />
@@ -60,6 +74,20 @@
     .dnd-uygun { background-color: #f0fdfa; box-shadow: inset 0 0 0 2px #2dd4bf; }
     .dnd-kilit { cursor: not-allowed; }
     .dnd-kilit:hover { background-color: #fef2f2; }
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
   </style>
 
   <!-- ============ ATLAMALI MENÜ STİLİ (eklendi — mevcut stile/HTML'e dokunmaz) ============ -->
@@ -122,7 +150,39 @@
     @media print {
       #atlamaMenu { display: none; }
     }
-  </style>
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+      .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+    .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+    .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+    .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+    .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+    .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+    .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+    .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+    .takip-alt-btn { padding: 8px 16px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+    .takip-alt-btn.aktif { background: #14b8a6; border-color: #14b8a6; color: #fff; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.3); }
+</style>
 </head>
 
 <body class="text-slate-800 antialiased">
@@ -165,14 +225,20 @@
     <button type="button" class="atlama-btn" data-hedef="havuzBolum">İstekler</button>
     <button type="button" class="atlama-btn" data-hedef="analizBolum">Ek Ders</button>
     <button type="button" class="atlama-btn" data-hedef="ozetBolum">Bakış</button>
+    <button type="button" class="atlama-btn" data-hedef="takipBolum">Takip</button>
     <button type="button" class="atlama-btn" data-hedef="yonetimBolum">Yönetim</button>
   </div>
+
 </nav>
 
 <main class="max-w-[1440px] mx-auto px-4 md:px-6 pt-6 pb-24 space-y-5">
 
   <!-- ============ 1) ÖZET RAPOR ============ -->
-  <section id="ozetBolum" class="no-print"></section>
+          <section id="ozetBOLUM" class="no-print"></section>
+  
+  
+  
+  
 
   <!-- ============ BAKIŞ ÖZETİ PANELİ (YOKLAMA + ÖDEV) ============ -->
   <div class="no-print rounded-xl border border-slate-200 bg-white mb-4">
@@ -183,11 +249,20 @@
   </div>
 
   <!-- ============ DETAYLI ANALİZ ============ -->
-  <section id="analizBolum" class="no-print"></section>
+  <section id="takipBolum" class="no-print">
+      <div class="kart p-5">
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button type="button" class="takip-alt-btn aktif" data-alt="yoklama" onclick="gosterAlt('yoklama')">Yoklama</button>
+          <button type="button" class="takip-alt-btn" data-alt="odevler" onclick="gosterAlt('odevler')">Ödevler</button>
+          <button type="button" class="takip-alt-btn" data-alt="kutuphane" onclick="gosterAlt('kutuphane')">Kütüphane</button>
+        </div>
+        <div id="takipIcerik" class="takip-icerik"></div>
+      </div>
+    </section>
+<section id="analizBolum" class="no-print"></section>
 
   <!-- ============ 2) VERİ YÖNETİMİ ============ -->
   <section id="yonetimBolum" class="no-print"></section>
-
 
   <!-- ============ 4) BİREBİR DERS PLANLA ============ -->
   <div class="hidden" id="ks-kilavuz"><div class="no-print rounded-xl border border-teal-100 bg-teal-50/60 px-3.5 py-2.5 text-[11px] text-teal-800 leading-relaxed mb-3"><b class="font-extrabold"><i class="fa-solid fa-circle-info mr-1"></i>Ders Saati Kılavuzu:</b> Dersler 40 dakikadır ve kısa kod saatleriyle işler. 1 · 08:50-09:30 · 2 · 09:40-10:20 · 3 · 10:30-11:10 · 4 · 11:20-12:00 · 5 · 13:00-13:40 · 6 · 13:50-14:30 · 7 · 14:40-15:20 · 8 · 15:30-16:10 · 9 · 16:20-17:00 · 10 · 17:10-17:50 · 11 · 18:00-18:40. <span class="text-teal-600">Mola (12:00-13:00) ders için kullanılmaz.</span></div></div>
@@ -617,6 +692,84 @@
   window.addEventListener("scroll", spy, { passive: true });
   spy();
 })();
-</script>
-</body>
-</html>
+</script><section id="takipBolum" class="no-print">
+      <div class="kart p-5">
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button type="button" class="takip-alt-btn aktif" data-alt="yoklama" onclick="gosterAlt('yoklama')">Yoklama</button>
+          <button type="button" class="takip-alt-btn" data-alt="odevler" onclick="gosterAlt('odevler')">Ödevler</button>
+          <button type="button" class="takip-alt-btn" data-alt="kutuphane" onclick="gosterAlt('kutuphane')">Kütüphane</button>
+        </div>
+        <div id="takipIcerik" class="takip-icerik"></div>
+      </div>
+    </section>
+<section id="takipBolum" class="no-print">
+      <div class="kart p-5">
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button type="button" class="takip-alt-btn aktif" data-alt="yoklama" onclick="gosterAlt('yoklama')">Yoklama</button>
+          <button type="button" class="takip-alt-btn" data-alt="odevler" onclick="gosterAlt('odevler')">Ödevler</button>
+          <button type="button" class="takip-alt-btn" data-alt="kutuphane" onclick="gosterAlt('kutuphane')">Kütüphane</button>
+        </div>
+        <div id="takipIcerik" class="takip-icerik"></div>
+      </div>
+    </section>
+<section id="takipBolum" class="no-print">
+      <div class="kart p-5">
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button type="button" class="takip-alt-btn aktif" data-alt="yoklama" onclick="gosterAlt('yoklama')">Yoklama</button>
+          <button type="button" class="takip-alt-btn" data-alt="odevler" onclick="gosterAlt('odevler')">Ödevler</button>
+          <button type="button" class="takip-alt-btn" data-alt="kutuphane" onclick="gosterAlt('kutuphane')">Kütüphane</button>
+        </div>
+        <div id="takipIcerik" class="takip-icerik"></div>
+      </div>
+    </section>
+<section id="takipBolum" class="no-print">
+      <div class="kart p-5">
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button type="button" class="takip-alt-btn aktif" data-alt="yoklama" onclick="gosterAlt('yoklama')">Yoklama</button>
+          <button type="button" class="takip-alt-btn" data-alt="odevler" onclick="gosterAlt('odevler')">Ödevler</button>
+          <button type="button" class="takip-alt-btn" data-alt="kutuphane" onclick="gosterAlt('kutuphane')">Kütüphane</button>
+        </div>
+        <div id="takipIcerik" class="takip-icerik"></div>
+      </div>
+    </section>
+<section id="takipBolum" class="no-print">
+      <div class="kart p-5">
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button type="button" class="takip-alt-btn aktif" data-alt="yoklama" onclick="gosterAlt('yoklama')">Yoklama</button>
+          <button type="button" class="takip-alt-btn" data-alt="odevler" onclick="gosterAlt('odevler')">Ödevler</button>
+          <button type="button" class="takip-alt-btn" data-alt="kutuphane" onclick="gosterAlt('kutuphane')">Kütüphane</button>
+        </div>
+        <div id="takipIcerik" class="takip-icerik"></div>
+      </div>
+    </section>
+<section id="takipBolum" class="no-print">
+      <div class="kart p-5">
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button type="button" class="takip-alt-btn aktif" data-alt="yoklama" onclick="gosterAlt('yoklama')">Yoklama</button>
+          <button type="button" class="takip-alt-btn" data-alt="odevler" onclick="gosterAlt('odevler')">Ödevler</button>
+          <button type="button" class="takip-alt-btn" data-alt="kutuphane" onclick="gosterAlt('kutuphane')">Kütüphane</button>
+        </div>
+        <div id="takipIcerik" class="takip-icerik"></div>
+      </div>
+    </section>
+</body><section id="takipBolum" class="no-print">
+      <div class="kart p-5">
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button type="button" class="takip-alt-btn aktif" data-alt="yoklama" onclick="gosterAlt('yoklama')">Yoklama</button>
+          <button type="button" class="takip-alt-btn" data-alt="odevler" onclick="gosterAlt('odevler')">Ödevler</button>
+          <button type="button" class="takip-alt-btn" data-alt="kutuphane" onclick="gosterAlt('kutuphane')">Kütüphane</button>
+        </div>
+        <div id="takipIcerik" class="takip-icerik"></div>
+      </div>
+    </section>
+<section id="takipBolum" class="no-print">
+      <div class="kart p-5">
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button type="button" class="takip-alt-btn aktif" data-alt="yoklama" onclick="gosterAlt('yoklama')">Yoklama</button>
+          <button type="button" class="takip-alt-btn" data-alt="odevler" onclick="gosterAlt('odevler')">Ödevler</button>
+          <button type="button" class="takip-alt-btn" data-alt="kutuphane" onclick="gosterAlt('kutuphane')">Kütüphane</button>
+        </div>
+        <div id="takipIcerik" class="takip-icerik"></div>
+      </div>
+    </section>
+

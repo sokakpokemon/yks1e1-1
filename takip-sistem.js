@@ -126,7 +126,7 @@
       btnSinav.type = "button";
       btnSinav.className = "takip-alt-btn";
       btnSinav.setAttribute("data-alt", "sinav");
-      btnSinav.setAttribute("onclick", "window.gosterAlt('sinav')");
+      btnSinav.onclick = function() { window.gosterAlt('sinav'); };
       btnSinav.textContent = "Sınav Yoklaması";
       btnKutuphane.parentNode.insertBefore(btnSinav, btnKutuphane.nextSibling);
     }

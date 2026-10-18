@@ -910,7 +910,7 @@
         var genelPuan = Math.round((oKatilim * 0.5) + (oOdev * 0.3) + (ktPuan * 0.2));
 
         karneler.push({
-            ad: String(ogr.adSoyad || ogr.ad || ""), sinif: String(ogr.sinif || ""),
+            id: ogr.id, ad: String(ogr.adSoyad || ogr.ad || ""), sinif: String(ogr.sinif || ""),
             katilim: oKatilim, odev: oOdev, kt: oKtSaat, puan: genelPuan
         });
     });
@@ -936,7 +936,7 @@
     
     karneler.sort(function(a,b){ return b.puan - a.puan; }).forEach(function(k) {
         var renk = k.puan >= 80 ? '#22c55e' : (k.puan >= 60 ? '#f59e0b' : '#ef4444');
-        html += '<div class="an-kart" data-sinif="'+sinavEsc(k.sinif)+'" data-ad="'+sinavEsc(k.ad.toLowerCase())+'" style="display:flex; align-items:center; justify-content:space-between; padding:10px; border:1px solid #f1f5f9; border-radius:8px; background:#f8fafc;">' +
+        html += '<div class="an-kart" onclick="window.__ogrDetayGoster(\''+k.id+'\')" data-sinif="'+sinavEsc(k.sinif)+'" data-ad="'+sinavEsc(k.ad.toLowerCase())+'" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:10px; border:1px solid #f1f5f9; border-radius:8px; background:#f8fafc; hover:background:#f1f5f9;">' +
           '<div>' +
             '<div style="font-weight:700; font-size:13px; color:#1e293b;">' + sinavEsc(k.ad) + '</div>' +
             '<div style="font-size:11px; color:#64748b;">' + sinavEsc(k.sinif) + '</div>' +
@@ -1073,4 +1073,113 @@ window.__sysAnalizAra = function() {
     });
 };
 
+
+  // === ÖĞRENCİ DETAY MODALI ===
+  window.__ogrDetayGoster = function(ogrId) {
+    var veri = (typeof veriOku === "function") ? veriOku() : sinavVeriOku();
+    var ogr = (veri.ogrenciler || []).find(function(o){ return o.id === ogrId; });
+    if(!ogr) return alert("Öğrenci bulunamadı.");
+
+    var ad = ogr.adSoyad || ogr.ad || "Öğrenci";
+    var sinif = ogr.sinif || "-";
+    var tel = ogr.veliTelefon || ogr.veliTel || "-";
+
+    // Verileri topla
+    var dersler = [];
+    Object.keys(veri.yoklamalar || {}).forEach(function(t) {
+        if(veri.yoklamalar[t][sinif] && veri.yoklamalar[t][sinif][ogrId]) {
+            var d = veri.yoklamalar[t][sinif][ogrId];
+            dersler.push({ tarih: t, durum: typeof d === 'string' ? d : d.durum, aciklama: typeof d === 'object' ? d.aciklama : "" });
+        }
+    });
+    dersler.sort(function(a,b){ return b.tarih.localeCompare(a.tarih); });
+
+    var sinavlar = [];
+    Object.keys(veri.sinavYoklamalari || {}).forEach(function(t) {
+        if(veri.sinavYoklamalari[t][sinif] && veri.sinavYoklamalari[t][sinif][ogrId]) {
+            var d = veri.sinavYoklamalari[t][sinif][ogrId];
+            sinavlar.push({ tarih: t, durum: typeof d === 'string' ? d : d.durum, aciklama: typeof d === 'object' ? d.aciklama : "" });
+        }
+    });
+    sinavlar.sort(function(a,b){ return b.tarih.localeCompare(a.tarih); });
+
+    var kutuphane = [];
+    Object.keys(veri.kutuphane || {}).forEach(function(t) {
+        if(veri.kutuphane[t][ogrId]) {
+            var k = veri.kutuphane[t][ogrId];
+            if (k === "gelmedi") kutuphane.push({ tarih: t, durum: "Gelmedi", sure: "-" });
+            else if (k.giris) kutuphane.push({ tarih: t, durum: k.cikis ? "Tamamlandı" : "İçeride", sure: k.cikis ? (k.giris + " - " + k.cikis) : (k.giris + " - ...") });
+        }
+    });
+    kutuphane.sort(function(a,b){ return b.tarih.localeCompare(a.tarih); });
+
+    var odevler = [];
+    (veri.odevler || []).forEach(function(o) {
+        if(o.durumlar && o.durumlar[ogrId]) {
+            odevler.push({ tarih: o.olusturmaTarihi, ders: o.ders, konu: o.konu, durum: o.durumlar[ogrId] });
+        }
+    });
+    odevler.sort(function(a,b){ return b.tarih.localeCompare(a.tarih); });
+
+    // HTML Oluşturma
+    function makeList(arr, type) {
+        if(arr.length === 0) return '<div style="padding:10px; color:#94a3b8; font-size:12px; text-align:center;">Kayıt yok.</div>';
+        var h = '<div style="max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;">';
+        arr.slice(0, 15).forEach(function(item) { // Son 15 kaydı göster
+            var renk = "#64748b";
+            if(item.durum === "geldi" || item.durum === "girdi" || item.durum === "yapildi") renk = "#22c55e";
+            else if(item.durum === "gelmedi" || item.durum === "girmedi" || item.durum === "yapmadi") renk = "#ef4444";
+            else if(item.durum === "gec") renk = "#f59e0b";
+
+            h += '<div style="display:flex; justify-content:space-between; padding:8px; background:#f8fafc; border-radius:6px; font-size:12px;">' +
+                '<div><span style="font-weight:700;">' + item.tarih + '</span>';
+            if(type === 'odev') h += ' <span style="color:#64748b;">(' + item.ders + ' - ' + item.konu + ')</span>';
+            if(type === 'kutuphane') h += ' <span style="color:#64748b;">(' + item.sure + ')</span>';
+            h += '</div><div style="font-weight:700; color:' + renk + ';">' + item.durum.toUpperCase();
+            if(item.aciklama) h += ' <span style="font-size:10px; font-weight:normal; color:#64748b;">(' + item.aciklama + ')</span>';
+            h += '</div></div>';
+        });
+        h += '</div>';
+        return h;
+    }
+
+    var html = '<div style="font-family:system-ui; padding:6px;">' +
+        '<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">' +
+            '<div>' +
+                '<div style="font-size:18px; font-weight:800; color:#0f172a;">' + sinavEsc(ad) + '</div>' +
+                '<div style="font-size:13px; color:#0f766e; font-weight:600; margin-top:2px;">' + sinavEsc(sinif) + ' Sınıfı</div>' +
+                '<div style="font-size:12px; color:#64748b; margin-top:4px;">📞 Veli: ' + sinavEsc(tel) + '</div>' +
+            '</div>' +
+        '</div>' +
+        
+        '<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">' +
+            '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:12px;">' +
+                '<div style="font-size:12px; font-weight:800; color:#0f172a; margin-bottom:8px; border-bottom:1px solid #f1f5f9; padding-bottom:4px;">📚 Ders Yoklaması</div>' +
+                makeList(dersler, 'ders') +
+            '</div>' +
+            '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:12px;">' +
+                '<div style="font-size:12px; font-weight:800; color:#0f172a; margin-bottom:8px; border-bottom:1px solid #f1f5f9; padding-bottom:4px;">📝 Sınav Yoklaması</div>' +
+                makeList(sinavlar, 'sinav') +
+            '</div>' +
+            '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:12px;">' +
+                '<div style="font-size:12px; font-weight:800; color:#0f172a; margin-bottom:8px; border-bottom:1px solid #f1f5f9; padding-bottom:4px;">📖 Kütüphane</div>' +
+                makeList(kutuphane, 'kutuphane') +
+            '</div>' +
+            '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:12px;">' +
+                '<div style="font-size:12px; font-weight:800; color:#0f172a; margin-bottom:8px; border-bottom:1px solid #f1f5f9; padding-bottom:4px;">📋 Ödevler</div>' +
+                makeList(odevler, 'odev') +
+            '</div>' +
+        '</div>' +
+        '<button type="button" onclick="document.getElementById(\'__ogrDetayOverlay\').remove()" style="width:100%; margin-top:16px; background:#f1f5f9; color:#475569; padding:10px; border:none; border-radius:8px; font-weight:700; cursor:pointer;">Kapat</button>' +
+    '</div>';
+
+    var ov = document.createElement("div");
+    ov.id = "__ogrDetayOverlay";
+    ov.style.cssText = "position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:9999; display:flex; align-items:center; justify-content:center; padding:16px;";
+    var k = document.createElement("div");
+    k.style.cssText = "background:#fff; border-radius:16px; padding:20px; max-width:600px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.3); max-height:90vh; overflow-y:auto;";
+    k.innerHTML = html;
+    ov.appendChild(k);
+    document.body.appendChild(ov);
+  };
 })();

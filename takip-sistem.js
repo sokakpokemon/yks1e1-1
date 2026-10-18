@@ -134,6 +134,24 @@
       btnSinav.textContent = "Sınav Yoklaması";
       btnKutuphane.parentNode.insertBefore(btnSinav, btnKutuphane.nextSibling);
     }
+    
+    // Analiz Butonu Ekle
+    if (btnKutuphane && !document.querySelector('.takip-alt-btn[data-alt="analiz"]')) {
+      var btnAnaliz = document.createElement("button");
+      btnAnaliz.type = "button";
+      btnAnaliz.className = "takip-alt-btn";
+      btnAnaliz.setAttribute("data-alt", "analiz");
+      btnAnaliz.textContent = "📊 Analiz";
+      btnAnaliz.onclick = function() {
+        document.querySelectorAll(".takip-alt-btn").forEach(function(b){ b.classList.remove("aktif"); });
+        btnAnaliz.classList.add("aktif");
+        if(window.gosterAlt) window.gosterAlt("analiz");
+      };
+      // Sınav butonunun yanına ekle
+      var btnSinavEl = document.querySelector('.takip-alt-btn[data-alt="sinav"]');
+      if(btnSinavEl) btnSinavEl.parentNode.insertBefore(btnAnaliz, btnSinavEl.nextSibling);
+      else btnKutuphane.parentNode.insertBefore(btnAnaliz, btnKutuphane.nextSibling);
+    }
 
     // ÇİFT YEŞİL DÜZELTMESİ: index.html'in kendi gosterAlt'ı, sayfa yüklendikten sonra
     // eklenen sınav butonunu listesinde (altButonlar) tutmadığı için diğer alt sekmelere
@@ -162,6 +180,7 @@
     else if (alt === "odevler") icerik.innerHTML = window.__sysOdevEkran();
     else if (alt === "kutuphane") icerik.innerHTML = window.__sysKutuphaneEkran();
     else if (alt === "sinav") icerik.innerHTML = window.__sysSinavEkran();
+    else if (alt === "analiz") icerik.innerHTML = window.__sysAnalizEkran();
   };
 
   // === SINAV YOKLAMASI (BAĞIMSIZ MODÜL) ===
@@ -709,4 +728,157 @@
     
     if (window.gosterAlt) window.gosterAlt("yoklama");
 };
+
+  // === ANALİZ EKRANI (AŞAMA 1) ===
+  window.__sysAnalizEkran = function () {
+    var veri = (typeof veriOku === "function") ? veriOku() : sinavVeriOku();
+    var ogrenciler = veri.ogrenciler || [];
+    var yoklamalar = veri.yoklamalar || {};
+    var odevler = veri.odevler || [];
+    var kutuphane = veri.kutuphane || {};
+
+    // 1. Genel İstatistikler
+    var toplamOgr = ogrenciler.length;
+    var toplamDers = 0, gelinenDers = 0;
+    var toplamOdev = 0, yapilanOdev = 0;
+    var toplamKtDk = 0;
+
+    // Tarihleri al (son 30 gün)
+    var bugun = new Date();
+    var limitTarih = new Date();
+    limitTarih.setDate(bugun.getDate() - 30);
+    var limitKey = limitTarih.toISOString().slice(0,10);
+
+    // Yoklama İstatistiği
+    Object.keys(yoklamalar).forEach(function(tarih) {
+        if (tarih < limitKey) return;
+        var gun = yoklamalar[tarih];
+        Object.keys(gun).forEach(function(sinif) {
+            Object.keys(gun[sinif]).forEach(function(ogrId) {
+                var d = typeof gun[sinif][ogrId] === 'string' ? gun[sinif][ogrId] : gun[sinif][ogrId].durum;
+                if (d === 'iptal') return;
+                toplamDers++;
+                if (d === 'geldi' || d === 'gec') gelinenDers++;
+            });
+        });
+    });
+
+    // Ödev İstatistiği
+    odevler.forEach(function(o) {
+        if (o.olusturmaTarihi < limitKey) return;
+        Object.keys(o.durumlar || {}).forEach(function(id) {
+            var d = o.durumlar[id];
+            if (d === 'bekliyor') return;
+            toplamOdev++;
+            if (d === 'yapildi') yapilanOdev++;
+        });
+    });
+
+    // Kütüphane İstatistiği
+    Object.keys(kutuphane).forEach(function(tarih) {
+        if (tarih < limitKey) return;
+        var gun = kutuphane[tarih];
+        Object.keys(gun).forEach(function(id) {
+            var v = gun[id];
+            if (v && v.giris && v.cikis) {
+                var g = v.giris.split(":"), c = v.cikis.split(":");
+                var dk = (parseInt(c[0]) * 60 + parseInt(c[1])) - (parseInt(g[0]) * 60 + parseInt(g[1]));
+                if (dk > 0) toplamKtDk += dk;
+            }
+        });
+    });
+
+    var katilimOrani = toplamDers > 0 ? Math.round((gelinenDers / toplamDers) * 100) : 0;
+    var odevOrani = toplamOdev > 0 ? Math.round((yapilanOdev / toplamOdev) * 100) : 0;
+    var ktSaat = Math.round(toplamKtDk / 60);
+
+    var html = '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:20px;">';
+    
+    // Kart 1: Öğrenci
+    html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; position:relative; overflow:hidden;">' +
+      '<div style="position:absolute; right:10px; top:10px; font-size:24px; opacity:0.2;">👥</div>' +
+      '<div style="font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase;">Aktif Öğrenci</div>' +
+      '<div style="font-size:28px; font-weight:800; color:#0f172a; margin-top:4px;">' + toplamOgr + '</div></div>';
+
+    // Kart 2: Katılım
+    var katilimRenk = katilimOrani >= 80 ? '#22c55e' : (katilimOrani >= 60 ? '#f59e0b' : '#ef4444');
+    html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; position:relative; overflow:hidden;">' +
+      '<div style="position:absolute; right:10px; top:10px; font-size:24px; opacity:0.2;">🏫</div>' +
+      '<div style="font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase;">Ders Katılımı (30 Gün)</div>' +
+      '<div style="font-size:28px; font-weight:800; color:' + katilimRenk + '; margin-top:4px;">%' + katilimOrani + '</div></div>';
+
+    // Kart 3: Ödev
+    var odevRenk = odevOrani >= 80 ? '#22c55e' : (odevOrani >= 60 ? '#f59e0b' : '#ef4444');
+    html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; position:relative; overflow:hidden;">' +
+      '<div style="position:absolute; right:10px; top:10px; font-size:24px; opacity:0.2;">📝</div>' +
+      '<div style="font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase;">Ödev Tamamlama</div>' +
+      '<div style="font-size:28px; font-weight:800; color:' + odevRenk + '; margin-top:4px;">%' + odevOrani + '</div></div>';
+
+    // Kart 4: Kütüphane
+    html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; position:relative; overflow:hidden;">' +
+      '<div style="position:absolute; right:10px; top:10px; font-size:24px; opacity:0.2;">📚</div>' +
+      '<div style="font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase;">Kütüphane (30 Gün)</div>' +
+      '<div style="font-size:28px; font-weight:800; color:#3b82f6; margin-top:4px;">' + ktSaat + ' <span style="font-size:14px; font-weight:600;">Saat</span></div></div>';
+
+    html += '</div>';
+
+    // 2. Riskli Öğrenciler Analizi
+    var riskliOgr = [];
+    ogrenciler.forEach(function(ogr) {
+        var devamsizlik = 0;
+        var odevSorun = 0;
+        
+        // Son 3 ders kontrolü (Basit yaklaşım: Tüm yoklamalarda bu öğrencinin son 3 durumuna bak)
+        var dersGecmisi = [];
+        Object.keys(yoklamalar).sort().reverse().forEach(function(tarih) {
+            if (yoklamalar[tarih][ogr.sinif] && yoklamalar[tarih][ogr.sinif][ogr.id]) {
+                var d = yoklamalar[tarih][ogr.sinif][ogr.id];
+                dersGecmisi.push(typeof d === 'string' ? d : d.durum);
+            }
+        });
+        var son3Ders = dersGecmisi.slice(0, 3);
+        if (son3Ders.length === 3 && son3Ders.every(function(d){ return d === 'gelmedi'; })) devamsizlik = 1;
+
+        // Son 3 ödev kontrolü
+        var odevGecmisi = [];
+        odevler.slice().reverse().forEach(function(o) {
+            if (o.durumlar && o.durumlar[ogr.id]) {
+                var d = o.durumlar[ogr.id];
+                if (d !== 'bekliyor') odevGecmisi.push(d);
+            }
+        });
+        var son3Odev = odevGecmisi.slice(0, 3);
+        if (son3Odev.length === 3 && son3Odev.every(function(d){ return d === 'yapmadi' || d === 'eksik'; })) odevSorun = 1;
+
+        if (devamsizlik || odevSorun) {
+            var nedenler = [];
+            if (devamsizlik) nedenler.push("Son 3 ders gelmedi");
+            if (odevSorun) nedenler.push("Son 3 ödev yapılmadı");
+            riskliOgr.push({ ad: ogr.adSoyad || ogr.ad, sinif: ogr.sinif, neden: nedenler.join(", ") });
+        }
+    });
+
+    html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-top:16px;">';
+    html += '<div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">' +
+      '<div style="width:8px; height:24px; background:#ef4444; border-radius:4px;"></div>' +
+      '<h3 style="margin:0; font-size:15px; font-weight:800; color:#0f172a;">Acil Müdahale Gerektirenler (' + riskliOgr.length + ')</h3></div>';
+
+    if (riskliOgr.length === 0) {
+        html += '<div style="text-align:center; padding:20px; color:#22c55e; font-weight:600; font-size:13px;">🎉 Harika! Şu an riskli öğrenci bulunmuyor.</div>';
+    } else {
+        html += '<div style="display:flex; flex-direction:column; gap:8px;">';
+        riskliOgr.forEach(function(r) {
+            html += '<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px;">' +
+              '<div><div style="font-weight:700; font-size:13px; color:#991b1b;">' + sinavEsc(r.ad) + '</div>' +
+              '<div style="font-size:11px; color:#b91c1c;">' + sinavEsc(r.neden) + '</div></div>' +
+              '<span style="font-size:11px; font-weight:700; background:#fee2e2; color:#991b1b; padding:4px 8px; border-radius:6px;">' + sinavEsc(r.sinif) + '</span>' +
+            '</div>';
+        });
+        html += '</div>';
+    }
+    html += '</div>';
+
+    return html;
+  };
+
 })();

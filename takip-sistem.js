@@ -411,74 +411,97 @@
   }
 
   window.__waTopluModal = function(tip) {
-    // veriOku index.html'in IIFE içinde; bu dosyada erişilemez → aynı arşiv anahtarı okunur
     var veri = (typeof veriOku === "function") ? veriOku() : sinavVeriOku();
-    var tarih = __waTarihBul(tip);
+    var tarih = new Date().toISOString().slice(0,10); // Varsayılan bugün
+    // Ekrandaki tarihi bulmaya çalış
+    var tInput = document.getElementById("yoklamaTarih") || document.getElementById("sinavTarih") || document.getElementById("__ktTarihInput");
+    if (tInput && tInput.value) tarih = tInput.value;
+
     var liste = [];
 
-    // Tipe göre listeyi doldur
+    // 1. DERS YOKLAMASI (Tüm sınıflar)
     if (tip === "yoklama") {
-        var sinifSecili = __waYoklamaSinifi();
-        var y = __waDerin(veri.yoklamalar, tarih, sinifSecili);
-        Object.keys(y).forEach(function(id) {
-            var d = typeof y[id] === 'string' ? y[id] : y[id].durum;
-            if (d === "gelmedi" || d === "gec") {
-                liste.push({ id: id, durum: d === "gelmedi" ? "Gelmedi" : "Geç Kaldı", ders: "" });
-            }
-        });
-    } else if (tip === "sinav") {
-        var sinifSeciliS = window.__sinavSeciliSinif || "";
-        var sy = __waDerin(veri.sinavYoklamalari, tarih, sinifSeciliS);
-        Object.keys(sy).forEach(function(id) {
-            var d = typeof sy[id] === 'string' ? sy[id] : sy[id].durum;
-            if (d === "girmedi") liste.push({ id: id, durum: "Sınava Girmedi", ders: "" });
-        });
-    } else if (tip === "kutuphane") {
-        var kt = (veri.kutuphane && veri.kutuphane[tarih]) || {};
-        Object.keys(kt).forEach(function(id) {
-            if (kt[id] === "gelmedi") liste.push({ id: id, durum: "Kütüphaneye Gelmedi", ders: "" });
-        });
-    } else if (tip === "odevler") {
-        // Son eklenen ödevi bul (veya tüm ödevleri)
-        var odevler = veri.odevler || [];
-        var sonOdev = odevler[odevler.length - 1];
-        if (sonOdev) {
-            Object.keys(sonOdev.durumlar || {}).forEach(function(id) {
-                var d = sonOdev.durumlar[id];
-                if (d === "yapmadi" || d === "eksik" || d === "gec") {
-                    liste.push({ id: id, durum: "Ödev: " + (d === "yapmadi" ? "Yapmadı" : d === "eksik" ? "Eksik" : "Geç"), ders: sonOdev.ders });
+        var tumYoklamalar = (veri.yoklamalar && veri.yoklamalar[tarih]) ? veri.yoklamalar[tarih] : {};
+        Object.keys(tumYoklamalar).forEach(function(sinifAd) {
+            var sinifYok = tumYoklamalar[sinifAd];
+            Object.keys(sinifYok).forEach(function(id) {
+                var d = typeof sinifYok[id] === 'string' ? sinifYok[id] : sinifYok[id].durum;
+                if (d === "gelmedi" || d === "gec") {
+                    liste.push({ id: id, durum: d === "gelmedi" ? "Gelmedi" : "Geç Kaldı", sinifAd: sinifAd });
                 }
             });
-        }
+        });
+    } 
+    // 2. SINAV YOKLAMASI (Tüm sınıflar)
+    else if (tip === "sinav") {
+        var tumSinavlar = (veri.sinavYoklamalari && veri.sinavYoklamalari[tarih]) ? veri.sinavYoklamalari[tarih] : {};
+        Object.keys(tumSinavlar).forEach(function(sinifAd) {
+            var sinifSnv = tumSinavlar[sinifAd];
+            Object.keys(sinifSnv).forEach(function(id) {
+                var d = typeof sinifSnv[id] === 'string' ? sinifSnv[id] : sinifSnv[id].durum;
+                if (d === "girmedi") {
+                    liste.push({ id: id, durum: "Sınava Girmedi", sinifAd: sinifAd });
+                }
+            });
+        });
+    } 
+    // 3. KÜTÜPHANE (Genel tarama, çünkü kütüphane verisinde sınıf yok)
+    else if (tip === "kutuphane") {
+        var tumKt = (veri.kutuphane && veri.kutuphane[tarih]) ? veri.kutuphane[tarih] : {};
+        Object.keys(tumKt).forEach(function(id) {
+            if (tumKt[id] === "gelmedi") {
+                var ogr = (veri.ogrenciler || []).find(function(o){ return o.id === id; });
+                liste.push({ id: id, durum: "Kütüphaneye Gelmedi", sinifAd: ogr ? ogr.sinif : "-" });
+            }
+        });
+    } 
+    // 4. ÖDEVLER (Tüm ödevleri tarayıp yapmayanları bul)
+    else if (tip === "odevler") {
+        var odevler = veri.odevler || [];
+        // Her ödev için yapmayanları listeye ekle (yinelenenleri önlemek için bir obje kullanabiliriz ama şimdilik düz ekleyelim)
+        odevler.forEach(function(odev) {
+            Object.keys(odev.durumlar || {}).forEach(function(id) {
+                var d = odev.durumlar[id];
+                if (d === "yapmadi" || d === "eksik" || d === "gec") {
+                    var ogr = (veri.ogrenciler || []).find(function(o){ return o.id === id; });
+                    if(ogr) {
+                        // Aynı öğrenci birden fazla ödevden kalmışsa tek satırda göster veya hepsini listele (şimdilik hepsini)
+                        liste.push({ id: id, durum: "Ödev (" + odev.ders + "): " + (d === "yapmadi" ? "Yapmadı" : d === "eksik" ? "Eksik" : "Geç"), sinifAd: ogr.sinif || "-" });
+                    }
+                }
+            });
+        });
     }
 
-    if (liste.length === 0) return alert("Bu bölümde mesaj gönderilecek (olumsuz durumdaki) öğrenci bulunmuyor.");
+    if (liste.length === 0) return alert("Seçili tarihte/tüm sınıflarda mesaj gönderilecek (olumsuz durumdaki) öğrenci bulunmuyor.");
 
     var t = taslakOku();
     var html = '<div style="font-family:system-ui;padding:6px;">' +
-      '<div style="font-size:15px;font-weight:700;margin-bottom:14px;color:#0f172a;">📱 Toplu Veli Bilgilendirme</div>' +
+      '<div style="font-size:15px;font-weight:700;margin-bottom:14px;color:#0f172a;">📱 Tüm Sınıflar - Toplu Bilgilendirme</div>' +
       '<div style="max-height:350px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:14px;">';
     
     liste.forEach(function(item, index) {
-        var ogrList = (veri.ogrenciler || []).filter(function(o) { return o.id === item.id; });
-        var ogr = ogrList[0];
+        var ogr = (veri.ogrenciler || []).find(function(o) { return o.id === item.id; });
         if (!ogr) return;
         var ad = ogr.adSoyad || ogr.ad || "Öğrenci";
-        var tel = ogr.veliTelefon || ogr.veliTel || ogr.veliTelefonu || ogr.anneTel || ogr.babaTel || "";
+        var tel = ogr.veliTelefon || ogr.veliTel || ogr.veliTelefonu || "";
         tel = String(tel).replace(/\D/g, "");
         if(tel.length === 10 && tel.startsWith("5")) tel = "90" + tel;
         else if(tel.length === 11 && tel.startsWith("05")) tel = "9" + tel;
         
-        // taslak anahtarları: yoklama / odev / kutuphane / sinav ("odevler" → "odev")
         var mesaj = t[tip === "odevler" ? "odev" : tip] || "";
-        mesaj = mesaj.replace(/{ad}/g, ad).replace(/{sinif}/g, ogr.sinif || "").replace(/{ders}/g, item.ders || "");
+        mesaj = mesaj.replace(/{ad}/g, ad).replace(/{sinif}/g, ogr.sinif || "").replace(/{ders}/g, "");
         var url = tel.length >= 10 ? "https://wa.me/" + tel + "?text=" + encodeURIComponent(mesaj) : "#";
 
         html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px;border-bottom:1px solid #f1f5f9;' + (index === liste.length - 1 ? 'border-bottom:none;' : '') + '">' +
-          '<div><div style="font-weight:700;font-size:12px;color:#1e293b;">' + ad + '</div><div style="font-size:11px;color:#ef4444;">' + item.durum + '</div></div>' +
+          '<div>' +
+             '<div style="font-weight:700;font-size:13px;color:#1e293b;">' + ad + '</div>' +
+             '<div style="font-size:11px;color:#0f766e;font-weight:600;">' + item.sinifAd + ' Sınıfı</div>' +
+             '<div style="font-size:11px;color:#ef4444;margin-top:2px;">' + item.durum + '</div>' +
+          '</div>' +
           (tel.length >= 10 
             ? '<a href="' + url + '" target="_blank" style="background:#dcfce7;color:#166534;padding:6px 12px;border-radius:99px;text-decoration:none;font-size:11px;font-weight:700;">WhatsApp ➔</a>'
-            : '<span style="font-size:11px;color:#94a3b8;">Numara Yok</span>') +
+            : '<span style="font-size:11px;color:#94a3b8;background:#f1f5f9;padding:6px 12px;border-radius:99px;">Numara Yok</span>') +
         '</div>';
     });
 
@@ -490,7 +513,7 @@
     ov.id = "__waTopluOverlay";
     ov.style.cssText = "position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;";
     var k = document.createElement("div");
-    k.style.cssText = "background:#fff;border-radius:16px;padding:20px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);";
+    k.style.cssText = "background:#fff;border-radius:16px;padding:20px;max-width:450px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);";
     k.innerHTML = html;
     ov.appendChild(k);
     document.body.appendChild(ov);

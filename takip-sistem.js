@@ -218,6 +218,7 @@
     if (d === "girmedi") {
       h += '<button type="button" class="rounded-full border border-slate-200 bg-white px-2 py-1.5 text-[12px] text-slate-600" onclick="window.__sinavNot(\'' + ogr.id + '\')">📝' 
         + (acik ? '<span class="ml-1">' + sinavEsc(acik) + '</span>' : '') + '</button>';
+      h += ' <button type="button" class="rounded-full border border-green-200 bg-green-50 px-2 py-1.5 text-[12px] text-green-700 hover:bg-green-100" title="Veliye Mesaj Gönder" onclick="event.stopPropagation(); window.__waGonder(\'' + ogr.id + '\', \'sinav\')">📱</button>';
     }
     return h;
   }
@@ -286,4 +287,122 @@
     });
     window.gosterAlt("sinav");
   };
+
+  // === WHATSAPP TASLAK VE GÖNDERİM SİSTEMİ ===
+  var varsayilanTaslaklar = {
+    yoklama: "Sayın Veli, öğrenciniz {ad} bugünkü {sinif} sınıfı dersine katılmamıştır. Bilgilerinize sunarız.",
+    odev: "Sayın Veli, öğrenciniz {ad}'ın {ders} dersinden almış olduğu ödevi yapmadığı tespit edilmiştir. Bilgilerinize sunarız.",
+    kutuphane: "Sayın Veli, öğrenciniz {ad} bugünkü kütüphane çalışmasına katılmamıştır. Bilgilerinize sunarız.",
+    sinav: "Sayın Veli, öğrenciniz {ad} bugünkü sınava girmemiştir. Bilgilerinize sunarız."
+  };
+
+  function taslakOku() {
+    try {
+      var t = JSON.parse(localStorage.getItem("yksOto_taslaklar") || "{}");
+      return Object.assign({}, varsayilanTaslaklar, t);
+    } catch(e) { return varsayilanTaslaklar; }
+  }
+  function taslakYaz(t) { localStorage.setItem("yksOto_taslaklar", JSON.stringify(t)); }
+
+  window.__waTaslakModal = function() {
+    var t = taslakOku();
+    var html = '<div style="font-family:system-ui;padding:6px;">' +
+      '<div style="font-size:15px;font-weight:700;margin-bottom:14px;color:#0f172a;">📱 WhatsApp Mesaj Taslakları</div>' +
+      '<div style="font-size:11px;color:#64748b;margin-bottom:12px;">Değişkenler: {ad} (Öğrenci Adı), {sinif}, {ders}. Bu değişkenler gönderim anında otomatik doldurulur.</div>' +
+      
+      '<label style="font-size:11px;font-weight:700;color:#0f766e;">Ders Yoklaması (Gelmedi)</label>' +
+      '<textarea id="__t_yoklama" style="width:100%;height:60px;margin-bottom:10px;padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:12px;">' + t.yoklama + '</textarea>' +
+      
+      '<label style="font-size:11px;font-weight:700;color:#0f766e;">Ödev (Yapmadı)</label>' +
+      '<textarea id="__t_odev" style="width:100%;height:60px;margin-bottom:10px;padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:12px;">' + t.odev + '</textarea>' +
+      
+      '<label style="font-size:11px;font-weight:700;color:#0f766e;">Kütüphane (Gelmedi)</label>' +
+      '<textarea id="__t_kutuphane" style="width:100%;height:60px;margin-bottom:10px;padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:12px;">' + t.kutuphane + '</textarea>' +
+      
+      '<label style="font-size:11px;font-weight:700;color:#0f766e;">Sınav (Girmedi)</label>' +
+      '<textarea id="__t_sinav" style="width:100%;height:60px;margin-bottom:14px;padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:12px;">' + t.sinav + '</textarea>' +
+
+      '<button type="button" onclick="window.__waTaslakKaydet()" style="width:100%;background:#14b8a6;color:#fff;padding:10px;border:none;border-radius:8px;font-weight:700;cursor:pointer;margin-bottom:6px;">💾 Taslakları Kaydet</button>' +
+      '<button type="button" onclick="document.getElementById(\'__waTaslakOverlay\').remove()" style="width:100%;background:#f1f5f9;color:#64748b;padding:10px;border:none;border-radius:8px;font-weight:700;cursor:pointer;">Kapat</button>' +
+    '</div>';
+
+    var ov = document.createElement("div");
+    ov.id = "__waTaslakOverlay";
+    ov.style.cssText = "position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;";
+    var k = document.createElement("div");
+    k.style.cssText = "background:#fff;border-radius:16px;padding:20px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);";
+    k.innerHTML = html;
+    ov.appendChild(k);
+    document.body.appendChild(ov);
+  };
+
+  window.__waTaslakKaydet = function() {
+    var t = {
+      yoklama: document.getElementById("__t_yoklama").value,
+      odev: document.getElementById("__t_odev").value,
+      kutuphane: document.getElementById("__t_kutuphane").value,
+      sinav: document.getElementById("__t_sinav").value
+    };
+    taslakYaz(t);
+    alert("✅ Taslaklar başarıyla kaydedildi.");
+    document.getElementById("__waTaslakOverlay").remove();
+  };
+
+  window.__waGonder = function(ogrId, tip, dersAdi) {
+    // veriOku index.html'in IIFE içinde kaldığı için bu dosyada erişilemez;
+    // aynı localStorage anahtarını (yksOto_arsiv_v1) okuyan sinavVeriOku kullanılır.
+    var veri = (typeof veriOku === "function") ? veriOku() : sinavVeriOku();
+    var ogr = (veri.ogrenciler || []).filter(function(o){ return o.id === ogrId; })[0];
+    if(!ogr) return alert("Öğrenci bulunamadı.");
+
+    var tel = ogr.veliTelefon || ogr.veliTel || ogr.veliTelefonu || ogr.anneTel || ogr.babaTel || "";
+    tel = String(tel).replace(/\D/g, ""); // Sadece rakamlar
+    if(tel.length === 10 && tel.startsWith("5")) tel = "90" + tel;
+    else if(tel.length === 11 && tel.startsWith("05")) tel = "9" + tel;
+    
+    if(tel.length < 10) return alert("Veli telefon numarası geçersiz veya eksik: " + tel);
+
+    var t = taslakOku();
+    var mesaj = t[tip] || "";
+    mesaj = mesaj.replace(/{ad}/g, (ogr.adSoyad || ogr.ad || "Öğrenci"))
+                 .replace(/{sinif}/g, (ogr.sinif || ""))
+                 .replace(/{ders}/g, (dersAdi || ""));
+
+    var url = "https://wa.me/" + tel + "?text=" + encodeURIComponent(mesaj);
+    window.open(url, "_blank");
+  };
+
+  // Taslak butonunu Takip başlığına ekle
+  setInterval(function(){
+    var header = document.getElementById("__takipBaslikEklendi");
+    if(header && !document.getElementById("__waTaslakBtn")) {
+      var btn = document.createElement("button");
+      btn.id = "__waTaslakBtn";
+      btn.innerHTML = "⚙️ Mesaj Taslakları";
+      btn.style.cssText = "position:absolute;right:16px;top:16px;background:#f8fafc;border:1px solid #e2e8f0;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;color:#475569;cursor:pointer;z-index:5;";
+      btn.onclick = window.__waTaslakModal;
+      header.style.position = "relative"; // butonun konumlanması için
+      header.appendChild(btn);
+    }
+  }, 500);
+
+  // === YOKLAMA CHİP'LERİNE 📱 BUTONU ===
+  // Ders Yoklaması çipleri index.html içindeki chipHTML() ile üretildiği ve index.html
+  // değiştirilemeyeceği için, 📝 butonundan HEMEN SONRA DOM üzerine eklenir (idempotent).
+  setInterval(function() {
+    var notlar = document.querySelectorAll('#takipIcerik button[onclick*="__ykNot"]');
+    notlar.forEach(function(b) {
+      if (b.nextElementSibling && b.nextElementSibling.getAttribute("data-waYoklama")) return;
+      var m = (b.getAttribute("onclick") || "").match(/__ykNot\('([^']+)'\)/);
+      if (!m) return;
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.setAttribute("data-waYoklama", "1");
+      btn.className = "rounded-full border border-green-200 bg-green-50 px-2 py-1.5 text-[12px] text-green-700 hover:bg-green-100";
+      btn.title = "Veliye Mesaj Gönder";
+      btn.textContent = "📱";
+      btn.onclick = function(e) { e.stopPropagation(); window.__waGonder(m[1], "yoklama"); };
+      if (b.parentNode) b.parentNode.insertBefore(btn, b.nextSibling);
+    });
+  }, 250);
 })();

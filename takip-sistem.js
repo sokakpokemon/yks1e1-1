@@ -580,4 +580,162 @@
         odTab.parentNode.appendChild(bo);
     }
   }, 500);
+
+  // === EXCEL ONİZLEME YAMASI (index.html HİÇ DOKUNULMADAN — ADIM 1 + ADIM 3) ===
+  // window.__ykExcelOnizle, index.html'in inline scripti içinde tanımlanır; takip-sistem.js
+  // ondan SONRA yüklendiği için fonksiyon burada sarılır:
+  //   ADIM 3 → window.__sonExcelRows = rows; (önizleme açılır açılmaz)
+  //   ADIM 1 → "Kaydet" butonu, sarı uyarının ALTINA / Kapat'ın HEMEN ÜSTÜNE eklenir.
+  if (!window.__ykExcelSarildi) {
+    window.__ykExcelSarildi = true;
+    (function ykExcelOnizleSar() {
+      var orijinal = window.__ykExcelOnizle;
+      if (typeof orijinal !== "function") {
+        // Henüz tanımlanmadıysa kısa bir süre sonra tekrar dene
+        if ((ykExcelOnizleSar.d = (ykExcelOnizleSar.d || 0) + 1) < 100) setTimeout(ykExcelOnizleSar, 50);
+        return;
+      }
+      window.__ykExcelOnizle = function (rows, dosyaAdi) {
+        window.__sonExcelRows = rows; // ADIM 3
+        var sonuc = orijinal(rows, dosyaAdi);
+        ykKaydetButonuEkle(); // ADIM 1
+        return sonuc;
+      };
+    })();
+  }
+
+  // Önizleme kutusundaki sarı uyarının altına, "Kapat" butonunun HEMEN ÜSTÜNE kaydet butonu
+  function ykKaydetButonuEkle() {
+    var ov = document.getElementById("__ykExcelOverlay");
+    if (!ov) return;
+    var kapat = null;
+    var btnler = ov.querySelectorAll("button");
+    for (var i = 0; i < btnler.length; i++) {
+      var oc = btnler[i].getAttribute("onclick") || "";
+      if (oc.indexOf("__ykExcelKaydet") !== -1) return; // zaten eklenmiş
+      if (oc.indexOf("__ykExcelKapat") !== -1) kapat = btnler[i];
+    }
+    if (!kapat) return;
+    kapat.insertAdjacentHTML("beforebegin",
+      '<button type="button" onclick="window.__ykExcelKaydet()" style="width:100%;background:#14b8a6;color:#fff;padding:12px;border:none;border-radius:8px;font-weight:700;cursor:pointer;margin-bottom:8px;font-size:14px;">✅ Excel\'i Sisteme Kaydet</button>');
+  }
+
+  // === EXCEL KAYDETME SİSTEMİ ===
+  window.__ykExcelKaydet = function() {
+    // Önizleme fonksiyonunda rows verisini global bir değişkende tutmuştuk,
+    // eğer tutmadıysak DOM'dan veya localStorage'dan okuyamayız. Bu yüzden
+    // __ykExcelOnizle içinde window.__sonExcelRows = rows; yapmalıyız.
+    var rows = window.__sonExcelRows;
+    if (!rows || !rows.length) return alert("Excel verisi bulunamadı. Lütfen dosyayı tekrar yükleyin.");
+
+    var veri = JSON.parse(localStorage.getItem("yksOto_arsiv_v1") || "{}");
+    if (!veri.yoklamalar) veri.yoklamalar = {};
+    var ogrenciler = veri.ogrenciler || [];
+
+    // Türkçe karakterleri ve büyük/küçük harfi normalize etme fonksiyonu
+    function normalize(s) {
+      return String(s || "").toLowerCase().replace(/ı/g,"i").replace(/ş/g,"s").replace(/ğ/g,"g").replace(/ü/g,"u").replace(/ö/g,"o").replace(/ç/g,"c").trim();
+    }
+
+    var basarili = 0;
+    var bulunamayan = [];
+
+    // İlk satır başlık mı kontrolü (Tarih, Öğrenci vb. içeriyorsa)
+    var baslangicIndex = 0;
+    if (rows[0] && rows[0].join(" ").toLowerCase().indexOf("tarih") !== -1) baslangicIndex = 1;
+
+    var aktifTarih = null;
+
+    for (var i = baslangicIndex; i < rows.length; i++) {
+      var r = rows[i];
+      if (!r || r.length === 0) continue;
+
+      var colA = String(r[0] || "").trim();
+      var colB = String(r[1] || "").trim();
+      var colC = String(r[2] || "").trim();
+
+      // Eğer A sütununda tarih varsa (ör. 11-Oct veya 2026-10-11)
+      if (colA && colA.match(/\d/) && !colB) {
+        // Tarihi YYYY-MM-DD formatına çevir
+        var parsedDate = new Date(colA);
+        // DİKKAT: YIL YOKSA Date'e güvenilmez — new Date("11-Oct") → 2001-10-11 verir
+        // (V8/Chrome test edildi), bu yüzden yıllıksız metinler Date yerine aşağıdaki
+        // manuel ay adı çevrimine girer: "11-Oct" → 2026-10-11, "Oct-11" → 2026-10-11.
+        var yilYok = !/\d{4}/.test(colA);
+        if (!yilYok && !isNaN(parsedDate.getTime())) {
+          aktifTarih = parsedDate.toISOString().slice(0, 10);
+        } else {
+            // Date parse edemezse veya yıl belirtmemişse (11-Oct gibi), manuel çevir
+            var aylar = {jan:"01", feb:"02", mar:"03", apr:"04", may:"05", jun:"06", jul:"07", aug:"08", sep:"09", oct:"10", nov:"11", dec:"12"};
+            var parts = colA.split("-");
+            var elleTarih = null;
+            if (parts.length === 2) {
+                var p0 = String(parts[0]).toLowerCase().trim();
+                var p1 = String(parts[1]).toLowerCase().trim();
+                if (aylar[p0]) {
+                    elleTarih = "2026-" + aylar[p0] + "-" + String(parts[1]).padStart(2, "0"); // "Oct-11"
+                } else if (aylar[p1]) {
+                    elleTarih = "2026-" + aylar[p1] + "-" + String(parts[0]).padStart(2, "0"); // "11-Oct"
+                }
+            }
+            if (elleTarih) {
+                aktifTarih = elleTarih;
+            } else if (!isNaN(parsedDate.getTime())) {
+                // Ay adı tanınmayan belirsiz metinlerde eski davranış korunur
+                aktifTarih = parsedDate.toISOString().slice(0, 10);
+            }
+        }
+        continue;
+      }
+
+      // Eğer B sütununda öğrenci adı varsa
+      if (colB && aktifTarih) {
+        var ogrAdi = colB;
+        var aciklama = colC;
+
+        // Öğrenciyi sistemde bul
+        var ogr = ogrenciler.find(function(o) {
+            return normalize(o.adSoyad || o.ad) === normalize(ogrAdi);
+        });
+
+        if (ogr) {
+            if (!veri.yoklamalar[aktifTarih]) veri.yoklamalar[aktifTarih] = {};
+            if (!veri.yoklamalar[aktifTarih][ogr.sinif]) veri.yoklamalar[aktifTarih][ogr.sinif] = {};
+
+            // Excel'de yazan herkes "Gelmedi" kabul edilir (açıklamasıyla birlikte)
+            veri.yoklamalar[aktifTarih][ogr.sinif][ogr.id] = {
+                durum: "gelmedi",
+                aciklama: aciklama || ""
+            };
+            basarili++;
+        } else {
+            bulunamayan.push(ogrAdi);
+        }
+      }
+    }
+
+    localStorage.setItem("yksOto_arsiv_v1", JSON.stringify(veri));
+
+    var mesaj = "✅ " + basarili + " kayıt başarıyla yüklendi.";
+    if (bulunamayan.length > 0) {
+        mesaj += "\n\n⚠ Sistemde bulunamayan " + bulunamayan.length + " öğrenci var:\n" + bulunamayan.slice(0, 10).join(", ");
+        if (bulunamayan.length > 10) mesaj += "...";
+    }
+    alert(mesaj);
+
+    var ov = document.getElementById("__ykExcelOverlay");
+    if (ov) ov.remove();
+
+    // Ekranı yenile
+    // Not: window.gosterAlt("yoklama") → window.__sysYoklamaEkran çağırır ve bu
+    // fonksiyon projede tanımlı değil (TypeError fırlatır); hata yutulur ve yoklama
+    // ekranı index.html'in __ykTarih → yenile zinciriyle tazelenir.
+    var tInp = document.getElementById("yoklamaTarih");
+    var tarih = tInp && tInp.value ? tInp.value : new Date().toISOString().slice(0, 10);
+    var yenileOK = false;
+    try {
+      if (window.gosterAlt) { window.gosterAlt("yoklama"); yenileOK = true; }
+    } catch (e) { yenileOK = false; }
+    if (!yenileOK && window.__ykTarih) window.__ykTarih(tarih);
+  };
 })();

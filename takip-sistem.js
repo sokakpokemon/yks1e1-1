@@ -633,8 +633,10 @@
     var ogrenciler = veri.ogrenciler || [];
 
     // Türkçe karakterleri ve büyük/küçük harfi normalize etme fonksiyonu
+    // DİKKAT: "İ" harfi toLowerCase() ile 'i' + BİRLEŞEN NOKTA (U+0307) üretir;
+    // "İREM ATİZ" → "i̇rem ati̇z" olur ve "İrem Atiz" ile eşleşmezdi. O nokta silinir.
     function normalize(s) {
-      return String(s || "").toLowerCase().replace(/ı/g,"i").replace(/ş/g,"s").replace(/ğ/g,"g").replace(/ü/g,"u").replace(/ö/g,"o").replace(/ç/g,"c").trim();
+      return String(s || "").toLowerCase().replace(/\u0307/g,"").replace(/ı/g,"i").replace(/ş/g,"s").replace(/ğ/g,"g").replace(/ü/g,"u").replace(/ö/g,"o").replace(/ç/g,"c").trim();
     }
 
     var basarili = 0;
@@ -654,36 +656,50 @@
       var colB = String(r[1] || "").trim();
       var colC = String(r[2] || "").trim();
 
-      // Eğer A sütununda tarih varsa (ör. 11-Oct veya 2026-10-11)
+      // Eğer A sütununda tarih satırı varsa (ör. "15 Eki", "15 Ekim", "2026-10-11")
       if (colA && colA.match(/\d/) && !colB) {
-        // Tarihi YYYY-MM-DD formatına çevir
-        var parsedDate = new Date(colA);
-        // DİKKAT: YIL YOKSA Date'e güvenilmez — new Date("11-Oct") → 2001-10-11 verir
-        // (V8/Chrome test edildi), bu yüzden yıllıksız metinler Date yerine aşağıdaki
-        // manuel ay adı çevrimine girer: "11-Oct" → 2026-10-11, "Oct-11" → 2026-10-11.
-        var yilYok = !/\d{4}/.test(colA);
-        if (!yilYok && !isNaN(parsedDate.getTime())) {
-          aktifTarih = parsedDate.toISOString().slice(0, 10);
+        // Türkçe Tarih Okuma
+        var tLower = colA.toLowerCase();
+        var ayMap = {"oca":"01", "şub":"02", "sub":"02", "mar":"03", "nis":"04", "may":"05", "haz":"06", "tem":"07", "ağu":"08", "agu":"08", "eyl":"09", "eki":"10", "kas":"11", "ara":"12", "jan":"01", "feb":"02", "apr":"04", "jun":"06", "jul":"07", "aug":"08", "sep":"09", "oct":"10", "nov":"11", "dec":"12"};
+        // Not: "sub" ve "agu" ASCII karşılıklarıdır — diakritikler düştüğünde (ör. "12 Sub") de ay bulunsun diye.
+
+        // Eğer 2026-10-15 gibi bir format ise
+        if (tLower.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            aktifTarih = tLower;
         } else {
-            // Date parse edemezse veya yıl belirtmemişse (11-Oct gibi), manuel çevir
-            var aylar = {jan:"01", feb:"02", mar:"03", apr:"04", may:"05", jun:"06", jul:"07", aug:"08", sep:"09", oct:"10", nov:"11", dec:"12"};
-            var parts = colA.split("-");
-            var elleTarih = null;
-            if (parts.length === 2) {
-                var p0 = String(parts[0]).toLowerCase().trim();
-                var p1 = String(parts[1]).toLowerCase().trim();
-                if (aylar[p0]) {
-                    elleTarih = "2026-" + aylar[p0] + "-" + String(parts[1]).padStart(2, "0"); // "Oct-11"
-                } else if (aylar[p1]) {
-                    elleTarih = "2026-" + aylar[p1] + "-" + String(parts[0]).padStart(2, "0"); // "11-Oct"
+            // 15 Eki, 15 Ekim, 15-Oct, 31.12.2026, 10/20/2026 gibi formatlar için
+            var parcalar = tLower.split(/[\s\-\.\/]+/);
+            var gun = "01", ay = "01", yil = "2026";
+            var sayilar = [], ayBulundu = false, yilIdx = -1;
+
+            parcalar.forEach(function(p, idx) {
+                if (!p) return;
+                if (p.match(/^\d{4}$/)) { yil = p; yilIdx = idx; }
+                else if (p.match(/^\d{1,2}$/)) { sayilar.push(p); }
+                else {
+                    var kisaAy = p.substring(0, 3);
+                    if (ayMap[kisaAy]) { ay = ayMap[kisaAy]; ayBulundu = true; }
                 }
+            });
+
+            if (ayBulundu) {
+                // Ay adı var: "15 Eki" / "Eki 15" → gün sayıdan okunur (varsayılan yıl 2026)
+                if (sayilar.length) gun = sayilar[0].padStart(2, "0");
+            } else if (sayilar.length >= 2 && yilIdx === 0) {
+                // Yıl başta yazılmışsa (ör. 2026-10-5): ay-gün sırası
+                ay = sayilar[0].padStart(2, "0");
+                gun = sayilar[1].padStart(2, "0");
+            } else if (sayilar.length >= 2) {
+                // Ay adı yok: sayısal gün/ay ayrımı — "31.12.2026" → 31 Aralık; "10/20/2026" → 20 Ekim
+                var n1 = parseInt(sayilar[0], 10), n2 = parseInt(sayilar[1], 10);
+                if (n2 > 12 && n1 <= 12) { gun = sayilar[1].padStart(2, "0"); ay = sayilar[0].padStart(2, "0"); }
+                else if (n2 <= 12) { gun = sayilar[0].padStart(2, "0"); ay = sayilar[1].padStart(2, "0"); }
+                else { gun = sayilar[0].padStart(2, "0"); } // ayı tutarsız — ay "01" kalır
+            } else if (sayilar.length === 1) {
+                gun = sayilar[0].padStart(2, "0");
             }
-            if (elleTarih) {
-                aktifTarih = elleTarih;
-            } else if (!isNaN(parsedDate.getTime())) {
-                // Ay adı tanınmayan belirsiz metinlerde eski davranış korunur
-                aktifTarih = parsedDate.toISOString().slice(0, 10);
-            }
+
+            aktifTarih = yil + "-" + ay + "-" + gun;
         }
         continue;
       }
@@ -694,8 +710,11 @@
         var aciklama = colC;
 
         // Öğrenciyi sistemde bul
+        var excelAd = normalize(ogrAdi);
         var ogr = ogrenciler.find(function(o) {
-            return normalize(o.adSoyad || o.ad) === normalize(ogrAdi);
+            var sysAd = normalize(o.adSoyad || o.ad);
+            // Birebir eşleşme veya sistemdeki adın Excel'deki adı içermesi
+            return sysAd === excelAd || sysAd.includes(excelAd) || excelAd.includes(sysAd);
         });
 
         if (ogr) {

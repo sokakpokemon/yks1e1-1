@@ -743,13 +743,11 @@
     var toplamOdev = 0, yapilanOdev = 0;
     var toplamKtDk = 0;
 
-    // Tarihleri al (son 30 gün)
     var bugun = new Date();
     var limitTarih = new Date();
     limitTarih.setDate(bugun.getDate() - 30);
     var limitKey = limitTarih.toISOString().slice(0,10);
 
-    // Yoklama İstatistiği
     Object.keys(yoklamalar).forEach(function(tarih) {
         if (tarih < limitKey) return;
         var gun = yoklamalar[tarih];
@@ -763,7 +761,6 @@
         });
     });
 
-    // Ödev İstatistiği
     odevler.forEach(function(o) {
         if (o.olusturmaTarihi < limitKey) return;
         Object.keys(o.durumlar || {}).forEach(function(id) {
@@ -774,7 +771,6 @@
         });
     });
 
-    // Kütüphane İstatistiği
     Object.keys(kutuphane).forEach(function(tarih) {
         if (tarih < limitKey) return;
         var gun = kutuphane[tarih];
@@ -793,62 +789,51 @@
     var ktSaat = Math.round(toplamKtDk / 60);
 
     var html = '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:20px;">';
+    var katilimRenk = katilimOrani >= 80 ? '#22c55e' : (katilimOrani >= 60 ? '#f59e0b' : '#ef4444');
+    var odevRenk = odevOrani >= 80 ? '#22c55e' : (odevOrani >= 60 ? '#f59e0b' : '#ef4444');
     
-    // Kart 1: Öğrenci
     html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; position:relative; overflow:hidden;">' +
       '<div style="position:absolute; right:10px; top:10px; font-size:24px; opacity:0.2;">👥</div>' +
       '<div style="font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase;">Aktif Öğrenci</div>' +
       '<div style="font-size:28px; font-weight:800; color:#0f172a; margin-top:4px;">' + toplamOgr + '</div></div>';
 
-    // Kart 2: Katılım
-    var katilimRenk = katilimOrani >= 80 ? '#22c55e' : (katilimOrani >= 60 ? '#f59e0b' : '#ef4444');
     html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; position:relative; overflow:hidden;">' +
       '<div style="position:absolute; right:10px; top:10px; font-size:24px; opacity:0.2;">🏫</div>' +
       '<div style="font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase;">Ders Katılımı (30 Gün)</div>' +
       '<div style="font-size:28px; font-weight:800; color:' + katilimRenk + '; margin-top:4px;">%' + katilimOrani + '</div></div>';
 
-    // Kart 3: Ödev
-    var odevRenk = odevOrani >= 80 ? '#22c55e' : (odevOrani >= 60 ? '#f59e0b' : '#ef4444');
     html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; position:relative; overflow:hidden;">' +
       '<div style="position:absolute; right:10px; top:10px; font-size:24px; opacity:0.2;">📝</div>' +
       '<div style="font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase;">Ödev Tamamlama</div>' +
       '<div style="font-size:28px; font-weight:800; color:' + odevRenk + '; margin-top:4px;">%' + odevOrani + '</div></div>';
 
-    // Kart 4: Kütüphane
     html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; position:relative; overflow:hidden;">' +
       '<div style="position:absolute; right:10px; top:10px; font-size:24px; opacity:0.2;">📚</div>' +
       '<div style="font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase;">Kütüphane (30 Gün)</div>' +
       '<div style="font-size:28px; font-weight:800; color:#3b82f6; margin-top:4px;">' + ktSaat + ' <span style="font-size:14px; font-weight:600;">Saat</span></div></div>';
-
     html += '</div>';
 
-    // 2. Riskli Öğrenciler Analizi
+    // 2. Riskli Öğrenciler
     var riskliOgr = [];
     ogrenciler.forEach(function(ogr) {
-        var devamsizlik = 0;
-        var odevSorun = 0;
+        var devamsizlik = 0, odevSorun = 0;
+        var dersGecmisi = [], odevGecmisi = [];
         
-        // Son 3 ders kontrolü (Basit yaklaşım: Tüm yoklamalarda bu öğrencinin son 3 durumuna bak)
-        var dersGecmisi = [];
         Object.keys(yoklamalar).sort().reverse().forEach(function(tarih) {
             if (yoklamalar[tarih][ogr.sinif] && yoklamalar[tarih][ogr.sinif][ogr.id]) {
                 var d = yoklamalar[tarih][ogr.sinif][ogr.id];
                 dersGecmisi.push(typeof d === 'string' ? d : d.durum);
             }
         });
-        var son3Ders = dersGecmisi.slice(0, 3);
-        if (son3Ders.length === 3 && son3Ders.every(function(d){ return d === 'gelmedi'; })) devamsizlik = 1;
+        if (dersGecmisi.slice(0, 3).length === 3 && dersGecmisi.slice(0, 3).every(function(d){ return d === 'gelmedi'; })) devamsizlik = 1;
 
-        // Son 3 ödev kontrolü
-        var odevGecmisi = [];
         odevler.slice().reverse().forEach(function(o) {
             if (o.durumlar && o.durumlar[ogr.id]) {
                 var d = o.durumlar[ogr.id];
                 if (d !== 'bekliyor') odevGecmisi.push(d);
             }
         });
-        var son3Odev = odevGecmisi.slice(0, 3);
-        if (son3Odev.length === 3 && son3Odev.every(function(d){ return d === 'yapmadi' || d === 'eksik'; })) odevSorun = 1;
+        if (odevGecmisi.slice(0, 3).length === 3 && odevGecmisi.slice(0, 3).every(function(d){ return d === 'yapmadi' || d === 'eksik'; })) odevSorun = 1;
 
         if (devamsizlik || odevSorun) {
             var nedenler = [];
@@ -878,7 +863,112 @@
     }
     html += '</div>';
 
+    // 3. Öğrenci Karneleri (YENİ EKLENEN)
+    var karneler = [];
+    ogrenciler.forEach(function(ogr) {
+        var ogrToplamDers = 0, ogrGelinenDers = 0;
+        var ogrToplamOdev = 0, ogrYapilanOdev = 0;
+        var ogrKtDk = 0;
+
+        // Ders
+        Object.keys(yoklamalar).forEach(function(t) {
+            if (t < limitKey) return;
+            if (yoklamalar[t][ogr.sinif] && yoklamalar[t][ogr.sinif][ogr.id]) {
+                var d = typeof yoklamalar[t][ogr.sinif][ogr.id] === 'string' ? yoklamalar[t][ogr.sinif][ogr.id] : yoklamalar[t][ogr.sinif][ogr.id].durum;
+                if (d !== 'iptal') { ogrToplamDers++; if (d === 'geldi' || d === 'gec') ogrGelinenDers++; }
+            }
+        });
+        // Ödev
+        odevler.forEach(function(o) {
+            if (o.olusturmaTarihi < limitKey) return;
+            if (o.durumlar && o.durumlar[ogr.id]) {
+                var d = o.durumlar[ogr.id];
+                if (d !== 'bekliyor') { ogrToplamOdev++; if (d === 'yapildi') ogrYapilanOdev++; }
+            }
+        });
+        // Kütüphane
+        Object.keys(kutuphane).forEach(function(t) {
+            if (t < limitKey) return;
+            if (kutuphane[t][ogr.id] && kutuphane[t][ogr.id].giris && kutuphane[t][ogr.id].cikis) {
+                var g = kutuphane[t][ogr.id].giris.split(":"), c = kutuphane[t][ogr.id].cikis.split(":");
+                var dk = (parseInt(c[0])*60 + parseInt(c[1])) - (parseInt(g[0])*60 + parseInt(g[1]));
+                if (dk > 0) ogrKtDk += dk;
+            }
+        });
+
+        var oKatilim = ogrToplamDers > 0 ? Math.round((ogrGelinenDers / ogrToplamDers) * 100) : 0;
+        var oOdev = ogrToplamOdev > 0 ? Math.round((ogrYapilanOdev / ogrToplamOdev) * 100) : 0;
+        var oKtSaat = Math.round(ogrKtDk / 60);
+        
+        // Performans Puanı: Katılım %50, Ödev %30, Kütüphane (max 20 saat) %20
+        var ktPuan = Math.min(oKtSaat, 20) / 20 * 100;
+        var genelPuan = Math.round((oKatilim * 0.5) + (oOdev * 0.3) + (ktPuan * 0.2));
+
+        karneler.push({
+            ad: ogr.adSoyad || ogr.ad, sinif: ogr.sinif,
+            katilim: oKatilim, odev: oOdev, kt: oKtSaat, puan: genelPuan
+        });
+    });
+
+    // Sınıfları al (filtre için)
+    var siniflar = Array.from(new Set(ogrenciler.map(function(o){ return o.sinif; }))).sort();
+
+    html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-top:16px;">';
+    html += '<div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:12px;">' +
+      '<div style="display:flex; align-items:center; gap:8px;">' +
+        '<div style="width:8px; height:24px; background:#3b82f6; border-radius:4px;"></div>' +
+        '<h3 style="margin:0; font-size:15px; font-weight:800; color:#0f172a;">Öğrenci Karneleri</h3>' +
+      '</div>' +
+      '<div style="display:flex; gap:8px;">' +
+        '<input type="text" id="__anArama" placeholder="🔍 Öğrenci ara..." oninput="window.__sysAnalizAra()" style="border:1px solid #cbd5e1; border-radius:6px; padding:6px 10px; font-size:12px; width:150px;">' +
+        '<select id="__anSinif" onchange="window.__sysAnalizAra()" style="border:1px solid #cbd5e1; border-radius:6px; padding:6px 10px; font-size:12px;">' +
+          '<option value="">Tüm Sınıflar</option>' +
+          siniflar.map(function(s){ return '<option value="'+sinavEsc(s)+'">'+sinavEsc(s)+'</option>'; }).join('') +
+        '</select>' +
+      '</div>' +
+    '</div>';
+
+    html += '<div id="__anListe" style="display:flex; flex-direction:column; gap:6px; max-height:400px; overflow-y:auto;">';
+    
+    // İlk çizim (Tümü)
+    karneler.sort(function(a,b){ return b.puan - a.puan; }).forEach(function(k) {
+        var renk = k.puan >= 80 ? '#22c55e' : (k.puan >= 60 ? '#f59e0b' : '#ef4444');
+        html += '<div class="an-kart" data-sinif="'+sinavEsc(k.sinif)+'" data-ad="'+sinavEsc(String(k.ad || "").toLowerCase())+'" style="display:flex; align-items:center; justify-content:space-between; padding:10px; border:1px solid #f1f5f9; border-radius:8px; background:#f8fafc;">' +
+          '<div>' +
+            '<div style="font-weight:700; font-size:13px; color:#1e293b;">' + sinavEsc(k.ad) + '</div>' +
+            '<div style="font-size:11px; color:#64748b;">' + sinavEsc(k.sinif) + '</div>' +
+          '</div>' +
+          '<div style="display:flex; gap:12px; align-items:center;">' +
+            '<div style="text-align:center;"><div style="font-size:10px; color:#64748b;">Katılım</div><div style="font-size:12px; font-weight:700;">%' + k.katilim + '</div></div>' +
+            '<div style="text-align:center;"><div style="font-size:10px; color:#64748b;">Ödev</div><div style="font-size:12px; font-weight:700;">%' + k.odev + '</div></div>' +
+            '<div style="text-align:center;"><div style="font-size:10px; color:#64748b;">Kütüphane</div><div style="font-size:12px; font-weight:700;">' + k.kt + 's</div></div>' +
+            '<div style="background:'+renk+'; color:#fff; font-weight:800; font-size:14px; padding:6px 12px; border-radius:8px; min-width:50px; text-align:center;">' + k.puan + '</div>' +
+          '</div>' +
+        '</div>';
+    });
+
+    html += '</div></div>';
+
     return html;
-  };
+};
+
+window.__sysAnalizAra = function() {
+    var aramaAlani = document.getElementById("__anArama");
+    var sinifAlani = document.getElementById("__anSinif");
+    if (!aramaAlani || !sinifAlani) return;
+    var arama = (aramaAlani.value || "").toLowerCase();
+    var seciliSinif = sinifAlani.value;
+    var kartlar = document.querySelectorAll(".an-kart");
+    
+    kartlar.forEach(function(kart) {
+        var ad = kart.getAttribute("data-ad");
+        var sinif = kart.getAttribute("data-sinif");
+        var uygunAd = ad.includes(arama);
+        var uygunSinif = !seciliSinif || sinif === seciliSinif;
+        
+        if (uygunAd && uygunSinif) kart.style.display = "flex";
+        else kart.style.display = "none";
+    });
+};
 
 })();

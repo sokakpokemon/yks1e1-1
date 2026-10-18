@@ -622,139 +622,91 @@
 
   // === EXCEL KAYDETME SİSTEMİ ===
   window.__ykExcelKaydet = function() {
-    // Önizleme fonksiyonunda rows verisini global bir değişkende tutmuştuk,
-    // eğer tutmadıysak DOM'dan veya localStorage'dan okuyamayız. Bu yüzden
-    // __ykExcelOnizle içinde window.__sonExcelRows = rows; yapmalıyız.
     var rows = window.__sonExcelRows;
     if (!rows || !rows.length) return alert("Excel verisi bulunamadı. Lütfen dosyayı tekrar yükleyin.");
 
     var veri = JSON.parse(localStorage.getItem("yksOto_arsiv_v1") || "{}");
     if (!veri.yoklamalar) veri.yoklamalar = {};
     var ogrenciler = veri.ogrenciler || [];
-
-    // Türkçe karakterleri ve büyük/küçük harfi normalize etme fonksiyonu
-    // DİKKAT: "İ" harfi toLowerCase() ile 'i' + BİRLEŞEN NOKTA (U+0307) üretir;
-    // "İREM ATİZ" → "i̇rem ati̇z" olur ve "İrem Atiz" ile eşleşmezdi. O nokta silinir.
+    
     function normalize(s) {
-      return String(s || "").toLowerCase().replace(/\u0307/g,"").replace(/ı/g,"i").replace(/ş/g,"s").replace(/ğ/g,"g").replace(/ü/g,"u").replace(/ö/g,"o").replace(/ç/g,"c").trim();
+        return String(s || "").toLowerCase().replace(/ı/g,"i").replace(/ş/g,"s").replace(/ğ/g,"g").replace(/ü/g,"u").replace(/ö/g,"o").replace(/ç/g,"c").replace(/\u0307/g, "").trim();
     }
 
     var basarili = 0;
     var bulunamayan = [];
-
-    // İlk satır başlık mı kontrolü (Tarih, Öğrenci vb. içeriyorsa)
-    var baslangicIndex = 0;
-    if (rows[0] && rows[0].join(" ").toLowerCase().indexOf("tarih") !== -1) baslangicIndex = 1;
-
     var aktifTarih = null;
 
-    for (var i = baslangicIndex; i < rows.length; i++) {
-      var r = rows[i];
-      if (!r || r.length === 0) continue;
+    for (var i = 0; i < rows.length; i++) {
+        var r = rows[i];
+        if (!r || r.length === 0) continue;
 
-      var colA = String(r[0] || "").trim();
-      var colB = String(r[1] || "").trim();
-      var colC = String(r[2] || "").trim();
+        var colA = String(r[0] || "").trim();
+        var colB = String(r[1] || "").trim();
 
-      // Eğer A sütununda tarih satırı varsa (ör. "15 Eki", "15 Ekim", "2026-10-11")
-      if (colA && colA.match(/\d/) && !colB) {
-        // Türkçe Tarih Okuma
-        var tLower = colA.toLowerCase();
-        var ayMap = {"oca":"01", "şub":"02", "sub":"02", "mar":"03", "nis":"04", "may":"05", "haz":"06", "tem":"07", "ağu":"08", "agu":"08", "eyl":"09", "eki":"10", "kas":"11", "ara":"12", "jan":"01", "feb":"02", "apr":"04", "jun":"06", "jul":"07", "aug":"08", "sep":"09", "oct":"10", "nov":"11", "dec":"12"};
-        // Not: "sub" ve "agu" ASCII karşılıklarıdır — diakritikler düştüğünde (ör. "12 Sub") de ay bulunsun diye.
+        // Tarih Okuma (Örn: 14.Eki veya 15.Eki)
+        if (colA && colA.match(/\d/) && !colB) {
+            var tLower = colA.toLowerCase();
+            var ayMap = {"oca":"01", "şub":"02", "sub":"02", "mar":"03", "nis":"04", "may":"05", "haz":"06", "tem":"07", "ağu":"08", "agu":"08", "eyl":"09", "eki":"10", "kas":"11", "ara":"12"};
+            
+            if (tLower.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                aktifTarih = tLower;
+            } else {
+                // Nokta, tire, boşluk gibi ayraçlara göre böl (14.Eki -> ["14", "Eki"])
+                var parcalar = tLower.split(/[\s\-\.]+/);
+                var gun = "01", ay = "01", yil = "2026";
+                
+                parcalar.forEach(function(p) {
+                    if (p.match(/^\d{1,2}$/)) gun = p.padStart(2, "0");
+                    else if (p.match(/^\d{4}$/)) yil = p;
+                    else {
+                        var kisaAy = p.substring(0, 3);
+                        if (ayMap[kisaAy]) ay = ayMap[kisaAy];
+                    }
+                });
+                aktifTarih = yil + "-" + ay + "-" + gun;
+            }
+            continue; 
+        }
 
-        // Eğer 2026-10-15 gibi bir format ise
-        if (tLower.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            aktifTarih = tLower;
-        } else {
-            // 15 Eki, 15 Ekim, 15-Oct, 31.12.2026, 10/20/2026 gibi formatlar için
-            var parcalar = tLower.split(/[\s\-\.\/]+/);
-            var gun = "01", ay = "01", yil = "2026";
-            var sayilar = [], ayBulundu = false, yilIdx = -1;
+        // Öğrenci Okuma (A sütununda isim varsa)
+        if (colA && aktifTarih && !colA.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            var ogrAdi = colA;
+            var aciklama = colB;
 
-            parcalar.forEach(function(p, idx) {
-                if (!p) return;
-                if (p.match(/^\d{4}$/)) { yil = p; yilIdx = idx; }
-                else if (p.match(/^\d{1,2}$/)) { sayilar.push(p); }
-                else {
-                    var kisaAy = p.substring(0, 3);
-                    if (ayMap[kisaAy]) { ay = ayMap[kisaAy]; ayBulundu = true; }
-                }
+            var excelAd = normalize(ogrAdi);
+            var ogr = ogrenciler.find(function(o) {
+                var sysAd = normalize(o.adSoyad || o.ad);
+                return sysAd === excelAd || sysAd.includes(excelAd) || excelAd.includes(sysAd);
             });
 
-            if (ayBulundu) {
-                // Ay adı var: "15 Eki" / "Eki 15" → gün sayıdan okunur (varsayılan yıl 2026)
-                if (sayilar.length) gun = sayilar[0].padStart(2, "0");
-            } else if (sayilar.length >= 2 && yilIdx === 0) {
-                // Yıl başta yazılmışsa (ör. 2026-10-5): ay-gün sırası
-                ay = sayilar[0].padStart(2, "0");
-                gun = sayilar[1].padStart(2, "0");
-            } else if (sayilar.length >= 2) {
-                // Ay adı yok: sayısal gün/ay ayrımı — "31.12.2026" → 31 Aralık; "10/20/2026" → 20 Ekim
-                var n1 = parseInt(sayilar[0], 10), n2 = parseInt(sayilar[1], 10);
-                if (n2 > 12 && n1 <= 12) { gun = sayilar[1].padStart(2, "0"); ay = sayilar[0].padStart(2, "0"); }
-                else if (n2 <= 12) { gun = sayilar[0].padStart(2, "0"); ay = sayilar[1].padStart(2, "0"); }
-                else { gun = sayilar[0].padStart(2, "0"); } // ayı tutarsız — ay "01" kalır
-            } else if (sayilar.length === 1) {
-                gun = sayilar[0].padStart(2, "0");
+            if (ogr) {
+                if (!veri.yoklamalar[aktifTarih]) veri.yoklamalar[aktifTarih] = {};
+                if (!veri.yoklamalar[aktifTarih][ogr.sinif]) veri.yoklamalar[aktifTarih][ogr.sinif] = {};
+                
+                veri.yoklamalar[aktifTarih][ogr.sinif][ogr.id] = { 
+                    durum: "gelmedi", 
+                    aciklama: aciklama || "" 
+                };
+                basarili++;
+            } else {
+                bulunamayan.push(ogrAdi);
             }
-
-            aktifTarih = yil + "-" + ay + "-" + gun;
         }
-        continue;
-      }
-
-      // Eğer B sütununda öğrenci adı varsa
-      if (colB && aktifTarih) {
-        var ogrAdi = colB;
-        var aciklama = colC;
-
-        // Öğrenciyi sistemde bul
-        var excelAd = normalize(ogrAdi);
-        var ogr = ogrenciler.find(function(o) {
-            var sysAd = normalize(o.adSoyad || o.ad);
-            // Birebir eşleşme veya sistemdeki adın Excel'deki adı içermesi
-            return sysAd === excelAd || sysAd.includes(excelAd) || excelAd.includes(sysAd);
-        });
-
-        if (ogr) {
-            if (!veri.yoklamalar[aktifTarih]) veri.yoklamalar[aktifTarih] = {};
-            if (!veri.yoklamalar[aktifTarih][ogr.sinif]) veri.yoklamalar[aktifTarih][ogr.sinif] = {};
-
-            // Excel'de yazan herkes "Gelmedi" kabul edilir (açıklamasıyla birlikte)
-            veri.yoklamalar[aktifTarih][ogr.sinif][ogr.id] = {
-                durum: "gelmedi",
-                aciklama: aciklama || ""
-            };
-            basarili++;
-        } else {
-            bulunamayan.push(ogrAdi);
-        }
-      }
     }
 
     localStorage.setItem("yksOto_arsiv_v1", JSON.stringify(veri));
-
+    
     var mesaj = "✅ " + basarili + " kayıt başarıyla yüklendi.";
     if (bulunamayan.length > 0) {
         mesaj += "\n\n⚠ Sistemde bulunamayan " + bulunamayan.length + " öğrenci var:\n" + bulunamayan.slice(0, 10).join(", ");
         if (bulunamayan.length > 10) mesaj += "...";
     }
     alert(mesaj);
-
+    
     var ov = document.getElementById("__ykExcelOverlay");
     if (ov) ov.remove();
-
-    // Ekranı yenile
-    // Not: window.gosterAlt("yoklama") → window.__sysYoklamaEkran çağırır ve bu
-    // fonksiyon projede tanımlı değil (TypeError fırlatır); hata yutulur ve yoklama
-    // ekranı index.html'in __ykTarih → yenile zinciriyle tazelenir.
-    var tInp = document.getElementById("yoklamaTarih");
-    var tarih = tInp && tInp.value ? tInp.value : new Date().toISOString().slice(0, 10);
-    var yenileOK = false;
-    try {
-      if (window.gosterAlt) { window.gosterAlt("yoklama"); yenileOK = true; }
-    } catch (e) { yenileOK = false; }
-    if (!yenileOK && window.__ykTarih) window.__ykTarih(tarih);
-  };
+    
+    if (window.gosterAlt) window.gosterAlt("yoklama");
+};
 })();

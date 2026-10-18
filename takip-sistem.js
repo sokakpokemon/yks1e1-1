@@ -1182,4 +1182,127 @@ window.__sysAnalizAra = function() {
     ov.appendChild(k);
     document.body.appendChild(ov);
   };
+
+  // === YÖNETİM › ÖĞRENCİ & SINIF: ARAMA KUTUSU VE SINIF FİLTRESİ ===
+  // index.html'e HİÇ dokunulmadan, renderYonetim() içindeki "Kayıtlı Öğrenciler"
+  // başlığının altına enjekte edilir. Yönetim sekmesi her yeniden çizimde içeriği
+  // innerHTML ile yeniden kurduğu için kutu 1 saniyelik setInterval ile korunur:
+  //   - kutu yoksa eklenir, son arama/filtre değerleri geri yüklenir
+  //   - filtre her turda tekrar uygulanır (liste yeniden çizilince gizlenmeler kaybolmaz)
+  var yonetimSonArama = "";
+  var yonetimSonSinif = "";
+
+  function yonetimKucuk(s) {
+    var v = String(s == null ? "" : s);
+    return typeof kucuk === "function" ? kucuk(v) : v.toLocaleLowerCase("tr-TR");
+  }
+
+  function yonetimOgrVeri() {
+    return (typeof DB !== "undefined" && DB && DB.ogrenciler) ? DB.ogrenciler : [];
+  }
+
+  // "Kayıtlı Öğrenciler (N)" başlığını bul (CSS uppercase değil, gerçek metin "Kayıtlı"dır)
+  function yonetimOgrBasligi() {
+    var h = document.querySelectorAll("#yonetimBolum h4");
+    for (var i = 0; i < h.length; i++) {
+      var t = (h[i].textContent || "").replace(/\s+/g, " ").trim();
+      if (t.indexOf("Kayıtlı Öğrenciler") >= 0) return h[i];
+    }
+    return null;
+  }
+
+  function yonetimOgrSiniflar() {
+    var set = {};
+    yonetimOgrVeri().forEach(function (o) { if (o && o.sinif) set[o.sinif] = 1; });
+    return Object.keys(set).sort();
+  }
+
+  // Başlığın altındaki liste kapsayıcısı ve öğrenci satırları (doğrudan çocuk DIV'ler)
+  function yonetimOgrSatirlar(baslik) {
+    var kutu = document.getElementById("__yonetimAramaKutusu");
+    var liste = kutu ? kutu.nextElementSibling : baslik.nextElementSibling;
+    if (!liste || liste.tagName !== "DIV") return []; // boş liste "<p>Henüz öğrenci yok.", satır yok
+    var satirlar = [];
+    for (var i = 0; i < liste.children.length; i++) {
+      if (liste.children[i].tagName === "DIV") satirlar.push(liste.children[i]);
+    }
+    return satirlar;
+  }
+
+  window.__yonetimFiltrele = function () {
+    var aramaEl = document.getElementById("__yAramaInput");
+    var sinifEl = document.getElementById("__ySinifSelect");
+    var baslik = yonetimOgrBasligi();
+    if (!aramaEl || !sinifEl || !baslik) return;
+
+    var arama = yonetimKucuk(String(aramaEl.value || "").trim());
+    var seciliSinif = sinifEl.value || "";
+    var ogrenciler = yonetimOgrVeri();
+    var satirlar = yonetimOgrSatirlar(baslik);
+    // Satır sayısı öğrenci sayısıyla aynıysa satır i ↔ öğrenci i eşleşmesi kesindir;
+    // sınıf eşleşmesi o zaman metin içeriğine değil, kaydın kendisine bakılır.
+    var birebir = satirlar.length === ogrenciler.length;
+
+    for (var i = 0; i < satirlar.length; i++) {
+      var satir = satirlar[i];
+      var metin = yonetimKucuk(satir.textContent || "");
+      var ogr = birebir ? ogrenciler[i] : null;
+      var uygunAd = !arama || metin.indexOf(arama) >= 0;
+      var uygunSinif = !seciliSinif ||
+        (ogr ? (ogr.sinif || "") === seciliSinif : metin.indexOf(yonetimKucuk(seciliSinif)) >= 0);
+      satir.style.display = (uygunAd && uygunSinif) ? "" : "none";
+    }
+  };
+
+  setInterval(function () {
+    var baslik = yonetimOgrBasligi();
+    if (!baslik) return; // Yönetim › Öğrenci & Sınıf sekmesi açık değil
+
+    var kutu = document.getElementById("__yonetimAramaKutusu");
+    if (!kutu) {
+      kutu = document.createElement("div");
+      kutu.id = "__yonetimAramaKutusu";
+      kutu.style.cssText = "display:flex; gap:8px; align-items:center; margin:10px 0 12px;";
+
+      var aramaEl = document.createElement("input");
+      aramaEl.type = "text";
+      aramaEl.id = "__yAramaInput";
+      aramaEl.placeholder = "🔍 Öğrenci ara (ad, sınıf, telefon)…";
+      aramaEl.style.cssText = "flex:1; min-width:0; border:1px solid #cbd5e1; border-radius:8px; padding:8px 12px; font-size:13px; outline:none;";
+      aramaEl.value = yonetimSonArama;
+      aramaEl.addEventListener("input", function () {
+        yonetimSonArama = aramaEl.value;
+        window.__yonetimFiltrele();
+      });
+
+      var sinifEl = document.createElement("select");
+      sinifEl.id = "__ySinifSelect";
+      sinifEl.style.cssText = "border:1px solid #cbd5e1; border-radius:8px; padding:8px 10px; font-size:13px; font-weight:600; background:#fff; max-width:45%;";
+      sinifEl.addEventListener("change", function () {
+        yonetimSonSinif = sinifEl.value;
+        window.__yonetimFiltrele();
+      });
+
+      kutu.appendChild(aramaEl);
+      kutu.appendChild(sinifEl);
+      baslik.parentNode.insertBefore(kutu, baslik.nextSibling);
+    }
+
+    // Sınıf seçenekleri DB değiştikçe tazelenir; seçili değer korunur
+    var siniflar = yonetimOgrSiniflar();
+    var anahtar = siniflar.join("|");
+    if (kutu.__sinifAnahtar !== anahtar) {
+      kutu.__sinifAnahtar = anahtar;
+      var sel = document.getElementById("__ySinifSelect");
+      if (sel) {
+        var mevcut = sel.value || yonetimSonSinif;
+        sel.innerHTML = '<option value="">Tüm Sınıflar</option>' +
+          siniflar.map(function (s) { return '<option value="' + sinavEsc(s) + '">' + sinavEsc(s) + "</option>"; }).join("");
+        sel.value = (mevcut && siniflar.indexOf(mevcut) >= 0) ? mevcut : "";
+        yonetimSonSinif = sel.value;
+      }
+    }
+
+    window.__yonetimFiltrele();
+  }, 1000);
 })();

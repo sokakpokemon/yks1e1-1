@@ -737,7 +737,6 @@
     var odevler = veri.odevler || [];
     var kutuphane = veri.kutuphane || {};
 
-    // 1. Genel İstatistikler
     var toplamOgr = ogrenciler.length;
     var toplamDers = 0, gelinenDers = 0;
     var toplamOdev = 0, yapilanOdev = 0;
@@ -813,6 +812,16 @@
       '<div style="font-size:28px; font-weight:800; color:#3b82f6; margin-top:4px;">' + ktSaat + ' <span style="font-size:14px; font-weight:600;">Saat</span></div></div>';
     html += '</div>';
 
+    // YENİ: GRAFİKLER
+    html += '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:16px; margin-bottom:20px;">';
+    html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">' +
+      '<h3 style="margin:0 0 12px; font-size:14px; font-weight:800; color:#0f172a;">Son 7 Günün Katılımı</h3>' +
+      '<div style="position:relative; height:200px; width:100%;"><canvas id="__anChartLine"></canvas></div></div>';
+    html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">' +
+      '<h3 style="margin:0 0 12px; font-size:14px; font-weight:800; color:#0f172a;">Bugünün Yoklama Dağılımı</h3>' +
+      '<div style="position:relative; height:200px; width:100%;"><canvas id="__anChartDoughnut"></canvas></div></div>';
+    html += '</div>';
+
     // 2. Riskli Öğrenciler
     var riskliOgr = [];
     ogrenciler.forEach(function(ogr) {
@@ -863,14 +872,13 @@
     }
     html += '</div>';
 
-    // 3. Öğrenci Karneleri (YENİ EKLENEN)
+    // 3. Öğrenci Karneleri
     var karneler = [];
     ogrenciler.forEach(function(ogr) {
         var ogrToplamDers = 0, ogrGelinenDers = 0;
         var ogrToplamOdev = 0, ogrYapilanOdev = 0;
         var ogrKtDk = 0;
 
-        // Ders
         Object.keys(yoklamalar).forEach(function(t) {
             if (t < limitKey) return;
             if (yoklamalar[t][ogr.sinif] && yoklamalar[t][ogr.sinif][ogr.id]) {
@@ -878,7 +886,6 @@
                 if (d !== 'iptal') { ogrToplamDers++; if (d === 'geldi' || d === 'gec') ogrGelinenDers++; }
             }
         });
-        // Ödev
         odevler.forEach(function(o) {
             if (o.olusturmaTarihi < limitKey) return;
             if (o.durumlar && o.durumlar[ogr.id]) {
@@ -886,7 +893,6 @@
                 if (d !== 'bekliyor') { ogrToplamOdev++; if (d === 'yapildi') ogrYapilanOdev++; }
             }
         });
-        // Kütüphane
         Object.keys(kutuphane).forEach(function(t) {
             if (t < limitKey) return;
             if (kutuphane[t][ogr.id] && kutuphane[t][ogr.id].giris && kutuphane[t][ogr.id].cikis) {
@@ -900,17 +906,15 @@
         var oOdev = ogrToplamOdev > 0 ? Math.round((ogrYapilanOdev / ogrToplamOdev) * 100) : 0;
         var oKtSaat = Math.round(ogrKtDk / 60);
         
-        // Performans Puanı: Katılım %50, Ödev %30, Kütüphane (max 20 saat) %20
         var ktPuan = Math.min(oKtSaat, 20) / 20 * 100;
         var genelPuan = Math.round((oKatilim * 0.5) + (oOdev * 0.3) + (ktPuan * 0.2));
 
         karneler.push({
-            ad: ogr.adSoyad || ogr.ad, sinif: ogr.sinif,
+            ad: String(ogr.adSoyad || ogr.ad || ""), sinif: String(ogr.sinif || ""),
             katilim: oKatilim, odev: oOdev, kt: oKtSaat, puan: genelPuan
         });
     });
 
-    // Sınıfları al (filtre için)
     var siniflar = Array.from(new Set(ogrenciler.map(function(o){ return o.sinif; }))).sort();
 
     html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-top:16px;">';
@@ -930,10 +934,9 @@
 
     html += '<div id="__anListe" style="display:flex; flex-direction:column; gap:6px; max-height:400px; overflow-y:auto;">';
     
-    // İlk çizim (Tümü)
     karneler.sort(function(a,b){ return b.puan - a.puan; }).forEach(function(k) {
         var renk = k.puan >= 80 ? '#22c55e' : (k.puan >= 60 ? '#f59e0b' : '#ef4444');
-        html += '<div class="an-kart" data-sinif="'+sinavEsc(k.sinif)+'" data-ad="'+sinavEsc(String(k.ad || "").toLowerCase())+'" style="display:flex; align-items:center; justify-content:space-between; padding:10px; border:1px solid #f1f5f9; border-radius:8px; background:#f8fafc;">' +
+        html += '<div class="an-kart" data-sinif="'+sinavEsc(k.sinif)+'" data-ad="'+sinavEsc(k.ad.toLowerCase())+'" style="display:flex; align-items:center; justify-content:space-between; padding:10px; border:1px solid #f1f5f9; border-radius:8px; background:#f8fafc;">' +
           '<div>' +
             '<div style="font-weight:700; font-size:13px; color:#1e293b;">' + sinavEsc(k.ad) + '</div>' +
             '<div style="font-size:11px; color:#64748b;">' + sinavEsc(k.sinif) + '</div>' +
@@ -949,7 +952,106 @@
 
     html += '</div></div>';
 
+    // Grafik çizimini geciktirerek çağır (DOM'un oluşması için)
+    setTimeout(function() {
+        if (typeof Chart === 'undefined') return; // Chart.js yüklü değilse atla
+
+        // --- 1. Çizgi Grafik: Son 7 Gün ---
+        var son7Gun = [];
+        var son7Ders = [];
+        var son7Gelinen = [];
+        for (var i = 6; i >= 0; i--) {
+            var d = new Date();
+            d.setDate(d.getDate() - i);
+            var t = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+            son7Gun.push(t.substring(5)); // Sadece AA-GG
+            
+            var toplam = 0, gelinen = 0;
+            if (yoklamalar[t]) {
+                Object.keys(yoklamalar[t]).forEach(function(s) {
+                    Object.keys(yoklamalar[t][s]).forEach(function(id) {
+                        var st = typeof yoklamalar[t][s][id] === 'string' ? yoklamalar[t][s][id] : yoklamalar[t][s][id].durum;
+                        if (st !== 'iptal') { toplam++; if (st === 'geldi' || st === 'gec') gelinen++; }
+                    });
+                });
+            }
+            son7Ders.push(toplam);
+            son7Gelinen.push(gelinen);
+        }
+
+        var ctxLine = document.getElementById('__anChartLine');
+        if (ctxLine && Chart.getChart(ctxLine)) Chart.getChart(ctxLine).destroy();
+        if (ctxLine) {
+            new Chart(ctxLine, {
+                type: 'line',
+                data: {
+                    labels: son7Gun,
+                    datasets: [{
+                        label: 'Gelen Öğrenci',
+                        data: son7Gelinen,
+                        borderColor: '#14b8a6',
+                        backgroundColor: 'rgba(20, 184, 166, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
+        }
+
+        // --- 2. Pasta Grafik: Bugünün Dağılımı ---
+        var bugunT = sinavBugunKey(); // Yerel "bugün": yoklama anahtarları yerel tarih (index.html bugunKey)
+        var bugunGeldi = 0, bugunGelmedi = 0, bugunGec = 0;
+        if (yoklamalar[bugunT]) {
+            Object.keys(yoklamalar[bugunT]).forEach(function(s) {
+                Object.keys(yoklamalar[bugunT][s]).forEach(function(id) {
+                    var st = typeof yoklamalar[bugunT][s][id] === 'string' ? yoklamalar[bugunT][s][id] : yoklamalar[bugunT][s][id].durum;
+                    if (st === 'geldi') bugunGeldi++;
+                    else if (st === 'gelmedi') bugunGelmedi++;
+                    else if (st === 'gec') bugunGec++;
+                });
+            });
+        }
+
+        var ctxDough = document.getElementById('__anChartDoughnut');
+        if (ctxDough && Chart.getChart(ctxDough)) Chart.getChart(ctxDough).destroy();
+        if (ctxDough) {
+            new Chart(ctxDough, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Geldi', 'Gelmedi', 'Geç'],
+                    datasets: [{
+                        data: [bugunGeldi, bugunGelmedi, bugunGec],
+                        backgroundColor: ['#22c55e', '#ef4444', '#f59e0b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
+            });
+        }
+    }, 100);
+
     return html;
+};
+
+window.__sysAnalizAra = function() {
+    var aramaEl = document.getElementById("__anArama");
+    var sinifEl = document.getElementById("__anSinif");
+    if (!aramaEl || !sinifEl) return;
+    
+    var arama = (aramaEl.value || "").toLowerCase();
+    var seciliSinif = sinifEl.value;
+    var kartlar = document.querySelectorAll(".an-kart");
+    
+    kartlar.forEach(function(kart) {
+        var ad = kart.getAttribute("data-ad");
+        var sinif = kart.getAttribute("data-sinif");
+        var uygunAd = ad.includes(arama);
+        var uygunSinif = !seciliSinif || sinif === seciliSinif;
+        
+        if (uygunAd && uygunSinif) kart.style.display = "flex";
+        else kart.style.display = "none";
+    });
 };
 
 window.__sysAnalizAra = function() {

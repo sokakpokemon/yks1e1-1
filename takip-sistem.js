@@ -126,15 +126,37 @@
       btnSinav.type = "button";
       btnSinav.className = "takip-alt-btn";
       btnSinav.setAttribute("data-alt", "sinav");
-      btnSinav.onclick = function() { window.gosterAlt('sinav'); };
+      btnSinav.onclick = function() { 
+        document.querySelectorAll(".takip-alt-btn").forEach(function(b){ b.classList.remove("aktif"); });
+        btnSinav.classList.add("aktif");
+        if(window.gosterAlt) window.gosterAlt("sinav"); 
+      };
       btnSinav.textContent = "Sınav Yoklaması";
       btnKutuphane.parentNode.insertBefore(btnSinav, btnKutuphane.nextSibling);
+    }
+
+    // ÇİFT YEŞİL DÜZELTMESİ: index.html'in kendi gosterAlt'ı, sayfa yüklendikten sonra
+    // eklenen sınav butonunu listesinde (altButonlar) tutmadığı için diğer alt sekmelere
+    // tıklanınca "Sınav Yoklaması" yeşil kalıyordu; burada elle temizlenir (idempotent).
+    var btnSinavMevcut = document.querySelector('.takip-alt-btn[data-alt="sinav"]');
+    if (btnSinavMevcut) {
+      document.querySelectorAll('.takip-alt-btn:not([data-alt="sinav"])').forEach(function(b) {
+        if (b.__sinavAktifTemiz) return;
+        b.__sinavAktifTemiz = true;
+        b.addEventListener("click", function() { btnSinavMevcut.classList.remove("aktif"); });
+      });
     }
   }, 200);
 
   window.gosterAlt = function (alt) {
     var btn = document.querySelectorAll(".takip-alt-btn");
-    btn.forEach(function (b) { if (b.getAttribute("data-alt") === alt) b.classList.add("aktif"); else b.classList.remove("aktif"); });
+    btn.forEach(function (b) { 
+        if (b.getAttribute("data-alt") === alt) {
+            b.classList.add("aktif"); 
+        } else {
+            b.classList.remove("aktif"); 
+        }
+    });
     var icerik = document.getElementById("takipIcerik"); if (!icerik) return;
     if (alt === "yoklama") icerik.innerHTML = window.__sysYoklamaEkran();
     else if (alt === "odevler") icerik.innerHTML = window.__sysOdevEkran();

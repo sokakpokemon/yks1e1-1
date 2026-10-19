@@ -1303,6 +1303,49 @@ window.__sysAnalizAra = function() {
       }
     }
 
-    window.__yonetimFiltrele();
-  }, 1000);
+    // === TÜRKÇE HARF DUYARLI ARAMA YAMASI ===
+  setInterval(function() {
+    function trNormalize(str) {
+      return String(str || "")
+        .replace(/İ/g, "i").replace(/I/g, "i").replace(/ı/g, "i")
+        .replace(/Ş/g, "ş").replace(/Ğ/g, "ğ")
+        .replace(/Ü/g, "ü").replace(/Ö/g, "ö").replace(/Ç/g, "ç")
+        .toLowerCase().trim();
+    }
+
+    var inputs = document.querySelectorAll("input[type='text']");
+    inputs.forEach(function(inp) {
+      var ph = (inp.placeholder || "").toLowerCase();
+      if (!inp.hasAttribute("data-tr-yama") &&
+          (ph.includes("ad soyad") || ph.includes("öğrenci adı"))) {
+        inp.setAttribute("data-tr-yama", "true");
+
+        inp.addEventListener("input", function(e) {
+          var val = e.target.value;
+          var normalized = trNormalize(val);
+          if (normalized !== val) {
+            // `h-ogrenci` ("Öğrenci adı") için `grupPanelAra` override
+            if (ph.includes("öğrenci adı") && typeof window.grupPanelAra === "function") {
+              window.grupPanelAra(normalized);
+            }
+            // `f-ogrenci` ("Ad Soyad") için `planla` fonksiyonunu override et
+            if (ph.includes("ad soyad") && typeof window.planla === "function") {
+              if (typeof window.__trYamaPlanla === "undefined") {
+                window.__trYamaPlanla = true;
+                var _origPlanla = window.planla;
+                window.planla = function(normalized) {
+                  var fOgr = document.getElementById("f-ogrenci");
+                  var val = fOgr ? fOgr.value : "";
+                  var useVal = (normalized != null ? normalized : trNormalize(val));
+                  _origPlanla.call(this, useVal);
+                };
+              }
+            }
+          }
+        });
+      }
+    });
+  }, 500);
+
 })();
+;

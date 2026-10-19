@@ -4700,15 +4700,77 @@ function gunlukTablo() {
    ═══════════════════════════════════════════════════════════════ */
 var dersFiltre = { mod: "hafta", baslangic: "", bitis: "", arama: "", durum: "tumu", limit: 20, sayfa: 1, _odakArama: false };
 
+/* ═══ HIZLI TARİH BUTONLARI — DÖNEM SINIRLARI İÇİNDE HESAP ═══
+   Öncelik: 1) Aktif dönemin (aktifDonemId → DB.donemler kaydı) başlangıç/bitiş
+              tarihleri varsa ONLAR kullanılır.
+           2) Yoksa üstteki aktif pencere dönemi (ör. "Eylül 2026") esas alınır;
+              pencere sınırısızsa new Date() ile içinde bulunulan ayın
+              1'i ve son günü hesaplanır.
+   Ters aralık (bitiş < başlangıç) HİÇ üretilmez; clamp'ler hep b <= e garantilidir. */
+function aktifDonemAraligi() {
+  var id = (typeof aktifDonemId === "function") ? aktifDonemId() : "";
+  var dn = (DB && Array.isArray(DB.donemler) ? DB.donemler : []).filter(function (x) { return x && x.id === id; })[0];
+  if (!dn) return null;
+  var b = dn.baslangic || dn.baslangicTarih || dn.start || "";
+  var e = dn.bitis || dn.bitisTarih || dn.end || "";
+  if (b && e && b <= e) return { b: b, e: e };
+  return null; /* dönem kaydında geçerli tarih aralığı yok */
+}
+function takvimAyAraligi(key) {
+  var d = key ? fromKey(key) : new Date(); /* key yoksa içinde bulunulan ay */
+  var b = toKey(new Date(d.getFullYear(), d.getMonth(), 1));
+  var e = toKey(new Date(d.getFullYear(), d.getMonth() + 1, 0));
+  if (b > e) { var g = b; b = e; e = g; } /* asla olmaz — defansif */
+  return { b: b, e: e };
+}
+function gunuDonemIcindeTut(key) {
+  var s = aktifDonemAraligi();
+  if (!s) return key;
+  if (key < s.b) return s.b;
+  if (key > s.e) return s.e;
+  return key;
+}
 function dersFiltreHizli(mod) {
   var t = todayKey();
   dersFiltre.mod = mod;
   dersFiltre.sayfa = 1;
   ui.gunSecim = null;
-  if (mod === "bugun") { dersFiltre.baslangic = t; dersFiltre.bitis = t; ui.filtre = "hafta"; ui.anchor = t; }
-  else if (mod === "hafta") { dersFiltre.baslangic = ""; dersFiltre.bitis = ""; ui.filtre = "hafta"; ui.anchor = t; }
-  else if (mod === "ay") { dersFiltre.baslangic = ""; dersFiltre.bitis = ""; ui.filtre = "ay"; ui.anchor = t; }
-  else { dersFiltre.baslangic = ""; dersFiltre.bitis = ""; ui.filtre = "tumu"; }
+  if (mod === "bugun") {
+    /* "Bugün": bugün aktif dönem dışındaysa dönem sınırındaki güne oturur */
+    t = gunuDonemIcindeTut(t);
+    dersFiltre.baslangic = t; dersFiltre.bitis = t;
+    ui.filtre = "hafta"; ui.anchor = t;
+  } else if (mod === "hafta") {
+    /* "Bu Hafta": hafta dönem tarihliyse dönem sınırlarıyla kırparır; dönem yoksa pencere (hafta) yeterli */
+    var taban = gunuDonemIcindeTut(t);
+    dersFiltre.baslangic = ""; dersFiltre.bitis = "";
+    var sin = aktifDonemAraligi();
+    if (sin) {
+      var wB = haftaBaslangiciD(taban), wE = addDaysKey(wB, 6);
+      if (wB < sin.b) wB = sin.b;
+      if (wE > sin.e) wE = sin.e;
+      if (wB <= wE) { dersFiltre.baslangic = wB; dersFiltre.bitis = wE; }
+      else { dersFiltre.baslangic = taban; dersFiltre.bitis = taban; } /* imkânsız — ters aralık üretme */
+    }
+    ui.filtre = "hafta"; ui.anchor = taban;
+  } else if (mod === "ay") {
+    /* "Bu Ay": 1) aktif dönemin tarihleri; 2) yoksa üstteki aktif ay (ör. "Eylül 2026");
+       pencere ay değilse new Date() ile içinde bulunulan ayın 1'i .. son günü */
+    var dn = aktifDonemAraligi();
+    var pw = pencere();
+    var hedefKey = dn ? null : ((ui.filtre === "ay" && pw.start) ? pw.start : null);
+    var ayA = dn || takvimAyAraligi(hedefKey);
+    dersFiltre.baslangic = ayA.b; dersFiltre.bitis = ayA.e;
+    if (ayA.b.slice(0, 7) === ayA.e.slice(0, 7)) {
+      /* tek aylık aralık: pencere de aynı aya hizalanır (liste boş kalmasın) */
+      ui.filtre = "ay"; ui.anchor = ayA.b;
+    } else {
+      /* dönem birden çok aya yayılıyorsa pencere aralığı kırpmasın */
+      ui.filtre = "tumu";
+    }
+  } else { /* tumu */
+    dersFiltre.baslangic = ""; dersFiltre.bitis = ""; ui.filtre = "tumu";
+  }
   istekDropHedef = null;
   renderOzet(); renderAnaliz(); renderDersler();
 }

@@ -4736,9 +4736,14 @@ function dersFiltreSayfaGit(n) { dersFiltre.sayfa = n; renderDersler(); }
 function dfGit(yon) {
   if (ui.filtre === "tumu") return;
   if (dersFiltre.baslangic && dersFiltre.bitis) {
+    /* Tek gün / özel aralık modunda: aralık günlük kayar, pencere yeni aralığı kapsayacak şekilde yeniden çapalanır */
     var adim = dersFiltre.baslangic === dersFiltre.bitis ? 1 : 7;
     dersFiltre.baslangic = addDaysKey(dersFiltre.baslangic, yon * adim);
     dersFiltre.bitis = addDaysKey(dersFiltre.bitis, yon * adim);
+    ui.anchor = dersFiltre.baslangic;
+    dersFiltre.sayfa = 1;
+    renderOzet(); renderAnaliz(); renderDersler();
+    return;
   }
   dersFiltre.sayfa = 1;
   navGit(yon);

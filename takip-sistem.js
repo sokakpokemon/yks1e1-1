@@ -2294,4 +2294,39 @@ window.__sysAnalizAra = function() {
     setInterval(tik, 500);
   })();
 
+  // === SINIF-SAATI-SAYIM-YAMASI ===
+  // app.js'te öğretmen listesindeki sayaç "(t.avail.sinif || []).length" ile hesaplanıyor.
+  // Oysa avail.sinif bir NESNE (slot → sınıf adı); nesnenin .length'i yoktur, bu yüzden her
+  // öğretmenin altında "undefined sınıf saati" yazıyordu. Nesneye sayılamayan (enumerable
+  // olmayan) bir length getter'ı tanımlanır: doğru sayı = anahtar adedi, veri yoksa 0.
+  // Non-enumerable olduğu için Object.keys/for-in/JSON.stringify davranışı değişmez; slot
+  // erişimleri (sinif["0-1"], "0-1" in sinif) aynen çalışır.
+  function sinifSayisiHazirla() {
+    try {
+      var liste = (window.DB && Array.isArray(window.DB.ogretmenler)) ? window.DB.ogretmenler : [];
+      liste.forEach(function (t) {
+        if (!t || !t.avail || !t.avail.sinif) return;
+        var s = t.avail.sinif;
+        if (typeof s !== "object" || Array.isArray(s)) return; // dizi ise length zaten doğru
+        if (Object.prototype.hasOwnProperty.call(s, "length")) return;
+        Object.defineProperty(s, "length", {
+          configurable: true,
+          get: function () { return Object.keys(this).length; }
+        });
+      });
+    } catch (e) { /* sayaç yalnız görünüm içindir; hata render'ı engellemesin */ }
+  }
+  (function () {
+    sinifSayisiHazirla();
+    var orijinal = window.ogretmenTab;
+    if (typeof orijinal !== "function" || orijinal.__sinifSayisiYamasi) return;
+    var sarmal = function () {
+      // Excel içe aktarma / yeni kayıt sonrası oluşan nesneler için her render'da tazele
+      sinifSayisiHazirla();
+      return orijinal.apply(this, arguments);
+    };
+    sarmal.__sinifSayisiYamasi = true;
+    window.ogretmenTab = sarmal;
+  })();
+
 })();

@@ -135,6 +135,24 @@
       btnKutuphane.parentNode.insertBefore(btnSinav, btnKutuphane.nextSibling);
     }
     
+    // Görüşmeler Butonu Ekle (Sınav Yoklaması ile Analiz arasına)
+    if (btnKutuphane && !document.querySelector('.takip-alt-btn[data-alt="gorusmeler"]')) {
+      var btnGorusme = document.createElement("button");
+      btnGorusme.type = "button";
+      btnGorusme.className = "takip-alt-btn";
+      btnGorusme.setAttribute("data-alt", "gorusmeler");
+      btnGorusme.textContent = "📞 Görüşmeler";
+      btnGorusme.onclick = function() {
+        document.querySelectorAll(".takip-alt-btn").forEach(function(b){ b.classList.remove("aktif"); });
+        btnGorusme.classList.add("aktif");
+        if(window.gosterAlt) window.gosterAlt("gorusmeler");
+      };
+      // Sınav butonunun hemen ardına; yoksa Kütüphane'nin yanına ekle
+      var btnSinavKardes = document.querySelector('.takip-alt-btn[data-alt="sinav"]');
+      if(btnSinavKardes) btnSinavKardes.parentNode.insertBefore(btnGorusme, btnSinavKardes.nextSibling);
+      else btnKutuphane.parentNode.insertBefore(btnGorusme, btnKutuphane.nextSibling);
+    }
+
     // Analiz Butonu Ekle
     if (btnKutuphane && !document.querySelector('.takip-alt-btn[data-alt="analiz"]')) {
       var btnAnaliz = document.createElement("button");
@@ -147,9 +165,12 @@
         btnAnaliz.classList.add("aktif");
         if(window.gosterAlt) window.gosterAlt("analiz");
       };
-      // Sınav butonunun yanına ekle
+      // Görüşmeler butonundan hemen sonra (yoksa Sınav'ın, o da yoksa Kütüphane'nin yanına) ekle
+      // Sıra: … [Sınav Yoklaması] [📞 Görüşmeler] [📊 Analiz]
       var btnSinavEl = document.querySelector('.takip-alt-btn[data-alt="sinav"]');
-      if(btnSinavEl) btnSinavEl.parentNode.insertBefore(btnAnaliz, btnSinavEl.nextSibling);
+      var btnGorusmeEl = document.querySelector('.takip-alt-btn[data-alt="gorusmeler"]');
+      if(btnGorusmeEl) btnGorusmeEl.parentNode.insertBefore(btnAnaliz, btnGorusmeEl.nextSibling);
+      else if(btnSinavEl) btnSinavEl.parentNode.insertBefore(btnAnaliz, btnSinavEl.nextSibling);
       else btnKutuphane.parentNode.insertBefore(btnAnaliz, btnKutuphane.nextSibling);
     }
 
@@ -162,6 +183,17 @@
         if (b.__sinavAktifTemiz) return;
         b.__sinavAktifTemiz = true;
         b.addEventListener("click", function() { btnSinavMevcut.classList.remove("aktif"); });
+      });
+    }
+
+    // Aynı neden Görüşmeler butonu için de geçerli: index.html'in altButonlar listesinde
+    // olmadığı için başka bir sekmeye geçilince yeşil kalırdı; burada elle temizlenir.
+    var btnGorusmeMevcut = document.querySelector('.takip-alt-btn[data-alt="gorusmeler"]');
+    if (btnGorusmeMevcut) {
+      document.querySelectorAll('.takip-alt-btn:not([data-alt="gorusmeler"])').forEach(function(b) {
+        if (b.__gorusmeAktifTemiz) return;
+        b.__gorusmeAktifTemiz = true;
+        b.addEventListener("click", function() { btnGorusmeMevcut.classList.remove("aktif"); });
       });
     }
   }, 200);
@@ -181,6 +213,7 @@
     else if (alt === "kutuphane") icerik.innerHTML = window.__sysKutuphaneEkran();
     else if (alt === "sinav") icerik.innerHTML = window.__sysSinavEkran();
     else if (alt === "analiz") icerik.innerHTML = window.__sysAnalizEkran();
+    else if (alt === "gorusmeler") icerik.innerHTML = window.__sysGorusmelerEkran();
   };
 
   // === SINAV YOKLAMASI (BAĞIMSIZ MODÜL) ===
@@ -864,7 +897,10 @@
   window.__gorusmeSil = function (id, ogrId) {
     if (!confirm("Bu görüşme kaydı silinsin mi?")) return;
     gorusmeleriYaz(gorusmeleriOku().filter(function (g) { return !g || g.id !== id; }));
-    window.__ogrDetayGoster(ogrId);
+    // Kayıt hangi yüzeyde görünüyorsa orası tazelenir: detay penceresi açıksa detay,
+    // değilse Görüşmeler sekmesi.
+    if (document.getElementById("__ogrDetayOverlay")) window.__ogrDetayGoster(ogrId);
+    else if (typeof window.gosterAlt === "function" && document.getElementById("takipIcerik")) window.gosterAlt("gorusmeler");
   };
 
   window.__ogrDetayKapat = function () {
@@ -1475,4 +1511,129 @@ window.__sysAnalizAra = function() {
 
     window.__yonetimFiltrele();
   }, 1000);
+
+  // === GÖRÜŞMELER SEKMESİ (📞) ===
+  // Sekme içeriği: üstte yeni görüşme formu, altta tüm öğrencilerin geçmiş görüşmeleri.
+  // Kayıtlar Görüşmeler modülünün (veri.gorusmeler) aynı yardımcılarıyla okunur/yazılır.
+  window.__sysGorusmelerEkran = function () {
+    var veri = (typeof veriOku === "function") ? veriOku() : sinavVeriOku();
+    var ogrenciler = (veri.ogrenciler || []).slice().sort(function (a, b) {
+      return String(a.adSoyad || a.ad || "").localeCompare(String(b.adSoyad || b.ad || ""), "tr");
+    });
+    var ogrMap = {};
+    ogrenciler.forEach(function (o) { ogrMap[o.id] = o; });
+
+    var liste = gorusmeleriOku().sort(function (a, b) {
+      var t = String(b.tarih || "").localeCompare(String(a.tarih || ""));
+      return t !== 0 ? t : String(b.olusturma || "").localeCompare(String(a.olusturma || ""));
+    });
+
+    var say = { ogrenci: 0, veli: 0, sikayet: 0 };
+    liste.forEach(function (g) { if (g && say[g.tur] != null) say[g.tur]++; });
+
+    var stil = "border:1px solid #cbd5e1; border-radius:6px; padding:6px 8px; font-size:12px; background:#fff;";
+    var turSecenek = Object.keys(GORUSME_TUR).map(function (k) {
+      var t = GORUSME_TUR[k];
+      return '<option value="' + k + '">' + t.ikon + " " + t.ad + "</option>";
+    }).join("");
+    var ogrSecenek = ogrenciler.map(function (o) {
+      var etiket = String(o.adSoyad || o.ad || "") + (o.sinif ? " (" + o.sinif + ")" : "");
+      return '<option value="' + sinavEsc(o.id) + '">' + sinavEsc(etiket) + "</option>";
+    }).join("");
+
+    var html = '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-top:16px;">' +
+      '<div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">' +
+        '<div style="width:8px; height:24px; background:#0d9488; border-radius:4px;"></div>' +
+        '<h3 style="margin:0; font-size:15px; font-weight:800; color:#0f172a;">📞 Görüşmeler (' + liste.length + ')</h3>' +
+      '</div>' +
+      '<div style="display:flex; gap:4px; flex-wrap:wrap; margin-bottom:12px;">' +
+        gorusmeEtiketHTML("sikayet", say.sikayet) + gorusmeEtiketHTML("veli", say.veli) + gorusmeEtiketHTML("ogrenci", say.ogrenci) +
+      '</div>' +
+
+      '<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:6px;">' +
+        '<div style="font-size:12px; font-weight:800; color:#0f172a;">Yeni Görüşme</div>' +
+        '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
+          '<select id="__gg_ogr" style="' + stil + ' flex:1; min-width:180px;">' +
+            (ogrSecenek || '<option value="">Kayıtlı öğrenci yok</option>') +
+          '</select>' +
+          '<select id="__gg_tur" style="' + stil + '">' + turSecenek + '</select>' +
+          '<input type="date" id="__gg_tarih" value="' + sinavBugunKey() + '" style="' + stil + '">' +
+          '<input type="text" id="__gg_veli" placeholder="Veli adı (opsiyonel)" style="' + stil + ' flex:1; min-width:140px;">' +
+        '</div>' +
+        '<textarea id="__gg_not" rows="2" placeholder="Görüşme notu..." style="' + stil + ' resize:vertical;"></textarea>' +
+        '<div style="display:flex; justify-content:flex-end;">' +
+          '<button type="button" onclick="window.__gorusmeEkleGlobal()" style="border:none; background:#0d9488; color:#fff; padding:6px 14px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">Kaydet</button>' +
+        '</div>' +
+      '</div>' +
+
+      '<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin:14px 0 8px;">' +
+        '<div style="font-size:12px; font-weight:800; color:#0f172a;">Geçmiş Görüşmeler</div>' +
+        '<input type="text" id="__ggAra" placeholder="🔍 Öğrenci / not ara..." oninput="window.__gorusmeTabAra()" style="' + stil + ' width:200px;">' +
+      '</div>';
+
+    if (!liste.length) {
+      html += '<div style="padding:16px; color:#94a3b8; font-size:12px; text-align:center; border:1px dashed #e2e8f0; border-radius:8px;">Henüz görüşme kaydı yok. Yukarıdaki formdan ekleyebilirsiniz.</div>';
+    } else {
+      html += '<div id="__ggListe" style="display:flex; flex-direction:column; gap:6px; max-height:440px; overflow-y:auto;">';
+      liste.forEach(function (g) {
+        var t = gorusmeTur(g.tur);
+        var o = ogrMap[g.ogrId];
+        var ad = o ? String(o.adSoyad || o.ad || "") : "(silinmiş öğrenci)";
+        var sinif = o ? String(o.sinif || "") : "";
+        var aranacak = (ad + " " + sinif + " " + (g.not || "") + " " + t.ad + " " + (g.veliAd || "")).toLowerCase();
+        html += '<div class="gorusme-satir" data-ara="' + sinavEsc(aranacak) + '" style="display:flex; align-items:flex-start; gap:8px; padding:10px; background:#f8fafc; border:1px solid #f1f5f9; border-radius:8px; font-size:12px;">' +
+          '<div style="flex:1; min-width:0;">' +
+            '<div style="font-weight:700; color:#1e293b;">' + sinavEsc(ad) +
+              (sinif ? ' <span style="color:#64748b; font-size:11px; font-weight:600;">' + sinavEsc(sinif) + '</span>' : '') +
+              ' <span style="background:' + t.bg + '; color:' + t.tx + '; padding:2px 6px; border-radius:4px; font-size:10px;">' + t.ikon + " " + t.ad +
+              (g.veliAd ? " · " + sinavEsc(g.veliAd) : "") + '</span>' +
+            '</div>' +
+            '<div style="color:#475569; margin-top:2px; white-space:pre-wrap;">' + sinavEsc(g.not || "") + '</div>' +
+            '<div style="color:#94a3b8; font-size:11px; margin-top:2px;">' + sinavEsc(g.tarih || "-") + '</div>' +
+          '</div>' +
+          '<button type="button" title="Kaydı sil" onclick="window.__gorusmeSil(\'' + gorusmeGuvenliId(g.id) + '\',\'' + gorusmeGuvenliId(g.ogrId) + '\')" style="border:none; background:#fee2e2; color:#991b1b; border-radius:6px; width:22px; height:22px; font-size:11px; font-weight:800; cursor:pointer; flex:none;">✕</button>' +
+        '</div>';
+      });
+      html += '</div>';
+    }
+
+    html += '</div>';
+    return html;
+  };
+
+  window.__gorusmeEkleGlobal = function () {
+    var ogrEl = document.getElementById("__gg_ogr");
+    var turEl = document.getElementById("__gg_tur");
+    var tarihEl = document.getElementById("__gg_tarih");
+    var veliEl = document.getElementById("__gg_veli");
+    var notEl = document.getElementById("__gg_not");
+
+    var ogrId = ogrEl ? String(ogrEl.value || "") : "";
+    var not = notEl ? String(notEl.value || "").trim() : "";
+    if (!ogrId) { alert("Görüşme için bir öğrenci seçin."); if (ogrEl) ogrEl.focus(); return; }
+    if (!not) { alert("Görüşme notu boş olamaz."); if (notEl) notEl.focus(); return; }
+
+    var liste = gorusmeleriOku();
+    liste.push({
+      id: "g_" + Date.now() + "_" + Math.floor(Math.random() * 100000),
+      ogrId: ogrId,
+      tur: (turEl && GORUSME_TUR[turEl.value]) ? turEl.value : "ogrenci",
+      tarih: (tarihEl && tarihEl.value) ? tarihEl.value : sinavBugunKey(),
+      veliAd: veliEl ? String(veliEl.value || "").trim() : "",
+      not: not,
+      olusturma: new Date().toISOString()
+    });
+    gorusmeleriYaz(liste);
+    if (typeof window.gosterAlt === "function") window.gosterAlt("gorusmeler");
+  };
+
+  window.__gorusmeTabAra = function () {
+    var inp = document.getElementById("__ggAra");
+    if (!inp) return;
+    var q = String(inp.value || "").toLowerCase();
+    document.querySelectorAll(".gorusme-satir").forEach(function (r) {
+      var aranacak = String(r.getAttribute("data-ara") || "");
+      r.style.display = aranacak.indexOf(q) >= 0 ? "flex" : "none";
+    });
+  };
 })();

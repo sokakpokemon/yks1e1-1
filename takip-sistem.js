@@ -2316,6 +2316,19 @@ window.__sysAnalizAra = function() {
       });
     } catch (e) { /* sayaç yalnız görünüm içindir; hata render'ı engellemesin */ }
   }
+  // === ETIKET-YAMASI ===
+  // Öğretmen kartı alt satırı: "4 sınıf saati · 2 kapalı" → "4 ders saati · 2 saat boş".
+  // Değişim, HTML üretildiği ANDA (her ogretmenTab render'ında) yapılır; bu yüzden ayrıca
+  // setInterval veya MutationObserver ile DOM'u taramaya gerek yoktur — yeniden render
+  // edilen her kart aynı sarmalayıcıdan geçtiği için etiket kalıcı olarak düzeltilmiş olur.
+  // Desendeki "· " öneki yalnız bu sayaç satırını hedefler (ör. çizelgedeki "Kapalı"
+  // açıklaması veya başka metinler etkilenmez).
+  function etiketleriDuzelt(html) {
+    if (typeof html !== "string") return html;
+    return html
+      .replace(/· (\d+) sınıf saati/g, "· $1 ders saati")
+      .replace(/· (\d+) kapalı/g, "· $1 saat boş");
+  }
   (function () {
     sinifSayisiHazirla();
     var orijinal = window.ogretmenTab;
@@ -2323,7 +2336,7 @@ window.__sysAnalizAra = function() {
     var sarmal = function () {
       // Excel içe aktarma / yeni kayıt sonrası oluşan nesneler için her render'da tazele
       sinifSayisiHazirla();
-      return orijinal.apply(this, arguments);
+      return etiketleriDuzelt(orijinal.apply(this, arguments));
     };
     sarmal.__sinifSayisiYamasi = true;
     window.ogretmenTab = sarmal;

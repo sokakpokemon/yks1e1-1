@@ -2616,4 +2616,491 @@ window.__sysAnalizAra = function() {
     setInterval(tik, 500);
   })();
 
+  /* ============================================================
+     D64 — ÖĞRENCİ & SINIF / SINIF PROGRAMI DÜZELTMELERİ
+     1) Sınıf adlarını standartlaştır (boşluk/nokta/tire kaldır, BÜYÜK)
+     2) Öğrencisi ve dersi olmayan boş sınıfları temizle
+     3) Sınıf Toplu Ders Programı hücrelerini derse göre renklendir
+     4) Boş hücrelere tıkla → "Kapalı" işareti (kalıcı)
+     ============================================================ */
+  var D64_RENKLER = {
+    "MATEMATİK": "#ef4444",
+    "FİZİK": "#3b82f6",
+    "KİMYA": "#22c55e",
+    "BİYOLOJİ": "#eab308",
+    "TÜRKÇE": "#f97316",
+    "EDEBİYAT": "#ec4899",
+    "COĞRAFYA": "#8b5cf6",
+    "TARİH": "#78350f",
+    "GEOMETRİ": "#0ea5e9",
+    "İNGİLİZCE": "#64748b"
+  };
+  var D64_KAPALI_ARKA = "#334155";
+  var D64_KAPALI_BASLIK_EK = " · Kapalı";
+  var D64_NORM_CALISTI = false;
+
+  function d64Buyuk(s) {
+    s = String(s == null ? "" : s);
+    try { return s.toLocaleUpperCase("tr-TR"); } catch (e) { return s.toUpperCase(); }
+  }
+
+  /* "MEZUN SAY 1" → "MEZUNSAY1", "10. SINIF" → "10SINIF", "11 EA DİL" → "11EADİL" */
+  function d64SinifAnahtar(ad) {
+    var s = String(ad == null ? "" : ad);
+    s = s.replace(/\s+/g, "").replace(/[.\-–—_]/g, "");
+    return d64Buyuk(s);
+  }
+
+  function d64Veri() {
+    try {
+      if (typeof window !== "undefined" && window.DB && typeof window.DB === "object") return window.DB;
+    } catch (e0) {}
+    try { return JSON.parse(localStorage.getItem("yksOto_arsiv_v1") || "{}"); } catch (e1) { return null; }
+  }
+
+  function d64Kaydet(veri) {
+    if (!veri) return;
+    try {
+      if (typeof window !== "undefined" && veri === window.DB && typeof window.saveDB === "function") {
+        window.saveDB();
+        return;
+      }
+    } catch (e0) {}
+    try { localStorage.setItem("yksOto_arsiv_v1", JSON.stringify(veri)); } catch (e1) {}
+  }
+
+  function d64DiziBirlestir(a, b) {
+    var out = [];
+    function ekle(d) {
+      if (!Array.isArray(d)) return;
+      d.forEach(function (x) { if (out.indexOf(x) < 0) out.push(x); });
+    }
+    ekle(a); ekle(b);
+    return out;
+  }
+
+  /* Eski sınıf adı → standart ad eşlemesi. Öğrenci/öğretmen kimlikleri ve
+     "Sınıf Dersi" yer tutucusu sınıf adı sanılıp bozulmaz. */
+  function d64EslemeKur(veri) {
+    var esle = {};
+    var yasak = {};
+    function idYasak(x) { if (x != null && x !== "") yasak[String(x)] = 1; }
+    (veri.ogrenciler || []).forEach(function (o) { if (o) idYasak(o.id); });
+    (veri.ogretmenler || []).forEach(function (t) { if (t) idYasak(t.id); });
+
+    function ekle(ad) {
+      if (ad == null) return;
+      var s = String(ad).trim();
+      if (!s || yasak[s]) return;
+      if (s === "Sınıf Dersi" || s === "SD") return;
+      var yeni = d64SinifAnahtar(s);
+      if (!yeni || yeni === s) return;
+      if (!esle[s]) esle[s] = yeni;
+    }
+
+    (veri.ogrenciler || []).forEach(function (o) { if (o && o.sinif) ekle(o.sinif); });
+    Object.keys(veri.sinifProg || {}).forEach(ekle);
+    Object.keys(veri.sinifIds || {}).forEach(ekle);
+    Object.keys(veri.sinifProgDonemler || {}).forEach(function (d) {
+      Object.keys(veri.sinifProgDonemler[d] || {}).forEach(ekle);
+    });
+    (veri.ogretmenler || []).forEach(function (t) {
+      var av = t && t.avail && t.avail.sinif;
+      if (!av || typeof av !== "object" || Array.isArray(av)) return;
+      Object.keys(av).forEach(function (k) { ekle(av[k]); });
+    });
+    ["dersler", "ekDersler", "istekler", "gorusmeler", "odevler"].forEach(function (alan) {
+      (veri[alan] || []).forEach(function (k) { if (k && k.sinif) ekle(k.sinif); });
+    });
+    ["sinavYoklamalari", "yoklamalar"].forEach(function (alan) {
+      Object.keys(veri[alan] || {}).forEach(function (tarih) {
+        Object.keys(veri[alan][tarih] || {}).forEach(ekle);
+      });
+    });
+    return esle;
+  }
+
+  function d64DiziAnahtariTasi(obje, eski, yeni) {
+    if (!obje || typeof obje !== "object" || eski === yeni) return false;
+    if (!(eski in obje)) return false;
+    var kaynak = obje[eski];
+    var hedef = obje[yeni];
+    delete obje[eski];
+    if (Array.isArray(hedef) || Array.isArray(kaynak)) obje[yeni] = d64DiziBirlestir(hedef, kaynak);
+    else if (hedef == null) obje[yeni] = kaynak;
+    else if (typeof hedef === "object" && typeof kaynak === "object") {
+      Object.keys(kaynak).forEach(function (k) { if (!(k in hedef)) hedef[k] = kaynak[k]; });
+    }
+    return true;
+  }
+
+  /* Tarih → sınıf → öğrenci biçimindeki yoklama haritalarında sınıf anahtarını taşır. */
+  function d64TarihliSinifHaritasiTasi(harita, eski, yeni) {
+    if (!harita || typeof harita !== "object") return false;
+    var degisti = false;
+    Object.keys(harita).forEach(function (tarih) {
+      var gun = harita[tarih];
+      if (!gun || typeof gun !== "object" || !(eski in gun)) return;
+      var kaynak = gun[eski];
+      if (yeni in gun) {
+        var hedef = gun[yeni];
+        if (hedef && kaynak && typeof hedef === "object" && typeof kaynak === "object") {
+          Object.keys(kaynak).forEach(function (ogrId) { if (!(ogrId in hedef)) hedef[ogrId] = kaynak[ogrId]; });
+        }
+        delete gun[eski];
+      } else {
+        gun[yeni] = kaynak;
+        delete gun[eski];
+      }
+      degisti = true;
+    });
+    return degisti;
+  }
+
+  function d64SinifIdTasi(veri, eski, yeni) {
+    if (!veri.sinifIds || typeof veri.sinifIds !== "object" || !(eski in veri.sinifIds)) return false;
+    if (veri.sinifIds[yeni] == null || veri.sinifIds[yeni] === "") veri.sinifIds[yeni] = veri.sinifIds[eski];
+    delete veri.sinifIds[eski];
+    return true;
+  }
+
+  function d64KapaliAnahtariTasi(veri, eski, yeni) {
+    if (!veri.sinifKapali || typeof veri.sinifKapali !== "object" || !(eski in veri.sinifKapali)) return false;
+    var kaynak = (veri.sinifKapali[eski] && typeof veri.sinifKapali[eski] === "object") ? veri.sinifKapali[eski] : {};
+    var hedef = (veri.sinifKapali[yeni] && typeof veri.sinifKapali[yeni] === "object") ? veri.sinifKapali[yeni] : {};
+    Object.keys(kaynak).forEach(function (k) { if (!(k in hedef)) hedef[k] = kaynak[k]; });
+    veri.sinifKapali[yeni] = hedef;
+    delete veri.sinifKapali[eski];
+    return true;
+  }
+
+  /* GÖREV 1 — tüm sınıf referanslarını standart forma taşır (idempotent). */
+  function d64SiniflariStandartlastir(veri) {
+    if (!veri || typeof veri !== "object") return false;
+    var esle = d64EslemeKur(veri);
+    var anahtarlar = Object.keys(esle);
+    if (!anahtarlar.length) return false;
+    var degisti = false;
+
+    (veri.ogrenciler || []).forEach(function (o) {
+      if (o && o.sinif && esle[o.sinif]) { o.sinif = esle[o.sinif]; degisti = true; }
+    });
+
+    ["dersler", "ekDersler", "istekler", "gorusmeler", "odevler"].forEach(function (alan) {
+      (veri[alan] || []).forEach(function (k) {
+        if (k && k.sinif && esle[k.sinif]) { k.sinif = esle[k.sinif]; degisti = true; }
+      });
+    });
+
+    anahtarlar.forEach(function (eski) {
+      var yeni = esle[eski];
+      if (d64DiziAnahtariTasi(veri.sinifProg, eski, yeni)) degisti = true;
+      if (d64SinifIdTasi(veri, eski, yeni)) degisti = true;
+      if (d64KapaliAnahtariTasi(veri, eski, yeni)) degisti = true;
+
+      if (veri.sinifProgDonemler && typeof veri.sinifProgDonemler === "object") {
+        Object.keys(veri.sinifProgDonemler).forEach(function (donem) {
+          if (d64DiziAnahtariTasi(veri.sinifProgDonemler[donem], eski, yeni)) degisti = true;
+        });
+      }
+
+      if (d64TarihliSinifHaritasiTasi(veri.sinavYoklamalari, eski, yeni)) degisti = true;
+      if (d64TarihliSinifHaritasiTasi(veri.yoklamalar, eski, yeni)) degisti = true;
+    });
+
+    (veri.ogretmenler || []).forEach(function (t) {
+      var av = t && t.avail && t.avail.sinif;
+      if (!av || typeof av !== "object" || Array.isArray(av)) return;
+      Object.keys(av).forEach(function (k) {
+        var v = av[k];
+        if (typeof v === "string" && esle[v]) { av[k] = esle[v]; degisti = true; }
+      });
+    });
+
+    try {
+      if (typeof ui !== "undefined" && ui) {
+        if (ui.sinifAd && esle[ui.sinifAd]) { ui.sinifAd = esle[ui.sinifAd]; degisti = true; }
+        if (ui.panelSecim && ui.panelSecim.sinif && esle[ui.panelSecim.sinif]) { ui.panelSecim.sinif = esle[ui.panelSecim.sinif]; degisti = true; }
+        if (ui.seciliDurum === "sinif" && ui.seciliOgrId && esle[ui.seciliOgrId]) { ui.seciliOgrId = esle[ui.seciliOgrId]; degisti = true; }
+      }
+    } catch (eUi) {}
+    return degisti;
+  }
+
+  function d64ProgramDoluMu(deger) {
+    if (Array.isArray(deger)) {
+      return deger.some(function (k) { return k != null && String(k).trim() !== ""; });
+    }
+    if (deger && typeof deger === "object") {
+      return Object.keys(deger).some(function (k) { return deger[k] != null && deger[k] !== false && deger[k] !== ""; });
+    }
+    return false;
+  }
+
+  /* GÖREV 2 — öğrencisi yok + dersi yok (hiçbir dönemde) olan sınıfları siler. */
+  function d64BosSiniflariTemizle(veri) {
+    if (!veri || !veri.sinifProg || typeof veri.sinifProg !== "object") return false;
+    var ogrenciVar = {};
+    (veri.ogrenciler || []).forEach(function (o) { if (o && o.sinif) ogrenciVar[o.sinif] = true; });
+
+    var silinecek = [];
+    Object.keys(veri.sinifProg).forEach(function (s) {
+      if (!s || ogrenciVar[s]) return;
+      if (d64ProgramDoluMu(veri.sinifProg[s])) return;
+
+      var baskaDonemdeVar = false;
+      if (veri.sinifProgDonemler && typeof veri.sinifProgDonemler === "object") {
+        Object.keys(veri.sinifProgDonemler).forEach(function (d) {
+          var p = veri.sinifProgDonemler[d];
+          if (p && typeof p === "object" && d64ProgramDoluMu(p[s])) baskaDonemdeVar = true;
+        });
+      }
+      if (!baskaDonemdeVar) silinecek.push(s);
+    });
+
+    if (!silinecek.length) return false;
+    silinecek.forEach(function (s) {
+      delete veri.sinifProg[s];
+      if (veri.sinifProgDonemler && typeof veri.sinifProgDonemler === "object") {
+        Object.keys(veri.sinifProgDonemler).forEach(function (d) {
+          var p = veri.sinifProgDonemler[d];
+          if (p && typeof p === "object") delete p[s];
+        });
+      }
+      if (veri.sinifIds && typeof veri.sinifIds === "object") delete veri.sinifIds[s];
+      if (veri.sinifKapali && typeof veri.sinifKapali === "object") delete veri.sinifKapali[s];
+    });
+
+    try {
+      if (typeof ui !== "undefined" && ui) {
+        if (ui.sinifAd && silinecek.indexOf(ui.sinifAd) >= 0) ui.sinifAd = null;
+        if (ui.panelSecim && silinecek.indexOf(ui.panelSecim.sinif) >= 0) ui.panelSecim.sinif = "";
+      }
+    } catch (eUi2) {}
+    return true;
+  }
+
+  function d64TabloyuBul() {
+    if (typeof document === "undefined" || !document.querySelectorAll) return null;
+    var basliklar = document.querySelectorAll("h4");
+    for (var i = 0; i < basliklar.length; i++) {
+      var b = basliklar[i];
+      var txt = b.textContent || "";
+      if (txt.indexOf("Sınıf Toplu Ders Programı") < 0) continue;
+      var tablo = null;
+      var dugum = b.parentNode;
+      for (var j = 0; j < 8 && dugum && !tablo; j++) {
+        tablo = dugum.querySelector ? dugum.querySelector("table") : null;
+        dugum = dugum.parentNode;
+      }
+      if (tablo) return { tablo: tablo, baslik: b };
+    }
+    return null;
+  }
+
+  function d64TablodakiSinif(bilgi) {
+    try {
+      var sec = document.getElementById ? document.getElementById("sinifSec") : null;
+      if (sec && sec.value) return String(sec.value).trim();
+    } catch (e0) {}
+    var t = bilgi && bilgi.baslik ? (bilgi.baslik.textContent || "") : "";
+    var p = t.indexOf("—");
+    if (p < 0) p = t.indexOf("–");
+    if (p < 0) p = t.indexOf("-");
+    return p >= 0 ? t.slice(p + 1).trim() : "";
+  }
+
+  function d64HucreSlot(btn) {
+    var td = btn && btn.closest ? btn.closest("td") : null;
+    var tr = btn && btn.closest ? btn.closest("tr") : null;
+    if (!td || !tr || !tr.parentNode) return "";
+    var satirlar = tr.parentNode.children || [];
+    var satir = -1;
+    for (var i = 0; i < satirlar.length; i++) { if (satirlar[i] === tr) { satir = i; break; } }
+    if (satir < 0) return "";
+    var kolon = td.cellIndex - 1;
+    if (kolon < 0) return "";
+    var kod = (typeof window !== "undefined" && window.KISA_KOD && window.KISA_KOD[satir])
+      ? window.KISA_KOD[satir].no : String(satir + 1);
+    return kolon + "-" + kod;
+  }
+
+  function d64Program(veri, sinif) {
+    var p = veri && veri.sinifProg ? veri.sinifProg[sinif] : null;
+    if (Array.isArray(p)) return p;
+    if (p && typeof p === "object") return Object.keys(p).filter(function (k) { return p[k]; });
+    return [];
+  }
+
+  function d64KapaliHaritasi(veri, sinif) {
+    var k = veri && veri.sinifKapali ? veri.sinifKapali[sinif] : null;
+    return (k && typeof k === "object") ? k : {};
+  }
+
+  function d64DersBul(metin) {
+    var buyuk = d64Buyuk(metin);
+    if (!buyuk) return null;
+    var adlar = Object.keys(D64_RENKLER);
+    for (var i = 0; i < adlar.length; i++) {
+      if (buyuk.indexOf(adlar[i]) >= 0) return adlar[i];
+    }
+    return null;
+  }
+
+  function d64RenkUygula(btn, metin) {
+    if (btn.getAttribute("data-d64-kapali") === "1") d64BosHucre(btn, false);
+    var ders = d64DersBul(metin);
+    if (!ders) {
+      if (btn.getAttribute("data-d64-renk")) {
+        btn.removeAttribute("data-d64-renk");
+        btn.style.backgroundColor = "";
+        btn.style.borderColor = "";
+        btn.style.color = "";
+      }
+      return;
+    }
+    if (btn.getAttribute("data-d64-renk") === ders) return;
+    var renk = D64_RENKLER[ders];
+    btn.setAttribute("data-d64-renk", ders);
+    btn.style.backgroundColor = renk;
+    btn.style.borderColor = renk;
+    btn.style.color = "#ffffff";
+    var parcalar = btn.querySelectorAll ? btn.querySelectorAll("span") : [];
+    for (var i = 0; i < parcalar.length; i++) {
+      parcalar[i].style.color = "#ffffff";
+      parcalar[i].style.opacity = "1";
+    }
+  }
+
+  function d64BosHucre(btn, isaretli) {
+    if (!isaretli) {
+      if (btn.getAttribute("data-d64-kapali") !== "1") return;
+      btn.removeAttribute("data-d64-kapali");
+      btn.textContent = "";
+      var eskiBaslik = btn.getAttribute("data-d64-baslik");
+      if (eskiBaslik != null) {
+        btn.title = eskiBaslik;
+        btn.removeAttribute("data-d64-baslik");
+      } else if ((btn.title || "").indexOf(D64_KAPALI_BASLIK_EK) >= 0) {
+        btn.title = btn.title.replace(D64_KAPALI_BASLIK_EK, "");
+      }
+      btn.style.backgroundColor = "";
+      btn.style.borderColor = "";
+      btn.style.color = "";
+      btn.style.fontSize = "";
+      btn.style.fontWeight = "";
+      btn.style.lineHeight = "";
+      btn.style.letterSpacing = "";
+      btn.style.cursor = "";
+      return;
+    }
+    if (btn.getAttribute("data-d64-kapali") === "1") return;
+    btn.setAttribute("data-d64-baslik", btn.title || "");
+    btn.setAttribute("data-d64-kapali", "1");
+    if ((btn.title || "").indexOf(D64_KAPALI_BASLIK_EK) < 0) btn.title = (btn.title || "") + D64_KAPALI_BASLIK_EK;
+    btn.textContent = "Kapalı";
+    btn.style.backgroundColor = D64_KAPALI_ARKA;
+    btn.style.borderColor = D64_KAPALI_ARKA;
+    btn.style.color = "#ffffff";
+    btn.style.fontSize = "8px";
+    btn.style.fontWeight = "800";
+    btn.style.lineHeight = "1.1";
+    btn.style.letterSpacing = "0.2px";
+    btn.style.cursor = "pointer";
+  }
+
+  /* GÖREV 3 + 4 — tabloyu her render sonrası tarar; renkleri ve
+     kalıcı "Kapalı" işaretlerini yeniden uygular. */
+  function d64TabloSusle() {
+    var bilgi;
+    try { bilgi = d64TabloyuBul(); } catch (e0) { return; }
+    if (!bilgi) return;
+    var sinif = d64TablodakiSinif(bilgi);
+    if (!sinif) return;
+    var veri = d64Veri();
+    if (!veri) return;
+    var prog = d64Program(veri, sinif);
+    var kapali = d64KapaliHaritasi(veri, sinif);
+    var degisti = false;
+    var butonlar = bilgi.tablo.querySelectorAll ? bilgi.tablo.querySelectorAll(".hucreBtn") : [];
+
+    for (var i = 0; i < butonlar.length; i++) {
+      var btn = butonlar[i];
+      var slot = d64HucreSlot(btn);
+      if (!slot) continue;
+      if (prog.indexOf(slot) >= 0) {
+        if (kapali[slot]) { delete kapali[slot]; degisti = true; }
+        d64RenkUygula(btn, btn.textContent || "");
+      } else {
+        d64BosHucre(btn, !!kapali[slot]);
+      }
+    }
+
+    if (degisti) {
+      if (!Object.keys(kapali).length && veri.sinifKapali && veri.sinifKapali[sinif]) delete veri.sinifKapali[sinif];
+      d64Kaydet(veri);
+    }
+  }
+
+  /* GÖREV 4 — dolu hücrede hiçbir şey yapmaz; boş hücrede "Kapalı"yı açar/kapatır.
+     app.js'in inline togSinif() tıklaması capture aşamasında engellenir. */
+  if (typeof document !== "undefined" && document.addEventListener) {
+    document.addEventListener("click", function (e) {
+      var hedef = e.target;
+      var btn = hedef && hedef.closest ? hedef.closest(".hucreBtn") : null;
+      if (!btn) return;
+      var bilgi = d64TabloyuBul();
+      if (!bilgi || !bilgi.tablo.contains || !bilgi.tablo.contains(btn)) return;
+      var sinif = d64TablodakiSinif(bilgi);
+      var slot = d64HucreSlot(btn);
+      if (!sinif || !slot) return;
+      var veri = d64Veri();
+      if (!veri) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (d64Program(veri, sinif).indexOf(slot) >= 0) return; /* ders atanmış: dokunma */
+
+      if (!veri.sinifKapali || typeof veri.sinifKapali !== "object") veri.sinifKapali = {};
+      if (!veri.sinifKapali[sinif] || typeof veri.sinifKapali[sinif] !== "object") veri.sinifKapali[sinif] = {};
+      if (veri.sinifKapali[sinif][slot] === "KAPALI") delete veri.sinifKapali[sinif][slot];
+      else veri.sinifKapali[sinif][slot] = "KAPALI";
+      if (!Object.keys(veri.sinifKapali[sinif]).length) delete veri.sinifKapali[sinif];
+
+      d64Kaydet(veri);
+      d64TabloSusle();
+    }, true);
+  }
+
+  function d64Baslat() {
+    if (D64_NORM_CALISTI) return;
+    D64_NORM_CALISTI = true;
+    var veri = d64Veri();
+    if (!veri) return;
+
+    var degisti = false;
+    try { if (d64SiniflariStandartlastir(veri)) degisti = true; } catch (e0) {}
+    try { if (d64BosSiniflariTemizle(veri)) degisti = true; } catch (e1) {}
+
+    if (degisti) {
+      var yenilendi = false;
+      try {
+        if (typeof window !== "undefined" && veri === window.DB && typeof window.yenile === "function") {
+          window.yenile();
+          yenilendi = true;
+        }
+      } catch (e2) { yenilendi = false; }
+      if (!yenilendi) d64Kaydet(veri);
+    }
+    d64TabloSusle();
+  }
+
+  if (typeof document !== "undefined" && document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", d64Baslat);
+  } else {
+    setTimeout(d64Baslat, 0);
+  }
+  setInterval(d64TabloSusle, 500);
+
 })();

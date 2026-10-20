@@ -42,70 +42,8 @@
     }
   }, 150);
 
-  // === KÜTÜPHANE: TÜMÜNÜ GİRİŞ YAP BUTONU ===
-  setInterval(function() {
-    // Sınıf bazlı listede bu global buton kullanılmaz: 200 öğrencinin tamamını
-    // tek tuşla işaretliyordu. Yerine "Bu Sınıfın Tümünü Giriş Yap" var.
-    if (window.__ktSinifTumu) return;
-    var ktListe = document.getElementById("__ktListe");
-    if (ktListe && !document.getElementById("__ktTopluGirisBtn")) {
-
-      // Butonu oluştur
-      var btn = document.createElement("button");
-      btn.id = "__ktTopluGirisBtn";
-      btn.className = "rounded-xl border border-teal-200 bg-teal-50 px-3 py-1.5 text-[12px] font-bold text-teal-700 hover:bg-teal-100 mb-3";
-      btn.style.marginRight = "8px";
-      btn.textContent = "✅ Tümünü Giriş Yap";
-
-      btn.onclick = function() {
-        if(!confirm("Bugün kütüphaneye gelen tüm öğrencileri 'Giriş' olarak işaretlemek istiyor musunuz? (Zaten işaretli olanlara dokunulmaz)")) return;
-
-        var LS_K = "yksOto_arsiv_v1";
-        var veri = JSON.parse(localStorage.getItem(LS_K) || "{}");
-
-        // Tarihi input'tan al (sayfadaki tarih seçici)
-        var tarihInput = document.getElementById("yoklamaTarih") || document.getElementById("__ktTarihInput");
-        var tarih = tarihInput ? tarihInput.value : new Date().toISOString().slice(0,10);
-
-        var d = new Date();
-        var saat = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
-
-        if (!veri.kutuphane) veri.kutuphane = {};
-        if (!veri.kutuphane[tarih]) veri.kutuphane[tarih] = {};
-
-        var ogrenciler = veri.ogrenciler || [];
-        var sayac = 0;
-
-        ogrenciler.forEach(function(o) {
-           var mevcut = veri.kutuphane[tarih][o.id];
-           // Eğer kayıt yoksa veya "gelmedi" ise giriş yap
-           if (!mevcut || mevcut === "gelmedi") {
-               veri.kutuphane[tarih][o.id] = { giris: saat };
-               sayac++;
-           }
-        });
-
-        localStorage.setItem(LS_K, JSON.stringify(veri));
-
-        // Ekranı yenile
-        if (window.__ktListeCiz) {
-            window.__ktListeCiz();
-        } else {
-            window.location.reload();
-        }
-
-        alert(sayac + " öğrenci için giriş kaydı oluşturuldu.");
-      };
-
-      // Butonu listenin en üstüne (arama çubuğundan hemen sonraya) ekle
-      var aramaKutusu = document.getElementById("__ktArama");
-      if(aramaKutusu && aramaKutusu.parentNode) {
-         aramaKutusu.parentNode.parentNode.insertBefore(btn, aramaKutusu.parentNode.nextSibling);
-      } else {
-         ktListe.insertBefore(btn, ktListe.firstChild);
-      }
-    }
-  }, 500);
+  // Kütüphane listesi dosya sonundaki sınıf bazlı modülden gelir; giriş/çıkış
+  // saati tutan eski "Tümünü Giriş Yap" bloğu tamamen kaldırıldı.
 
   // === ALT SEKMELERİ GÜNCELLE ===
   setInterval(function() {
@@ -924,7 +862,7 @@
     var toplamOgr = ogrenciler.length;
     var toplamDers = 0, gelinenDers = 0;
     var toplamOdev = 0, yapilanOdev = 0;
-    var toplamKtDk = 0;
+    var toplamKtGun = 0;
 
     var bugun = new Date();
     var limitTarih = new Date();
@@ -958,18 +896,13 @@
         if (tarih < limitKey) return;
         var gun = kutuphane[tarih];
         Object.keys(gun).forEach(function(id) {
-            var v = gun[id];
-            if (v && v.giris && v.cikis) {
-                var g = v.giris.split(":"), c = v.cikis.split(":");
-                var dk = (parseInt(c[0]) * 60 + parseInt(c[1])) - (parseInt(g[0]) * 60 + parseInt(g[1]));
-                if (dk > 0) toplamKtDk += dk;
-            }
+            var d = ktDurum(gun[id]);
+            if (d === "geldi" || d === "gec") toplamKtGun++;
         });
     });
 
     var katilimOrani = toplamDers > 0 ? Math.round((gelinenDers / toplamDers) * 100) : 0;
     var odevOrani = toplamOdev > 0 ? Math.round((yapilanOdev / toplamOdev) * 100) : 0;
-    var ktSaat = Math.round(toplamKtDk / 60);
 
     var html = '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:20px;">';
     var katilimRenk = katilimOrani >= 80 ? '#22c55e' : (katilimOrani >= 60 ? '#f59e0b' : '#ef4444');
@@ -993,7 +926,7 @@
     html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; position:relative; overflow:hidden;">' +
       '<div style="position:absolute; right:10px; top:10px; font-size:24px; opacity:0.2;">📚</div>' +
       '<div style="font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase;">Kütüphane (30 Gün)</div>' +
-      '<div style="font-size:28px; font-weight:800; color:#3b82f6; margin-top:4px;">' + ktSaat + ' <span style="font-size:14px; font-weight:600;">Saat</span></div></div>';
+      '<div style="font-size:28px; font-weight:800; color:#3b82f6; margin-top:4px;">' + toplamKtGun + ' <span style="font-size:14px; font-weight:600;">Gün</span></div></div>';
     html += '</div>';
 
     // YENİ: GRAFİKLER
@@ -1068,7 +1001,7 @@
     ogrenciler.forEach(function(ogr) {
         var ogrToplamDers = 0, ogrGelinenDers = 0;
         var ogrToplamOdev = 0, ogrYapilanOdev = 0;
-        var ogrKtDk = 0;
+        var ogrKtGun = 0;
 
         Object.keys(yoklamalar).forEach(function(t) {
             if (t < limitKey) return;
@@ -1086,23 +1019,19 @@
         });
         Object.keys(kutuphane).forEach(function(t) {
             if (t < limitKey) return;
-            if (kutuphane[t][ogr.id] && kutuphane[t][ogr.id].giris && kutuphane[t][ogr.id].cikis) {
-                var g = kutuphane[t][ogr.id].giris.split(":"), c = kutuphane[t][ogr.id].cikis.split(":");
-                var dk = (parseInt(c[0])*60 + parseInt(c[1])) - (parseInt(g[0])*60 + parseInt(g[1]));
-                if (dk > 0) ogrKtDk += dk;
-            }
+            var kd = ktDurum(kutuphane[t][ogr.id]);
+            if (kd === "geldi" || kd === "gec") ogrKtGun++;
         });
 
         var oKatilim = ogrToplamDers > 0 ? Math.round((ogrGelinenDers / ogrToplamDers) * 100) : 0;
         var oOdev = ogrToplamOdev > 0 ? Math.round((ogrYapilanOdev / ogrToplamOdev) * 100) : 0;
-        var oKtSaat = Math.round(ogrKtDk / 60);
         
-        var ktPuan = Math.min(oKtSaat, 20) / 20 * 100;
+        var ktPuan = Math.min(ogrKtGun, 20) / 20 * 100;
         var genelPuan = Math.round((oKatilim * 0.5) + (oOdev * 0.3) + (ktPuan * 0.2));
 
         karneler.push({
             id: ogr.id, ad: String(ogr.adSoyad || ogr.ad || ""), sinif: String(ogr.sinif || ""),
-            katilim: oKatilim, odev: oOdev, kt: oKtSaat, puan: genelPuan,
+            katilim: oKatilim, odev: oOdev, kt: ogrKtGun, puan: genelPuan,
             gorusme: gorusmeSayac[ogr.id] || null
         });
     });
@@ -1138,7 +1067,7 @@
           '<div style="display:flex; gap:12px; align-items:center;">' +
             '<div style="text-align:center;"><div style="font-size:10px; color:#64748b;">Katılım</div><div style="font-size:12px; font-weight:700;">%' + k.katilim + '</div></div>' +
             '<div style="text-align:center;"><div style="font-size:10px; color:#64748b;">Ödev</div><div style="font-size:12px; font-weight:700;">%' + k.odev + '</div></div>' +
-            '<div style="text-align:center;"><div style="font-size:10px; color:#64748b;">Kütüphane</div><div style="font-size:12px; font-weight:700;">' + k.kt + 's</div></div>' +
+            '<div style="text-align:center;"><div style="font-size:10px; color:#64748b;">Kütüphane</div><div style="font-size:12px; font-weight:700;">' + k.kt + 'g</div></div>' +
             '<div style="background:'+renk+'; color:#fff; font-weight:800; font-size:14px; padding:6px 12px; border-radius:8px; min-width:50px; text-align:center;">' + k.puan + '</div>' +
           '</div>' +
         '</div>';
@@ -1303,11 +1232,10 @@ window.__sysAnalizAra = function() {
 
     var kutuphane = [];
     Object.keys(veri.kutuphane || {}).forEach(function(t) {
-        if(veri.kutuphane[t][ogrId]) {
-            var k = veri.kutuphane[t][ogrId];
-            if (k === "gelmedi") kutuphane.push({ tarih: t, durum: "Gelmedi", sure: "-" });
-            else if (k.giris) kutuphane.push({ tarih: t, durum: k.cikis ? "Tamamlandı" : "İçeride", sure: k.cikis ? (k.giris + " - " + k.cikis) : (k.giris + " - ...") });
-        }
+        var k = ktDurum((veri.kutuphane[t] || {})[ogrId]);
+        if (k === "geldi") kutuphane.push({ tarih: t, durum: "Geldi" });
+        else if (k === "gelmedi") kutuphane.push({ tarih: t, durum: "Gelmedi" });
+        else if (k === "gec") kutuphane.push({ tarih: t, durum: "Geç" });
     });
     kutuphane.sort(function(a,b){ return b.tarih.localeCompare(a.tarih); });
 
@@ -1335,7 +1263,6 @@ window.__sysAnalizAra = function() {
             h += '<div style="display:flex; justify-content:space-between; padding:8px; background:#f8fafc; border-radius:6px; font-size:12px;">' +
                 '<div><span style="font-weight:700;">' + item.tarih + '</span>';
             if(type === 'odev') h += ' <span style="color:#64748b;">(' + item.ders + ' - ' + item.konu + ')</span>';
-            if(type === 'kutuphane') h += ' <span style="color:#64748b;">(' + item.sure + ')</span>';
             h += '</div><div style="font-weight:700; color:' + renk + ';">' + item.durum.toUpperCase();
             if(item.aciklama) h += ' <span style="font-size:10px; font-weight:normal; color:#64748b;">(' + item.aciklama + ')</span>';
             h += '</div></div>';
@@ -1659,20 +1586,11 @@ window.__sysAnalizAra = function() {
     return window.__ktSeciliTarih || sinavBugunKey();
   }
 
-  function ktSaatSimdi() {
-    var d = new Date();
-    return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
-  }
-
-  function ktSureDk(giris, cikis) {
-    var g = giris.split(":"), c = cikis.split(":");
-    var dk = (parseInt(c[0]) * 60 + parseInt(c[1])) - (parseInt(g[0]) * 60 + parseInt(g[1]));
-    return dk > 0 ? dk : 0;
-  }
-
-  function ktSureMetin(giris, cikis) {
-    var dk = ktSureDk(giris, cikis);
-    return Math.floor(dk / 60) + "s " + (dk % 60) + "dk";
+  // Eski { giris, cikis } kayıtları "Geldi" sayılır; saat/süre artık tutulmaz.
+  function ktDurum(v) {
+    if (v === "geldi" || v === "gelmedi" || v === "gec") return v;
+    if (v && typeof v === "object" && v.giris) return "geldi";
+    return "";
   }
 
   function ktSinifAdi(ogr) {
@@ -1783,36 +1701,33 @@ window.__sysAnalizAra = function() {
       ? sinifOgrencileri.filter(function (o) { return ktOgrAd(o).toLowerCase().indexOf(arama) !== -1; })
       : sinifOgrencileri;
 
-    // Özet yalnızca seçili sınıfı sayar
+    // Özet yalnızca seçili sınıfı sayar (giriş/çıkış ve süre yok)
     var kayitlar = (veri.kutuphane && veri.kutuphane[tarih]) || {};
-    var icerde = 0, tamamlandi = 0, gelmedi = 0, toplamDk = 0;
+    var geldi = 0, gelmedi = 0, gec = 0;
     sinifOgrencileri.forEach(function (o) {
-      var v = kayitlar[o.id];
-      if (!v) return;
-      if (v === "gelmedi") { gelmedi++; return; }
-      if (v.giris && !v.cikis) icerde++;
-      if (v.giris && v.cikis) {
-        tamamlandi++;
-        toplamDk += ktSureDk(v.giris, v.cikis);
-      }
+      var d = ktDurum(kayitlar[o.id]);
+      if (d === "geldi") geldi++;
+      else if (d === "gelmedi") gelmedi++;
+      else if (d === "gec") gec++;
     });
-    var saat = Math.floor(toplamDk / 60), dk = toplamDk % 60;
 
     // Sınıf başlığı + sınıfın tümünü işaretle
     html += '<div class="flex flex-wrap items-center justify-between gap-2 mb-3">';
     html += '<div class="font-bold text-slate-800 text-[14px]">' + sinavEsc(secili || "-") + " — " + sinifOgrencileri.length + ' öğrenci' +
       (arama ? ' <span class="font-semibold text-slate-400 text-[12px]">(' + ogrenciler.length + ' sonuç)</span>' : '') + '</div>';
     if (sinifOgrencileri.length > 0) {
-      html += '<button type="button" class="rounded-xl border border-teal-200 bg-teal-50 px-3 py-1.5 text-[12px] font-bold text-teal-700 hover:bg-teal-100" onclick="window.__ktSinifTumu()">✅ Bu Sınıfın Tümünü Giriş Yap</button>';
+      html += '<div class="flex flex-wrap gap-2">';
+      html += '<button type="button" class="rounded-xl border border-teal-200 bg-teal-50 px-3 py-1.5 text-[12px] font-bold text-teal-700 hover:bg-teal-100" onclick="window.__ktSinifToplu(\'geldi\')">✅ Tüm Sınıfı Geldi</button>';
+      html += '<button type="button" class="rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-[12px] font-bold text-red-700 hover:bg-red-100" onclick="window.__ktSinifToplu(\'gelmedi\')">❌ Tüm Sınıfı Gelmedi</button>';
+      html += '</div>';
     }
     html += '</div>';
 
     // Özet
     html += '<div class="flex flex-wrap gap-2 mb-3 text-[11px]">';
-    html += '<span style="padding:2px 8px;border-radius:99px;background:#dcfce7;color:#166534;font-weight:700;">İçeride: ' + icerde + '</span>';
-    html += '<span style="padding:2px 8px;border-radius:99px;background:#dbeafe;color:#1e40af;font-weight:700;">Tamamlandı: ' + tamamlandi + '</span>';
+    html += '<span style="padding:2px 8px;border-radius:99px;background:#dcfce7;color:#166534;font-weight:700;">Geldi: ' + geldi + '</span>';
     html += '<span style="padding:2px 8px;border-radius:99px;background:#fee2e2;color:#991b1b;font-weight:700;">Gelmedi: ' + gelmedi + '</span>';
-    html += '<span style="padding:2px 8px;border-radius:99px;background:#f1f5f9;color:#475569;font-weight:700;">Süre: ' + saat + 's ' + dk + 'dk</span>';
+    html += '<span style="padding:2px 8px;border-radius:99px;background:#fef3c7;color:#92400e;font-weight:700;">Geç: ' + gec + '</span>';
     html += '</div>';
 
     // Chip listesi
@@ -1822,20 +1737,17 @@ window.__sysAnalizAra = function() {
       html += '<div class="flex flex-wrap gap-2">';
       ogrenciler.forEach(function (o) {
         var ad = ktOgrAd(o);
-        var v = kayitlar[o.id];
+        var durum = ktDurum(kayitlar[o.id]);
         var stil, etiket;
-        if (!v) {
-          stil = "background:#fff;color:#475569;border-color:#cbd5e1;";
-          etiket = "";
-        } else if (v === "gelmedi") {
+        if (durum === "geldi") {
+          stil = "background:#22c55e;color:#fff;border-color:#22c55e;";
+          etiket = " · Geldi";
+        } else if (durum === "gelmedi") {
           stil = "background:#ef4444;color:#fff;border-color:#ef4444;";
           etiket = " · Gelmedi";
-        } else if (v.giris && !v.cikis) {
-          stil = "background:#22c55e;color:#fff;border-color:#22c55e;";
-          etiket = " · Giriş: " + v.giris;
-        } else if (v.giris && v.cikis) {
-          stil = "background:#3b82f6;color:#fff;border-color:#3b82f6;";
-          etiket = " · " + v.giris + "-" + v.cikis + " (" + ktSureMetin(v.giris, v.cikis) + ")";
+        } else if (durum === "gec") {
+          stil = "background:#f59e0b;color:#fff;border-color:#f59e0b;";
+          etiket = " · Geç";
         } else {
           stil = "background:#fff;color:#475569;border-color:#cbd5e1;";
           etiket = "";
@@ -1849,30 +1761,45 @@ window.__sysAnalizAra = function() {
     el.innerHTML = html;
   };
 
-  // Seçili sınıfın tümünü giriş yap (yalnızca o sınıfın öğrencileri)
-  window.__ktSinifTumu = function () {
+  // Chip döngüsü: Boş -> Geldi -> Gelmedi -> Geç -> Boş
+  window.__ktChip = function (ogrId) {
+    var tarih = ktAktifTarih();
+    var veri = sinavVeriOku();
+    if (!veri.kutuphane) veri.kutuphane = {};
+    if (!veri.kutuphane[tarih]) veri.kutuphane[tarih] = {};
+
+    var sira = ["", "geldi", "gelmedi", "gec"];
+    var idx = sira.indexOf(ktDurum(veri.kutuphane[tarih][ogrId]));
+    var yeni = sira[(idx + 1) % sira.length];
+
+    if (yeni === "") delete veri.kutuphane[tarih][ogrId];
+    else veri.kutuphane[tarih][ogrId] = yeni;
+
+    sinavVeriYaz(veri);
+    window.__ktListeCiz();
+  };
+
+  // Sınıfın tamamını tek tuşla işaretle
+  window.__ktSinifToplu = function (durum) {
     var sinif = window.__ktSeciliSinif;
-    if (!sinif) return;
-    if (!confirm("«" + sinif + "» sınıfındaki tüm öğrencileri 'Giriş' olarak işaretlemek istiyor musunuz? (Zaten işaretli olanlara dokunulmaz)")) return;
+    if (!sinif || (durum !== "geldi" && durum !== "gelmedi")) return;
+    var etiket = durum === "geldi" ? "Geldi" : "Gelmedi";
+    if (!confirm("«" + sinif + "» sınıfının tamamını '" + etiket + "' olarak işaretlemek istiyor musunuz?")) return;
 
     var tarih = ktAktifTarih();
     var veri = sinavVeriOku();
     if (!veri.kutuphane) veri.kutuphane = {};
     if (!veri.kutuphane[tarih]) veri.kutuphane[tarih] = {};
 
-    var saat = ktSaatSimdi();
     var sayac = 0;
     (veri.ogrenciler || []).forEach(function (o) {
       if (ktSinifAdi(o) !== sinif) return;
-      var mevcut = veri.kutuphane[tarih][o.id];
-      if (!mevcut || mevcut === "gelmedi") {
-        veri.kutuphane[tarih][o.id] = { giris: saat };
-        sayac++;
-      }
+      veri.kutuphane[tarih][o.id] = durum;
+      sayac++;
     });
 
     sinavVeriYaz(veri);
     window.__ktListeCiz();
-    alert(sayac + " öğrenci için giriş kaydı oluşturuldu.");
+    alert(sayac + " öğrenci '" + etiket + "' olarak işaretlendi.");
   };
 })();

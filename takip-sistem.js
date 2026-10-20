@@ -2113,7 +2113,12 @@ window.__sysAnalizAra = function() {
         if (trNorm(ad) === trNorm(mevcut)) varMi = true;
         opts.push('<option value="' + esc(ad) + '">' + esc(ad) + (o.brans ? " (" + esc(o.brans) + ")" : "") + "</option>");
       });
-      if (mevcut && !varMi) opts.push('<option value="' + esc(mevcut) + '">' + esc(mevcut) + "</option>");
+      if (mevcut && !varMi) {
+        // Listede olmayan ad serbest metindir: temizle (yalnızca listeden seçim)
+        input.value = "";
+        mevcut = "";
+        bildir(input);
+      }
       var imza = opts.join("");
       if (select.getAttribute("data-imza") !== imza && document.activeElement !== select) {
         select.innerHTML = imza;
@@ -2170,21 +2175,30 @@ window.__sysAnalizAra = function() {
       liste.addEventListener("click", function (e) {
         var satir = e.target && e.target.closest ? e.target.closest("[data-idx]") : null;
         if (!satir) return;
-        var o = liste.__sonuclar[parseInt(satir.getAttribute("data-idx"), 10)];
-        if (!o) return;
-        var ad = ogrAd(o);
-        input.value = ad;
-        arama.value = ad;
-        arama.setAttribute("data-son", ad);
-        liste.style.display = "none";
-        acikListe = null;
-        bildir(input);
+        ogrenciSec(input, arama, liste, liste.__sonuclar[parseInt(satir.getAttribute("data-idx"), 10)]);
+      });
+      arama.addEventListener("keydown", function (e) {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        ogrenciSec(input, arama, liste, liste.__sonuclar[0]);
       });
 
       sarmal.appendChild(arama);
       sarmal.appendChild(liste);
       input.parentNode.insertBefore(sarmal, input.nextSibling);
       return { arama: arama, liste: liste };
+    }
+
+    // Değer YALNIZCA listeden seçimle yazılır (serbest metin gizli input'a geçmez)
+    function ogrenciSec(input, arama, liste, o) {
+      if (!o) return;
+      var ad = ogrAd(o);
+      input.value = ad;
+      arama.value = ad;
+      arama.setAttribute("data-son", ad);
+      liste.style.display = "none";
+      acikListe = null;
+      bildir(input);
     }
 
     function ogrenciAra(input, arama, liste) {
@@ -2209,23 +2223,23 @@ window.__sysAnalizAra = function() {
       liste.style.display = q ? "block" : "none";
       if (q) acikListe = liste; else if (acikListe === liste) acikListe = null;
 
-      // Tam ad yazıldıysa gizli input'a da yaz (serbest yazımda form doğrulaması çalışsın)
-      var tam = null;
-      for (var i = 0; i < kaynak.length; i++) {
-        if (trNorm(ogrAd(kaynak[i])) === q) { tam = kaynak[i]; break; }
-      }
-      var yeni = tam ? ogrAd(tam) : "";
-      if ((input.value || "") !== yeni) {
-        input.value = yeni;
-        arama.setAttribute("data-son", yeni);
+      // SERBEST METİN YOK: yazılan metin seçili addan farklıysa gizli input temizlenir;
+      // böylece app.js'in planla() içindeki "bulunamazsa yeni kayıt aç" dalı tetiklenmez.
+      if (input.value && trNorm(input.value) !== q) {
+        input.value = "";
+        arama.setAttribute("data-son", "");
         bildir(input);
       }
     }
 
-    // app.js'in programatik yazdığı değerleri (düzenleme, forma aktarma, hızlı seçim) kutuya yansıt
-    function ogrenciEsitle(input, kutu) {
-      var son = kutu.arama.getAttribute("data-son") || "";
+    // app.js'in programatik yazdığı değerler (düzenleme, forma aktarma, hızlı seçim) listeye karşı doğrulanır
+    function ogrenciEsitle(input, kutu, ogrenciler) {
       var deger = input.value || "";
+      if (deger) {
+        var varMi = ogrenciler.some(function (o) { return trNorm(ogrAd(o)) === trNorm(deger); });
+        if (!varMi) { input.value = ""; deger = ""; bildir(input); }
+      }
+      var son = kutu.arama.getAttribute("data-son") || "";
       if (deger !== son && document.activeElement !== kutu.arama) {
         kutu.arama.value = deger;
         kutu.arama.setAttribute("data-son", deger);
@@ -2247,11 +2261,12 @@ window.__sysAnalizAra = function() {
         if (input.tagName !== "INPUT" || input.type === "hidden") return;
         input.__akilliOgrenciler = ogrenciler;
         if (!input.__akilliKutu) input.__akilliKutu = ogrenciKur(input);
-        ogrenciEsitle(input, input.__akilliKutu);
+        ogrenciEsitle(input, input.__akilliKutu, ogrenciler);
       });
     }
 
     tik();
     setInterval(tik, 500);
   })();
+
 })();

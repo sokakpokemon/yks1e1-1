@@ -2056,4 +2056,202 @@ window.__sysAnalizAra = function() {
     window.__ktListeCiz();
     alert(sayac + " öğrenci '" + etiket + "' olarak işaretlendi.");
   };
+
+  // === AKILLI SEÇİM KUTULARI (OTOMATİK TAMAMLAMA) ===
+  // Kapsam: yalnızca Birebir Ders Planla (#f-ogrenci, #f-ogretmen) ve İstek Havuzu (#h-ogrenci).
+  // Öğrenci/öğretmen ekleme-düzenleme modallarındaki ad alanlarına (y-ad, o-ad, d-ad) DOKUNULMAZ.
+  (function akilliSecimBaslat() {
+    var OGRENCI_SEC = "#f-ogrenci, #h-ogrenci";
+    var OGRETMEN_SEC = "#f-ogretmen";
+
+    function trNorm(s) {
+      return String(s == null ? "" : s).toLowerCase()
+        .replace(/ı/g, "i").replace(/ş/g, "s").replace(/ğ/g, "g")
+        .replace(/ü/g, "u").replace(/ö/g, "o").replace(/ç/g, "c")
+        .replace(/\s+/g, " ").trim();
+    }
+    function esc(s) {
+      return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+      });
+    }
+    function ogrAd(o) { return String((o && (o.adSoyad || o.ad)) || "").trim(); }
+    function veri() { return (typeof veriOku === "function") ? veriOku() : sinavVeriOku(); }
+    function bildir(input) {
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    var acikListe = null;
+    document.addEventListener("click", function (e) {
+      if (!acikListe) return;
+      if (acikListe.contains(e.target) || acikListe.__arama === e.target) return;
+      acikListe.style.display = "none";
+      acikListe = null;
+    });
+
+    // --- 1. ÖĞRETMEN: AÇILIR LİSTE ---
+    function ogretmenKur(input) {
+      input.style.display = "none";
+      var select = document.createElement("select");
+      select.className = input.className;
+      input.parentNode.insertBefore(select, input.nextSibling);
+      select.addEventListener("change", function () {
+        input.value = select.value;
+        bildir(input);
+      });
+      return select;
+    }
+
+    function ogretmenDoldur(input, select, ogretmenler) {
+      var mevcut = input.value || "";
+      var opts = ['<option value="">Öğretmen seçin...</option>'];
+      var varMi = false;
+      ogretmenler.forEach(function (o) {
+        var ad = String((o && o.ad) || "").trim();
+        if (!ad) return;
+        if (trNorm(ad) === trNorm(mevcut)) varMi = true;
+        opts.push('<option value="' + esc(ad) + '">' + esc(ad) + (o.brans ? " (" + esc(o.brans) + ")" : "") + "</option>");
+      });
+      if (mevcut && !varMi) opts.push('<option value="' + esc(mevcut) + '">' + esc(mevcut) + "</option>");
+      var imza = opts.join("");
+      if (select.getAttribute("data-imza") !== imza && document.activeElement !== select) {
+        select.innerHTML = imza;
+        select.setAttribute("data-imza", imza);
+      }
+      select.value = mevcut;
+    }
+
+    // --- 2. ÖĞRENCİ: ARAMALI SEÇİM ---
+    function ogrenciKur(input) {
+      input.style.display = "none";
+      var sarmal = document.createElement("div");
+      sarmal.style.position = "relative";
+      sarmal.style.width = "100%";
+
+      var arama = document.createElement("input");
+      arama.type = "text";
+      arama.className = input.className;
+      arama.placeholder = "🔍 Öğrenci ara...";
+      arama.autocomplete = "off";
+      arama.style.width = "100%";
+      arama.style.boxSizing = "border-box";
+      arama.value = input.value || "";
+      arama.setAttribute("data-son", input.value || "");
+
+      var liste = document.createElement("div");
+      liste.style.position = "absolute";
+      liste.style.top = "100%";
+      liste.style.left = "0";
+      liste.style.right = "0";
+      liste.style.background = "#fff";
+      liste.style.border = "1px solid #e2e8f0";
+      liste.style.borderRadius = "8px";
+      liste.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+      liste.style.maxHeight = "200px";
+      liste.style.overflowY = "auto";
+      liste.style.zIndex = "9999";
+      liste.style.display = "none";
+      liste.__arama = arama;
+      liste.__sonuclar = [];
+
+      arama.addEventListener("input", function () { ogrenciAra(input, arama, liste); });
+      arama.addEventListener("focus", function () { if (arama.value.trim()) ogrenciAra(input, arama, liste); });
+      arama.addEventListener("blur", function () { setTimeout(function () { liste.style.display = "none"; }, 160); });
+
+      liste.addEventListener("mouseover", function (e) {
+        var s = e.target && e.target.closest ? e.target.closest("[data-idx]") : null;
+        if (s) s.style.background = "#f8fafc";
+      });
+      liste.addEventListener("mouseout", function (e) {
+        var s = e.target && e.target.closest ? e.target.closest("[data-idx]") : null;
+        if (s) s.style.background = "#fff";
+      });
+      liste.addEventListener("click", function (e) {
+        var satir = e.target && e.target.closest ? e.target.closest("[data-idx]") : null;
+        if (!satir) return;
+        var o = liste.__sonuclar[parseInt(satir.getAttribute("data-idx"), 10)];
+        if (!o) return;
+        var ad = ogrAd(o);
+        input.value = ad;
+        arama.value = ad;
+        arama.setAttribute("data-son", ad);
+        liste.style.display = "none";
+        acikListe = null;
+        bildir(input);
+      });
+
+      sarmal.appendChild(arama);
+      sarmal.appendChild(liste);
+      input.parentNode.insertBefore(sarmal, input.nextSibling);
+      return { arama: arama, liste: liste };
+    }
+
+    function ogrenciAra(input, arama, liste) {
+      var kaynak = input.__akilliOgrenciler || [];
+      var q = trNorm(arama.value);
+      var sonuc = [];
+      if (q) {
+        sonuc = kaynak.filter(function (o) {
+          return trNorm(ogrAd(o)).indexOf(q) !== -1 || trNorm(o && o.sinif).indexOf(q) !== -1;
+        }).slice(0, 10);
+      }
+      liste.__sonuclar = sonuc;
+      if (!sonuc.length) {
+        liste.innerHTML = '<div style="padding:10px; color:#94a3b8; font-size:12px; text-align:center;">' + (q ? "Öğrenci bulunamadı." : "Yazmaya başlayın...") + "</div>";
+      } else {
+        liste.innerHTML = sonuc.map(function (o, i) {
+          return '<div data-idx="' + i + '" style="padding:8px 12px; cursor:pointer; border-bottom:1px solid #f1f5f9; font-size:13px; background:#fff;">' +
+            '<div style="font-weight:700; color:#0f172a;">' + esc(ogrAd(o)) + "</div>" +
+            '<div style="font-size:11px; color:#64748b;">' + esc(o.sinif) + "</div></div>";
+        }).join("");
+      }
+      liste.style.display = q ? "block" : "none";
+      if (q) acikListe = liste; else if (acikListe === liste) acikListe = null;
+
+      // Tam ad yazıldıysa gizli input'a da yaz (serbest yazımda form doğrulaması çalışsın)
+      var tam = null;
+      for (var i = 0; i < kaynak.length; i++) {
+        if (trNorm(ogrAd(kaynak[i])) === q) { tam = kaynak[i]; break; }
+      }
+      var yeni = tam ? ogrAd(tam) : "";
+      if ((input.value || "") !== yeni) {
+        input.value = yeni;
+        arama.setAttribute("data-son", yeni);
+        bildir(input);
+      }
+    }
+
+    // app.js'in programatik yazdığı değerleri (düzenleme, forma aktarma, hızlı seçim) kutuya yansıt
+    function ogrenciEsitle(input, kutu) {
+      var son = kutu.arama.getAttribute("data-son") || "";
+      var deger = input.value || "";
+      if (deger !== son && document.activeElement !== kutu.arama) {
+        kutu.arama.value = deger;
+        kutu.arama.setAttribute("data-son", deger);
+      }
+    }
+
+    function tik() {
+      var v = veri() || {};
+      var ogrenciler = Array.isArray(v.ogrenciler) ? v.ogrenciler : [];
+      var ogretmenler = Array.isArray(v.ogretmenler) ? v.ogretmenler : [];
+
+      document.querySelectorAll(OGRETMEN_SEC).forEach(function (input) {
+        if (input.tagName !== "INPUT") return;
+        if (!input.__akilliSelect) input.__akilliSelect = ogretmenKur(input);
+        ogretmenDoldur(input, input.__akilliSelect, ogretmenler);
+      });
+
+      document.querySelectorAll(OGRENCI_SEC).forEach(function (input) {
+        if (input.tagName !== "INPUT" || input.type === "hidden") return;
+        input.__akilliOgrenciler = ogrenciler;
+        if (!input.__akilliKutu) input.__akilliKutu = ogrenciKur(input);
+        ogrenciEsitle(input, input.__akilliKutu);
+      });
+    }
+
+    tik();
+    setInterval(tik, 500);
+  })();
 })();

@@ -3103,4 +3103,103 @@ window.__sysAnalizAra = function() {
   }
   setInterval(d64TabloSusle, 500);
 
+  /* ============================================================
+     D65 — "KAPALI" SAAT KONTROLÜ: planla() sarmalayıcısı
+     Sınıf programında "Kapalı" işaretli slota birebir ders
+     yazılmasını engeller. "Çakışmayı Yoksay" (#f-yoksay)
+     işaretliyse orijinal planla() çalışır.
+     ============================================================ */
+  (function () {
+    var orijinalPlanla = window.planla;
+    if (typeof orijinalPlanla !== "function" || orijinalPlanla.__d64KapaliSarmal) return;
+
+    function eleman(id) {
+      try { return document.getElementById ? document.getElementById(id) : null; } catch (e) { return null; }
+    }
+
+    /* #f-tarih gerçekte type=date → YYYY-MM-DD üretir; gg-aa-yyyy de desteklenir. */
+    function tarihParcala(deger) {
+      var s = String(deger == null ? "" : deger).trim();
+      var m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+      var yil, ay, gun;
+      if (m) { yil = parseInt(m[1], 10); ay = parseInt(m[2], 10); gun = parseInt(m[3], 10); }
+      else {
+        m = s.match(/^(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{4})$/);
+        if (!m) return null;
+        gun = parseInt(m[1], 10); ay = parseInt(m[2], 10); yil = parseInt(m[3], 10);
+      }
+      var d = new Date(yil, ay - 1, gun);
+      if (d.getFullYear() !== yil || d.getMonth() !== ay - 1 || d.getDate() !== gun) return null;
+      return d;
+    }
+
+    /* #f-saat value'su "8" değil "15:30" gibi başlangıç saatidir; ksKodOf ile koda çevrilir. */
+    function saatKodu(deger) {
+      var s = String(deger == null ? "" : deger).trim();
+      if (/^\d{1,2}$/.test(s)) {
+        var no = parseInt(s, 10);
+        if (no >= 1 && no <= 11) return String(no);
+      }
+      try { if (typeof ksKodOf === "function") { var k = ksKodOf(s); if (k) return String(k); } } catch (e0) {}
+      try {
+        if (typeof KISA_KOD !== "undefined" && KISA_KOD) {
+          for (var i = 0; i < KISA_KOD.length; i++) {
+            if (KISA_KOD[i] && KISA_KOD[i].b === s) return String(KISA_KOD[i].no);
+          }
+        }
+      } catch (e1) {}
+      return "";
+    }
+
+    /* true → kapalı nedeniyle planlama engellendi. false → orijinal akış devam eder. */
+    function kapaliKontrol() {
+      var ogrEl = eleman("f-ogrenci");
+      var tarihEl = eleman("f-tarih");
+      var saatEl = eleman("f-saat");
+      if (!ogrEl || !tarihEl || !saatEl) return false;
+
+      var ogrenciAd = String(ogrEl.value || "").trim();
+      if (!ogrenciAd) return false;
+
+      var veri = d64Veri();
+      if (!veri || !Array.isArray(veri.ogrenciler)) return false;
+
+      var kuc = (typeof kucuk === "function") ? kucuk : function (x) {
+        return String(x == null ? "" : x).trim().toLocaleLowerCase("tr-TR");
+      };
+      var aranan = kuc(ogrenciAd);
+      var ogr = null;
+      for (var i = 0; i < veri.ogrenciler.length; i++) {
+        var o = veri.ogrenciler[i];
+        if (!o) continue;
+        var ad = o.ad != null ? o.ad : (o.adSoyad != null ? o.adSoyad : "");
+        if (kuc(ad) === aranan) { ogr = o; break; }
+      }
+      if (!ogr || !ogr.sinif) return false;
+
+      var tarih = tarihParcala(tarihEl.value);
+      if (!tarih) return false;
+      var gunIdx = (tarih.getDay() + 6) % 7; /* Pazartesi=0 … Pazar=6 */
+      var kod = saatKodu(saatEl.value);
+      if (!kod) return false;
+
+      var harita = veri.sinifKapali && veri.sinifKapali[ogr.sinif];
+      if (!harita || harita[gunIdx + "-" + kod] !== "KAPALI") return false;
+
+      var yoksayEl = eleman("f-yoksay");
+      if (yoksayEl && yoksayEl.checked) return false;
+
+      alert("Bu saat dilimi kapalıdır. Ders planlanamaz. Yine de planlamak için 'Çakışmayı Yoksay' seçeneğini işaretleyin.");
+      return true;
+    }
+
+    function planlaKapaliSarmal() {
+      if (kapaliKontrol()) return;
+      return orijinalPlanla.apply(this, arguments);
+    }
+    planlaKapaliSarmal.__d64KapaliSarmal = true;
+
+    window.planla = planlaKapaliSarmal;
+  })();
+
 })();

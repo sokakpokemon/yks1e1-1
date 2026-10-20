@@ -1091,10 +1091,15 @@
         var ktPuan = Math.min(ogrKtGun, 20) / 20 * 100;
         var genelPuan = Math.round((oKatilim * 0.5) + (oOdev * 0.3) + (ktPuan * 0.2));
 
+        // Birebir ders sayisi (yalniz tamamlananlar) - tek kaynak: veri.dersler
+        var birebirSayisi = (veri.dersler || []).filter(function(d) {
+            return d && d.ogrenciId === ogr.id && d.durum === 'tamamlandi';
+        }).length;
+
         karneler.push({
             id: ogr.id, ad: String(ogr.adSoyad || ogr.ad || ""), sinif: String(ogr.sinif || ""),
             katilim: oKatilim, odev: oOdev, kt: ogrKtGun, puan: genelPuan,
-            gorusme: gorusmeSayac[ogr.id] || null
+            gorusme: gorusmeSayac[ogr.id] || null, birebir: birebirSayisi
         });
     });
 
@@ -1121,7 +1126,8 @@
         var renk = k.puan >= 80 ? '#22c55e' : (k.puan >= 60 ? '#f59e0b' : '#ef4444');
         var gEtiketler = gorusmeEtiketGrubu(k.gorusme);
         var oEtiketler = oncelikEtiketGrubu(k.gorusme);
-        var rozetSatir = (oEtiketler || gEtiketler) ? '<div style="display:flex; gap:4px; flex-wrap:wrap; max-width:250px;">' + oEtiketler + gEtiketler + '</div>' : '';
+        var bEtiket = (k.birebir > 0) ? '<span style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700;">📚 ' + k.birebir + ' Birebir</span>' : '';
+        var rozetSatir = (bEtiket || oEtiketler || gEtiketler) ? '<div style="display:flex; gap:4px; flex-wrap:wrap; max-width:250px;">' + bEtiket + oEtiketler + gEtiketler + '</div>' : '';
         // En az 1 Acil görüşmesi olan öğrencinin karne kartının sol kenarında kırmızı şerit
         var acilMi = !!(k.gorusme && k.gorusme.acil > 0);
         var kartStil = 'cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:10px; border:1px solid #f1f5f9; border-radius:8px; background:#f8fafc; hover:background:#f1f5f9;' + (acilMi ? ' border-left:4px solid #ef4444;' : '');
@@ -1317,6 +1323,46 @@ window.__sysAnalizAra = function() {
     // Görüşmeler (en yeni üstte) — modül: veri.gorusmeler
     var gorusmeler = gorusmeOgrListe(ogrId);
 
+    // Birebir dersler (en yeni üstte) — tek kaynak: veri.dersler
+    var birebirDersler = (veri.dersler || []).filter(function(d) { return d && d.ogrenciId === ogrId; });
+    birebirDersler.sort(function(a,b){
+        return String(b.tarih || "").localeCompare(String(a.tarih || "")) ||
+               String(b.olusturma || "").localeCompare(String(a.olusturma || ""));
+    });
+
+    // Tamamlanan birebir derslerin öğretmen bazlı özeti
+    var birebirOgrSayac = {};
+    birebirDersler.forEach(function(d) {
+        if (d.durum === 'tamamlandi' && d.ogretmenAd) {
+            birebirOgrSayac[d.ogretmenAd] = (birebirOgrSayac[d.ogretmenAd] || 0) + 1;
+        }
+    });
+    var birebirOgrOzet = Object.keys(birebirOgrSayac).map(function(k){ return k + ': ' + birebirOgrSayac[k]; }).join(', ');
+
+    function birebirDersAdi(d) {
+        var D = (typeof DERS === "object" && DERS && DERS[d.dersId]) ? DERS[d.dersId] : null;
+        return sinavEsc(D ? D.ad : (d.dersId || "Ders"));
+    }
+
+    function birebirListeHTML() {
+        if (birebirDersler.length === 0) return '<div style="padding:10px; color:#94a3b8; font-size:12px; text-align:center;">Kayıt yok.</div>';
+        var h = '<div style="max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;">';
+        birebirDersler.slice(0, 15).forEach(function(d) { // Son 15 kaydı göster
+            var durumRenk = { 'tamamlandi': '#22c55e', 'iptal': '#ef4444', 'planlandi': '#3b82f6' }[d.durum] || '#64748b';
+            var durumLbl = { 'tamamlandi': 'Tamamlandı', 'iptal': 'İptal', 'planlandi': 'Planlandı' }[d.durum] || String(d.durum || "-");
+            h += '<div style="display:flex; justify-content:space-between; gap:8px; padding:8px; background:#f8fafc; border-radius:6px; font-size:12px;">' +
+                '<div style="flex:1; min-width:0;">' +
+                    '<div style="font-weight:700; color:#1e293b;">' + sinavEsc(String(d.tarih || "-")) +
+                        ' <span style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:10px; color:#475569;">' + birebirDersAdi(d) + '</span></div>' +
+                    '<div style="color:#64748b; font-size:11px; margin-top:2px;">' + sinavEsc(String(d.konu || 'Genel tekrar')) + ' · ' + sinavEsc(String(d.ogretmenAd || '')) + '</div>' +
+                '</div>' +
+                '<div style="font-weight:700; color:' + durumRenk + '; display:flex; align-items:center; white-space:nowrap;">' + durumLbl + '</div>' +
+                '</div>';
+        });
+        h += '</div>';
+        return h;
+    }
+
     // HTML Oluşturma
     function makeList(arr, type) {
         if(arr.length === 0) return '<div style="padding:10px; color:#94a3b8; font-size:12px; text-align:center;">Kayıt yok.</div>';
@@ -1371,6 +1417,13 @@ window.__sysAnalizAra = function() {
                 '</div>' +
                 '<div id="__gorusmeFormAlan" style="display:none;"></div>' +
                 gorusmeListeHTML(ogrId, gorusmeler) +
+            '</div>' +
+            '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:12px; grid-column:1 / -1;">' +
+                '<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; border-bottom:1px solid #f1f5f9; padding-bottom:4px; flex-wrap:wrap;">' +
+                    '<div style="font-size:12px; font-weight:800; color:#0f172a;">📚 Birebir Dersler (' + birebirDersler.length + ')</div>' +
+                    (birebirOgrOzet ? '<div style="font-size:10px; color:#0369a1; font-weight:700; background:#e0f2fe; padding:2px 6px; border-radius:4px;">Öğretmenler: ' + sinavEsc(birebirOgrOzet) + '</div>' : '') +
+                '</div>' +
+                birebirListeHTML() +
             '</div>' +
         '</div>' +
         '<button type="button" onclick="window.__ogrDetayKapat()" style="width:100%; margin-top:16px; background:#f1f5f9; color:#475569; padding:10px; border:none; border-radius:8px; font-weight:700; cursor:pointer;">Kapat</button>' +

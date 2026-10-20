@@ -2393,4 +2393,227 @@ window.__sysAnalizAra = function() {
     window.ogretmenTab = sarmal;
   })();
 
+  // === BRANS-DERS-CIFT-YON ===
+  // Birebir Ders Planla formunda "Ders" (#f-ders) ile "Öğretmen" (#f-ogretmen) alanını
+  // çift yönlü bağlar:
+  //   ders değişimi     → öğretmen listesi yalnız o dersi verebilen branşlarla doldurulur
+  //   öğretmen değişimi → ders, öğretmenin branşının ilk ders koduna ayarlanır
+  // NOT: #f-ogretmen index.html'de bir INPUT'tur; görünen kutu akilliSecimBaslat modülünün
+  // ürettiği select'tir (input.__akilliSelect). Bu yüzden filtre o select üzerinde yapılır.
+  // app.js yenile() sırasında bu alanları yeniden doldurabildiği için bağ 500 ms'lik
+  // interval ile idempotent biçimde tazelenir. Periyodik kontrolde kullanıcının seçimi
+  // ZORLA değiştirilmez; yalnızca seçenekler filtrelenir ve uyumsuz eşleşme uyarılır.
+  (function () {
+    // Ders kodu → o dersi verebilecek branşlar (mat öğretmeni mat+geo, tur öğretmeni tur+edb)
+    var HARITA = {
+      mat: ["mat", "geo"],
+      geo: ["geo", "mat"],
+      fiz: ["fiz"],
+      kim: ["kim"],
+      biy: ["biy"],
+      tur: ["tur", "edb"],
+      edb: ["edb", "tur"],
+      cgr: ["cgr"],
+      tar: ["tar"],
+      ing: ["ing"]
+    };
+    // Branş adı uzun yazılmışsa kanonik koda indirgenir ("Matematik" → "mat")
+    var AD_ES = { matematik: "mat", geometri: "geo", fizik: "fiz", kimya: "kim", biyoloji: "biy", turkce: "tur", edebiyat: "edb", cografya: "cgr", tarih: "tar", ingilizce: "ing" };
+
+    function norm(v) {
+      var m = { "ı": "i", "İ": "i", "ğ": "g", "Ğ": "g", "ü": "u", "Ü": "u", "ş": "s", "Ş": "s", "ö": "o", "Ö": "o", "ç": "c", "Ç": "c" };
+      return String(v == null ? "" : v).replace(/[ıİğĞüÜşŞöÖçÇ]/g, function (c) { return m[c]; })
+        .replace(/[Iİ]/g, "i").toLowerCase().replace(/[^a-z0-9]/g, "");
+    }
+    function esc(s) {
+      return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+      });
+    }
+    function ogretmenAd(t) { return String((t && (t.ad || t.adSoyad)) || "").trim(); }
+    function ogretmenler() {
+      if (window.DB && Array.isArray(window.DB.ogretmenler)) return window.DB.ogretmenler;
+      var v = (typeof veriOku === "function") ? veriOku() : sinavVeriOku();
+      return (v && Array.isArray(v.ogretmenler)) ? v.ogretmenler : [];
+    }
+    function dersAdi(id) {
+      var d = (window.DERS || {})[id];
+      return d && d.ad ? d.ad : String(id || "");
+    }
+    function bransKodu(t) {
+      var b = norm(t && t.brans);
+      if (AD_ES[b]) b = AD_ES[b];
+      return b;
+    }
+    function dersKodu(v) { return norm(v); }
+    function dersBranslari(dersId) {
+      var d = dersKodu(dersId);
+      return HARITA[d] ? HARITA[d].slice() : (d ? [d] : []);
+    }
+    function uygunMu(t, dersId) {
+      var b = bransKodu(t);
+      if (!b || !dersId) return false; // FAIL-CLOSED: branşsız öğretmen hiçbir derse atanamaz
+      return dersBranslari(dersId).indexOf(b) >= 0;
+    }
+    function ogretmenBul(ad) {
+      var a = norm(ad);
+      if (!a) return null;
+      return ogretmenler().filter(function (t) { return norm(ogretmenAd(t)) === a; })[0] || null;
+    }
+    // Branşın haritadaki ilk ders kodu: önce birebir anahtar (geo→geo, edb→edb),
+    // yoksa branşı içeren ilk anahtar.
+    function bransinIlkDersi(b) {
+      if (!b) return "";
+      if (HARITA[b]) return b;
+      var anahtarlar = Object.keys(HARITA);
+      for (var i = 0; i < anahtarlar.length; i++) {
+        if (HARITA[anahtarlar[i]].indexOf(b) >= 0) return anahtarlar[i];
+      }
+      return "";
+    }
+
+    // Uyarı bandı: form grid'inin hemen altında, bir kez oluşturulur (idempotent)
+    function uyariKutu() {
+      var el = document.getElementById("__ksBransUyari");
+      if (el) return el;
+      var ogrt = document.getElementById("f-ogretmen");
+      if (!ogrt) return null;
+      var grid = ogrt.closest ? ogrt.closest(".grid") : null;
+      var hedef = grid || (ogrt.parentNode && ogrt.parentNode.parentNode);
+      if (!hedef || !hedef.insertAdjacentHTML) return null;
+      hedef.insertAdjacentHTML("afterend",
+        '<div id="__ksBransUyari" style="display:none;margin-top:12px;padding:10px 12px;border:1px solid #fcd34d;background:#fffbeb;color:#92400e;border-radius:10px;font-size:12px;font-weight:600;line-height:1.5;"></div>');
+      return document.getElementById("__ksBransUyari");
+    }
+    function uyariYaz(ders, mevcutAd, mevcutT, uygunDegil, uygunlar) {
+      var el = uyariKutu();
+      if (!el) return;
+      var mesaj = "";
+      if (ders && mevcutAd && uygunDegil) {
+        var alternatif = "";
+        if (mevcutT) {
+          var b = bransKodu(mevcutT);
+          alternatif = (HARITA[b] || (b ? [b] : [])).map(dersAdi).join(", ");
+        }
+        mesaj = "⚠️ <b>" + esc(mevcutAd) + "</b> öğretmeninin branşı <b>" + esc(dersAdi(ders)) + "</b> dersine uygun değil; bu ders kaydedilemez." +
+          (alternatif ? " Bu öğretmenin verebileceği dersler: <b>" + esc(alternatif) + "</b>." : "");
+      } else if (ders && !uygunlar.length) {
+        mesaj = "ℹ️ <b>" + esc(dersAdi(ders)) + "</b> dersini verebilecek branşta kayıtlı öğretmen yok.";
+      }
+      if (!mesaj) {
+        if (el.style.display !== "none") { el.style.display = "none"; el.innerHTML = ""; }
+        return;
+      }
+      if (el.innerHTML !== mesaj) el.innerHTML = mesaj;
+      el.style.display = "block";
+    }
+
+    // #f-ders select'ini istenen koda ayarlar; seçenek yoksa DERSLER'den ekler
+    function dersAyarla(kod) {
+      var dersEl = document.getElementById("f-ders");
+      if (!dersEl || !kod) return;
+      var varMi = false;
+      for (var i = 0; i < dersEl.options.length; i++) {
+        if (String(dersEl.options[i].value) === String(kod)) { varMi = true; break; }
+      }
+      if (!varMi && window.DERS && window.DERS[kod]) {
+        var opt = document.createElement("option");
+        opt.value = kod;
+        opt.textContent = window.DERS[kod].ad || kod;
+        dersEl.appendChild(opt);
+      }
+      dersEl.value = kod;
+    }
+
+    // Öğretmen select'inin seçeneklerini derse göre filtreler.
+    // zorlaSec=true → ders değişimi: seçili öğretmen uymuyorsa ilk uygun (yoksa boş).
+    // zorlaSec=false → periyodik kontrol: seçim korunur, yalnız seçenekler + uyarı tazelenir.
+    function ogretmenTazele(zorlaSec) {
+      var input = document.getElementById("f-ogretmen");
+      var dersEl = document.getElementById("f-ders");
+      if (!input || !dersEl) return;
+      var sec = input.__akilliSelect;
+      if (!sec || !sec.parentNode) return; // akilliSecimBaslat select'i henüz kurmadı
+
+      var ders = String(dersEl.value || "").trim();
+      var tumu = ogretmenler();
+      var uygunlar = ders ? tumu.filter(function (t) { return uygunMu(t, ders); }) : tumu.slice();
+      var mevcutAd = String(input.value || "").trim();
+      var mevcutT = mevcutAd ? ogretmenBul(mevcutAd) : null;
+
+      // Ders değişiminde uyumsuz seçim ilk uygun öğretmene (yoksa boş) çekilir.
+      // app.js'in olay dinleyicisi yok; değer doğrudan yazılır (planla() bu değeri okur).
+      // Olay dispatch edilmediği için kendi change dinleyicimiz tetiklenmez (döngü yok).
+      if (zorlaSec && ders && mevcutAd && (!mevcutT || !uygunMu(mevcutT, ders))) {
+        var ilk = uygunlar[0] || null;
+        mevcutAd = ilk ? ogretmenAd(ilk) : "";
+        mevcutT = ilk;
+        input.value = mevcutAd;
+      }
+
+      var opts = ['<option value="">Öğretmen seçin...</option>'];
+      uygunlar.forEach(function (t) {
+        var ad = ogretmenAd(t);
+        if (!ad) return;
+        opts.push('<option value="' + esc(ad) + '">' + esc(ad) + (t.brans ? " (" + esc(t.brans) + ")" : "") + "</option>");
+      });
+      // Uyarı yalnız KAYITLI ve branşı uymayan öğretmen için: kayıtsız ad planla() sırasında
+      // dersin branşıyla yeni öğretmen olarak açılır (app.js), bu yüzden uyumsuz sayılmaz.
+      var uygunDegil = !!(ders && mevcutT && !uygunMu(mevcutT, ders));
+      var listede = uygunlar.some(function (t) { return norm(ogretmenAd(t)) === norm(mevcutAd); });
+      if (mevcutAd && !listede) {
+        // Seçim zorla değiştirilmez; uyumsuz/eksik kayıt listede kalır ki kutu boşalmasın
+        opts.push('<option value="' + esc(mevcutAd) + '">' + esc(mevcutAd) + (uygunDegil ? " ⚠ branş uyumsuz" : "") + "</option>");
+      }
+      var imza = opts.join("");
+      if (sec.innerHTML !== imza && document.activeElement !== sec) {
+        var tamImza = sec.getAttribute("data-imza");
+        sec.innerHTML = imza;
+        sec.value = mevcutAd;
+        // akilliSecimBaslat'ın 500 ms'lik doldurucusu aynı (tam) listeyi tekrar yazmasın:
+        // imza karşılaştırması bu değere bakar; değer korununca yeniden yazma olmaz.
+        if (tamImza) sec.setAttribute("data-imza", tamImza);
+      } else if (document.activeElement !== sec && sec.value !== mevcutAd) {
+        sec.value = mevcutAd;
+      }
+
+      uyariYaz(ders, mevcutAd, mevcutT, uygunDegil, uygunlar);
+    }
+
+    function dersDegisti() {
+      ogretmenTazele(true);
+    }
+
+    function ogretmenDegisti() {
+      var input = document.getElementById("f-ogretmen");
+      var dersEl = document.getElementById("f-ders");
+      if (!input || !dersEl) return;
+      var t = ogretmenBul(String(input.value || "").trim());
+      if (t) {
+        var hedef = bransinIlkDersi(bransKodu(t));
+        if (hedef) dersAyarla(hedef);
+      }
+      ogretmenTazele(false); // yeni derse göre liste + uyarı tazelenir
+    }
+
+    function tik() {
+      var dersEl = document.getElementById("f-ders");
+      var input = document.getElementById("f-ogretmen");
+      if (!dersEl || !input) return;
+      if (!dersEl.__ksCiftYonBagli) {
+        dersEl.__ksCiftYonBagli = true;
+        dersEl.addEventListener("change", dersDegisti);
+      }
+      if (!input.__ksCiftYonBagli) {
+        input.__ksCiftYonBagli = true;
+        input.addEventListener("change", ogretmenDegisti);
+      }
+      if (!input.__akilliSelect) return; // akilliSecimBaslat kurana kadar bekle
+      ogretmenTazele(false);
+    }
+
+    tik();
+    setInterval(tik, 500);
+  })();
+
 })();

@@ -2329,6 +2329,57 @@ window.__sysAnalizAra = function() {
       .replace(/· (\d+) sınıf saati/g, "· $1 ders saati")
       .replace(/· (\d+) kapalı/g, "· $1 saat boş");
   }
+
+  // === BOS-SAAT-YAMASI ===
+  // Kart alt satırındaki eski sayı KAPALI (musait) saat sayısıydı; istenen, gerçekten BOŞ
+  // olan saat sayısıdır. Toplam slot, çizelgenin kendi başlıklarından türetilir:
+  //   GUNLER (7 gün) × KISA_KOD (11 ders saati) = 77 slot.
+  // Boş = toplam − (sınıf dersi + kapalı) saatler. Anahtarlar tekilleştirilir ve yalnız
+  // çizelgede gerçekten çizilen geçerli slotlar sayılır (eski/bozuk anahtarlar sayılmaz).
+  function haftalikToplamSaat() {
+    var gun = (window.GUNLER && window.GUNLER.length) ? window.GUNLER.length : 7;
+    var kod = (window.KISA_KOD && window.KISA_KOD.length) ? window.KISA_KOD.length : 11;
+    return gun * kod;
+  }
+  function slotGecerliMi(k) {
+    var p = String(k).split("-");
+    if (p.length < 2) return false;
+    var g = parseInt(p[0], 10);
+    var gun = (window.GUNLER && window.GUNLER.length) ? window.GUNLER.length : 7;
+    if (isNaN(g) || g < 0 || g >= gun) return false;
+    var kodlar = window.KISA_KOD;
+    if (!Array.isArray(kodlar) || !kodlar.length) return true;
+    for (var i = 0; i < kodlar.length; i++) {
+      if (String(kodlar[i].no) === String(p[1])) return true;
+    }
+    return false;
+  }
+  function bosSaatSayisi(t) {
+    var toplam = haftalikToplamSaat();
+    if (!t || !t.avail) return toplam;
+    var dolu = {};
+    var ekle = function (k) { if (slotGecerliMi(k)) dolu[String(k)] = 1; };
+    var s = t.avail.sinif;
+    if (Array.isArray(s)) s.forEach(ekle);
+    else if (s && typeof s === "object") Object.keys(s).forEach(ekle);
+    if (Array.isArray(t.avail.musait)) t.avail.musait.forEach(ekle);
+    var bos = toplam - Object.keys(dolu).length;
+    return bos < 0 ? 0 : bos;
+  }
+  // app.js çıktısı: "· 4 ders saati · 2 saat boş". Her öğretmen satırında "ders saati"
+  // bölümü DAİMA vardır (kapalı sayısı 0 ise ikinci bölüm hiç basılmaz); bu yüzden
+  // eşleşmeler öğretmen listesiyle birebir hizalıdır ve sayaç sırayla eşlenir.
+  function bosSaatEtiketleri(html) {
+    if (typeof html !== "string") return html;
+    var liste = (window.DB && Array.isArray(window.DB.ogretmenler)) ? window.DB.ogretmenler : null;
+    if (!liste) return html;
+    var i = 0;
+    return html.replace(/· (\d+) ders saati(?: · \d+ saat boş)?/g, function (m, ders) {
+      var t = liste[i++];
+      if (!t) return m;
+      return "· " + ders + " ders saati · " + bosSaatSayisi(t) + " saat boş";
+    });
+  }
   (function () {
     sinifSayisiHazirla();
     var orijinal = window.ogretmenTab;
@@ -2336,7 +2387,7 @@ window.__sysAnalizAra = function() {
     var sarmal = function () {
       // Excel içe aktarma / yeni kayıt sonrası oluşan nesneler için her render'da tazele
       sinifSayisiHazirla();
-      return etiketleriDuzelt(orijinal.apply(this, arguments));
+      return bosSaatEtiketleri(etiketleriDuzelt(orijinal.apply(this, arguments)));
     };
     sarmal.__sinifSayisiYamasi = true;
     window.ogretmenTab = sarmal;

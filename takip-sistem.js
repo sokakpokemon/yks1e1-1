@@ -2057,6 +2057,31 @@ window.__sysAnalizAra = function() {
     alert(sayac + " öğrenci '" + etiket + "' olarak işaretlendi.");
   };
 
+  // === YÖNETİM KAYIT KALICILIĞI (KRİTİK DÜZELTME) ===
+  // app.js'te ogrenciEkle / ogretmenEkle / ogrenciGuncelle bellekte değişiklik yapıp
+  // saveDB() çağırmıyor; eklenen kayıt sayfa yenilenince kayboluyordu. Bu sarmalayıcı
+  // yalnızca gerçek bir değişiklik olduğunda yazar (doğrulama hatasında yazmaz).
+  (function yonetimKayitKaliciligi() {
+    function sar(ad, dizi) {
+      var orijinal = window[ad];
+      if (typeof orijinal !== "function" || orijinal.__ksKaliciSarmal) return;
+      var sarmal = function () {
+        var once = "";
+        try { once = JSON.stringify(DB[dizi] || []); } catch (e) { once = ""; }
+        var sonuc = orijinal.apply(this, arguments);
+        var sonra = "";
+        try { sonra = JSON.stringify(DB[dizi] || []); } catch (e) { sonra = ""; }
+        if (sonra !== once && typeof saveDB === "function") saveDB();
+        return sonuc;
+      };
+      sarmal.__ksKaliciSarmal = true;
+      window[ad] = sarmal;
+    }
+    sar("ogrenciEkle", "ogrenciler");
+    sar("ogretmenEkle", "ogretmenler");
+    sar("ogrenciGuncelle", "ogrenciler");
+  })();
+
   // === AKILLI SEÇİM KUTULARI (OTOMATİK TAMAMLAMA) ===
   // Kapsam: yalnızca Birebir Ders Planla (#f-ogrenci, #f-ogretmen) ve İstek Havuzu (#h-ogrenci).
   // Öğrenci/öğretmen ekleme-düzenleme modallarındaki ad alanlarına (y-ad, o-ad, d-ad) DOKUNULMAZ.

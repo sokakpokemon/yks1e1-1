@@ -718,6 +718,52 @@
     return GORUSME_TUR[t] || { ad: "Diğer", ikon: "📞", bg: "#f1f5f9", tx: "#475569" };
   }
 
+  // === ÖNCELİK SINIFLANDIRMASI ===
+  // Kayıt alan: oncelik = "acil" | "onemli" | "genel" (yoksa/genel-seçilmezse "genel").
+  var GORUSME_ONCELK = {
+    acil:   { ad: "Acil",   ikon: "🔴", renk: "#ef4444", bg: "#fee2e2", tx: "#991b1b", doldurTx: "#ffffff" },
+    onemli: { ad: "Önemli", ikon: "🟡", renk: "#eab308", bg: "#fef9c3", tx: "#854d0e", doldurTx: "#713f12" },
+    genel:  { ad: "Genel",  ikon: "🔵", renk: "#3b82f6", bg: "#dbeafe", tx: "#1e40af", doldurTx: "#ffffff" }
+  };
+  var GORUSME_ONCELK_SIRA = ["acil", "onemli", "genel"];
+
+  function gorusmeOncelik(k) {
+    return GORUSME_ONCELK[k] || GORUSME_ONCELK.genel;
+  }
+
+  // Türkçe karakter duyarlı normalizasyon: "İ" / "I" / "ı" hepsi "i"ye,
+  // böylece "i" sorgusu "İ" ve "ı" içeren adlarla eşleşir.
+  function gorusmeTRKucuk(s) {
+    return String(s == null ? "" : s)
+      .replace(/İ/g, "i").replace(/I/g, "i").replace(/ı/g, "i")
+      .replace(/Ğ/g, "g").replace(/ğ/g, "g")
+      .replace(/Ü/g, "u").replace(/ü/g, "u")
+      .replace(/Ş/g, "s").replace(/ş/g, "s")
+      .replace(/Ö/g, "o").replace(/ö/g, "o")
+      .replace(/Ç/g, "c").replace(/ç/g, "c")
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function oncelikEtiketHTML(k, n) {
+    if (!n) return "";
+    var b = gorusmeOncelik(k);
+    return '<span style="background:' + b.bg + '; color:' + b.tx + '; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700;">' + b.ikon + " " + n + " " + b.ad + "</span>";
+  }
+
+  function oncelikEtiketGrubu(s) {
+    var d = s || {};
+    return oncelikEtiketHTML("acil", d.acil) + oncelikEtiketHTML("onemli", d.onemli) + oncelikEtiketHTML("genel", d.genel);
+  }
+
+  // Seçili buton kendi renginde dolu görünür; seçili olmayan beyaz zeminli.
+  function oncelikButonStil(k, aktif) {
+    var b = gorusmeOncelik(k);
+    return "border:1px solid " + (aktif ? b.renk : "#cbd5e1") + "; background:" + (aktif ? b.renk : "#ffffff") +
+      "; color:" + (aktif ? b.doldurTx : b.tx) + "; padding:6px 12px; border-radius:999px; font-size:11px; font-weight:700; cursor:pointer;";
+  }
+
   function gorusmeleriOku() {
     try {
       if (window.DB) {
@@ -746,7 +792,11 @@
 
   function gorusmeOgrListe(ogrId) {
     return gorusmeleriOku().filter(function (g) { return g && g.ogrId === ogrId; })
-      .sort(function (a, b) { return String(b.tarih || "").localeCompare(String(a.tarih || "")); });
+      .sort(function (a, b) {
+        var t = String(b.tarih || "").localeCompare(String(a.tarih || ""));
+        // Aynı tarihte son eklenen kayıt üstte kalsın (en yeni en üstte)
+        return t !== 0 ? t : String(b.olusturma || "").localeCompare(String(a.olusturma || ""));
+      });
   }
 
   function gorusmeEtiketHTML(tur, n) {
@@ -770,9 +820,12 @@
     var h = '<div style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;">';
     liste.forEach(function (g) {
       var t = gorusmeTur(g.tur);
+      var o = gorusmeOncelik(g.oncelik);
       h += '<div style="display:flex; align-items:flex-start; gap:8px; padding:8px; background:#f8fafc; border-radius:6px; font-size:12px;">' +
+        '<div style="width:4px; align-self:stretch; background:' + o.renk + '; border-radius:4px; flex:none;"></div>' +
         '<div style="flex:1; min-width:0;">' +
           '<div style="font-weight:700; color:#1e293b;">' + sinavEsc(g.tarih || "-") +
+            ' <span style="background:' + o.bg + '; color:' + o.tx + '; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700;">' + o.ikon + " " + o.ad + '</span>' +
             ' <span style="background:' + t.bg + '; color:' + t.tx + '; padding:2px 6px; border-radius:4px; font-size:10px;">' + t.ikon + " " + t.ad +
             (g.veliAd ? " · " + sinavEsc(g.veliAd) : "") + '</span>' +
           '</div>' +
@@ -939,6 +992,18 @@
       '<div style="position:relative; height:200px; width:100%;"><canvas id="__anChartDoughnut"></canvas></div></div>';
     html += '</div>';
 
+    // Görüşme sayıları tek geçişte öğrenci bazında toplanır (liste başına tek okuma).
+    // Tür sayıları (ogrenci/veli/sikayet) + öncelik sayıları (acil/onemli/genel):
+    // karne rozetleri ve "Acil Müdahale" kriteri de burayı kullanır.
+    var gorusmeSayac = {};
+    gorusmeleriOku().forEach(function(g) {
+        if (!g || !g.ogrId) return;
+        if (!gorusmeSayac[g.ogrId]) gorusmeSayac[g.ogrId] = { ogrenci: 0, veli: 0, sikayet: 0, acil: 0, onemli: 0, genel: 0 };
+        if (gorusmeSayac[g.ogrId][g.tur] != null) gorusmeSayac[g.ogrId][g.tur]++;
+        var onc = (g.oncelik && GORUSME_ONCELK[g.oncelik]) ? g.oncelik : "genel";
+        gorusmeSayac[g.ogrId][onc] = (gorusmeSayac[g.ogrId][onc] || 0) + 1;
+    });
+
     // 2. Riskli Öğrenciler
     var riskliOgr = [];
     ogrenciler.forEach(function(ogr) {
@@ -961,10 +1026,13 @@
         });
         if (odevGecmisi.slice(0, 3).length === 3 && odevGecmisi.slice(0, 3).every(function(d){ return d === 'yapmadi' || d === 'eksik'; })) odevSorun = 1;
 
-        if (devamsizlik || odevSorun) {
+        var gAcil = (gorusmeSayac[ogr.id] && gorusmeSayac[ogr.id].acil) || 0;
+
+        if (devamsizlik || odevSorun || gAcil > 0) {
             var nedenler = [];
             if (devamsizlik) nedenler.push("Son 3 ders gelmedi");
             if (odevSorun) nedenler.push("Son 3 ödev yapılmadı");
+            if (gAcil > 0) nedenler.push("Acil görüşmesi var");
             riskliOgr.push({ ad: ogr.adSoyad || ogr.ad, sinif: ogr.sinif, neden: nedenler.join(", ") });
         }
     });
@@ -991,13 +1059,7 @@
 
     // 3. Öğrenci Karneleri
     var karneler = [];
-    // Görüşme sayıları tek geçişte öğrenci bazında toplanır (liste başına tek okuma)
-    var gorusmeSayac = {};
-    gorusmeleriOku().forEach(function(g) {
-        if (!g || !g.ogrId) return;
-        if (!gorusmeSayac[g.ogrId]) gorusmeSayac[g.ogrId] = { ogrenci: 0, veli: 0, sikayet: 0 };
-        if (gorusmeSayac[g.ogrId][g.tur] != null) gorusmeSayac[g.ogrId][g.tur]++;
-    });
+    // Görüşme sayıları (tür + öncelik) riskli liste öncesinde tek geçişte toplandı.
     ogrenciler.forEach(function(ogr) {
         var ogrToplamDers = 0, ogrGelinenDers = 0;
         var ogrToplamOdev = 0, ogrYapilanOdev = 0;
@@ -1058,11 +1120,16 @@
     karneler.sort(function(a,b){ return b.puan - a.puan; }).forEach(function(k) {
         var renk = k.puan >= 80 ? '#22c55e' : (k.puan >= 60 ? '#f59e0b' : '#ef4444');
         var gEtiketler = gorusmeEtiketGrubu(k.gorusme);
-        html += '<div class="an-kart" onclick="window.__ogrDetayGoster(\''+k.id+'\')" data-sinif="'+sinavEsc(k.sinif)+'" data-ad="'+sinavEsc(k.ad.toLowerCase())+'" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:10px; border:1px solid #f1f5f9; border-radius:8px; background:#f8fafc; hover:background:#f1f5f9;">' +
+        var oEtiketler = oncelikEtiketGrubu(k.gorusme);
+        var rozetSatir = (oEtiketler || gEtiketler) ? '<div style="display:flex; gap:4px; flex-wrap:wrap; max-width:250px;">' + oEtiketler + gEtiketler + '</div>' : '';
+        // En az 1 Acil görüşmesi olan öğrencinin karne kartının sol kenarında kırmızı şerit
+        var acilMi = !!(k.gorusme && k.gorusme.acil > 0);
+        var kartStil = 'cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:10px; border:1px solid #f1f5f9; border-radius:8px; background:#f8fafc; hover:background:#f1f5f9;' + (acilMi ? ' border-left:4px solid #ef4444;' : '');
+        html += '<div class="an-kart" onclick="window.__ogrDetayGoster(\''+k.id+'\')" data-sinif="'+sinavEsc(k.sinif)+'" data-ad="'+sinavEsc(k.ad.toLowerCase())+'" style="' + kartStil + '">' +
           '<div>' +
             '<div style="font-weight:700; font-size:13px; color:#1e293b;">' + sinavEsc(k.ad) + '</div>' +
-            '<div style="font-size:11px; color:#64748b; margin-bottom:' + (gEtiketler ? '3px' : '0') + ';">' + sinavEsc(k.sinif) + '</div>' +
-            (gEtiketler ? '<div style="display:flex; gap:4px; flex-wrap:wrap; max-width:250px;">' + gEtiketler + '</div>' : '') +
+            '<div style="font-size:11px; color:#64748b; margin-bottom:' + (rozetSatir ? '3px' : '0') + ';">' + sinavEsc(k.sinif) + '</div>' +
+            rozetSatir +
           '</div>' +
           '<div style="display:flex; gap:12px; align-items:center;">' +
             '<div style="text-align:center;"><div style="font-size:10px; color:#64748b;">Katılım</div><div style="font-size:12px; font-weight:700;">%' + k.katilim + '</div></div>' +
@@ -1466,10 +1533,20 @@ window.__sysAnalizAra = function() {
       var t = GORUSME_TUR[k];
       return '<option value="' + k + '">' + t.ikon + " " + t.ad + "</option>";
     }).join("");
-    var ogrSecenek = ogrenciler.map(function (o) {
-      var etiket = String(o.adSoyad || o.ad || "") + (o.sinif ? " (" + o.sinif + ")" : "");
-      return '<option value="' + sinavEsc(o.id) + '">' + sinavEsc(etiket) + "</option>";
-    }).join("");
+    // Öğrenci arama kaynağı (yazdıkça açılan liste) + öncelik/filtre durumu
+    ggOgrHazirla(ogrenciler);
+    if (!GORUSME_ONCELK[window.__ggOncelik]) window.__ggOncelik = "genel";
+    if (["tumu", "acil", "onemli", "genel"].indexOf(window.__ggFiltre) < 0) window.__ggFiltre = "tumu";
+
+    var filtreButon = function (k, etiket) {
+      var aktif = window.__ggFiltre === k;
+      return '<button type="button" data-filt="' + k + '" onclick="window.__gorusmeOncelikFiltre(\'' + k + '\')" style="' + filtreButonStil(k, aktif) + '">' + etiket + '</button>';
+    };
+    var oncelikButon = function (k) {
+      var b = gorusmeOncelik(k);
+      var aktif = window.__ggOncelik === k;
+      return '<button type="button" class="gg-onc-btn" data-oncelik="' + k + '" onclick="window.__gorusmeOncelikSec(\'' + k + '\')" style="' + oncelikButonStil(k, aktif) + '">' + b.ikon + ' ' + b.ad + '</button>';
+    };
 
     var html = '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-top:16px;">' +
       '<div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">' +
@@ -1480,15 +1557,32 @@ window.__sysAnalizAra = function() {
         gorusmeEtiketHTML("sikayet", say.sikayet) + gorusmeEtiketHTML("veli", say.veli) + gorusmeEtiketHTML("ogrenci", say.ogrenci) +
       '</div>' +
 
+      // Öncelik filtresi — formun üstünde
+      '<div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:12px;">' +
+        '<span style="font-size:11px; font-weight:800; color:#64748b;">Öncelik Filtresi:</span>' +
+        filtreButon("tumu", "Tümü") +
+        filtreButon("acil", "🔴 Acil") +
+        filtreButon("onemli", "🟡 Önemli") +
+        filtreButon("genel", "🔵 Genel") +
+      '</div>' +
+
       '<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:6px;">' +
-        '<div style="font-size:12px; font-weight:800; color:#0f172a;">Yeni Görüşme</div>' +
+        '<div style="font-size:12px; font-weight:800; color:#0f172a;">Yeni Görüşme Ekle</div>' +
+        // Öğrenci seçimi: yazdıkça arama + altında açılan liste (select kutusu kaldırıldı)
+        '<div style="position:relative;">' +
+          '<input type="text" id="__gg_ogrAra" placeholder="🔍 Öğrenci ara (yazdıkça listelenir)..." autocomplete="off" oninput="window.__gorusmeOgrAra()" onfocus="window.__gorusmeOgrAra()" onblur="window.__gorusmeOgrKapat()" style="' + stil + ' width:100%; box-sizing:border-box;">' +
+          '<input type="hidden" id="__gg_ogr">' +
+          '<div id="__gg_ogrListe" style="display:none; position:absolute; z-index:40; left:0; right:0; top:100%; margin-top:4px; background:#fff; border:1px solid #e2e8f0; border-radius:8px; max-height:190px; overflow-y:auto; box-shadow:0 12px 28px rgba(15,23,42,0.14);"></div>' +
+        '</div>' +
         '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
-          '<select id="__gg_ogr" style="' + stil + ' flex:1; min-width:180px;">' +
-            (ogrSecenek || '<option value="">Kayıtlı öğrenci yok</option>') +
-          '</select>' +
           '<select id="__gg_tur" style="' + stil + '">' + turSecenek + '</select>' +
           '<input type="date" id="__gg_tarih" value="' + sinavBugunKey() + '" style="' + stil + '">' +
           '<input type="text" id="__gg_veli" placeholder="Veli adı (opsiyonel)" style="' + stil + ' flex:1; min-width:140px;">' +
+        '</div>' +
+        // Öncelik seçimi: 🔴 Acil · 🟡 Önemli · 🔵 Genel (varsayılan: Genel)
+        '<div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">' +
+          '<span style="font-size:11px; font-weight:800; color:#64748b;">Öncelik:</span>' +
+          oncelikButon("acil") + oncelikButon("onemli") + oncelikButon("genel") +
         '</div>' +
         '<textarea id="__gg_not" rows="2" placeholder="Görüşme notu..." style="' + stil + ' resize:vertical;"></textarea>' +
         '<div style="display:flex; justify-content:flex-end;">' +
@@ -1507,14 +1601,18 @@ window.__sysAnalizAra = function() {
       html += '<div id="__ggListe" style="display:flex; flex-direction:column; gap:6px; max-height:440px; overflow-y:auto;">';
       liste.forEach(function (g) {
         var t = gorusmeTur(g.tur);
-        var o = ogrMap[g.ogrId];
-        var ad = o ? String(o.adSoyad || o.ad || "") : "(silinmiş öğrenci)";
-        var sinif = o ? String(o.sinif || "") : "";
-        var aranacak = (ad + " " + sinif + " " + (g.not || "") + " " + t.ad + " " + (g.veliAd || "")).toLowerCase();
-        html += '<div class="gorusme-satir" data-ara="' + sinavEsc(aranacak) + '" style="display:flex; align-items:flex-start; gap:8px; padding:10px; background:#f8fafc; border:1px solid #f1f5f9; border-radius:8px; font-size:12px;">' +
+        var ogr = ogrMap[g.ogrId];
+        var ad = ogr ? String(ogr.adSoyad || ogr.ad || "") : "(silinmiş öğrenci)";
+        var sinif = ogr ? String(ogr.sinif || "") : "";
+        var oncKey = (g.oncelik && GORUSME_ONCELK[g.oncelik]) ? g.oncelik : "genel";
+        var onc = GORUSME_ONCELK[oncKey];
+        var aranacak = gorusmeTRKucuk(ad + " " + sinif + " " + (g.not || "") + " " + t.ad + " " + (g.veliAd || "") + " " + onc.ad);
+        html += '<div class="gorusme-satir" data-oncelik="' + oncKey + '" data-ara="' + sinavEsc(aranacak) + '" style="display:flex; align-items:flex-start; gap:8px; padding:10px; background:#f8fafc; border:1px solid #f1f5f9; border-radius:8px; font-size:12px;">' +
+          '<div style="width:4px; align-self:stretch; background:' + onc.renk + '; border-radius:4px; flex:none;"></div>' +
           '<div style="flex:1; min-width:0;">' +
             '<div style="font-weight:700; color:#1e293b;">' + sinavEsc(ad) +
               (sinif ? ' <span style="color:#64748b; font-size:11px; font-weight:600;">' + sinavEsc(sinif) + '</span>' : '') +
+              ' <span style="background:' + onc.bg + '; color:' + onc.tx + '; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700;">' + onc.ikon + ' ' + onc.ad + '</span>' +
               ' <span style="background:' + t.bg + '; color:' + t.tx + '; padding:2px 6px; border-radius:4px; font-size:10px;">' + t.ikon + " " + t.ad +
               (g.veliAd ? " · " + sinavEsc(g.veliAd) : "") + '</span>' +
             '</div>' +
@@ -1528,10 +1626,14 @@ window.__sysAnalizAra = function() {
     }
 
     html += '</div>';
+    // Filtre durumu DOM enjekte edildikten sonra uygulanır (kaydet/sil sonrası korunur)
+    setTimeout(function () {
+      if (document.getElementById("__ggListe")) window.__gorusmeSatirFiltre();
+    }, 0);
     return html;
   };
 
-  window.__gorusmeEkleGlobal = function () {
+  window.__gorusmeEkleGlobal = function (oncelik) {
     var ogrEl = document.getElementById("__gg_ogr");
     var turEl = document.getElementById("__gg_tur");
     var tarihEl = document.getElementById("__gg_tarih");
@@ -1540,8 +1642,17 @@ window.__sysAnalizAra = function() {
 
     var ogrId = ogrEl ? String(ogrEl.value || "") : "";
     var not = notEl ? String(notEl.value || "").trim() : "";
-    if (!ogrId) { alert("Görüşme için bir öğrenci seçin."); if (ogrEl) ogrEl.focus(); return; }
+    if (!ogrId) {
+      alert("Görüşme için bir öğrenci seçin.");
+      var araEl = document.getElementById("__gg_ogrAra");
+      if (araEl) araEl.focus(); else if (ogrEl) ogrEl.focus();
+      return;
+    }
     if (!not) { alert("Görüşme notu boş olamaz."); if (notEl) notEl.focus(); return; }
+
+    // Öncelik: parametre yoksa formdaki seçili buton; o da yoksa varsayılan "genel".
+    var onc = (oncelik && GORUSME_ONCELK[oncelik]) ? oncelik
+      : ((window.__ggOncelik && GORUSME_ONCELK[window.__ggOncelik]) ? window.__ggOncelik : "genel");
 
     var liste = gorusmeleriOku();
     liste.push({
@@ -1551,6 +1662,7 @@ window.__sysAnalizAra = function() {
       tarih: (tarihEl && tarihEl.value) ? tarihEl.value : sinavBugunKey(),
       veliAd: veliEl ? String(veliEl.value || "").trim() : "",
       not: not,
+      oncelik: onc,
       olusturma: new Date().toISOString()
     });
     gorusmeleriYaz(liste);
@@ -1558,13 +1670,102 @@ window.__sysAnalizAra = function() {
   };
 
   window.__gorusmeTabAra = function () {
+    window.__gorusmeSatirFiltre();
+  };
+
+  // Metin araması + öncelik filtresi birlikte uygulanır.
+  window.__gorusmeSatirFiltre = function () {
     var inp = document.getElementById("__ggAra");
-    if (!inp) return;
-    var q = String(inp.value || "").toLowerCase();
+    var q = gorusmeTRKucuk(inp ? inp.value : "");
+    var f = (window.__ggFiltre && window.__ggFiltre !== "tumu") ? window.__ggFiltre : "tumu";
     document.querySelectorAll(".gorusme-satir").forEach(function (r) {
-      var aranacak = String(r.getAttribute("data-ara") || "");
-      r.style.display = aranacak.indexOf(q) >= 0 ? "flex" : "none";
+      var aranacak = gorusmeTRKucuk(r.getAttribute("data-ara") || "");
+      var onc = r.getAttribute("data-oncelik") || "genel";
+      var uygun = (!q || aranacak.indexOf(q) >= 0) && (f === "tumu" || onc === f);
+      r.style.display = uygun ? "flex" : "none";
     });
+  };
+
+  // Liste filtre butonları: Tümü / 🔴 Acil / 🟡 Önemli / 🔵 Genel
+  window.__gorusmeOncelikFiltre = function (k) {
+    window.__ggFiltre = (["tumu", "acil", "onemli", "genel"].indexOf(k) >= 0) ? k : "tumu";
+    document.querySelectorAll("[data-filt]").forEach(function (b) {
+      var bk = b.getAttribute("data-filt");
+      b.setAttribute("style", filtreButonStil(bk, bk === window.__ggFiltre));
+    });
+    window.__gorusmeSatirFiltre();
+  };
+
+  // Form içi öncelik seçimi (varsayılan: Genel); seçili buton kendi renginde dolu.
+  window.__gorusmeOncelikSec = function (k) {
+    window.__ggOncelik = GORUSME_ONCELK[k] ? k : "genel";
+    document.querySelectorAll(".gg-onc-btn").forEach(function (b) {
+      var bk = b.getAttribute("data-oncelik");
+      b.setAttribute("style", oncelikButonStil(bk, bk === window.__ggOncelik));
+    });
+  };
+
+  function filtreButonStil(k, aktif) {
+    var renk = (k === "tumu") ? "#0d9488" : gorusmeOncelik(k).renk;
+    var tx = (k === "tumu") ? "#0d9488" : gorusmeOncelik(k).tx;
+    var doldurTx = (k === "tumu") ? "#ffffff" : gorusmeOncelik(k).doldurTx;
+    return "border:1px solid " + (aktif ? renk : "#cbd5e1") + "; background:" + (aktif ? renk : "#ffffff") +
+      "; color:" + (aktif ? doldurTx : tx) + "; padding:6px 12px; border-radius:999px; font-size:11px; font-weight:700; cursor:pointer;";
+  }
+
+  // --- Öğrenci araması: yazdıkça açılan liste (Türkçe karakter duyarlı) ---
+  var ggOgrKaynak = [];
+
+  function ggOgrHazirla(ogrenciler) {
+    ggOgrKaynak = (ogrenciler || []).map(function (o) {
+      var ad = String(o.adSoyad || o.ad || "");
+      return {
+        id: o.id,
+        etiket: ad + (o.sinif ? " (" + o.sinif + ")" : ""),
+        aranacak: gorusmeTRKucuk(ad + " " + String(o.sinif || ""))
+      };
+    });
+  }
+
+  window.__gorusmeOgrAra = function () {
+    var inp = document.getElementById("__gg_ogrAra");
+    var kutu = document.getElementById("__gg_ogrListe");
+    var gizli = document.getElementById("__gg_ogr");
+    if (!inp || !kutu) return;
+    // Yazmaya başlandıysa eski seçim geçersiz olur
+    if (gizli) gizli.value = "";
+    var q = gorusmeTRKucuk(inp.value);
+    var bulunan = [];
+    for (var i = 0; i < ggOgrKaynak.length && bulunan.length < 50; i++) {
+      if (!q || ggOgrKaynak[i].aranacak.indexOf(q) >= 0) bulunan.push({ idx: i, k: ggOgrKaynak[i] });
+    }
+    if (!bulunan.length) {
+      kutu.innerHTML = '<div style="padding:10px; font-size:12px; color:#94a3b8; text-align:center;">Eşleşen öğrenci yok.</div>';
+    } else {
+      kutu.innerHTML = bulunan.map(function (b) {
+        return '<div class="gg-ogr-satir" onmousedown="event.preventDefault();" onclick="window.__gorusmeOgrSec(' + b.idx + ')" style="padding:8px 10px; font-size:12px; color:#334155; cursor:pointer; border-bottom:1px solid #f1f5f9;">' + sinavEsc(b.k.etiket) + '</div>';
+      }).join("");
+    }
+    kutu.style.display = "block";
+  };
+
+  window.__gorusmeOgrSec = function (idx) {
+    var k = ggOgrKaynak[idx];
+    if (!k) return;
+    var gizli = document.getElementById("__gg_ogr");
+    var inp = document.getElementById("__gg_ogrAra");
+    var kutu = document.getElementById("__gg_ogrListe");
+    if (gizli) gizli.value = String(k.id == null ? "" : k.id);
+    if (inp) inp.value = k.etiket;
+    if (kutu) kutu.style.display = "none";
+  };
+
+  window.__gorusmeOgrKapat = function () {
+    // onmousedown.preventDefault sayesinde satıra tıklamada blur olmaz; yine de güvenli kapanış
+    setTimeout(function () {
+      var kutu = document.getElementById("__gg_ogrListe");
+      if (kutu) kutu.style.display = "none";
+    }, 150);
   };
 
   // === KÜTÜPHANE: SINIF BAZLI LİSTE ===

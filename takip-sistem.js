@@ -3210,17 +3210,18 @@ window.__sysAnalizAra = function() {
 
       // Formun altına ekle (Birebir Ders Planla formunu bul)
       var formKart = document.querySelector('button[onclick*="planla"]');
+      var parent = null;
       if (formKart) {
         // Butonun içinde olduğu en yakın kart/div'i bul
-        var parent = formKart.parentNode;
+        parent = formKart.parentNode;
         while (parent && !parent.querySelector('#f-ogrenci')) {
           parent = parent.parentNode;
           if (!parent || parent === document.body) break;
         }
-        if (parent && parent !== document.body) {
-          parent.parentNode.insertBefore(bant, parent.nextSibling);
-          return;
-        }
+      }
+      if (parent && parent !== document.body) {
+        parent.parentNode.insertBefore(bant, parent.nextSibling);
+      } else if (formKart) {
         // Fallback: butonun hemen üstüne ekle
         formKart.parentNode.insertBefore(bant, formKart);
       } else {

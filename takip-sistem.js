@@ -2672,6 +2672,7 @@ window.__sysAnalizAra = function() {
 
   function d64Kaydet(veri) {
     if (!veri) return;
+    console.log("[TEŞHİS] d64Kaydet çağrıldı. veri === window.DB:", veri === window.DB);
     try {
       if (typeof window !== "undefined" && veri === window.DB && typeof window.saveDB === "function") {
         window.saveDB();
@@ -3065,6 +3066,7 @@ window.__sysAnalizAra = function() {
      app.js'in inline togSinif() tıklaması capture aşamasında engellenir. */
   if (typeof document !== "undefined" && document.addEventListener) {
     document.addEventListener("click", function (e) {
+      console.log("[TEŞHİS] Tıklama handler ÇALIŞTI");
       var hedef = e.target;
       var btn = hedef && hedef.closest ? hedef.closest(".hucreBtn") : null;
       if (!btn) return;
@@ -3072,8 +3074,10 @@ window.__sysAnalizAra = function() {
       if (!bilgi || !bilgi.tablo.contains || !bilgi.tablo.contains(btn)) return;
       var sinif = d64TablodakiSinif(bilgi);
       var slot = d64HucreSlot(btn);
+      console.log("[TEŞHİS] sinif:", sinif, "slot:", slot);
       if (!sinif || !slot) return;
       var veri = d64Veri();
+      console.log("[TEŞHİS] veri:", veri);
       if (!veri) return;
 
       e.preventDefault();
@@ -3087,7 +3091,11 @@ window.__sysAnalizAra = function() {
       else veri.sinifKapali[sinif][slot] = "KAPALI";
       if (!Object.keys(veri.sinifKapali[sinif]).length) delete veri.sinifKapali[sinif];
 
+      console.log("[TEŞHİS] d64Kaydet ÖNCESİ veri.sinifKapali:", veri.sinifKapali);
       d64Kaydet(veri);
+      console.log("[TEŞHİS] d64Kaydet SONRASI localStorage:",
+        JSON.parse(localStorage.getItem("yksOto_arsiv_v1") || "{}").sinifKapali);
+      console.log("[TEŞHİS] window.DB.sinifKapali:", window.DB ? window.DB.sinifKapali : "DB YOK");
       d64TabloSusle();
     }, true);
   }

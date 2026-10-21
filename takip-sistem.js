@@ -3065,8 +3065,15 @@ window.__sysAnalizAra = function() {
   /* GÖREV 4 — dolu hücrede hiçbir şey yapmaz; boş hücrede "Kapalı"yı açar/kapatır.
      app.js'in inline togSinif() tıklaması capture aşamasında engellenir. */
   if (typeof document !== "undefined" && document.addEventListener) {
-    document.addEventListener("click", function (e) {
-      console.log("[TEŞHİS] Tıklama handler ÇALIŞTI");
+    /* D65-TEKIL-HANDLER: aynı tıklama handler'ı iki kez bağlanmasın (ör. script çift yüklenirse). */
+    if (!window.__d64ClickHandlerBound) {
+      window.__d64ClickHandlerBound = true;
+      document.addEventListener("click", function (e) {
+        /* D65-REENTRANS: aynı tıklama 100ms içinde ikinci kez işlenmesin. */
+        if (window.__d64KapaliIslemde) return;
+        window.__d64KapaliIslemde = true;
+        setTimeout(function () { window.__d64KapaliIslemde = false; }, 100);
+        console.log("[TEŞHİS] Tıklama handler ÇALIŞTI");
       var hedef = e.target;
       var btn = hedef && hedef.closest ? hedef.closest(".hucreBtn") : null;
       if (!btn) return;
@@ -3092,12 +3099,14 @@ window.__sysAnalizAra = function() {
       if (!Object.keys(veri.sinifKapali[sinif]).length) delete veri.sinifKapali[sinif];
 
       console.log("[TEŞHİS] d64Kaydet ÖNCESİ veri.sinifKapali:", veri.sinifKapali);
+      window.DB = veri; /* D65-KAYDETME-GARANTISI: yazım her zaman canonical DB üzerinden */
       d64Kaydet(veri);
       console.log("[TEŞHİS] d64Kaydet SONRASI localStorage:",
         JSON.parse(localStorage.getItem("yksOto_arsiv_v1") || "{}").sinifKapali);
       console.log("[TEŞHİS] window.DB.sinifKapali:", window.DB ? window.DB.sinifKapali : "DB YOK");
       d64TabloSusle();
-    }, true);
+      }, true);
+    }
   }
 
   function d64Baslat() {

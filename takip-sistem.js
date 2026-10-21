@@ -2798,6 +2798,232 @@ window.__sysAnalizAra = function() {
 
     tik();
     setInterval(tik, 500);
+
+    /* === ODEV-BRANS-CIFT-YON ===
+       Ödev formuna (index.html: __odEkran) birebir formun çift yönlü kuralını uygular:
+         Sınıf/Öğrenci  → o sınıfta dersi olan öğretmenler (avail.sinif slot→sınıf kaydı)
+         Ders           → yalnız o dersi verebilen branşlar (uygunMu)
+         Öğretmen       → branşın ilk dersi otomatik seçilir (bransinIlkDersi)
+       Ders listesi tüm dersleri içerir (birebir form #f-ders gibi); böylece ders
+       değiştirilerek sınıftaki her branşa ulaşılabilir ve öğretmen listesi her zaman
+       görünen dersle uyumlu kalır.
+       Bağlanan alanlar:
+         Sınıfa Ödev   : #__odSinif → #__odOgretmen → #__odDers
+         Bireysel Ödev : #__odOgr   → #__odOgretmenB → #__odDersB
+       index.html'deki select onchange nitelikleri window.__od*Degisti fonksiyonlarını
+       çağırdığı için o fonksiyonlar burada sarılır; ayrıca aynı select'lere change
+       listener eklenir (form her yeniden çizildiğinde yeniden bağlanır).
+       Tüm yazımlar data-od-imza karşılaştırmalıdır: periyodik tazeleme kullanıcının
+       seçimini bozmaz, yalnızca seçenek listelerini tutarlı tutar. */
+    (function () {
+      var FORMLAR = {
+        sinif: { kaynak: "__odSinif", ogretmen: "__odOgretmen", ders: "__odDers" },
+        bireysel: { kaynak: "__odOgr", ogretmen: "__odOgretmenB", ders: "__odDersB" }
+      };
+      var DERSLERI = window.DERS || {};
+
+      function eleman(id) { return id ? document.getElementById(id) : null; }
+
+      function odVeri() {
+        if (window.DB && typeof window.DB === "object") return window.DB;
+        try {
+          return JSON.parse(localStorage.getItem(window.LS_KEY || "yksOto_arsiv_v1") || "{}");
+        } catch (e) { return {}; }
+      }
+
+      // Ders değeri iki biçimde gelebilir: kod ("mat") veya ad ("MATEMATİK").
+      function odDersKodu(ham) {
+        var x = String(ham == null ? "" : ham).trim();
+        if (!x) return "";
+        var n = norm(x);
+        if (DERSLERI[n]) return n;
+        var anahtarlar = Object.keys(DERSLERI);
+        for (var i = 0; i < anahtarlar.length; i++) {
+          var d = DERSLERI[anahtarlar[i]];
+          if (d && norm(d.ad) === n) return anahtarlar[i];
+        }
+        if (AD_ES[n]) return AD_ES[n];
+        return HARITA[n] ? n : "";
+      }
+
+      function odDersAdi(kod) {
+        var d = DERSLERI[kod];
+        return d && d.ad ? d.ad : String(kod || "");
+      }
+
+      // Formun sınıfı: Sınıfa Ödev'de seçili sınıf, Bireysel'de öğrencinin sınıfı.
+      function odSinifAdi(form) {
+        var f = FORMLAR[form];
+        if (!f) return "";
+        var kaynak = eleman(f.kaynak);
+        if (!kaynak) return "";
+        if (form === "sinif") return String(kaynak.value || "").trim();
+        var id = String(kaynak.value || "");
+        if (!id) return "";
+        var liste = odVeri().ogrenciler || [];
+        for (var i = 0; i < liste.length; i++) {
+          if (liste[i] && String(liste[i].id) === id) return String(liste[i].sinif || "").trim();
+        }
+        return "";
+      }
+
+      // "10. SINIF" ≡ "10.SINIF" — norm aksan/boşluk/noktalama duyarsızdır.
+      function odSiniftaMi(t, sinif) {
+        if (!sinif) return true;
+        var av = t && t.avail && t.avail.sinif;
+        if (!av || typeof av !== "object" || Array.isArray(av)) return false;
+        var hedef = norm(sinif);
+        var anahtarlar = Object.keys(av);
+        for (var i = 0; i < anahtarlar.length; i++) {
+          var v = av[anahtarlar[i]];
+          if (v && norm(v) === hedef) return true;
+        }
+        return false;
+      }
+
+      function odSinifOgretmenleri(sinif) {
+        var tum = ogretmenler();
+        if (!sinif) return tum.slice();
+        return tum.filter(function (t) { return odSiniftaMi(t, sinif); });
+      }
+
+      function odOgretmenBul(id) {
+        if (!id) return null;
+        var liste = ogretmenler();
+        for (var i = 0; i < liste.length; i++) {
+          if (String(liste[i] && liste[i].id) === String(id)) return liste[i];
+        }
+        return null;
+      }
+
+      function odSecenekYaz(sel, html, deger) {
+        if (!sel) return;
+        var imza = sel.getAttribute ? sel.getAttribute("data-od-imza") : null;
+        if (imza !== html) {
+          sel.innerHTML = html;
+          if (sel.setAttribute) sel.setAttribute("data-od-imza", html);
+        }
+        if (deger != null && sel.value !== deger) sel.value = deger;
+      }
+
+      function odDersHtml(kodlar) {
+        var html = "";
+        for (var i = 0; i < kodlar.length; i++) {
+          var ad = odDersAdi(kodlar[i]);
+          html += '<option value="' + esc(ad) + '">' + esc(ad) + "</option>";
+        }
+        return html;
+      }
+
+      // Etiket biçimi index.html'deki __odKaydet ile uyumlu olmalı: "AD — BRANŞ".
+      function odOgretmenHtml(liste) {
+        var html = "";
+        for (var i = 0; i < liste.length; i++) {
+          var t = liste[i];
+          var ad = ogretmenAd(t);
+          if (!ad) continue;
+          var b = bransKodu(t);
+          var etiket = DERSLERI[b] && DERSLERI[b].ad ? DERSLERI[b].ad : String((t && t.brans) || "");
+          var deger = (t.id != null && t.id !== "") ? String(t.id) : ad;
+          html += '<option value="' + esc(deger) + '" data-brans="' + esc(b) + '">' +
+            esc(ad + (etiket ? " — " + etiket : "")) + "</option>";
+        }
+        return html;
+      }
+
+      // mod: "ilk" (sınıf/öğrenci değişti), "ders", "ogretmen", "taze" (periyodik)
+      function odTazele(form, mod) {
+        var f = FORMLAR[form];
+        if (!f) return;
+        var ogretmenSel = eleman(f.ogretmen);
+        var dersSel = eleman(f.ders);
+        if (!ogretmenSel || !dersSel) return;
+
+        var sinif = odSinifAdi(form);
+        var havuz = odSinifOgretmenleri(sinif);
+        var mevcutT = odOgretmenBul(String(ogretmenSel.value || ""));
+        var dersKod = odDersKodu(dersSel.value);
+
+        // 1) Sınıf/öğrenci veya öğretmen değiştiyse: branşın ilk dersi otomatik seçilir.
+        var seciliT = null;
+        if (mod === "ilk" || mod === "ogretmen") {
+          seciliT = (mevcutT && havuz.indexOf(mevcutT) >= 0) ? mevcutT : (havuz[0] || null);
+          if (seciliT) {
+            var ilk = bransinIlkDersi(bransKodu(seciliT));
+            if (ilk) dersKod = ilk;
+          }
+        }
+
+        // 2) Öğretmen havuzu: sınıf ve ders uyumu (uygunMu). Liste asla uyumsuz branş göstermez.
+        if (dersKod) {
+          havuz = havuz.filter(function (t) { return uygunMu(t, dersKod); });
+        }
+        if (!seciliT && mevcutT && havuz.indexOf(mevcutT) >= 0) seciliT = mevcutT;
+        if (!seciliT || havuz.indexOf(seciliT) < 0) seciliT = havuz[0] || null;
+
+        // 3) Ders seçenekleri: tüm dersler (birebir formdaki gibi). Seçim varsa korunur.
+        var tumDersler = Object.keys(DERSLERI);
+        if (!tumDersler.length) {
+          odSecenekYaz(dersSel, '<option value="">(Ders bulunamadı)</option>', "");
+        } else {
+          var hedefKod = (dersKod && tumDersler.indexOf(dersKod) >= 0) ? dersKod : tumDersler[0];
+          dersKod = hedefKod;
+          odSecenekYaz(dersSel, odDersHtml(tumDersler), odDersAdi(hedefKod));
+        }
+
+        // 4) Öğretmen listesi: yalnız bu sınıfta dersi olan ve dersi verebilen branşlar.
+        if (!havuz.length) {
+          odSecenekYaz(ogretmenSel,
+            '<option value="">' + (sinif ? "(Bu sınıfta uygun öğretmen yok)" : "(Öğretmen bulunamadı)") + "</option>", "");
+          return;
+        }
+        var seciliId = seciliT ? String((seciliT.id != null && seciliT.id !== "") ? seciliT.id : ogretmenAd(seciliT)) : "";
+        odSecenekYaz(ogretmenSel, odOgretmenHtml(havuz), seciliId);
+      }
+
+      function odBagla(form) {
+        var f = FORMLAR[form];
+        if (!f) return;
+        var kaynak = eleman(f.kaynak);
+        var ogretmenSel = eleman(f.ogretmen);
+        var dersSel = eleman(f.ders);
+        if (kaynak && !kaynak.__ksOdBag) {
+          kaynak.__ksOdBag = true;
+          kaynak.addEventListener("change", function () { odTazele(form, "ilk"); });
+        }
+        if (dersSel && !dersSel.__ksOdBag) {
+          dersSel.__ksOdBag = true;
+          dersSel.addEventListener("change", function () { odTazele(form, "ders"); });
+        }
+        if (ogretmenSel && !ogretmenSel.__ksOdBag) {
+          ogretmenSel.__ksOdBag = true;
+          ogretmenSel.addEventListener("change", function () { odTazele(form, "ogretmen"); });
+        }
+      }
+
+      // index.html'deki onchange nitelikleri bu global fonksiyonları çağırır.
+      window.__odSinifDegisti = function () { odTazele("sinif", "ilk"); };
+      window.__odOgretmenDegisti = function () { odTazele("sinif", "ogretmen"); };
+      window.__odOgrDegisti = function () { odTazele("bireysel", "ilk"); };
+      window.__odOgretmenDegistiB = function () { odTazele("bireysel", "ogretmen"); };
+
+      function odTik() {
+        var formlar = Object.keys(FORMLAR);
+        for (var i = 0; i < formlar.length; i++) {
+          var form = formlar[i];
+          var f = FORMLAR[form];
+          var ogretmenSel = eleman(f.ogretmen);
+          var dersSel = eleman(f.ders);
+          if (!ogretmenSel || !dersSel) continue;
+          odBagla(form);
+          // Form yeni çizildiyse select'ler boştur → ilk doldurma; aksi halde seçimi koru.
+          var bos = !ogretmenSel.options || !ogretmenSel.options.length || !dersSel.options || !dersSel.options.length;
+          odTazele(form, bos ? "ilk" : "taze");
+        }
+      }
+      odTik();
+      setInterval(odTik, 500);
+    })();
   })();
 
   /* ============================================================

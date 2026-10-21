@@ -304,39 +304,129 @@
   };
 
   // === WHATSAPP TASLAK VE GÖNDERİM SİSTEMİ ===
-  var varsayilanTaslaklar = {
-    yoklama: "Sayın Veli, öğrenciniz {ad} bugünkü {sinif} sınıfı dersine katılmamıştır. Bilgilerinize sunarız.",
-    odev: "Sayın Veli, öğrenciniz {ad}'ın {ders} dersinden almış olduğu ödevi yapmadığı tespit edilmiştir. Bilgilerinize sunarız.",
-    kutuphane: "Sayın Veli, öğrenciniz {ad} bugünkü kütüphane çalışmasına katılmamıştır. Bilgilerinize sunarız.",
-    sinav: "Sayın Veli, öğrenciniz {ad} bugünkü sınava girmemiştir. Bilgilerinize sunarız."
+  // Taslak kategorileri ve her kategorinin olumlu/olumsuz durum anahtarları
+  var __waTaslakKategorileri = ["yoklama", "odev", "kutuphane", "sinav"];
+  var __waTaslakSekmeAdlari = {
+    yoklama: "Ders Yoklaması",
+    odev: "Ödev",
+    kutuphane: "Kütüphane",
+    sinav: "Sınav"
+  };
+  var __waTaslakDurumlari = {
+    yoklama: ["geldi", "gelmedi", "gec"],
+    odev: ["yapildi", "yapmadi", "eksik", "gec"],
+    kutuphane: ["geldi", "gelmedi", "gec"],
+    sinav: ["girdi", "girmedi"]
+  };
+  var __waTaslakDurumAdlari = {
+    yoklama: { geldi: "✅ Geldi", gelmedi: "❌ Gelmedi", gec: "⏰ Geç Kaldı" },
+    odev: { yapildi: "✅ Yapıldı", yapmadi: "❌ Yapmadı", eksik: "⚠️ Eksik", gec: "⏰ Geç Teslim" },
+    kutuphane: { geldi: "✅ Geldi", gelmedi: "❌ Gelmedi", gec: "⏰ Geç Kaldı" },
+    sinav: { girdi: "✅ Girdi", girmedi: "❌ Girmedi" }
   };
 
+  var varsayilanTaslaklar = {
+    yoklama: {
+      geldi: "Sayın Veli, öğrenciniz {ad} bugünkü {sinif} sınıfı dersine katılmıştır. Başarılar dileriz.",
+      gelmedi: "Sayın Veli, öğrenciniz {ad} bugünkü {sinif} sınıfı dersine katılmamıştır. Bilgilerinize sunarız.",
+      gec: "Sayın Veli, öğrenciniz {ad} bugünkü {sinif} sınıfı dersine geç katılmıştır. Bilgilerinize sunarız."
+    },
+    odev: {
+      yapildi: "Sayın Veli, öğrenciniz {ad}'ın {ders} dersinden aldığı ödevi başarıyla tamamlamıştır. Tebrik ederiz!",
+      yapmadi: "Sayın Veli, öğrenciniz {ad}'ın {ders} dersinden aldığı ödevi yapmadığı tespit edilmiştir. Bilgilerinize sunarız.",
+      eksik: "Sayın Veli, öğrenciniz {ad}'ın {ders} dersinden aldığı ödevi eksik yaptığı tespit edilmiştir. Bilgilerinize sunarız.",
+      gec: "Sayın Veli, öğrenciniz {ad}'ın {ders} dersinden aldığı ödevi geç teslim ettiği tespit edilmiştir. Bilgilerinize sunarız."
+    },
+    kutuphane: {
+      geldi: "Sayın Veli, öğrenciniz {ad} bugünkü kütüphane çalışmasına katılmıştır. Başarılar dileriz.",
+      gelmedi: "Sayın Veli, öğrenciniz {ad} bugünkü kütüphane çalışmasına katılmamıştır. Bilgilerinize sunarız.",
+      gec: "Sayın Veli, öğrenciniz {ad} bugünkü kütüphane çalışmasına geç katılmıştır. Bilgilerinize sunarız."
+    },
+    sinav: {
+      girdi: "Sayın Veli, öğrenciniz {ad} bugünkü sınava girmiştir. Başarılar dileriz.",
+      girmedi: "Sayın Veli, öğrenciniz {ad} bugünkü sınava girmemiştir. Bilgilerinize sunarız."
+    }
+  };
+
+  function __waOlumsuzDurum(kat) {
+    return kat === "odev" ? "yapmadi" : kat === "sinav" ? "girmedi" : "gelmedi";
+  }
+
   function taslakOku() {
-    try {
-      var t = JSON.parse(localStorage.getItem("yksOto_taslaklar") || "{}");
-      return Object.assign({}, varsayilanTaslaklar, t);
-    } catch(e) { return varsayilanTaslaklar; }
+    var kayit = {};
+    try { kayit = JSON.parse(localStorage.getItem("yksOto_taslaklar") || "{}") || {}; } catch(e) { kayit = {}; }
+    var t = {};
+    __waTaslakKategorileri.forEach(function (kat) {
+      var varsayilan = varsayilanTaslaklar[kat] || {};
+      var kayitli = kayit[kat];
+      t[kat] = {};
+      // Eski sürümde her kategori tek bir düz metin olarak saklanıyordu → olumsuz duruma taşınır.
+      if (typeof kayitli === "string") t[kat][__waOlumsuzDurum(kat)] = kayitli;
+      else if (kayitli && typeof kayitli === "object") {
+        Object.keys(kayitli).forEach(function (durum) {
+          t[kat][durum] = String(kayitli[durum] == null ? "" : kayitli[durum]);
+        });
+      }
+      __waTaslakDurumlari[kat].forEach(function (durum) {
+        if (typeof t[kat][durum] !== "string") t[kat][durum] = varsayilan[durum] || "";
+      });
+    });
+    return t;
   }
   function taslakYaz(t) { localStorage.setItem("yksOto_taslaklar", JSON.stringify(t)); }
 
-  window.__waTaslakModal = function() {
-    var t = taslakOku();
-    var html = '<div style="font-family:system-ui;padding:6px;">' +
-      '<div style="font-size:15px;font-weight:700;margin-bottom:14px;color:#0f172a;">📱 WhatsApp Mesaj Taslakları</div>' +
-      '<div style="font-size:11px;color:#64748b;margin-bottom:12px;">Değişkenler: {ad} (Öğrenci Adı), {sinif}, {ders}. Bu değişkenler gönderim anında otomatik doldurulur.</div>' +
-      
-      '<label style="font-size:11px;font-weight:700;color:#0f766e;">Ders Yoklaması (Gelmedi)</label>' +
-      '<textarea id="__t_yoklama" style="width:100%;height:60px;margin-bottom:10px;padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:12px;">' + t.yoklama + '</textarea>' +
-      
-      '<label style="font-size:11px;font-weight:700;color:#0f766e;">Ödev (Yapmadı)</label>' +
-      '<textarea id="__t_odev" style="width:100%;height:60px;margin-bottom:10px;padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:12px;">' + t.odev + '</textarea>' +
-      
-      '<label style="font-size:11px;font-weight:700;color:#0f766e;">Kütüphane (Gelmedi)</label>' +
-      '<textarea id="__t_kutuphane" style="width:100%;height:60px;margin-bottom:10px;padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:12px;">' + t.kutuphane + '</textarea>' +
-      
-      '<label style="font-size:11px;font-weight:700;color:#0f766e;">Sınav (Girmedi)</label>' +
-      '<textarea id="__t_sinav" style="width:100%;height:60px;margin-bottom:14px;padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:12px;">' + t.sinav + '</textarea>' +
+  var __waTaslakGecici = null;
 
+  function __waTaslakEsc(s) {
+    return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function __waTaslakSekmelerHTML() {
+    var aktif = window.__waTaslakAktifSekme || "yoklama";
+    var html = "";
+    __waTaslakKategorileri.forEach(function (kat) {
+      var secili = kat === aktif;
+      html += '<button type="button" onclick="window.__waTaslakSekme(\'' + kat + '\')" style="border:1px solid ' + (secili ? "#14b8a6" : "#cbd5e1") + ';background:' + (secili ? "#14b8a6" : "#fff") + ';color:' + (secili ? "#fff" : "#475569") + ';padding:7px 11px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;">' + __waTaslakSekmeAdlari[kat] + '</button>';
+    });
+    return html;
+  }
+
+  // Sekmedeki textarea değerlerini toplar; sekme değişiminde kaydedilmemiş düzenlemeler korunur.
+  function __waTaslakDegerleriTopla() {
+    var t = __waTaslakGecici || taslakOku();
+    __waTaslakKategorileri.forEach(function (kat) {
+      __waTaslakDurumlari[kat].forEach(function (durum) {
+        var el = document.getElementById("__t_" + kat + "_" + durum);
+        if (el) t[kat][durum] = el.value;
+      });
+    });
+    return t;
+  }
+
+  function __waTaslakCiz() {
+    var kat = window.__waTaslakAktifSekme || "yoklama";
+    var t = __waTaslakDegerleriTopla();
+    __waTaslakGecici = t;
+    var govde = document.getElementById("__waTaslakGovde");
+    if (!govde) return;
+    var html = '<div style="font-size:11px;color:#64748b;margin-bottom:12px;">Değişkenler: {ad} (Öğrenci Adı), {sinif}, {ders}. Bu değişkenler gönderim anında otomatik doldurulur.</div>';
+    __waTaslakDurumlari[kat].forEach(function (durum) {
+      html += '<label style="display:block;font-size:11px;font-weight:700;color:#0f766e;margin-bottom:4px;">' + __waTaslakDurumAdlari[kat][durum] + '</label>' +
+        '<textarea id="__t_' + kat + '_' + durum + '" style="width:100%;height:64px;margin-bottom:10px;padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:12px;resize:vertical;">' + __waTaslakEsc(t[kat][durum]) + '</textarea>';
+    });
+    govde.innerHTML = html;
+  }
+
+  window.__waTaslakModal = function() {
+    var eski = document.getElementById("__waTaslakOverlay");
+    if (eski) eski.remove();
+    __waTaslakGecici = null;
+    window.__waTaslakAktifSekme = "yoklama";
+
+    var html = '<div style="font-family:system-ui;padding:6px;">' +
+      '<div style="font-size:15px;font-weight:700;margin-bottom:12px;color:#0f172a;">📱 WhatsApp Mesaj Taslakları</div>' +
+      '<div id="__waTaslakSekmeler" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">' + __waTaslakSekmelerHTML() + '</div>' +
+      '<div id="__waTaslakGovde"></div>' +
       '<button type="button" onclick="window.__waTaslakKaydet()" style="width:100%;background:#14b8a6;color:#fff;padding:10px;border:none;border-radius:8px;font-weight:700;cursor:pointer;margin-bottom:6px;">💾 Taslakları Kaydet</button>' +
       '<button type="button" onclick="document.getElementById(\'__waTaslakOverlay\').remove()" style="width:100%;background:#f1f5f9;color:#64748b;padding:10px;border:none;border-radius:8px;font-weight:700;cursor:pointer;">Kapat</button>' +
     '</div>';
@@ -345,22 +435,34 @@
     ov.id = "__waTaslakOverlay";
     ov.style.cssText = "position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;";
     var k = document.createElement("div");
-    k.style.cssText = "background:#fff;border-radius:16px;padding:20px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);";
+    k.style.cssText = "background:#fff;border-radius:16px;padding:20px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);";
     k.innerHTML = html;
     ov.appendChild(k);
     document.body.appendChild(ov);
+    __waTaslakCiz();
+  };
+
+  window.__waTaslakSekme = function(kat) {
+    if (__waTaslakKategorileri.indexOf(kat) === -1) return;
+    __waTaslakGecici = __waTaslakDegerleriTopla();
+    window.__waTaslakAktifSekme = kat;
+    var sekmeler = document.getElementById("__waTaslakSekmeler");
+    if (sekmeler) sekmeler.innerHTML = __waTaslakSekmelerHTML();
+    __waTaslakCiz();
   };
 
   window.__waTaslakKaydet = function() {
-    var t = {
-      yoklama: document.getElementById("__t_yoklama").value,
-      odev: document.getElementById("__t_odev").value,
-      kutuphane: document.getElementById("__t_kutuphane").value,
-      sinav: document.getElementById("__t_sinav").value
-    };
+    var t = __waTaslakDegerleriTopla();
+    __waTaslakKategorileri.forEach(function (kat) {
+      __waTaslakDurumlari[kat].forEach(function (durum) {
+        if (typeof t[kat][durum] !== "string") t[kat][durum] = varsayilanTaslaklar[kat][durum] || "";
+      });
+    });
     taslakYaz(t);
+    __waTaslakGecici = null;
     alert("✅ Taslaklar başarıyla kaydedildi.");
-    document.getElementById("__waTaslakOverlay").remove();
+    var ov = document.getElementById("__waTaslakOverlay");
+    if (ov) ov.remove();
   };
 
   window.__waGonder = function(ogrId, tip, dersAdi) {
@@ -378,7 +480,7 @@
     if(tel.length < 10) return alert("Veli telefon numarası geçersiz veya eksik: " + tel);
 
     var t = taslakOku();
-    var mesaj = t[tip] || "";
+    var mesaj = (t[tip] && t[tip][__waOlumsuzDurum(tip)]) || "";
     mesaj = mesaj.replace(/{ad}/g, (ogr.adSoyad || ogr.ad || "Öğrenci"))
                  .replace(/{sinif}/g, (ogr.sinif || ""))
                  .replace(/{ders}/g, (dersAdi || ""));
@@ -425,96 +527,186 @@
     return "";
   }
 
+  // === TOPLU MESAJ FİLTRESİ ===
+  // Kategori → olası durumlar. "olumlu" olanlar varsayılan görünümde gizlenir.
+  var __waTopluDurumlar = {
+    yoklama: [
+      { kod: "gelmedi", etiket: "❌ Gelmedi", olumlu: false },
+      { kod: "gec", etiket: "⏰ Geç", olumlu: false },
+      { kod: "geldi", etiket: "✅ Geldi", olumlu: true }
+    ],
+    odevler: [
+      { kod: "yapmadi", etiket: "❌ Yapmadı", olumlu: false },
+      { kod: "eksik", etiket: "⚠️ Eksik", olumlu: false },
+      { kod: "gec", etiket: "⏰ Geç", olumlu: false },
+      { kod: "yapildi", etiket: "✅ Yaptı", olumlu: true }
+    ],
+    kutuphane: [
+      { kod: "gelmedi", etiket: "❌ Gelmedi", olumlu: false },
+      { kod: "gec", etiket: "⏰ Geç", olumlu: false },
+      { kod: "geldi", etiket: "✅ Geldi", olumlu: true }
+    ],
+    sinav: [
+      { kod: "girmedi", etiket: "❌ Girmedi", olumlu: false },
+      { kod: "girdi", etiket: "✅ Girdi", olumlu: true }
+    ]
+  };
+
+  function __waKtDurum(v) {
+    if (v === "geldi" || v === "gelmedi" || v === "gec") return v;
+    if (v && typeof v === "object" && v.giris) return "geldi";
+    return "";
+  }
+
+  function __waKayit(veri, tip, id, sinifAd, durumKod, ders) {
+    var durumlar = __waTopluDurumlar[tip] || [];
+    var meta = null;
+    for (var i = 0; i < durumlar.length; i++) if (durumlar[i].kod === durumKod) { meta = durumlar[i]; break; }
+    var ogrenciler = veri.ogrenciler || [];
+    var ogr = null;
+    for (var j = 0; j < ogrenciler.length; j++) if (ogrenciler[j].id === id) { ogr = ogrenciler[j]; break; }
+    return {
+      id: id,
+      sinifAd: sinifAd || (ogr && ogr.sinif) || "-",
+      durumKod: durumKod,
+      durumEtiket: meta ? meta.etiket : durumKod,
+      olumlu: meta ? !!meta.olumlu : false,
+      ders: ders || ""
+    };
+  }
+
   window.__waTopluModal = function(tip) {
     var veri = (typeof veriOku === "function") ? veriOku() : sinavVeriOku();
-    var tarih = new Date().toISOString().slice(0,10); // Varsayılan bugün
-    // Ekrandaki tarihi bulmaya çalış
-    var tInput = document.getElementById("yoklamaTarih") || document.getElementById("sinavTarih") || document.getElementById("__ktTarihInput");
+    var tarih = new Date().toISOString().slice(0,10);
+    var tId = tip === "yoklama" ? "yoklamaTarih" : tip === "sinav" ? "sinavTarih" : tip === "kutuphane" ? "__ktTarihInput" : "";
+    var tInput = tId ? document.getElementById(tId) : null;
     if (tInput && tInput.value) tarih = tInput.value;
 
     var liste = [];
 
-    // 1. DERS YOKLAMASI (Tüm sınıflar)
+    // 1. DERS YOKLAMASI (Tüm sınıflar, tüm durumlar)
     if (tip === "yoklama") {
         var tumYoklamalar = (veri.yoklamalar && veri.yoklamalar[tarih]) ? veri.yoklamalar[tarih] : {};
         Object.keys(tumYoklamalar).forEach(function(sinifAd) {
-            var sinifYok = tumYoklamalar[sinifAd];
+            var sinifYok = tumYoklamalar[sinifAd] || {};
             Object.keys(sinifYok).forEach(function(id) {
-                var d = typeof sinifYok[id] === 'string' ? sinifYok[id] : sinifYok[id].durum;
-                if (d === "gelmedi" || d === "gec") {
-                    liste.push({ id: id, durum: d === "gelmedi" ? "Gelmedi" : "Geç Kaldı", sinifAd: sinifAd });
-                }
+                var kayit = sinifYok[id];
+                var d = typeof kayit === 'string' ? kayit : (kayit && kayit.durum) || "";
+                if (d === "geldi" || d === "gelmedi" || d === "gec") liste.push(__waKayit(veri, tip, id, sinifAd, d, ""));
             });
         });
-    } 
-    // 2. SINAV YOKLAMASI (Tüm sınıflar)
+    }
+    // 2. SINAV YOKLAMASI (Tüm sınıflar, tüm durumlar)
     else if (tip === "sinav") {
         var tumSinavlar = (veri.sinavYoklamalari && veri.sinavYoklamalari[tarih]) ? veri.sinavYoklamalari[tarih] : {};
         Object.keys(tumSinavlar).forEach(function(sinifAd) {
-            var sinifSnv = tumSinavlar[sinifAd];
+            var sinifSnv = tumSinavlar[sinifAd] || {};
             Object.keys(sinifSnv).forEach(function(id) {
-                var d = typeof sinifSnv[id] === 'string' ? sinifSnv[id] : sinifSnv[id].durum;
-                if (d === "girmedi") {
-                    liste.push({ id: id, durum: "Sınava Girmedi", sinifAd: sinifAd });
-                }
+                var kayit = sinifSnv[id];
+                var d = typeof kayit === 'string' ? kayit : (kayit && kayit.durum) || "";
+                if (d === "girdi" || d === "girmedi") liste.push(__waKayit(veri, tip, id, sinifAd, d, ""));
             });
         });
-    } 
-    // 3. KÜTÜPHANE (Genel tarama, çünkü kütüphane verisinde sınıf yok)
+    }
+    // 3. KÜTÜPHANE (Genel tarama, kütüphane verisinde sınıf yok)
     else if (tip === "kutuphane") {
         var tumKt = (veri.kutuphane && veri.kutuphane[tarih]) ? veri.kutuphane[tarih] : {};
         Object.keys(tumKt).forEach(function(id) {
-            if (tumKt[id] === "gelmedi") {
-                var ogr = (veri.ogrenciler || []).find(function(o){ return o.id === id; });
-                liste.push({ id: id, durum: "Kütüphaneye Gelmedi", sinifAd: ogr ? ogr.sinif : "-" });
-            }
+            var d = __waKtDurum(tumKt[id]);
+            if (!d) return;
+            liste.push(__waKayit(veri, tip, id, "", d, ""));
         });
-    } 
-    // 4. ÖDEVLER (Tüm ödevleri tarayıp yapmayanları bul)
+    }
+    // 4. ÖDEVLER (Tüm ödevler, tüm durumlar)
     else if (tip === "odevler") {
         var odevler = veri.odevler || [];
-        // Her ödev için yapmayanları listeye ekle (yinelenenleri önlemek için bir obje kullanabiliriz ama şimdilik düz ekleyelim)
         odevler.forEach(function(odev) {
             Object.keys(odev.durumlar || {}).forEach(function(id) {
                 var d = odev.durumlar[id];
-                if (d === "yapmadi" || d === "eksik" || d === "gec") {
-                    var ogr = (veri.ogrenciler || []).find(function(o){ return o.id === id; });
-                    if(ogr) {
-                        // Aynı öğrenci birden fazla ödevden kalmışsa tek satırda göster veya hepsini listele (şimdilik hepsini)
-                        liste.push({ id: id, durum: "Ödev (" + odev.ders + "): " + (d === "yapmadi" ? "Yapmadı" : d === "eksik" ? "Eksik" : "Geç"), sinifAd: ogr.sinif || "-" });
-                    }
-                }
+                if (d !== "yapildi" && d !== "yapmadi" && d !== "eksik" && d !== "gec") return;
+                liste.push(__waKayit(veri, tip, id, "", d, odev.ders || ""));
             });
         });
     }
 
-    if (liste.length === 0) return alert("Seçili tarihte/tüm sınıflarda mesaj gönderilecek (olumsuz durumdaki) öğrenci bulunmuyor.");
+    if (liste.length === 0) return alert("Seçili tarihte/tüm sınıflarda mesaj gönderilecek öğrenci bulunmuyor.");
 
-    var t = taslakOku();
+    window.__waTopluDurum = { tip: tip, filtre: "olumsuz", veri: veri, liste: liste };
+    var eski = document.getElementById("__waTopluOverlay");
+    if (eski) eski.remove();
+    var ov = document.createElement("div");
+    ov.id = "__waTopluOverlay";
+    ov.style.cssText = "position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;";
+    var k = document.createElement("div");
+    k.id = "__waTopluKart";
+    k.style.cssText = "background:#fff;border-radius:16px;padding:20px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);";
+    ov.appendChild(k);
+    document.body.appendChild(ov);
+    __waTopluCiz();
+  };
+
+  window.__waTopluFiltreSec = function(filtre) {
+    if (!window.__waTopluDurum) return;
+    window.__waTopluDurum.filtre = filtre;
+    __waTopluCiz();
+  };
+
+  function __waTopluFiltreHTML(tip, filtre) {
+    var secenekler = [{ kod: "olumsuz", etiket: "❗ Olumsuz" }, { kod: "tumu", etiket: "Tümü" }].concat(__waTopluDurumlar[tip] || []);
+    var html = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">';
+    secenekler.forEach(function(s) {
+      var aktif = s.kod === filtre;
+      html += '<button type="button" onclick="window.__waTopluFiltreSec(\'' + s.kod + '\')" style="border:1px solid ' + (aktif ? "#14b8a6" : "#e2e8f0") + ';background:' + (aktif ? "#14b8a6" : "#fff") + ';color:' + (aktif ? "#fff" : "#475569") + ';padding:5px 10px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;">' + s.etiket + '</button>';
+    });
+    return html + '</div>';
+  }
+
+  function __waTopluCiz() {
+    var durum = window.__waTopluDurum;
+    var kart = document.getElementById("__waTopluKart");
+    if (!durum || !kart) return;
+    var tip = durum.tip;
+    var filtre = durum.filtre || "olumsuz";
+    var veri = durum.veri || ((typeof veriOku === "function") ? veriOku() : sinavVeriOku());
+    var tumListe = durum.liste || [];
+    var liste = filtre === "tumu" ? tumListe
+      : filtre === "olumsuz" ? tumListe.filter(function(i) { return !i.olumlu; })
+      : tumListe.filter(function(i) { return i.durumKod === filtre; });
+
+    var kat = tip === "odevler" ? "odev" : tip;
+    var taslaklar = taslakOku();
     var html = '<div style="font-family:system-ui;padding:6px;">' +
-      '<div style="font-size:15px;font-weight:700;margin-bottom:14px;color:#0f172a;">📱 Tüm Sınıflar - Toplu Bilgilendirme</div>' +
-      '<div style="max-height:350px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:14px;">';
-    
+      '<div style="font-size:15px;font-weight:700;margin-bottom:4px;color:#0f172a;">📱 Tüm Sınıflar - Toplu Bilgilendirme</div>' +
+      '<div style="font-size:11px;color:#64748b;margin-bottom:12px;">' + liste.length + ' / ' + tumListe.length + ' kayıt — varsayılan görünüm yalnızca olumsuz durumlar.</div>' +
+      __waTopluFiltreHTML(tip, filtre) +
+      '<div style="max-height:340px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:14px;">';
+
+    if (!liste.length) {
+      html += '<div style="padding:16px;text-align:center;font-size:12px;color:#64748b;">Bu filtreye uygun öğrenci bulunmuyor.</div>';
+    }
+
     liste.forEach(function(item, index) {
-        var ogr = (veri.ogrenciler || []).find(function(o) { return o.id === item.id; });
+        var ogr = (veri.ogrenciler || []).filter(function(o) { return o.id === item.id; })[0];
         if (!ogr) return;
         var ad = ogr.adSoyad || ogr.ad || "Öğrenci";
         var tel = ogr.veliTelefon || ogr.veliTel || ogr.veliTelefonu || "";
         tel = String(tel).replace(/\D/g, "");
         if(tel.length === 10 && tel.startsWith("5")) tel = "90" + tel;
         else if(tel.length === 11 && tel.startsWith("05")) tel = "9" + tel;
-        
-        var mesaj = t[tip === "odevler" ? "odev" : tip] || "";
-        mesaj = mesaj.replace(/{ad}/g, ad).replace(/{sinif}/g, ogr.sinif || "").replace(/{ders}/g, "");
+
+        // İlgili durumun kendi taslağı kullanılır (örn. odev.yapmadi / odev.gec)
+        var mesaj = (taslaklar[kat] && taslaklar[kat][item.durumKod]) || "";
+        mesaj = mesaj.replace(/{ad}/g, ad).replace(/{sinif}/g, ogr.sinif || "").replace(/{ders}/g, item.ders || "");
         var url = tel.length >= 10 ? "https://wa.me/" + tel + "?text=" + encodeURIComponent(mesaj) : "#";
+        var durumYazi = (tip === "odevler" && item.ders ? "Ödev (" + item.ders + "): " : "") + item.durumEtiket;
 
         html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px;border-bottom:1px solid #f1f5f9;' + (index === liste.length - 1 ? 'border-bottom:none;' : '') + '">' +
           '<div>' +
-             '<div style="font-weight:700;font-size:13px;color:#1e293b;">' + ad + '</div>' +
-             '<div style="font-size:11px;color:#0f766e;font-weight:600;">' + item.sinifAd + ' Sınıfı</div>' +
-             '<div style="font-size:11px;color:#ef4444;margin-top:2px;">' + item.durum + '</div>' +
+             '<div style="font-weight:700;font-size:13px;color:#1e293b;">' + sinavEsc(ad) + '</div>' +
+             '<div style="font-size:11px;color:#0f766e;font-weight:600;">' + sinavEsc(item.sinifAd) + ' Sınıfı</div>' +
+             '<div style="font-size:11px;color:' + (item.olumlu ? "#16a34a" : "#ef4444") + ';margin-top:2px;">' + sinavEsc(durumYazi) + '</div>' +
           '</div>' +
-          (tel.length >= 10 
+          (tel.length >= 10
             ? '<a href="' + url + '" target="_blank" style="background:#dcfce7;color:#166534;padding:6px 12px;border-radius:99px;text-decoration:none;font-size:11px;font-weight:700;">WhatsApp ➔</a>'
             : '<span style="font-size:11px;color:#94a3b8;background:#f1f5f9;padding:6px 12px;border-radius:99px;">Numara Yok</span>') +
         '</div>';
@@ -523,16 +715,8 @@
     html += '</div>' +
       '<button type="button" onclick="document.getElementById(\'__waTopluOverlay\').remove()" style="width:100%;background:#f1f5f9;color:#64748b;padding:10px;border:none;border-radius:8px;font-weight:700;cursor:pointer;">Kapat</button>' +
     '</div>';
-
-    var ov = document.createElement("div");
-    ov.id = "__waTopluOverlay";
-    ov.style.cssText = "position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;";
-    var k = document.createElement("div");
-    k.style.cssText = "background:#fff;border-radius:16px;padding:20px;max-width:450px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);";
-    k.innerHTML = html;
-    ov.appendChild(k);
-    document.body.appendChild(ov);
-  };
+    kart.innerHTML = html;
+  }
 
   // Her sekmenin üstüne Toplu Mesaj butonu ekle
   setInterval(function() {

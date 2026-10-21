@@ -2655,7 +2655,19 @@ window.__sysAnalizAra = function() {
     try {
       if (typeof window !== "undefined" && window.DB && typeof window.DB === "object") return window.DB;
     } catch (e0) {}
-    try { return JSON.parse(localStorage.getItem("yksOto_arsiv_v1") || "{}"); } catch (e1) { return null; }
+    try {
+      var v = JSON.parse(localStorage.getItem("yksOto_arsiv_v1") || "{}");
+      /* D65-KALICILIK: localStorage'dan parse edilen obje sonradan window.DB'ye
+         memoize edilir ki app.js saveDB() aynı referansı yazsın; sinifKapali
+         sonradan kaybolmasın. */
+      try {
+        if (typeof window !== "undefined" && v && typeof v === "object" && (!window.DB || typeof window.DB !== "object")) {
+          window.DB = v;
+          return window.DB;
+        }
+      } catch (eMemo) {}
+      return v;
+    } catch (e1) { return null; }
   }
 
   function d64Kaydet(veri) {
@@ -2667,6 +2679,13 @@ window.__sysAnalizAra = function() {
       }
     } catch (e0) {}
     try { localStorage.setItem("yksOto_arsiv_v1", JSON.stringify(veri)); } catch (e1) {}
+    /* D65-KALICILIK: app.js saveDB() kendi DB global'ini yazar; sinifKapali oraya
+       da kopyalanmazsa sonraki kayıt onu siler. window.DB ile senkronize et. */
+    try {
+      if (typeof window !== "undefined" && veri !== window.DB && window.DB && typeof window.DB === "object" && veri.sinifKapali) {
+        window.DB.sinifKapali = veri.sinifKapali;
+      }
+    } catch (e2) {}
   }
 
   function d64DiziBirlestir(a, b) {
@@ -3201,5 +3220,14 @@ window.__sysAnalizAra = function() {
 
     window.planla = planlaKapaliSarmal;
   })();
+
+  /* GEÇİCİ TEŞHİS (GÖREV 3) — kalıcılık doğrulaması bittikten sonra SİLİN. */
+  setTimeout(function () {
+    try {
+      var testVeri = JSON.parse(localStorage.getItem("yksOto_arsiv_v1") || "{}");
+      console.log("[TEŞHİS] sinifKapali localStorage'da:", testVeri.sinifKapali);
+      console.log("[TEŞHİS] window.DB === d64Veri():", typeof window !== "undefined" && window.DB === d64Veri());
+    } catch (e) { console.log("[TEŞHİS] okuma hatası:", e); }
+  }, 2000);
 
 })();

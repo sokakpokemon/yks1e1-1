@@ -2672,7 +2672,6 @@ window.__sysAnalizAra = function() {
 
   function d64Kaydet(veri) {
     if (!veri) return;
-    console.log("[TEŞHİS] d64Kaydet çağrıldı. veri === window.DB:", veri === window.DB);
     try {
       if (typeof window !== "undefined" && veri === window.DB && typeof window.saveDB === "function") {
         window.saveDB();
@@ -3073,7 +3072,6 @@ window.__sysAnalizAra = function() {
         if (window.__d64KapaliIslemde) return;
         window.__d64KapaliIslemde = true;
         setTimeout(function () { window.__d64KapaliIslemde = false; }, 100);
-        console.log("[TEŞHİS] Tıklama handler ÇALIŞTI");
       var hedef = e.target;
       var btn = hedef && hedef.closest ? hedef.closest(".hucreBtn") : null;
       if (!btn) return;
@@ -3081,10 +3079,8 @@ window.__sysAnalizAra = function() {
       if (!bilgi || !bilgi.tablo.contains || !bilgi.tablo.contains(btn)) return;
       var sinif = d64TablodakiSinif(bilgi);
       var slot = d64HucreSlot(btn);
-      console.log("[TEŞHİS] sinif:", sinif, "slot:", slot);
       if (!sinif || !slot) return;
       var veri = d64Veri();
-      console.log("[TEŞHİS] veri:", veri);
       if (!veri) return;
 
       e.preventDefault();
@@ -3098,12 +3094,8 @@ window.__sysAnalizAra = function() {
       else veri.sinifKapali[sinif][slot] = "KAPALI";
       if (!Object.keys(veri.sinifKapali[sinif]).length) delete veri.sinifKapali[sinif];
 
-      console.log("[TEŞHİS] d64Kaydet ÖNCESİ veri.sinifKapali:", veri.sinifKapali);
       window.DB = veri; /* D65-KAYDETME-GARANTISI: yazım her zaman canonical DB üzerinden */
       d64Kaydet(veri);
-      console.log("[TEŞHİS] d64Kaydet SONRASI localStorage:",
-        JSON.parse(localStorage.getItem("yksOto_arsiv_v1") || "{}").sinifKapali);
-      console.log("[TEŞHİS] window.DB.sinifKapali:", window.DB ? window.DB.sinifKapali : "DB YOK");
       d64TabloSusle();
       }, true);
     }
@@ -3180,13 +3172,6 @@ window.__sysAnalizAra = function() {
       return null;
     }
 
-    /* GEÇİCİ TEŞHİS — tarih parser doğrulaması; kök neden bulununca SİLİNECEK. */
-    setTimeout(function () {
-      var _tp = tarihParcala("2026-10-21");
-      console.log("[TARİH-TEST] 2026-10-21:", _tp);
-      console.log("[TARİH-TEST] 2026-10-21 gün:", _tp ? _tp.getDay() : "YOK");
-    }, 3000);
-
     /* #f-saat value'su "8" değil "15:30" gibi başlangıç saatidir; ksKodOf ile koda çevrilir. */
     function saatKodu(deger) {
       var s = String(deger == null ? "" : deger).trim();
@@ -3205,28 +3190,62 @@ window.__sysAnalizAra = function() {
       return "";
     }
 
+    /* Kapalı saat uyarısını formun altında kırmızı bant olarak gösterir. */
+    function kapaliUyariGoster(mesaj) {
+      // Önce varsa eski uyarıyı kaldır
+      var eski = document.getElementById("__kapaliUyariBandi");
+      if (eski) eski.remove();
+
+      // Yeni uyarı bandı oluştur
+      var bant = document.createElement("div");
+      bant.id = "__kapaliUyariBandi";
+      bant.style.cssText = "display:flex; align-items:flex-start; gap:10px; padding:12px 16px; background:#fef2f2; border:1px solid #fecaca; border-left:4px solid #ef4444; border-radius:8px; margin:12px 0; font-family:system-ui;";
+      bant.innerHTML =
+        '<div style="flex-shrink:0; width:20px; height:20px; border-radius:50%; background:#ef4444; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px;">!</div>' +
+        '<div style="flex:1;">' +
+          '<div style="font-weight:700; color:#991b1b; font-size:13px;">Bu saat dilimi kapalıdır</div>' +
+          '<div style="color:#b91c1c; font-size:12px; margin-top:2px;">' + mesaj + '</div>' +
+        '</div>' +
+        '<button onclick="this.parentNode.remove()" style="flex-shrink:0; background:none; border:none; color:#991b1b; cursor:pointer; font-size:16px; padding:0 4px;">×</button>';
+
+      // Formun altına ekle (Birebir Ders Planla formunu bul)
+      var formKart = document.querySelector('button[onclick*="planla"]');
+      if (formKart) {
+        // Butonun içinde olduğu en yakın kart/div'i bul
+        var parent = formKart.parentNode;
+        while (parent && !parent.querySelector('#f-ogrenci')) {
+          parent = parent.parentNode;
+          if (!parent || parent === document.body) break;
+        }
+        if (parent && parent !== document.body) {
+          parent.parentNode.insertBefore(bant, parent.nextSibling);
+          return;
+        }
+        // Fallback: butonun hemen üstüne ekle
+        formKart.parentNode.insertBefore(bant, formKart);
+      } else {
+        // Hiç bulunamazsa body'nin en üstüne ekle
+        document.body.insertBefore(bant, document.body.firstChild);
+      }
+
+      // 8 saniye sonra otomatik kaldır
+      setTimeout(function () {
+        if (bant && bant.parentNode) bant.remove();
+      }, 8000);
+    }
+
     /* true → kapalı nedeniyle planlama engellendi. false → orijinal akış devam eder. */
     function kapaliKontrol() {
-      /* GEÇİCİ TEŞHİS (KAPALI) — kök neden bulununca loglar SİLİNECEK. */
-      console.log("[KAPALI-TEŞHİS] Fonksiyon çağrıldı");
-
       var ogrEl = eleman("f-ogrenci");
       var tarihEl = eleman("f-tarih");
       var saatEl = eleman("f-saat");
-      console.log("[KAPALI-TEŞHİS] Form elemanları:", {
-        ogr: ogrEl ? ogrEl.value : "YOK",
-        tarih: tarihEl ? tarihEl.value : "YOK",
-        saat: saatEl ? saatEl.value : "YOK"
-      });
-      if (!ogrEl || !tarihEl || !saatEl) { console.log("[KAPALI-TEŞHİS] Form elemanı YOK, return false"); return false; }
+      if (!ogrEl || !tarihEl || !saatEl) { return false; }
 
       var ogrenciAd = String(ogrEl.value || "").trim();
-      console.log("[KAPALI-TEŞHİS] Öğrenci adı:", ogrenciAd);
-      if (!ogrenciAd) { console.log("[KAPALI-TEŞHİS] Öğrenci adı boş, return false"); return false; }
+      if (!ogrenciAd) { return false; }
 
       var veri = d64Veri();
-      console.log("[KAPALI-TEŞHİS] veri var mı?:", !!veri, "ogrenciler array mı?:", Array.isArray(veri && veri.ogrenciler));
-      if (!veri || !Array.isArray(veri.ogrenciler)) { console.log("[KAPALI-TEŞHİS] veri/ogrenciler yok, return false"); return false; }
+      if (!veri || !Array.isArray(veri.ogrenciler)) { return false; }
 
       var kuc = (typeof kucuk === "function") ? kucuk : function (x) {
         return String(x == null ? "" : x).trim().toLocaleLowerCase("tr-TR");
@@ -3239,40 +3258,27 @@ window.__sysAnalizAra = function() {
         var ad = o.ad != null ? o.ad : (o.adSoyad != null ? o.adSoyad : "");
         if (kuc(ad) === aranan) { ogr = o; break; }
       }
-      console.log("[KAPALI-TEŞHİS] Öğrenci bulundu mu?:", ogr ? "EVET, sınıf: " + ogr.sinif : "HAYIR");
-      if (!ogr || !ogr.sinif) { console.log("[KAPALI-TEŞHİS] Öğrenci yok veya sınıfı boş, return false"); return false; }
+      if (!ogr || !ogr.sinif) { return false; }
 
       var tarih = tarihParcala(tarihEl.value);
-      console.log("[KAPALI-TEŞHİS] Tarih parse:", tarih);
-      if (!tarih) { console.log("[KAPALI-TEŞHİS] Tarih parse edilemedi, return false"); return false; }
+      if (!tarih) { return false; }
       var gunIdx = (tarih.getDay() + 6) % 7; /* Pazartesi=0 … Pazar=6 */
-      console.log("[KAPALI-TEŞHİS] gunIdx:", gunIdx);
 
       var kod = saatKodu(saatEl.value);
-      console.log("[KAPALI-TEŞHİS] kod:", kod);
-      if (!kod) { console.log("[KAPALI-TEŞHİS] Kod hesaplanamadı, return false"); return false; }
+      if (!kod) { return false; }
 
       var slot = gunIdx + "-" + kod;
       var harita = veri.sinifKapali && veri.sinifKapali[ogr.sinif];
-      console.log("[KAPALI-TEŞHİS] Aranan slot:", slot);
-      console.log("[KAPALI-TEŞHİS] sinifKapali anahtarları:", veri.sinifKapali ? Object.keys(veri.sinifKapali) : "sinifKapali YOK");
-      console.log("[KAPALI-TEŞHİS] sinifKapali[ogr.sinif]:", harita);
-      console.log("[KAPALI-TEŞHİS] harita slot anahtarları:", harita ? Object.keys(harita) : "harita yok");
-      console.log("[KAPALI-TEŞHİS] harita[slot]:", harita ? harita[slot] : "harita yok");
-      if (!harita || harita[slot] !== "KAPALI") { console.log("[KAPALI-TEŞHİS] Slot kapalı DEĞİL, return false"); return false; }
+      if (!harita || harita[slot] !== "KAPALI") { return false; }
 
       var yoksayEl = eleman("f-yoksay");
-      console.log("[KAPALI-TEŞHİS] yoksay checkbox:", yoksayEl ? yoksayEl.checked : "YOK");
-      if (yoksayEl && yoksayEl.checked) { console.log("[KAPALI-TEŞHİS] Yoksay işaretli, return false"); return false; }
+      if (yoksayEl && yoksayEl.checked) { return false; }
 
-      console.log("[KAPALI-TEŞHİS] ✓✓✓ KAPALI BULUNDU! Engelleme yapılmalı!");
-      alert("Bu saat dilimi kapalıdır. Ders planlanamaz. Yine de planlamak için 'Çakışmayı Yoksay' seçeneğini işaretleyin.");
+      kapaliUyariGoster("Bu saat dilimi kapalıdır. Ders planlanamaz. Yine de planlamak için 'Çakışmayı Yoksay' seçeneğini işaretleyin.");
       return true;
     }
 
     function planlaKapaliSarmal() {
-      /* GEÇİCİ TEŞHİS: bu satır hiç basılmıyorsa sarmalayıcı hiç çağrılmıyor demektir. */
-      console.log("[KAPALI-TEŞHİS] Sarmal çağrıldı (window.planla)");
       if (kapaliKontrol()) return;
       return orijinalPlanla.apply(this, arguments);
     }
@@ -3280,15 +3286,6 @@ window.__sysAnalizAra = function() {
 
     window.planla = planlaKapaliSarmal;
   })();
-
-  /* GEÇİCİ TEŞHİS (GÖREV 3) — kalıcılık doğrulaması bittikten sonra SİLİN. */
-  setTimeout(function () {
-    try {
-      var testVeri = JSON.parse(localStorage.getItem("yksOto_arsiv_v1") || "{}");
-      console.log("[TEŞHİS] sinifKapali localStorage'da:", testVeri.sinifKapali);
-      console.log("[TEŞHİS] window.DB === d64Veri():", typeof window !== "undefined" && window.DB === d64Veri());
-    } catch (e) { console.log("[TEŞHİS] okuma hatası:", e); }
-  }, 2000);
 
   /* === DERS PLANLA › HAFTA GÜN ÇİPLERİ: GÜN ADI DOĞRULAMA ===
      Çip etiketi tarihten bağımsız olarak yeniden hesaplanır; ekrandaki metne güvenilmez.

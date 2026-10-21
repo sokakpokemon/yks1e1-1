@@ -3153,21 +3153,39 @@ window.__sysAnalizAra = function() {
       try { return document.getElementById ? document.getElementById(id) : null; } catch (e) { return null; }
     }
 
-    /* #f-tarih gerçekte type=date → YYYY-MM-DD üretir; gg-aa-yyyy de desteklenir. */
+    /* #f-tarih gerçekte type=date → YYYY-MM-DD üretir. ISO'nun yanında
+       "YYYY-MM-DDTHH:MM" ve tarayıcının parse ettiği diğer biçimler de kabul edilir. */
     function tarihParcala(deger) {
       var s = String(deger == null ? "" : deger).trim();
-      var m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-      var yil, ay, gun;
-      if (m) { yil = parseInt(m[1], 10); ay = parseInt(m[2], 10); gun = parseInt(m[3], 10); }
-      else {
-        m = s.match(/^(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{4})$/);
-        if (!m) return null;
-        gun = parseInt(m[1], 10); ay = parseInt(m[2], 10); yil = parseInt(m[3], 10);
+      if (!s) return null;
+
+      // ISO format: YYYY-MM-DD (veya YYYY-MM-DDTHH:MM)
+      var m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+      if (m) {
+        var yil = parseInt(m[1], 10);
+        var ay = parseInt(m[2], 10);
+        var gun = parseInt(m[3], 10);
+        var d = new Date(yil, ay - 1, gun);
+        if (d.getFullYear() === yil && d.getMonth() === ay - 1 && d.getDate() === gun) {
+          return d;
+        }
       }
-      var d = new Date(yil, ay - 1, gun);
-      if (d.getFullYear() !== yil || d.getMonth() !== ay - 1 || d.getDate() !== gun) return null;
-      return d;
+
+      // Fallback: tarayıcının kendi Date parser'ı
+      try {
+        var d2 = new Date(s);
+        if (!isNaN(d2.getTime())) return d2;
+      } catch (e) {}
+
+      return null;
     }
+
+    /* GEÇİCİ TEŞHİS — tarih parser doğrulaması; kök neden bulununca SİLİNECEK. */
+    setTimeout(function () {
+      var _tp = tarihParcala("2026-10-21");
+      console.log("[TARİH-TEST] 2026-10-21:", _tp);
+      console.log("[TARİH-TEST] 2026-10-21 gün:", _tp ? _tp.getDay() : "YOK");
+    }, 3000);
 
     /* #f-saat value'su "8" değil "15:30" gibi başlangıç saatidir; ksKodOf ile koda çevrilir. */
     function saatKodu(deger) {

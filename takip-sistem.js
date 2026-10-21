@@ -3189,16 +3189,26 @@ window.__sysAnalizAra = function() {
 
     /* true → kapalı nedeniyle planlama engellendi. false → orijinal akış devam eder. */
     function kapaliKontrol() {
+      /* GEÇİCİ TEŞHİS (KAPALI) — kök neden bulununca loglar SİLİNECEK. */
+      console.log("[KAPALI-TEŞHİS] Fonksiyon çağrıldı");
+
       var ogrEl = eleman("f-ogrenci");
       var tarihEl = eleman("f-tarih");
       var saatEl = eleman("f-saat");
-      if (!ogrEl || !tarihEl || !saatEl) return false;
+      console.log("[KAPALI-TEŞHİS] Form elemanları:", {
+        ogr: ogrEl ? ogrEl.value : "YOK",
+        tarih: tarihEl ? tarihEl.value : "YOK",
+        saat: saatEl ? saatEl.value : "YOK"
+      });
+      if (!ogrEl || !tarihEl || !saatEl) { console.log("[KAPALI-TEŞHİS] Form elemanı YOK, return false"); return false; }
 
       var ogrenciAd = String(ogrEl.value || "").trim();
-      if (!ogrenciAd) return false;
+      console.log("[KAPALI-TEŞHİS] Öğrenci adı:", ogrenciAd);
+      if (!ogrenciAd) { console.log("[KAPALI-TEŞHİS] Öğrenci adı boş, return false"); return false; }
 
       var veri = d64Veri();
-      if (!veri || !Array.isArray(veri.ogrenciler)) return false;
+      console.log("[KAPALI-TEŞHİS] veri var mı?:", !!veri, "ogrenciler array mı?:", Array.isArray(veri && veri.ogrenciler));
+      if (!veri || !Array.isArray(veri.ogrenciler)) { console.log("[KAPALI-TEŞHİS] veri/ogrenciler yok, return false"); return false; }
 
       var kuc = (typeof kucuk === "function") ? kucuk : function (x) {
         return String(x == null ? "" : x).trim().toLocaleLowerCase("tr-TR");
@@ -3211,25 +3221,40 @@ window.__sysAnalizAra = function() {
         var ad = o.ad != null ? o.ad : (o.adSoyad != null ? o.adSoyad : "");
         if (kuc(ad) === aranan) { ogr = o; break; }
       }
-      if (!ogr || !ogr.sinif) return false;
+      console.log("[KAPALI-TEŞHİS] Öğrenci bulundu mu?:", ogr ? "EVET, sınıf: " + ogr.sinif : "HAYIR");
+      if (!ogr || !ogr.sinif) { console.log("[KAPALI-TEŞHİS] Öğrenci yok veya sınıfı boş, return false"); return false; }
 
       var tarih = tarihParcala(tarihEl.value);
-      if (!tarih) return false;
+      console.log("[KAPALI-TEŞHİS] Tarih parse:", tarih);
+      if (!tarih) { console.log("[KAPALI-TEŞHİS] Tarih parse edilemedi, return false"); return false; }
       var gunIdx = (tarih.getDay() + 6) % 7; /* Pazartesi=0 … Pazar=6 */
-      var kod = saatKodu(saatEl.value);
-      if (!kod) return false;
+      console.log("[KAPALI-TEŞHİS] gunIdx:", gunIdx);
 
+      var kod = saatKodu(saatEl.value);
+      console.log("[KAPALI-TEŞHİS] kod:", kod);
+      if (!kod) { console.log("[KAPALI-TEŞHİS] Kod hesaplanamadı, return false"); return false; }
+
+      var slot = gunIdx + "-" + kod;
       var harita = veri.sinifKapali && veri.sinifKapali[ogr.sinif];
-      if (!harita || harita[gunIdx + "-" + kod] !== "KAPALI") return false;
+      console.log("[KAPALI-TEŞHİS] Aranan slot:", slot);
+      console.log("[KAPALI-TEŞHİS] sinifKapali anahtarları:", veri.sinifKapali ? Object.keys(veri.sinifKapali) : "sinifKapali YOK");
+      console.log("[KAPALI-TEŞHİS] sinifKapali[ogr.sinif]:", harita);
+      console.log("[KAPALI-TEŞHİS] harita slot anahtarları:", harita ? Object.keys(harita) : "harita yok");
+      console.log("[KAPALI-TEŞHİS] harita[slot]:", harita ? harita[slot] : "harita yok");
+      if (!harita || harita[slot] !== "KAPALI") { console.log("[KAPALI-TEŞHİS] Slot kapalı DEĞİL, return false"); return false; }
 
       var yoksayEl = eleman("f-yoksay");
-      if (yoksayEl && yoksayEl.checked) return false;
+      console.log("[KAPALI-TEŞHİS] yoksay checkbox:", yoksayEl ? yoksayEl.checked : "YOK");
+      if (yoksayEl && yoksayEl.checked) { console.log("[KAPALI-TEŞHİS] Yoksay işaretli, return false"); return false; }
 
+      console.log("[KAPALI-TEŞHİS] ✓✓✓ KAPALI BULUNDU! Engelleme yapılmalı!");
       alert("Bu saat dilimi kapalıdır. Ders planlanamaz. Yine de planlamak için 'Çakışmayı Yoksay' seçeneğini işaretleyin.");
       return true;
     }
 
     function planlaKapaliSarmal() {
+      /* GEÇİCİ TEŞHİS: bu satır hiç basılmıyorsa sarmalayıcı hiç çağrılmıyor demektir. */
+      console.log("[KAPALI-TEŞHİS] Sarmal çağrıldı (window.planla)");
       if (kapaliKontrol()) return;
       return orijinalPlanla.apply(this, arguments);
     }

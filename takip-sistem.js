@@ -3247,4 +3247,51 @@ window.__sysAnalizAra = function() {
     } catch (e) { console.log("[TEŞHİS] okuma hatası:", e); }
   }, 2000);
 
+  /* === DERS PLANLA › HAFTA GÜN ÇİPLERİ: GÜN ADI DOĞRULAMA ===
+     Çip etiketi tarihten bağımsız olarak yeniden hesaplanır; ekrandaki metne güvenilmez.
+     Tarih kaynağı: onclick="gunSec('YYYY-MM-DD')" ya da title="GG.AA.YYYY".
+     Takvim kuralı app.js ile aynı: Pazartesi=0 … Pazar=6 (dowIdx). */
+  var GUN_ADI_KISA = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"]; /* Date.getDay() sırası */
+
+  function gunKisaAdi(tarihKey) {
+    var p = String(tarihKey).split("-");
+    var y = parseInt(p[0], 10), m = parseInt(p[1], 10), g = parseInt(p[2], 10);
+    if (!y || !m || !g) return "";
+    return GUN_ADI_KISA[new Date(y, m - 1, g).getDay()] || "";
+  }
+
+  function gunCipTarihi(chip) {
+    var m = String(chip.getAttribute("onclick") || "").match(/gunSec\(\s*['"](\d{4})-(\d{2})-(\d{2})['"]\s*\)/);
+    if (m) return m[1] + "-" + m[2] + "-" + m[3];
+    m = String(chip.getAttribute("title") || "").match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    if (m) return m[3] + "-" + m[2] + "-" + m[1];
+    return "";
+  }
+
+  function gunCipleriDuzelt() {
+    var cipler = document.querySelectorAll('button[onclick*="gunSec("]');
+    for (var i = 0; i < cipler.length; i++) {
+      var chip = cipler[i];
+      var metin = String(chip.textContent || "").replace(/\s+/g, " ").trim();
+      if (!/^(Pzt|Sal|Çar|Per|Cum|Cmt|Paz) \d{1,2}$/.test(metin)) continue;
+      var key = gunCipTarihi(chip);
+      if (!key) continue;
+      var dogru = gunKisaAdi(key) + " " + String(parseInt(key.slice(8, 10), 10));
+      if (metin !== dogru) chip.textContent = dogru;
+    }
+  }
+
+  /* dowIdx global ise ve bozulmuşsa kanonik formülü geri koy (Pzt=0 … Paz=6). */
+  if (typeof window.dowIdx === "function" && window.dowIdx("2026-10-21") !== 2) {
+    window.dowIdx = function (key) {
+      var p = String(key).split("-");
+      var d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+      return (d.getDay() + 6) % 7;
+    };
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", gunCipleriDuzelt);
+  gunCipleriDuzelt();
+  setInterval(gunCipleriDuzelt, 500);
+
 })();

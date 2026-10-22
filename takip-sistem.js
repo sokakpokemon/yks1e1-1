@@ -305,24 +305,27 @@
 
   // === WHATSAPP TASLAK VE GÖNDERİM SİSTEMİ ===
   // Taslak kategorileri ve her kategorinin olumlu/olumsuz durum anahtarları
-  var __waTaslakKategorileri = ["yoklama", "odev", "kutuphane", "sinav"];
+  var __waTaslakKategorileri = ["yoklama", "odev", "kutuphane", "sinav", "birebir"];
   var __waTaslakSekmeAdlari = {
     yoklama: "Ders Yoklaması",
     odev: "Ödev",
     kutuphane: "Kütüphane",
-    sinav: "Sınav"
+    sinav: "Sınav",
+    birebir: "Birebir Ders Planı"
   };
   var __waTaslakDurumlari = {
     yoklama: ["geldi", "gelmedi", "gec"],
     odev: ["yapildi", "yapmadi", "eksik", "gec"],
     kutuphane: ["geldi", "gelmedi", "gec"],
-    sinav: ["girdi", "girmedi"]
+    sinav: ["girdi", "girmedi"],
+    birebir: ["plan"]
   };
   var __waTaslakDurumAdlari = {
     yoklama: { geldi: "✅ Geldi", gelmedi: "❌ Gelmedi", gec: "⏰ Geç Kaldı" },
     odev: { yapildi: "✅ Yapıldı", yapmadi: "❌ Yapmadı", eksik: "⚠️ Eksik", gec: "⏰ Geç Teslim" },
     kutuphane: { geldi: "✅ Geldi", gelmedi: "❌ Gelmedi", gec: "⏰ Geç Kaldı" },
-    sinav: { girdi: "✅ Girdi", girmedi: "❌ Girmedi" }
+    sinav: { girdi: "✅ Girdi", girmedi: "❌ Girmedi" },
+    birebir: { plan: "Ders Planı Bildirimi" }
   };
 
   var varsayilanTaslaklar = {
@@ -345,6 +348,10 @@
     sinav: {
       girdi: "Sayın Veli, öğrenciniz {ad} bugünkü sınava girmiştir. Başarılar dileriz.",
       girmedi: "Sayın Veli, öğrenciniz {ad} bugünkü sınava girmemiştir. Bilgilerinize sunarız."
+    },
+    /* BIREBIR-TASLAK: tek durum (plan) — {ad}, {sinif}, {dersler} doldurulur. */
+    birebir: {
+      plan: "Değerli öğrencimiz {ad},\n\nBirebir ders programın aşağıdaki gibidir:\n\n{dersler}\n\nBu dersler, eksiklerini tamamlaman ve hedeflerine biraz daha yaklaşman için planlandı.\nDers saatinden birkaç dakika önce hazır olman yeterli. Anlamadığın veya zorlandığın konuları öğretmeninle paylaşmayı unutma.\nSen çalışmaya devam et, biz de bu süreçte yanında olalım.\nGüzel çalışmalar, başarılar dileriz.\n— FORMÜL KURS REHBERLİK SERVİSİ"
     }
   };
 
@@ -409,11 +416,19 @@
     __waTaslakGecici = t;
     var govde = document.getElementById("__waTaslakGovde");
     if (!govde) return;
-    var html = '<div style="font-size:11px;color:#64748b;margin-bottom:12px;">Değişkenler: {ad} (Öğrenci Adı), {sinif}, {ders}. Bu değişkenler gönderim anında otomatik doldurulur.</div>';
-    __waTaslakDurumlari[kat].forEach(function (durum) {
-      html += '<label style="display:block;font-size:11px;font-weight:700;color:#0f766e;margin-bottom:4px;">' + __waTaslakDurumAdlari[kat][durum] + '</label>' +
-        '<textarea id="__t_' + kat + '_' + durum + '" style="width:100%;height:64px;margin-bottom:10px;padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:12px;resize:vertical;">' + __waTaslakEsc(t[kat][durum]) + '</textarea>';
-    });
+    var html;
+    /* BIREBIR-TASLAK: bu sekmede tek uzun textarea (plan) + {dersler} değişkeni notu. */
+    if (kat === "birebir") {
+      html = '<div style="font-size:11px;color:#64748b;margin-bottom:12px;">Değişkenler: {ad} (Öğrenci Adı), {sinif}, {dersler} (ders listesi). Bu değişkenler gönderim anında otomatik doldurulur.</div>' +
+        '<label style="display:block;font-size:11px;font-weight:700;color:#0f766e;margin-bottom:4px;">' + __waTaslakDurumAdlari.birebir.plan + '</label>' +
+        '<textarea id="__t_birebir_plan" style="width:100%;height:200px;margin-bottom:10px;padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:12px;resize:vertical;">' + __waTaslakEsc((t.birebir && t.birebir.plan) || "") + '</textarea>';
+    } else {
+      html = '<div style="font-size:11px;color:#64748b;margin-bottom:12px;">Değişkenler: {ad} (Öğrenci Adı), {sinif}, {ders}. Bu değişkenler gönderim anında otomatik doldurulur.</div>';
+      __waTaslakDurumlari[kat].forEach(function (durum) {
+        html += '<label style="display:block;font-size:11px;font-weight:700;color:#0f766e;margin-bottom:4px;">' + __waTaslakDurumAdlari[kat][durum] + '</label>' +
+          '<textarea id="__t_' + kat + '_' + durum + '" style="width:100%;height:64px;margin-bottom:10px;padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:12px;resize:vertical;">' + __waTaslakEsc(t[kat][durum]) + '</textarea>';
+      });
+    }
     govde.innerHTML = html;
   }
 
@@ -453,6 +468,9 @@
 
   window.__waTaslakKaydet = function() {
     var t = __waTaslakDegerleriTopla();
+    /* BIREBIR-TASLAK: birebir sekmesi açıkken tek textarea'dan okunur (diğer sekmelerde dokunulmaz). */
+    var birebirEl = document.getElementById("__t_birebir_plan");
+    if (birebirEl) t.birebir = { plan: birebirEl.value };
     __waTaslakKategorileri.forEach(function (kat) {
       __waTaslakDurumlari[kat].forEach(function (durum) {
         if (typeof t[kat][durum] !== "string") t[kat][durum] = varsayilanTaslaklar[kat][durum] || "";

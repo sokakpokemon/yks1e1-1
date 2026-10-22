@@ -3142,7 +3142,7 @@ window.__sysAnalizAra = function() {
     "GEOMETRİ": "#0ea5e9",
     "İNGİLİZCE": "#64748b"
   };
-  var D64_KAPALI_ARKA = "#64748b";
+  var D64_KAPALI_ARKA = "#1e293b";
   var D64_KAPALI_BASLIK_EK = " · Kapalı";
   var D64_NORM_CALISTI = false;
 

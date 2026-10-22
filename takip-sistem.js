@@ -3993,4 +3993,39 @@ window.__sysAnalizAra = function() {
     window.waSatir.__d66Sarmal = true;
   })();
 
+  // === TARİH GÜN İNDEKSİ OVERRIDE (new Date() KULLANMADAN) ===
+  (function() {
+    // Mevcut global tarihGunIdx'i override et (index.html'de tanımlı)
+    window.tarihGunIdx = function(tarih) {
+      var p = String(tarih).split("-");
+      if (p.length !== 3) return -1;
+      var yil = parseInt(p[0], 10);
+      var ay = parseInt(p[1], 10);
+      var gun = parseInt(p[2], 10);
+      if (isNaN(yil) || isNaN(ay) || isNaN(gun)) return -1;
+
+      // Zeller formülü ile gün hesapla (0=Pazar, 1=Pzt, ..., 6=Cmt)
+      // Ocak ve Şubat'ı önceki yılın 13. ve 14. ayı olarak say
+      var m = ay;
+      var y = yil;
+      if (m < 3) { m += 12; y -= 1; }
+      var K = y % 100;
+      var J = Math.floor(y / 100);
+      var h = (gun + Math.floor(13 * (m + 1) / 5) + K + Math.floor(K / 4) +
+               Math.floor(J / 4) + 5 * J) % 7;
+      // h: 0=Cumartesi, 1=Pazar, 2=Pazartesi, ..., 6=Cuma (Zeller)
+      // Bizim istediğimiz: 0=Pazartesi, ..., 5=Cumartesi, 6=Pazar
+      var zellerToBizim = [5, 6, 0, 1, 2, 3, 4];
+      return zellerToBizim[h];
+    };
+
+    console.log("[TARİH-OVERRIDE] tarihGunIdx override edildi (Zeller formülü).");
+    console.log("[TARİH-OVERRIDE] Test 2026-10-17:", window.tarihGunIdx("2026-10-17"),
+                "(5 olmalı = Cumartesi)");
+    console.log("[TARİH-OVERRIDE] Test 2026-10-19:", window.tarihGunIdx("2026-10-19"),
+                "(0 olmalı = Pazartesi)");
+    console.log("[TARİH-OVERRIDE] Test 2026-10-18:", window.tarihGunIdx("2026-10-18"),
+                "(6 olmalı = Pazar)");
+  })();
+
 })();

@@ -381,6 +381,9 @@
     return t;
   }
   function taslakYaz(t) { localStorage.setItem("yksOto_taslaklar", JSON.stringify(t)); }
+  /* D66-BIREBIR-WA: birebir WhatsApp sarmalaması yeni taslak sistemini kullanabilsin diye dışa açılır.
+     (app.js'e dokunulmaz; taslaklar yalnız bu dosyada yönetilir.) */
+  window.taslakOku = taslakOku;
 
   var __waTaslakGecici = null;
 
@@ -3873,6 +3876,105 @@ window.__sysAnalizAra = function() {
     };
 
     window.saveDB.__d66Sarmal = true;
+  })();
+
+  // === BİREBİR WHATSAPP TASLAK SARMALAMASI ===
+  // app.js'deki birebir ders satırının yeşil WhatsApp butonu onclick="waSatir('<id>')" ile
+  // eski waGonder()/ogrenciMesajMetni() akışını (bozuk imza + sabit metin) çağırıyor.
+  // app.js DEĞİŞMEZ: waSatir burada sarmalanır ve yeni "Birebir Ders Planı" taslağını kullanır.
+  (function() {
+    if (typeof window.waSatir !== "function" || window.waSatir.__d66Sarmal) return;
+    var orijinalWaSatir = window.waSatir;
+
+    function dersAdi(dersId) {
+      if (window.DERS && window.DERS[dersId] && window.DERS[dersId].ad) return window.DERS[dersId].ad;
+      var liste = window.DERSLER || [];
+      for (var i = 0; i < liste.length; i++) {
+        if (liste[i] && liste[i].id === dersId) return liste[i].ad;
+      }
+      return dersId || "Ders";
+    }
+    function tarihYaz(t) {
+      if (t && typeof window.fmtTR === "function") return window.fmtTR(t);
+      return t || "";
+    }
+    function saatYaz(s) {
+      if (typeof window.saatEtiket === "function") return window.saatEtiket(s);
+      return s == null ? "" : String(s);
+    }
+
+    window.waSatir = function(id) {
+      try {
+        var db = window.DB;
+        // ID'den ders kaydını bul
+        var ders = db && db.dersler ? db.dersler.filter(function(d){ return d.id === id; })[0] : null;
+        if (!ders) return orijinalWaSatir.apply(this, arguments);
+
+        // Öğrenciyi bul (grup/ada düşmüş eski kayıtlar için ada göre yedek)
+        var ogr = null;
+        if (db.ogrenciler) {
+          ogr = db.ogrenciler.filter(function(o){ return o.id === ders.ogrenciId; })[0] || null;
+          if (!ogr && ders.ogrenciAd) {
+            var aranan = String(ders.ogrenciAd).trim().toLocaleLowerCase("tr-TR");
+            ogr = db.ogrenciler.filter(function(o){
+              return String(o.ad == null ? "" : o.ad).trim().toLocaleLowerCase("tr-TR") === aranan;
+            })[0] || null;
+          }
+        }
+        if (!ogr) return orijinalWaSatir.apply(this, arguments);
+
+        // Taslağı oku (modalda kaydedilen güncel "Birebir Ders Planı" metni)
+        var t = (typeof window.taslakOku === "function") ? window.taslakOku() : null;
+        if (!t || !t.birebir || !t.birebir.plan) return orijinalWaSatir.apply(this, arguments);
+
+        var mesaj = t.birebir.plan;
+        mesaj = mesaj.replace(/{ad}/g, ogr.adSoyad || ogr.ad || "Öğrenci");
+        mesaj = mesaj.replace(/{sinif}/g, ogr.sinif || "");
+
+        // Ders bilgilerini topla ({dersler} değişkeni için): öğrencinin planlı birebir dersleri
+        var ogrDersleri = db.dersler.filter(function(d){
+          return d.ogrenciId === ogr.id && (d.durum || "planlandi") === "planlandi";
+        }).sort(function(a, b) {
+          var s = String(a.tarih || "").localeCompare(String(b.tarih || ""));
+          return s !== 0 ? s : String(a.saat || "").localeCompare(String(b.saat || ""));
+        });
+        if (!ogrDersleri.length) ogrDersleri = [ders]; /* liste asla boş kalmasın */
+
+        var dersListesi = "";
+        ogrDersleri.forEach(function(d, i) {
+          dersListesi += (i + 1) + ". " + dersAdi(d.dersId) +
+            (d.ogretmenAd ? " (" + d.ogretmenAd + ")" : "") + "\n" +
+            tarihYaz(d.tarih) + " " + saatYaz(d.saat) + "\n";
+        });
+        dersListesi = dersListesi.replace(/\s+$/, "");
+        mesaj = mesaj.replace(/{dersler}/g, dersListesi);
+
+        // Alıcı: app.js'in alıcı çözümleyicisi (seçili tip korunur), yoksa öğrenci/veli alanları
+        var alici = (typeof window.waAliciBilgisi === "function")
+          ? window.waAliciBilgisi(ogr.id, typeof window.waAliciTipi === "string" ? window.waAliciTipi : "ogrenci")
+          : null;
+        var tel = (alici && alici.telefon) || ogr.veliTel || ogr.anneTel || ogr.babaTel || ogr.tel || "";
+        tel = String(tel).replace(/\D/g, "");
+        if (tel.length < 10) {
+          var uyari = (alici && alici.etiket ? alici.etiket : "Veli") + " telefonu kayitli degil";
+          if (typeof window.toast === "function") window.toast(uyari, "uyari");
+          else alert("Veli telefon numarası kayıtlı değil.");
+          return;
+        }
+
+        /* waUrl varsa app.js'in normalize kuralı kullanılır; yoksa aynı kural burada uygulanır. */
+        var no = tel.replace(/^0+/, "");
+        if (no.slice(0, 2) !== "90") no = "90" + no;
+        var url = (typeof window.waUrl === "function")
+          ? window.waUrl(mesaj, tel)
+          : ("https://wa.me/" + no + "?text=" + encodeURIComponent(mesaj));
+        window.open(url, "_blank");
+      } catch (e) {
+        console.warn("[D66-BİREBİR-WA] Hata:", e);
+        return orijinalWaSatir.apply(this, arguments);
+      }
+    };
+    window.waSatir.__d66Sarmal = true;
   })();
 
 })();

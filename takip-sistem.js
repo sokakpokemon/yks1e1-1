@@ -3839,4 +3839,40 @@ window.__sysAnalizAra = function() {
   gunCipleriDuzelt();
   setInterval(gunCipleriDuzelt, 500);
 
+  // === VERİ KAYBI ÖNLEME (saveDB SARMALAMASI) ===
+  (function() {
+    var orijinalSaveDB = window.saveDB;
+    if (!orijinalSaveDB || orijinalSaveDB.__d66Sarmal) return;
+
+    // Önce localStorage'daki güncel veriyi okuyup DB'ye merge eden yardımcı
+    function lsDenDBYeMerge() {
+      try {
+        var lsVeri = JSON.parse(localStorage.getItem("yksOto_arsiv_v1") || "{}");
+        if (!window.DB || !lsVeri) return;
+
+        // Sadece sorunlu alanları merge et (app.js'in kendi yönettiği alanlara dokunma)
+        var sorunluAlanlar = ["yoklamalar", "sinavYoklamalari", "kutuphane", "kutuphaneGunleri", "odevler"];
+        sorunluAlanlar.forEach(function(alan) {
+          if (lsVeri[alan] !== undefined) {
+            window.DB[alan] = lsVeri[alan];
+          }
+        });
+
+        // gorusmeler ve sinifKapali zaten DB'de tutuluyor, ama yine de merge edelim
+        if (lsVeri.gorusmeler !== undefined) window.DB.gorusmeler = lsVeri.gorusmeler;
+        if (lsVeri.sinifKapali !== undefined) window.DB.sinifKapali = lsVeri.sinifKapali;
+      } catch(e) {
+        console.warn("[D66-MERGE] Hata:", e);
+      }
+    }
+
+    // Orijinal saveDB'yi sarmala
+    window.saveDB = function() {
+      lsDenDBYeMerge(); // Önce merge et
+      return orijinalSaveDB.apply(this, arguments); // Sonra orijinali çağır
+    };
+
+    window.saveDB.__d66Sarmal = true;
+  })();
+
 })();

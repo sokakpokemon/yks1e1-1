@@ -3993,5 +3993,46 @@ window.__sysAnalizAra = function() {
     window.waSatir.__d66Sarmal = true;
   })();
 
+  // === ÖĞRETMEN ÇİZELGESİ "KAPALI" HÜCRE KOYULAŞTIRMA ===
+  (function() {
+    function stilEkle() {
+      if (document.getElementById("__koyuKapaliStil")) return;
+      var style = document.createElement("style");
+      style.id = "__koyuKapaliStil";
+      style.textContent =
+        // Öğretmen çizelgesindeki Kapalı hücreler (title içinde "Kapalı" geçer)
+        '[title*="Kapalı"] {' +
+          'background-color: #1e293b !important;' +
+          'color: #ffffff !important;' +
+          'opacity: 1 !important;' +
+          'border-color: #0f172a !important;' +
+        '}' +
+        // Lejanttaki küçük "Kapalı" karesi
+        '.bg-slate-100.border-slate-300 {' +
+          'background-color: #1e293b !important;' +
+          'border-color: #0f172a !important;' +
+        '}';
+      document.head.appendChild(style);
+      console.log("[KOYU-KAPALI] Stil eklendi");
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", stilEkle);
+    } else {
+      stilEkle();
+    }
+    setInterval(stilEkle, 1000);
+  })();
+
+  setTimeout(function() {
+    var kapalilar = document.querySelectorAll('[title*="Kapalı"]');
+    console.log("[KOYU-KAPALI] Bulunan Kapalı hücre sayısı:", kapalilar.length);
+    if (kapalilar.length > 0) {
+      var ilk = kapalilar[0];
+      console.log("[KOYU-KAPALI] İlk hücre className:", ilk.className);
+      console.log("[KOYU-KAPALI] İlk hücre title:", ilk.title);
+      console.log("[KOYU-KAPALI] İlk hücre arka plan:", window.getComputedStyle(ilk).backgroundColor);
+    }
+  }, 3000);
 
 })();

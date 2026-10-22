@@ -4035,4 +4035,93 @@ window.__sysAnalizAra = function() {
     }
   }, 3000);
 
+  // === GÜVENLİ YEDEK YÜKLEME SARMALAMASI ===
+  (function() {
+    var orijinalYedekOku = window.yedekOku;
+    if (!orijinalYedekOku || orijinalYedekOku.__d67Sarmal) return;
+
+    window.yedekOku = function(input) {
+      var f = input.files && input.files[0];
+      if (!f) return;
+      input.value = ""; /* aynı dosya tekrar seçilebilsin (app.js davranışı) */
+
+      // Dosyayı oku ve eksik alanları kontrol et
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          var p = JSON.parse(e.target.result);
+          var v = p.veri && p.veri.dersler ? p.veri : p;
+
+          /* Geçersiz/başka uygulamaya ait dosya: mevcut veri hiç değişmez, yedek de indirilmez.
+             (app.js yedekOku'nun zarf + dersler kontrolü korunur — bozuk dosya DB'ye yazılmaz.) */
+          if (p.veri && p.veri.dersler && (p.uygulama !== "YKS Birebir Takip" || p.surum !== 1)) {
+            alert("Bu yedek dosyası bu uygulamaya ait değil veya sürümü desteklenmiyor — yüklenmedi.");
+            return;
+          }
+          if (!v || !Array.isArray(v.dersler)) {
+            alert("Dosya okunamadı — geçerli bir YKS Birebir Takip yedek dosyası seçin.");
+            return;
+          }
+
+          // Yeni alanları kontrol et
+          var eksikler = [];
+          if (!v.gorusmeler) eksikler.push("Görüşmeler");
+          if (!v.sinifKapali) eksikler.push("Sınıf Kapalıları");
+          if (!v.kutuphaneGunleri) eksikler.push("Kütüphane Günleri");
+          if (!v.yoklamalar) eksikler.push("Ders Yoklamaları");
+          if (!v.odevler) eksikler.push("Ödevler");
+
+          var uyariMetni = "";
+          if (eksikler.length > 0) {
+            uyariMetni = "DİKKAT: Bu yedek dosyasında şu yeni alanlar eksik: " +
+                         eksikler.join(", ") + ". Yükleme yaparsanız mevcut verilerinizdeki bu alanlar silinecek!";
+          }
+
+          // 1. Önce mevcut veriyi otomatik yedekle
+          var mevcutVeri = localStorage.getItem("yksOto_arsiv_v1");
+          if (mevcutVeri) {
+            var yedekPaket = {
+              uygulama: "YKS Birebir Takip OTOMATİK YEDEK",
+              tarih: new Date().toISOString(),
+              veri: JSON.parse(mevcutVeri)
+            };
+            var blob = new Blob([JSON.stringify(yedekPaket, null, 2)], { type: "application/json" });
+            var a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "OTO-YEDEK-" + new Date().toISOString().slice(0, 10) + ".json";
+            document.body.appendChild(a); a.click(); a.remove();
+            console.log("[GÜVENLİ-YEDEK] Mevcut veriler otomatik indirildi.");
+          }
+
+          // 2. Uyarı göster ve yükle
+          var mesaj = "Yedek dosyası yüklenecek ve mevcut verileriniz bununla değiştirilecek.\n\n";
+          if (uyariMetni) mesaj += uyariMetni + "\n\n";
+          mesaj += mevcutVeri
+            ? "Mevcut verileriniz otomatik olarak indirildi (OTO-YEDEK dosyası).\n\nDevam etmek istiyor musunuz?"
+            : "Devam etmek istiyor musunuz?";
+
+          if (confirm(mesaj)) {
+            // Onaylandı, orijinal yüklemeyi yap (app.js yedekOku ile aynı adımlar)
+            var vNormalized = (typeof window.normalize === "function") ? window.normalize(v) : v;
+            window.DB = vNormalized;
+            if (typeof window.ksGec === "function") window.ksGec();
+            if (window.ui && typeof window.ui === "object") {
+              window.ui.editId = null; window.ui.ogrId = null; window.ui.sinifAd = null;
+            }
+            if (typeof window.saveDB === "function") window.saveDB();
+            if (typeof window.yenile === "function") window.yenile();
+            if (typeof window.toast === "function") window.toast("Arşiv başarıyla yüklendi ✓");
+            else alert("Arşiv başarıyla yüklendi.");
+          }
+        } catch(err) {
+          console.warn("[GÜVENLİ-YEDEK] Hata:", err);
+          alert("Dosya okunamadı veya geçersiz.");
+        }
+      };
+      reader.readAsText(f);
+    };
+
+    window.yedekOku.__d67Sarmal = true;
+  })();
+
 })();

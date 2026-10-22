@@ -503,6 +503,82 @@
     }
   }, 500);
 
+  // === ESKİ "WhatsApp Mesaj Şablonu" PANELİ → MESAJ TASLAKLARI YÖNLENDİRMESİ ===
+  // Ayarlar & Yedekleme sekmesindeki eski kart (app.js › waSablonKartHTML) gizlenir;
+  // yerine Takip sekmesindeki yeni "Mesaj Taslakları" modalını açan bir kart konur.
+  // DİKKAT: eski kartın kapsayıcısı .kart DEĞİL — <div class="rounded-2xl border border-slate-100 p-5 mb-4">.
+  // Bu kart, ayarlar grid'inin doğrudan çocuğudur; parentNode.parentNode tüm ayar
+  // bölümünü gizlerdi. Bu yüzden kapsayıcı, kartın kendi alanlarından (textarea/buton) çözülür.
+  function __eskiSablonKartiBul() {
+    var basliklar = document.querySelectorAll("h1, h2, h3, h4, h5, div, span");
+    for (var i = 0; i < basliklar.length; i++) {
+      if (basliklar[i].textContent && basliklar[i].textContent.trim() === "WhatsApp Mesaj Şablonu") {
+        return basliklar[i];
+      }
+    }
+    return null;
+  }
+
+  function __eskiSablonKapsayici(baslik) {
+    var dugum = baslik;
+    for (var adim = 0; dugum && adim < 6; adim++) {
+      if (dugum.querySelector &&
+          dugum.querySelector("#wa-sablon-baslik, #wa-sablon-giris, button[onclick*='waSablonKaydet']")) {
+        return dugum;
+      }
+      dugum = dugum.parentNode;
+    }
+    return baslik.parentNode;
+  }
+
+  setInterval(function() {
+    var eskiPanelBasligi = __eskiSablonKartiBul();
+    if (!eskiPanelBasligi) return;
+
+    var eskiKart = __eskiSablonKapsayici(eskiPanelBasligi);
+    if (!eskiKart || !eskiKart.parentNode) return;
+
+    // Eski kartı gizle
+    eskiKart.style.display = "none";
+
+    // Yönlendirme kartı zaten varsa tekrar ekleme
+    if (document.getElementById("__yeniMesajTaslakYonlendirme")) return;
+
+    var yeniKart = document.createElement("div");
+    yeniKart.id = "__yeniMesajTaslakYonlendirme";
+    yeniKart.className = "kart p-5";
+    yeniKart.style.cssText = "background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:24px; margin-top:16px;";
+    yeniKart.innerHTML =
+      '<div style="display:flex; align-items:flex-start; gap:16px;">' +
+        '<div style="flex-shrink:0; width:48px; height:48px; border-radius:12px; background:#ccfbf1; display:flex; align-items:center; justify-content:center; font-size:24px;">📱</div>' +
+        '<div style="flex:1;">' +
+          '<div style="font-size:16px; font-weight:800; color:#0f172a; margin-bottom:6px;">WhatsApp Mesaj Taslakları</div>' +
+          '<div style="font-size:13px; color:#475569; line-height:1.5; margin-bottom:14px;">' +
+            'Mesaj şablonlarını düzenlemek için artık <b>Takip</b> sekmesindeki ' +
+            '<b>⚙️ Mesaj Taslakları</b> butonunu kullanın. Her durum (Geldi/Gelmedi/Yapıldı/Eksik/Geç) için ayrı taslak oluşturabilirsiniz.' +
+          '</div>' +
+          '<button type="button" onclick="window.__eskiTaslakPaneliniAc()" ' +
+            'style="background:#14b8a6; color:#fff; padding:10px 20px; border:none; border-radius:8px; font-weight:700; cursor:pointer; font-size:13px;">' +
+            '⚙️ Mesaj Taslaklarını Aç' +
+          '</button>' +
+        '</div>' +
+      '</div>';
+
+    eskiKart.parentNode.insertBefore(yeniKart, eskiKart.nextSibling);
+  }, 500);
+
+  // Yönlendirme butonu: Takip sekmesine geç, ardından yeni taslak modalını aç.
+  window.__eskiTaslakPaneliniAc = function() {
+    var takipBtn = document.querySelector('.atlama-btn[data-hedef="takipBolum"]');
+    if (takipBtn) takipBtn.click();
+
+    setTimeout(function() {
+      if (typeof window.__waTaslakModal === "function") {
+        window.__waTaslakModal();
+      }
+    }, 300);
+  };
+
   // === TOPLU WHATSAPP MESAJ SİSTEMİ ===
   // Not: Öğrenci başına tekil WhatsApp butonları (yoklama çip enjektörü + sınav çipindeki 📱)
   // kaldırıldı; her sekme için tek "📱 Toplu Mesaj" butonu kullanılır.

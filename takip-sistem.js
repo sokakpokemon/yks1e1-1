@@ -3898,9 +3898,22 @@ window.__sysAnalizAra = function() {
       if (t && typeof window.fmtTR === "function") return window.fmtTR(t);
       return t || "";
     }
-    function saatYaz(s) {
-      if (typeof window.saatEtiket === "function") return window.saatEtiket(s);
-      return s == null ? "" : String(s);
+    /* D66-KUSUR1: mesaja yalnız başlangıç-bitiş aralığı yazılır; ders kodu ("11", "2", "6")
+       metne GİRMEZ. KISA_KOD "saat" alanı için iki biçimi de çözebilir:
+         • başlangıç saati ("18:00", "09:40") → ksKodOf ile koda çevrilir
+         • eski kayıtlarda doğrudan kod ("11", 2, "6") → doğrudan eşleşir */
+    function saatAraligi(s) {
+      var kodlar = window.KISA_KOD || [];
+      var metin = s == null ? "" : String(s).trim();
+      var i;
+      for (i = 0; i < kodlar.length; i++) {
+        if (kodlar[i] && kodlar[i].no === metin) return kodlar[i].b + "-" + kodlar[i].e;
+      }
+      var no = (typeof window.ksKodOf === "function") ? window.ksKodOf(metin) : "";
+      for (i = 0; i < kodlar.length; i++) {
+        if (kodlar[i] && no && kodlar[i].no === no) return kodlar[i].b + "-" + kodlar[i].e;
+      }
+      return metin;
     }
 
     window.waSatir = function(id) {
@@ -3944,10 +3957,13 @@ window.__sysAnalizAra = function() {
         ogrDersleri.forEach(function(d, i) {
           dersListesi += (i + 1) + ". " + dersAdi(d.dersId) +
             (d.ogretmenAd ? " (" + d.ogretmenAd + ")" : "") + "\n" +
-            tarihYaz(d.tarih) + " " + saatYaz(d.saat) + "\n";
+            tarihYaz(d.tarih) + " · " + saatAraligi(d.saat) + "\n";
         });
         dersListesi = dersListesi.replace(/\s+$/, "");
         mesaj = mesaj.replace(/{dersler}/g, dersListesi);
+        /* D66-KUSUR2: yerleştirme sonrası metnin sonunda kalan fazladan tire/boşluk temizlenir;
+           taslağın kendi metni aynen korunur (ör. "… REHBERLİK SERVİSİ—" → "… REHBERLİK SERVİSİ"). */
+        mesaj = mesaj.replace(/[\s\-–—]+$/, "");
 
         // Alıcı: app.js'in alıcı çözümleyicisi (seçili tip korunur), yoksa öğrenci/veli alanları
         var alici = (typeof window.waAliciBilgisi === "function")

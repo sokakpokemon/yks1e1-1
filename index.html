@@ -420,8 +420,8 @@
   }
 
   function tarihGunIdx(tarih) {
-    var p = tarih.split("-");
-    var d = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
+    var d = new Date(String(tarih) + "T12:00:00");
+    if (isNaN(d.getTime())) return -1;
     return (d.getDay() + 6) % 7;
   }
 

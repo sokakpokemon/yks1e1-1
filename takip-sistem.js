@@ -4911,53 +4911,77 @@ window.__sysAnalizAra = function() {
     return "";
   }
 
-  /* GÖREV 1 — istekDragOver sarmalı: hücreyi anında yeşil/kırmızı boyar */
-  var cakismaAsilDragOver = window.istekDragOver;
-  if (typeof cakismaAsilDragOver === "function" && !cakismaAsilDragOver.__ckSarmal) {
-    var cakismaDragOverSarmal = function (ev, el) {
-      var sonuc = cakismaAsilDragOver.apply(this, arguments); /* preventDefault + mevcut teal vurgu */
-      try {
-        var istekId = window.istekDropHedef;
-        var dersId = window.dersDropHedef;
-        if (!istekId || dersId || !el || !el.getAttribute) return sonuc; /* ders kartı taşıma → dokunma */
-        var saat = el.getAttribute("data-drop-saat") || "";
-        var ogrtId = el.getAttribute("data-drop-ogrt") || "";
-        var tarih = cakismaHucreTarihi(el, el.getAttribute("data-drop-gun"));
-        if (!tarih || !saat) return sonuc;
-        cakismaBoya(el, cakismaSebebi(istekId, tarih, saat, ogrtId));
-      } catch (e) { /* gösterge hatası sürüklemeyi bozmaz */ }
-      return sonuc;
-    };
-    cakismaDragOverSarmal.__ckSarmal = true;
-    window.istekDragOver = cakismaDragOverSarmal;
-  }
+  /* GÖREV 1 — istek havuzu kartı için TÜM HARİTA bir kez boyandı mı?
+     dragstart kaçırılsa bile ilk dragover'da harita boyanır (aşağıdaki sarmal). */
+  var cakismaHaritaBoyandi = false;
 
-  /* GÖREV 2 — istekBurak sarmalı: çakışma varsa bırakmayı engeller, yoksa orijinali çağırır */
-  var cakismaAsilBurak = window.istekBurak;
-  if (typeof cakismaAsilBurak === "function" && !cakismaAsilBurak.__ckSarmal) {
-    var cakismaBurakSarmal = function (ev, el, ogrtId, tarih, saat) {
-      try {
-        var istekId = window.istekDropHedef;
-        var dersId = window.dersDropHedef;
-        if (istekId && !dersId) {
-          var sebepler = cakismaSebebi(istekId, tarih, saat, ogrtId);
-          if (sebepler.length) {
-            if (ev && ev.preventDefault) ev.preventDefault();
-            if (ev && ev.stopPropagation) ev.stopPropagation();
-            if (el && el.classList) el.classList.remove("dnd-uygun");
-            if (typeof window.toast === "function") {
-              window.toast("Çakışma var: " + sebepler.join(" · "), "hata");
-            }
-            cakismaHepsiniTemizle();
-            return;
+  /* GÖREV 1 — istekDragOver sarmalı: hücreyi anında yeşil/kırmızı boyar.
+     GÖREV 2 — istekBurak sarmalı: çakışma varsa bırakmayı engeller, yoksa orijinali çağırır.
+     İKİ SARMAL TEK KURUCUDA (cakismaIstekSarmallariniKur) ve İDEMPOTENT: her çağrıda
+     window.istekDragOver / window.istekBurak'ın o anki gerçek fonksiyonu sarılır; zaten
+     sarmal takılıysa (__ckSarmal) ikinci kez sarılmaz. Kurucu açılışta bir kez, ayrıca HER
+     dragstart'ta çağrılır: app.js globali sonradan yeniden atasa ya da bu dosya app.js'ten
+     ÖNCE yüklense bile istek havuzu kartları çizelgedeki ders kartlarıyla AYNI
+     (cakismaSebebi / cakismaVarMi / cakismaHedefHucreler) kurallardan geçer. */
+  function cakismaIstekSarmallariniKur() {
+    /* GÖREV 1 — istekDragOver sarmalı */
+    var cakismaAsilDragOver = window.istekDragOver;
+    if (typeof cakismaAsilDragOver === "function" && !cakismaAsilDragOver.__ckSarmal) {
+      var cakismaDragOverSarmal = function (ev, el) {
+        var sonuc = cakismaAsilDragOver.apply(this, arguments); /* preventDefault + mevcut teal vurgu */
+        try {
+          var istekId = window.istekDropHedef;
+          var dersId = window.dersDropHedef;
+          /* dragstart hiç ulaşmadıysa (ya da harita boyanamadıysa) burada bir kez boyanır:
+             havuz isteği sürüklenirken tüm drop-zone hücreleri aynı anda yeşil/kırmızı olur. */
+          if (!cakismaHaritaBoyandi) {
+            cakismaHaritaBoyandi = true;
+            if (dersId) window.__ckSonBoya = cakismaTumHucreleriBoyaDers(dersId);
+            else if (istekId) window.__ckSonBoya = cakismaTumHucreleriBoya(istekId);
           }
-        }
-      } catch (e) { /* kontrol hatasında orijinal akış engellenmez */ }
-      return cakismaAsilBurak.apply(this, arguments);
-    };
-    cakismaBurakSarmal.__ckSarmal = true;
-    window.istekBurak = cakismaBurakSarmal;
+          if (!istekId || dersId || !el || !el.getAttribute) return sonuc; /* ders kartı taşıma → dokunma */
+          var saat = el.getAttribute("data-drop-saat") || "";
+          var ogrtId = el.getAttribute("data-drop-ogrt") || "";
+          var tarih = cakismaHucreTarihi(el, el.getAttribute("data-drop-gun"));
+          if (!tarih || !saat) return sonuc;
+          cakismaBoya(el, cakismaSebebi(istekId, tarih, saat, ogrtId));
+        } catch (e) { /* gösterge hatası sürüklemeyi bozmaz */ }
+        return sonuc;
+      };
+      cakismaDragOverSarmal.__ckSarmal = true;
+      window.istekDragOver = cakismaDragOverSarmal;
+    }
+
+    /* GÖREV 2 — istekBurak sarmalı: çakışma varsa bırakmayı engeller, yoksa orijinali çağırır */
+    var cakismaAsilBurak = window.istekBurak;
+    if (typeof cakismaAsilBurak === "function" && !cakismaAsilBurak.__ckSarmal) {
+      var cakismaBurakSarmal = function (ev, el, ogrtId, tarih, saat) {
+        try {
+          var istekId = window.istekDropHedef;
+          var dersId = window.dersDropHedef;
+          if (istekId && !dersId) {
+            var sebepler = cakismaSebebi(istekId, tarih, saat, ogrtId);
+            if (sebepler.length) {
+              if (ev && ev.preventDefault) ev.preventDefault();
+              if (ev && ev.stopPropagation) ev.stopPropagation();
+              if (el && el.classList) el.classList.remove("dnd-uygun");
+              if (typeof window.toast === "function") {
+                window.toast("Çakışma var: " + sebepler.join(" · "), "hata");
+              }
+              window.istekDropHedef = null; /* bırakma tüketildi: bayat hedef kalmasın */
+              cakismaHaritaBoyandi = false;
+              cakismaHepsiniTemizle();
+              return;
+            }
+          }
+        } catch (e) { /* kontrol hatasında orijinal akış engellenmez */ }
+        return cakismaAsilBurak.apply(this, arguments);
+      };
+      cakismaBurakSarmal.__ckSarmal = true;
+      window.istekBurak = cakismaBurakSarmal;
+    }
   }
+  cakismaIstekSarmallariniKur();
 
   /* GÖREV 2 — dersBurak sarmalı: AYNI BRANŞTAKİ BAŞKA ÖĞRETMENE TAŞIMA.
      app.js'in dersBurak'ı yalnız "hedef öğretmen = dersin öğretmeni" iken taşımaya izin verir
@@ -5113,25 +5137,39 @@ window.__sysAnalizAra = function() {
      fazındadır (app.js'in kendi dragstart listener'ı gibi); istek için kart DOM'undan
      (data-istek) yedek okunur. */
   document.addEventListener("dragstart", function (e) {
+    /* Sarmallar her sürüklemede tazelenir: app.js globali yeniden atadıysa ya da bu dosya
+       app.js'ten önce yüklendiyse istek havuzu kartı da ders kartı gibi çakışma kontrolünden geçer. */
+    cakismaIstekSarmallariniKur();
+    cakismaHaritaBoyandi = false; /* yeni sürükleme: harita yeniden boyanacak */
     try {
       var dersId = window.dersDropHedef;
       if (dersId) { /* ders kartı taşıma: aynı görsel harita, ders kurallarıyla */
         window.__ckSonBoya = cakismaTumHucreleriBoyaDers(dersId);
+        cakismaHaritaBoyandi = true;
         return;
       }
       var istekId = window.istekDropHedef;
-      if (!istekId && e && e.target && e.target.getAttribute) {
-        istekId = e.target.getAttribute("data-istek") || "";
+      /* Sürükleme kartın İÇİNDEKİ bir öğeden başladıysa data-istek en yakın karttan okunur;
+         inline ondragstart (istekDrag) her durumda bu yedeğin önünde çalışır. */
+      if (!istekId && e && e.target) {
+        var kaynak = e.target;
+        if (kaynak.closest) kaynak = kaynak.closest("[data-istek]") || kaynak;
+        if (kaynak.getAttribute) istekId = kaynak.getAttribute("data-istek") || "";
       }
       if (!istekId) return;
       window.__ckSonBoya = cakismaTumHucreleriBoya(istekId); /* {toplam, uygun, cakisan} */
-    } catch (err) { /* gösterge hatası sürüklemeyi bozmaz */ }
+      cakismaHaritaBoyandi = true;
+    } catch (err) { cakismaHaritaBoyandi = false; /* dragover'da yeniden denenir */ }
   });
 
   /* GÖREV 3 — Boyama kalıcı kalmasın: sürükleme bitişi / bırakma / hücreden çıkışta
      özgün stil + title + hücre içeriği geri konur. */
-  document.addEventListener("dragend", cakismaHepsiniTemizle, true);
-  document.addEventListener("drop", cakismaHepsiniTemizle, true);
+  function cakismaSuruklemeBitti() {
+    cakismaHaritaBoyandi = false; /* sonraki sürüklemede harita yeniden boyanır */
+    cakismaHepsiniTemizle();
+  }
+  document.addEventListener("dragend", cakismaSuruklemeBitti, true);
+  document.addEventListener("drop", cakismaSuruklemeBitti, true);
   /* dragstart'ta TÜM harita boyandığı için bir hücreden çıkış boyamayı SİLMEZ (harita
      sürükleme boyunca görünür kalır; temizlik dragend/drop'ta yapılır). Yalnız aktif bir
      sürükleme yokken kalmış artık boyama varsa o hücre temizlenir. */

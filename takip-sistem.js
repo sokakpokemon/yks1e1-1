@@ -3145,6 +3145,7 @@ window.__sysAnalizAra = function() {
   var D64_KAPALI_ARKA = "#9ca3af";
   var D64_KAPALI_BASLIK_EK = " · Kapalı";
   var D64_NORM_CALISTI = false;
+  var D64_KAPALI_MOD = false; /* D66: Sınıf programı "Kapalı" modu (varsayılan kapalı) */
 
   function d64Buyuk(s) {
     s = String(s == null ? "" : s);
@@ -3498,8 +3499,16 @@ window.__sysAnalizAra = function() {
     }
   }
 
+  /* D66 — eski sürümden kalan "Kapalı"/"KAPALI" yazısını temizler; yalnız renk kalır. */
+  function d64KapaliYazisiniTemizle(btn) {
+    if (!btn) return;
+    var t = String(btn.textContent == null ? "" : btn.textContent).replace(/\s+/g, " ").trim();
+    if (t && d64Buyuk(t) === "KAPALI") btn.textContent = "";
+  }
+
   function d64BosHucre(btn, isaretli) {
     if (!isaretli) {
+      d64KapaliYazisiniTemizle(btn);
       if (btn.getAttribute("data-d64-kapali") !== "1") return;
       btn.removeAttribute("data-d64-kapali");
       btn.textContent = "";
@@ -3520,18 +3529,23 @@ window.__sysAnalizAra = function() {
       btn.style.cursor = "";
       return;
     }
-    if (btn.getAttribute("data-d64-kapali") === "1") return;
+    /* D66: hücreye "Kapalı" YAZISI yazılmaz — sadece gri arka plan. */
+    d64KapaliYazisiniTemizle(btn);
+    if (btn.getAttribute("data-d64-kapali") === "1") {
+      btn.style.backgroundColor = D64_KAPALI_ARKA;
+      return;
+    }
     btn.setAttribute("data-d64-baslik", btn.title || "");
     btn.setAttribute("data-d64-kapali", "1");
     if ((btn.title || "").indexOf(D64_KAPALI_BASLIK_EK) < 0) btn.title = (btn.title || "") + D64_KAPALI_BASLIK_EK;
-    btn.textContent = "Kapalı";
+    btn.textContent = "";
     btn.style.backgroundColor = D64_KAPALI_ARKA;
     btn.style.borderColor = D64_KAPALI_ARKA;
-    btn.style.color = "#ffffff";
-    btn.style.fontSize = "8px";
-    btn.style.fontWeight = "800";
-    btn.style.lineHeight = "1.1";
-    btn.style.letterSpacing = "0.2px";
+    btn.style.color = "";
+    btn.style.fontSize = "";
+    btn.style.fontWeight = "";
+    btn.style.lineHeight = "";
+    btn.style.letterSpacing = "";
     btn.style.cursor = "pointer";
   }
 
@@ -3541,6 +3555,7 @@ window.__sysAnalizAra = function() {
     var bilgi;
     try { bilgi = d64TabloyuBul(); } catch (e0) { return; }
     if (!bilgi) return;
+    try { d64KapaliModDugmesi(bilgi); } catch (eMod) {} /* D66: mod butonu */
     var sinif = d64TablodakiSinif(bilgi);
     if (!sinif) return;
     var veri = d64Veri();
@@ -3590,6 +3605,10 @@ window.__sysAnalizAra = function() {
       var veri = d64Veri();
       if (!veri) return;
 
+      /* D66: tıklama yalnız "Kapalı" modu açıkken işlenir. Mod kapalıyken
+         uygulamanın kendi togSinif() davranışı bozulmadan çalışır. */
+      if (!D64_KAPALI_MOD) return;
+
       e.preventDefault();
       e.stopPropagation();
 
@@ -3637,6 +3656,56 @@ window.__sysAnalizAra = function() {
     setTimeout(d64Baslat, 0);
   }
   setInterval(d64TabloSusle, 500);
+
+  /* ============================================================
+     D66 — SINIF TOPLU DERS PROGRAMI "KAPALI" MODU
+     Tablo başlığındaki lejantın yanına "Kapalı" mod butonu ekler.
+     Mod açıkken boş hücreye tıklama veriye
+     sinifKapali[sinif][slot] = "KAPALI" yazar; hücreye YAZI yazılmaz,
+     yalnız gri arka plan (#9ca3af) uygulanır. Tekrar tıklama işareti
+     kaldırır. İşaretler d64Kaydet ile kalıcıdır.
+     ============================================================ */
+  function d64KapaliModDugmesi(bilgi) {
+    if (!bilgi || !bilgi.baslik || typeof document === "undefined" || !document.createElement) return;
+    var bas = bilgi.baslik;
+    var kapsayici = bas.parentNode && bas.parentNode.parentNode ? bas.parentNode.parentNode : null;
+    if (!kapsayici || !kapsayici.querySelector) return;
+
+    var btn = kapsayici.querySelector("#d64KapaliModBtn");
+    if (!btn) {
+      /* Lejant: "Toplu ders var" yazısını içeren span. */
+      var spanlar = kapsayici.querySelectorAll("span");
+      var lejant = null;
+      for (var i = 0; i < spanlar.length; i++) {
+        var t = spanlar[i].textContent || "";
+        if (t.indexOf("Toplu ders var") >= 0) { lejant = spanlar[i]; break; }
+      }
+      if (!lejant) return;
+
+      btn = document.createElement("button");
+      btn.id = "d64KapaliModBtn";
+      btn.type = "button";
+      btn.textContent = "Kapalı";
+      /* Title'da "Kapalı" geçmesin: [title*="Kapalı"] CSS'i butonu sürekli gri yapar. */
+      btn.title = "Hücre işaretleme modu: açıkken boş hücreye tıklayınca gri işaretlenir";
+      btn.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        D64_KAPALI_MOD = !D64_KAPALI_MOD;
+        d64KapaliModDugmesi(bilgi);
+        try { d64TabloSusle(); } catch (eT) {}
+      });
+      lejant.appendChild(btn);
+    }
+
+    var aktif = !!D64_KAPALI_MOD;
+    btn.setAttribute("aria-pressed", aktif ? "true" : "false");
+    btn.style.cssText = "display:inline-flex;align-items:center;gap:4px;border-radius:9999px;" +
+      "padding:4px 10px;font-size:10.5px;font-weight:800;line-height:1;cursor:pointer;" +
+      "border:1px solid " + (aktif ? D64_KAPALI_ARKA : "#e2e8f0") + ";" +
+      "background:" + (aktif ? D64_KAPALI_ARKA : "#ffffff") + ";" +
+      "color:" + (aktif ? "#ffffff" : "#64748b") + ";";
+  }
 
   /* ============================================================
      D65 — "KAPALI" SAAT KONTROLÜ: planla() sarmalayıcısı
@@ -3861,9 +3930,11 @@ window.__sysAnalizAra = function() {
           }
         });
 
-        // gorusmeler ve sinifKapali zaten DB'de tutuluyor, ama yine de merge edelim
+        // gorusmeler zaten DB'de tutuluyor, ama yine de merge edelim
         if (lsVeri.gorusmeler !== undefined) window.DB.gorusmeler = lsVeri.gorusmeler;
-        if (lsVeri.sinifKapali !== undefined) window.DB.sinifKapali = lsVeri.sinifKapali;
+        /* D66-KALICILIK: sinifKapali için DB kanoniktir. localStorage'daki eski
+           kopya buraya yazılırsa yeni "Kapalı" işaretleri (veya kaldırılanlar)
+           her saveDB çağrısında kaybolur. Bu alan merge EDİLMEZ. */
       } catch(e) {
         console.warn("[D66-MERGE] Hata:", e);
       }

@@ -3619,12 +3619,13 @@ window.__sysAnalizAra = function() {
         return;
       }
 
-      /* D66: "Kapalı" işaretleme yalnız mod açıkken yapılır. Mod kapalıyken
-         boş hücrede uygulamanın kendi togSinif() davranışı bozulmadan çalışır. */
-      if (!D64_KAPALI_MOD) return;
-
+      /* D70: mod PASİFKEN de tıklama yutulur; app.js'in togSinif() çağrısı
+         (mavi "Toplu ders var") çalışmaz ve hiçbir görsel değişiklik olmaz. */
       e.preventDefault();
       e.stopPropagation();
+
+      /* "Kapalı" işaretleme yalnız mod AKTİFKEN yapılır. */
+      if (!D64_KAPALI_MOD) return;
 
       if (!veri.sinifKapali || typeof veri.sinifKapali !== "object") veri.sinifKapali = {};
       if (!veri.sinifKapali[sinif] || typeof veri.sinifKapali[sinif] !== "object") veri.sinifKapali[sinif] = {};

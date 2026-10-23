@@ -5651,3 +5651,18 @@ window.__sysAnalizAra = function() {
     document.head.appendChild(genelStil);
   }
 })();
+
+// === MODERN GÖRÜNÜM: İKONLAR (D2) ===
+var ikonStil = document.createElement("style");
+ikonStil.id = "__ikonModernStil";
+ikonStil.textContent =
+  "i.fa-solid, i.fa-regular, i.fa-brands, .fa { " +
+  "  color: #64748b !important; " +
+  "  transition: all 0.2s ease !important; " +
+  "  font-size: 1.05em !important; " +
+  "}" +
+  "button:hover i.fa-solid, button:hover .fa, a:hover i.fa-solid { " +
+  "  color: #0f766e !important; " +
+  "  transform: scale(1.1) !important; " +
+  "}";
+document.head.appendChild(ikonStil);

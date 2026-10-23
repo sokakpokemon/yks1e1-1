@@ -202,9 +202,9 @@ function toKey(d) {
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 }
 function todayKey() { return toKey(new Date()); }
-function fromKey(k) { var p = String(k).split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+function fromKey(k) { var p = String(k).split("-").map(Number); return new Date(p[0], p[1] - 1, p[2], 12, 0, 0); }
 function addDaysKey(k, n) { var d = fromKey(k); d.setDate(d.getDate() + n); return toKey(d); }
-function dowIdx(k) { return (fromKey(k).getDay() + 6) % 7; }
+function dowIdx(k) { var p = String(k).split("-").map(Number); var d = new Date(p[0], p[1]-1, p[2], 12, 0, 0); return (d.getDay() + 6) % 7; }
 function fmtTR(k) { if (!k) return "—"; var p = k.split("-"); return p[2] + "." + p[1] + "." + p[0]; }
 function fmtSayi(n) { return Number(n || 0).toLocaleString("tr-TR"); }
 function haftaEtiket(sk) {

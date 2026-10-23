@@ -4244,10 +4244,11 @@ window.__sysAnalizAra = function() {
           console.warn("[GÜVENLİ-YEDEK] Hata:", err);
           alert("Dosya okunamadı veya geçersiz.");
         }
-      };      reader.readAsText(f);
-    };    window.yedekOku.__d67Sarmal = true;
+      };
+      reader.readAsText(f);
+    };
+    window.yedekOku.__d67Sarmal = true;
   })();
-
 })();
 
 

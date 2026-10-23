@@ -4726,21 +4726,49 @@ window.__sysAnalizAra = function() {
     return cakismaSebebi(istekId, tarih, saat, ogretmenId).length > 0;
   }
 
-  /* Hücre boyama — hücrenin özgün inline stili/title'ı saklanır, sürükleme bitince geri konur */
+  /* Hücre boyama (GÖREV 2) — hücrenin özgün arka planı, kenarlığı, position'ı, title'ı ve
+     İÇERİĞİ saklanır; sürükleme bitince hepsi birebir geri konur. */
   var cakismaIsaretli = [];
   function cakismaYedekle(el) {
     if (el.__ckYedek) return;
     el.__ckYedek = {
       bg: el.style.backgroundColor || "",
       golge: el.style.boxShadow || "",
+      pozisyon: el.style.position || "",
+      icerik: (typeof el.innerHTML === "string") ? el.innerHTML : null,
       baslik: el.getAttribute("title")
     };
+  }
+  /* Hücre içi sebep etiketi. Mutlak konumlu: hücrenin mevcut içeriği ("+") korunur, satır
+     yüksekliği değişmez (sürükleme sırasında tablo zıplamaz). Aynı etiket tekrar tekrar
+     üretilmez; yalnız metni/rengi tazelenir (dragover saniyede birçok kez çalışır). */
+  function cakismaEtiketYaz(el, sebepler) {
+    var metin = sebepler.length ? sebepler.join(" · ") : "Uygun";
+    var renk = sebepler.length ? "#b91c1c" : "#15803d";
+    var s = el.querySelector ? el.querySelector(".ck-cakisma-etiket") : null;
+    if (!s) {
+      s = document.createElement("span");
+      s.className = "ck-cakisma-etiket";
+      s.setAttribute("style", "position:absolute;left:1px;right:1px;bottom:1px;font-size:8px;font-weight:800;line-height:1.1;text-align:center;white-space:normal;word-break:break-word;pointer-events:none;");
+      el.style.position = "relative";
+      if (el.appendChild) el.appendChild(s);
+    }
+    if (s.textContent !== metin) s.textContent = metin;
+    if (s.style) s.style.color = renk;
   }
   function cakismaHucreTemizle(el) {
     if (!el || !el.__ckYedek) return;
     var y = el.__ckYedek;
+    /* Önce yalnız bizim eklediğimiz etiket kaldırılır; içerik gerçekten bizim tarafımızdan
+       değiştirildiyse (etiket vardı) özgün innerHTML birebir geri yazılır. */
+    var rozet = el.querySelector ? el.querySelector(".ck-cakisma-etiket") : null;
+    if (rozet) {
+      if (rozet.parentNode) rozet.parentNode.removeChild(rozet);
+      if (y.icerik !== null && typeof y.icerik === "string") el.innerHTML = y.icerik;
+    }
     el.style.backgroundColor = y.bg || "";
     el.style.boxShadow = y.golge || "";
+    el.style.position = y.pozisyon || "";
     if (y.baslik === null || typeof y.baslik === "undefined") el.removeAttribute("title");
     else el.setAttribute("title", y.baslik);
     el.__ckYedek = null;
@@ -4758,6 +4786,7 @@ window.__sysAnalizAra = function() {
       el.style.boxShadow = "inset 0 0 0 2px #22c55e";
       el.setAttribute("title", "Uygun");
     }
+    cakismaEtiketYaz(el, sebepler); /* GÖREV 2: hücre içinde "Uygun" / "Öğrenci dolu" … */
   }
   function cakismaHepsiniTemizle() {
     for (var i = 0; i < cakismaIsaretli.length; i++) cakismaHucreTemizle(cakismaIsaretli[i]);
@@ -4825,10 +4854,63 @@ window.__sysAnalizAra = function() {
     window.istekBurak = cakismaBurakSarmal;
   }
 
-  /* Boyama kalıcı kalmasın: sürükleme bitişi / bırakma / hücreden çıkışta özgün stil geri konur */
+  /* GÖREV 1 — dragstart yakalayıcı: sürükleme başladığı ANDA çizelgedeki TÜM drop-zone
+     hücreleri boyanır (yeşil = uygun, kırmızı = çakışma + sebep etiketi).
+     app.js'in inline ondrop attribute'u taşıyan ve data-drop-* nitelikleri olan hücreleri
+     hedefler; plan formu / havuz gibi diğer drop hedefleri kapsam dışıdır. */
+  function cakismaHedefHucreler() {
+    var liste = [];
+    var dugumler = document.querySelectorAll("[ondrop], [data-drop-saat], .dnd-uygun");
+    for (var i = 0; i < dugumler.length; i++) {
+      var el = dugumler[i];
+      if (!el || !el.getAttribute) continue;
+      if (!el.getAttribute("data-drop-saat") || !el.getAttribute("data-drop-ogrt")) continue;
+      if (liste.indexOf(el) >= 0) continue;
+      liste.push(el);
+    }
+    return liste;
+  }
+  function cakismaTumHucreleriBoya(istekId) {
+    var hucreler = cakismaHedefHucreler();
+    var sayac = { toplam: 0, uygun: 0, cakisan: 0 };
+    for (var i = 0; i < hucreler.length; i++) {
+      var el = hucreler[i];
+      var saat = el.getAttribute("data-drop-saat") || "";
+      var ogrtId = el.getAttribute("data-drop-ogrt") || "";
+      var tarih = cakismaHucreTarihi(el, el.getAttribute("data-drop-gun"));
+      if (!tarih || !saat) continue;
+      var varMi = cakismaVarMi(istekId, tarih, saat, ogrtId);
+      var sebepler = varMi ? cakismaSebebi(istekId, tarih, saat, ogrtId) : [];
+      cakismaBoya(el, sebepler);
+      sayac.toplam++;
+      if (sebepler.length) sayac.cakisan++; else sayac.uygun++;
+    }
+    return sayac;
+  }
+  /* Havuz isteği sürükleniyorsa (ders kartı DEĞİL) tüm alanlar anında işaretlenir.
+     istekDropHedef inline ondragstart'ta dolduğu için listener bubble fazındadır
+     (app.js'in kendi dragstart listener'ı gibi); yine de kart DOM'undan yedek okunur. */
+  document.addEventListener("dragstart", function (e) {
+    try {
+      if (window.dersDropHedef) return; /* ders kartı taşıma: havuz göstergesi çizilmez */
+      var istekId = window.istekDropHedef;
+      if (!istekId && e && e.target && e.target.getAttribute) {
+        istekId = e.target.getAttribute("data-istek") || "";
+      }
+      if (!istekId) return;
+      window.__ckSonBoya = cakismaTumHucreleriBoya(istekId); /* {toplam, uygun, cakisan} */
+    } catch (err) { /* gösterge hatası sürüklemeyi bozmaz */ }
+  });
+
+  /* GÖREV 3 — Boyama kalıcı kalmasın: sürükleme bitişi / bırakma / hücreden çıkışta
+     özgün stil + title + hücre içeriği geri konur. */
   document.addEventListener("dragend", cakismaHepsiniTemizle, true);
   document.addEventListener("drop", cakismaHepsiniTemizle, true);
+  /* dragstart'ta TÜM harita boyandığı için bir hücreden çıkış boyamayı SİLMEZ (harita
+     sürükleme boyunca görünür kalır; temizlik dragend/drop'ta yapılır). Yalnız aktif bir
+     sürükleme yokken kalmış artık boyama varsa o hücre temizlenir. */
   document.addEventListener("dragleave", function (e) {
+    if (window.istekDropHedef) return;
     var el = e.target;
     while (el && el !== document && !el.__ckYedek) el = el.parentNode;
     if (!el || el === document || !el.__ckYedek) return;

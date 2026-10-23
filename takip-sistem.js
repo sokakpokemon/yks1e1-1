@@ -3119,9 +3119,9 @@ window.__sysAnalizAra = function() {
         }
       }
       odTik();
-      setInterval(odTik, 500);  })();
-})();
-
+      setInterval(odTik, 500);
+    })();
+  })();
 
   /* ============================================================
      D64 — ÖĞRENCİ & SINIF / SINIF PROGRAMI DÜZELTMELERİ
@@ -3144,10 +3144,6 @@ window.__sysAnalizAra = function() {
   };
   var D64_KAPALI_ARKA = "#9ca3af";
   var D64_KAPALI_BASLIK_EK = " · Kapalı";
-  var D64_KAPALI_DUGME_DISAP = "w-7 h-7 rounded-full border border-slate-200 text-slate-400 text-[11px] font-bold flex items-center justify-center hover:bg-slate-100 shrink-0 cursor-pointer transition-colors";
-  var D64_KAPALI_DUGME_AP  = "w-7 h-7 rounded-full border border-slate-300 bg-slate-500 text-white text-[11px] font-bold flex items-center justify-center shadow-sm cursor-pointer transition-colors";
-  var D64_KAPALI_MOD_STORE  = "__d64KapaliMod";
-  var D64_KAPALI_DUGME_ID   = "__d64KapaliModButonu";
   var D64_NORM_CALISTI = false;
 
   function d64Buyuk(s) {
@@ -3528,14 +3524,14 @@ window.__sysAnalizAra = function() {
     btn.setAttribute("data-d64-baslik", btn.title || "");
     btn.setAttribute("data-d64-kapali", "1");
     if ((btn.title || "").indexOf(D64_KAPALI_BASLIK_EK) < 0) btn.title = (btn.title || "") + D64_KAPALI_BASLIK_EK;
-    btn.textContent = "";
+    btn.textContent = "Kapalı";
     btn.style.backgroundColor = D64_KAPALI_ARKA;
     btn.style.borderColor = D64_KAPALI_ARKA;
-    btn.style.color = "#1e293b";
-    btn.style.fontSize = "";
-    btn.style.fontWeight = "";
-    btn.style.lineHeight = "";
-    btn.style.letterSpacing = "";
+    btn.style.color = "#ffffff";
+    btn.style.fontSize = "8px";
+    btn.style.fontWeight = "800";
+    btn.style.lineHeight = "1.1";
+    btn.style.letterSpacing = "0.2px";
     btn.style.cursor = "pointer";
   }
 
@@ -3566,21 +3562,14 @@ window.__sysAnalizAra = function() {
       }
     }
 
-    /* mod-butonu DOM kararlılığı garanti altına alınır. */
-    var modEklendi = !!document.getElementById(D64_KAPALI_DUGME_ID);
-    if (!modEklendi) {
-      d64ModButonuYerlestir();
-    }
-
     if (degisti) {
       if (!Object.keys(kapali).length && veri.sinifKapali && veri.sinifKapali[sinif]) delete veri.sinifKapali[sinif];
       d64Kaydet(veri);
     }
   }
 
-  /* GÖREV 4 + MOD BUTONU — dolu hücrede hiçbir şey yapmaz; boş hücrede
-     ancak mod açıkken "Kapalı" işaretleme hakkina sahip.
-     app.js'in inline togSinif() tıklaması capture aşamasinda engellenir. */
+  /* GÖREV 4 — dolu hücrede hiçbir şey yapmaz; boş hücrede "Kapalı"yı açar/kapatır.
+     app.js'in inline togSinif() tıklaması capture aşamasında engellenir. */
   if (typeof document !== "undefined" && document.addEventListener) {
     /* D65-TEKIL-HANDLER: aynı tıklama handler'ı iki kez bağlanmasın (ör. script çift yüklenirse). */
     if (!window.__d64ClickHandlerBound) {
@@ -3604,10 +3593,7 @@ window.__sysAnalizAra = function() {
       e.preventDefault();
       e.stopPropagation();
 
-      if (d64Program(veri, sinif).indexOf(slot) >= 0) return; /* ders atanmiş: dokunma */
-
-      var modAci = d64ModAcikmi();
-      if (!modAci) return; /* kapalı-mod kapalı: tıklama işlemez */
+      if (d64Program(veri, sinif).indexOf(slot) >= 0) return; /* ders atanmış: dokunma */
 
       if (!veri.sinifKapali || typeof veri.sinifKapali !== "object") veri.sinifKapali = {};
       if (!veri.sinifKapali[sinif] || typeof veri.sinifKapali[sinif] !== "object") veri.sinifKapali[sinif] = {};
@@ -3651,104 +3637,6 @@ window.__sysAnalizAra = function() {
     setTimeout(d64Baslat, 0);
   }
   setInterval(d64TabloSusle, 500);
-
-  // === MOD BUTONU YERLEŞTİRME + DERLEME + DURUM SİLME ===
-  (function () {
-    var d64ButonEklendi = false;
-
-    function modAcikmi() {
-      try {
-        return localStorage.getItem(D64_KAPALI_MOD_STORE) === "1";
-      } catch (e) {
-        return false;
-      }
-    }
-
-    function modAyarla(acik) {
-      try { localStorage.setItem(D64_KAPALI_MOD_STORE, acik ? "1" : "0"); } catch (e) {}
-      var dugme = document.getElementById(D64_KAPALI_DUGME_ID);
-      if (!dugme) return;
-      dugme.className = acik ? D64_KAPALI_DUGME_AP : D64_KAPALI_DUGME_DISAP;
-      dugme.setAttribute("aria-pressed", String(acik));
-    }
-
-    function yerlestir() {
-      var bilgi = null;
-      try { bilgi = d64TabloyuBul(); } catch (e0) { return; }
-      if (!bilgi || !bilgi.baslik) return;
-      if (d64ButonEklendi) return;
-      var parent = bilgi.baslik.parentNode;
-      if (!parent) return;
-      var dugme = document.createElement("button");
-      dugme.id = D64_KAPALI_DUGME_ID;
-      dugme.type = "button";
-      dugme.title = "Kapalı modu: aktifken boş hücrelere tıklayınca o hücre Kapalı (arka plan rengi) olur, ekranda yazı yok.";
-      var isAci = modAcikmi();
-      dugme.className = isAci ? D64_KAPALI_DUGME_AP : D64_KAPALI_DUGME_DISAP;
-      dugme.setAttribute("aria-pressed", String(isAci));
-      dugme.setAttribute("aria-label", "Kapalı modu");
-      dugme.textContent = "Kapalı";
-      var baslik = bilgi && bilgi.baslik ? bilgi.baslik : null;
-      if (baslik && typeof baslik.nextSibling !== "undefined") {
-        parent.insertBefore(dugme, baslik.nextSibling);
-      } else {
-        parent.appendChild(dugme);
-      }
-      d64ButonEklendi = true;
-
-      dugme.addEventListener("click", function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        modAyarla(!modAcikmi());
-        d64TabloSusle();
-      });
-    }
-
-    function uy() {
-      if (typeof document === "undefined") return;
-      yerlestir();
-      var dugme = document.getElementById(D64_KAPALI_DUGME_ID);
-      if (dugme) modAyarla(modAcikmi());
-    }
-
-    if (typeof document !== "undefined" && document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", uy);
-    } else {
-      setTimeout(uy, 0);
-    }
-    setInterval(uy, 1500);
-  })();
-
-  // === MEVCUT KAPALI YAZILARININ TEMİZLENMESİ ===
-  (function () {
-    function temizle() {
-      if (typeof document === "undefined" || !document.querySelectorAll) return;
-      var bilgiler = [];
-      try { var bilgi = d64TabloyuBul(); } catch (e0) { return; }
-      if (!bilgi || !bilgi.tablo) return;
-      var butonlar = bilgi.tablo.querySelectorAll(".hucreBtn");
-      for (var i = 0; i < butonlar.length; i++) {
-        var b = butonlar[i];
-        var metin = (b.textContent || "").toUpperCase();
-        if (metin.indexOf("KAPALI") >= 0) {
-          b.textContent = "";
-        }
-      }
-    }
-
-    function duy() {
-      try { temizle(); } catch (e) {}
-    }
-
-    if (typeof document !== "undefined" && document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", function () { setTimeout(duy, 0); });
-    } else {
-      setTimeout(duy, 0);
-    }
-    setInterval(duy, 1200);
-  })();
-
-  })();
 
   /* ============================================================
      D65 — "KAPALI" SAAT KONTROLÜ: planla() sarmalayıcısı
@@ -4247,9 +4135,8 @@ window.__sysAnalizAra = function() {
       };
       reader.readAsText(f);
     };
+
     window.yedekOku.__d67Sarmal = true;
   })();
+
 })();
-
-
-

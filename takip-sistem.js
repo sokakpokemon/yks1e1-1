@@ -5699,3 +5699,45 @@ butonStil.textContent =
   "  outline: none !important; " +
   "}";
 document.head.appendChild(butonStil);
+
+// === MODERN GÖRÜNÜM: TABLOLAR VE KARTLAR (D4) ===
+var tabloStil = document.createElement("style");
+tabloStil.id = "__tabloKartModernStil";
+tabloStil.textContent =
+  "table { " +
+  "  border-collapse: separate !important; " +
+  "  border-spacing: 0 4px !important; " +
+  "  width: 100% !important; " +
+  "}" +
+  "table thead th { " +
+  "  background-color: transparent !important; " +
+  "  border-bottom: 1px solid #e2e8f0 !important; " +
+  "  color: #64748b !important; " +
+  "  font-size: 11px !important; " +
+  "  font-weight: 700 !important; " +
+  "  text-transform: uppercase !important; " +
+  "  letter-spacing: 0.05em !important; " +
+  "  padding: 12px 16px !important; " +
+  "  text-align: left !important; " +
+  "}" +
+  "table tbody tr { " +
+  "  background-color: #ffffff !important; " +
+  "  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04) !important; " +
+  "  border-radius: 12px !important; " +
+  "  transition: all 0.2s ease !important; " +
+  "}" +
+  "table tbody tr:hover { " +
+  "  background-color: #f8fafc !important; " +
+  "  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important; " +
+  "}" +
+  "table tbody td { " +
+  "  padding: 14px 16px !important; " +
+  "  border-bottom: 1px solid #f1f5f9 !important; " +
+  "  font-size: 13px !important; " +
+  "  color: #334155 !important; " +
+  "  vertical-align: middle !important; " +
+  "}" +
+  "table tbody tr:last-child td { " +
+  "  border-bottom: none !important; " +
+  "}";
+document.head.appendChild(tabloStil);

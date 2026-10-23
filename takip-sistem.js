@@ -5190,6 +5190,93 @@ window.__sysAnalizAra = function() {
     window.GUN_KISA = KISA.slice();
     window.GUNLER = UZUN.slice();
 
+    /* ===== KÖKTEN TARİH DÜZELTMESİ (TEK KAYNAK) =====
+       Tüm gün/tarih hesapları YEREL öğlen (12:00) + Pazartesi=0 kuralıyla yapılır.
+       app.js ve index.html DEĞİŞMEZ; yalnız çalışma zamanı global yardımcıları sabitlenir. */
+    function guvenliToKey(d) {
+      if (d == null || d === "") return "";
+      if (typeof d === "string") return d;
+      if (typeof d.getTime !== "function" || isNaN(d.getTime())) return "";
+      return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    }
+    function guvenliAddDaysKey(k, n) {
+      var d = guvenliFromKey(k);
+      if (!d || isNaN(d.getTime())) return String(k == null ? "" : k);
+      d.setDate(d.getDate() + Number(n || 0));
+      return guvenliToKey(d);
+    }
+    function guvenliHaftaBaslangici(k) { return guvenliAddDaysKey(k, -guvenliGunIdx(k)); }
+
+    window.toKey = guvenliToKey;
+    window.addDaysKey = guvenliAddDaysKey;
+    window.todayKey = function () { return guvenliToKey(new Date()); };
+    window.haftaBaslangiciD = guvenliHaftaBaslangici;
+    window.fmtTR = function (k) {
+      if (!k) return "";
+      var p = String(k).split("-");
+      return p.length === 3 ? p[2] + "." + p[1] + "." + p[0] : String(k);
+    };
+
+    /* === HAFTA PENCERESİ: başlangıç HER ZAMAN Pazartesi ===
+       app.js pencere() haftayı anchor - dowIdx(anchor) ile kurar. Takvim yardımcıları
+       herhangi bir sebeple kaysa bile pencere Pazartesi'ye sabitlenir. */
+    (function () {
+      if (typeof window.pencere !== "function" || window.pencere.__gunPencere) return;
+      var orijinalPencere = window.pencere;
+      var pencereSabit = function () {
+        var p = orijinalPencere.apply(this, arguments) || {};
+        try {
+          var u = window.ui || {};
+          if (u.filtre === "hafta" && u.anchor) {
+            var bas = guvenliHaftaBaslangici(u.anchor);
+            return { start: bas, end: guvenliAddDaysKey(bas, 6) };
+          }
+        } catch (e) { /* hesap yapılamazsa orijinal pencere korunur */ }
+        return p;
+      };
+      pencereSabit.__gunPencere = true;
+      window.pencere = pencereSabit;
+    })();
+
+    /* === GÜN ÇİPLERİ: etiket ÇİPİN KENDİ tarihinden türetilir ===
+       app.js çip etiketini GUN_KISA[cd] (pencere başlangıcına göre SIRA) ile yazıyor;
+       pencere bir gün kayarsa TÜM etiketler bir gün kayar → "Paz 19" (19 Ekim Pazartesi).
+       Burada her çipin onclick'inden tarih okunur; gün adı o tarihten hesaplanır. */
+    function gunCipAnahtari(chip) {
+      var m = String(chip.getAttribute("onclick") || "").match(/gunSec\(\s*'(\d{4}-\d{2}-\d{2})'\s*\)/);
+      if (m) return m[1];
+      m = String(chip.getAttribute("title") || "").match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+      if (m) return m[3] + "-" + m[2] + "-" + m[1];
+      return "";
+    }
+    function gunCipleriTazele() {
+      var cipler = document.querySelectorAll('button[onclick*="gunSec("]');
+      for (var i = 0; i < cipler.length; i++) {
+        var chip = cipler[i];
+        var key = gunCipAnahtari(chip);
+        if (!key) continue;
+        var gi = guvenliGunIdx(key);
+        var d = guvenliFromKey(key);
+        if (gi < 0 || isNaN(d.getTime())) continue;
+        var dogru = KISA[gi] + " " + d.getDate();
+        if (String(chip.textContent || "").replace(/\s+/g, " ").trim() !== dogru) chip.textContent = dogru;
+      }
+    }
+    window.__gunCipleriTazele = gunCipleriTazele;
+
+    /* renderDersler: çipler her render'da ANINDA düzeltilir (500 ms beklenmez). */
+    (function () {
+      if (typeof window.renderDersler !== "function" || window.renderDersler.__gunCip) return;
+      var orijinalRenderDersler = window.renderDersler;
+      var sarmal = function () {
+        var cikti = orijinalRenderDersler.apply(this, arguments);
+        try { gunCipleriTazele(); } catch (e) { /* DOM hazır değilse sessiz */ }
+        return cikti;
+      };
+      sarmal.__gunCip = true;
+      window.renderDersler = sarmal;
+    })();
+
     /* gunAdi: app.js ile AYNI çıktı biçimi, fakat güvenli tarih çözümlemesiyle. */
     window.gunAdi = function (key) {
       var d = guvenliFromKey(key);
@@ -5198,14 +5285,22 @@ window.__sysAnalizAra = function() {
       return GETDAY_ADI[d.getDay()] + ", " + d.getDate() + " " + aylar[d.getMonth()] + " " + d.getFullYear();
     };
 
-    /* Yeni hesaplamayla chip'leri/tabloyu bir kez yeniden üret. */
+    /* Yeni hesaplamayla chip'leri/tabloyu yeniden üret. */
     function gunleriTazele() {
       try {
         if (typeof window.renderDersler === "function") window.renderDersler();
+        if (typeof window.renderOzet === "function") window.renderOzet();
+        if (typeof window.renderAnaliz === "function") window.renderAnaliz();
+        if (typeof window.renderDersler !== "function" && typeof window.yenile === "function") window.yenile();
       } catch (e) { /* render hazır değilse sonraki render doğru değerleri kullanır */ }
+      try { gunCipleriTazele(); } catch (e2) {}
     }
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", gunleriTazele);
     else gunleriTazele();
+    /* Geç render'lar için kısa tekrarlar (kalıcı interval YOK). */
+    setTimeout(gunleriTazele, 100);
+    setTimeout(gunleriTazele, 400);
+    setTimeout(gunleriTazele, 1200);
   })();
 
   /* === BOŞ GÜN › NORMAL DERS PROGRAMI TABLOSU (BOS-GUN-TABLO-YAMASI) ===

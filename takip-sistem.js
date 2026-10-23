@@ -4387,19 +4387,50 @@ window.__sysAnalizAra = function() {
         planBtn.setAttribute("title", "Eşleştir & Planla");
       }
 
-      /* 3) "Grup üyelerini ekle/çıkar (N)" -> ikon + N */
+      /* 3) Grup üye rozeti: içeriği SIFIRDAN yazılır — butonda yalnız ikon + TEK sayı kalır.
+         (Daha önce yazılmış/artmış her metin düğümü innerHTML ile silinir.) */
       var uyeBtn = kart.querySelector(".istek-uye-buton button");
-      if (uyeBtn && uyeBtn.getAttribute("data-havuz-uye") !== "1") {
+      if (uyeBtn) {
         var yazi = (uyeBtn.textContent || "").trim();
+        var uyeAcikMi = /^kapat$/i.test(yazi);
         var sayi = (yazi.match(/\((\d+)\)/) || [])[1] || "";
-        uyeBtn.setAttribute("data-havuz-uye", "1");
-        if (yazi) uyeBtn.setAttribute("title", yazi);
-        metinDugumleriniTemizle(uyeBtn);
-        if (sayi) {
-          var span = document.createElement("span");
-          span.className = "istek-uye-sayi";
-          span.textContent = sayi;
-          uyeBtn.appendChild(span);
+        var uyeSayi = parseInt(sayi, 10);
+        if (!uyeSayi || uyeSayi < 1) uyeSayi = 1; /* tekli istek = 1 üye */
+        var imza = uyeAcikMi ? "kapat" : "rozet:" + uyeSayi;
+        if (uyeBtn.getAttribute("data-havuz-uye") !== imza) {
+          uyeBtn.setAttribute("data-havuz-uye", imza);
+          if (yazi) uyeBtn.setAttribute("title", yazi);
+          uyeBtn.innerHTML = '<i class="fa-solid fa-user-group"></i>' +
+            (uyeAcikMi ? "" : '<span class="istek-uye-sayi">' + uyeSayi + "</span>");
+        }
+      }
+
+      /* 3b) Kart gövdesinde başıboş SAYI metni kalmasın (ör. "18" gibi tek başına yazılmış sayılar) */
+      for (var si = kart.childNodes.length - 1; si >= 0; si--) {
+        var sn = kart.childNodes[si];
+        if (sn.nodeType === 3) {
+          var sv = sn.nodeValue || "";
+          if (/\d/.test(sv) && /^[\s\d.,:;·-]+$/.test(sv)) kart.removeChild(sn);
+        }
+      }
+
+      /* 3c) Avatar yalnızca BAŞ HARFLERİ taşır: içine sayı sızmışsa baş harflerle düzeltilir */
+      var av = null;
+      for (var ai = 0; ai < kart.children.length; ai++) {
+        var ace = kart.children[ai];
+        if (ace.tagName === "DIV" && (ace.className || "").indexOf("rounded-full") >= 0) { av = ace; break; }
+      }
+      if (av) {
+        var avT = (av.textContent || "").trim();
+        if (!avT || /^[\d\s.,:;-]+$/.test(avT)) {
+          var adSpan = kart.querySelector(".birebir-etiket>span");
+          var adT = adSpan ? (adSpan.textContent || "").trim() : "";
+          if (adT) {
+            var adPar = adT.split(/\s+/);
+            av.textContent = ((adPar[0] || "?")[0] + (adPar.length > 1 ? adPar[adPar.length - 1][0] : "")).toLocaleUpperCase("tr-TR");
+          } else if (!avT) {
+            av.textContent = "?";
+          }
         }
       }
 

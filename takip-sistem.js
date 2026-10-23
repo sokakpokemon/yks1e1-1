@@ -4643,4 +4643,199 @@ window.__sysAnalizAra = function() {
     else baslat();
   })();
 
+  /* ================================================================
+     SÜRÜKLE-BIRAK ÇAKIŞMA GÖSTERGESİ (yalnız bu dosya — app.js DEĞİŞMEZ)
+     app.js'teki iki mevcut fonksiyon SARMALANIR:
+       window.istekDragOver → hedef hücre yeşil (uygun) / kırmızı (çakışma) boyanır
+       window.istekBurak    → bırakmadan ÖNCE çakışma kontrolü; çakışmada kayıt ENGELLENİR
+     Orijinal fonksiyonlar her durumda çağrılmaya devam eder (preventDefault + mevcut
+     kilit/kayıt akışı korunur). Gösterge kodundaki bir hata sürüklemeyi ASLA bozmaz:
+     tüm kontrol try/catch içinde, hata hâlinde orijinal akış aynen sürer.
+     ================================================================ */
+
+  /* app.js global yardımcıları — yoksa güvenli yerel karşılıkları kullanılır */
+  function cakismaDb() {
+    return (typeof window.DB === "object" && window.DB) ? window.DB : null;
+  }
+  function cakismaKod(saat) {
+    if (typeof window.ksKodOf === "function") return window.ksKodOf(saat);
+    return String(saat == null ? "" : saat);
+  }
+  function cakismaGunIdx(tarih) {
+    if (typeof window.dowIdx === "function") return window.dowIdx(tarih);
+    var d = new Date(String(tarih) + "T12:00:00");
+    return isNaN(d.getTime()) ? -1 : (d.getDay() + 6) % 7;
+  }
+  function cakismaDersOgrenciler(ders) {
+    if (typeof window.dersOgrenciIds === "function") return window.dersOgrenciIds(ders) || [];
+    var tum = [ders && ders.ogrenciId].concat((ders && Array.isArray(ders.ogrenciIds)) ? ders.ogrenciIds : []);
+    return tum.filter(function (v, i, a) { return v != null && v !== "" && a.indexOf(v) === i; });
+  }
+
+  /* GÖREV 3 — çakışma sebebi (dizi) / çakışma var mı (boolean)
+     Kontroller: (1) öğretmen o saatte başka derste, (2) istek öğrencisi/grubu o saatte
+     başka derste, (3) öğrencinin sınıfının o gün+saat slotunda toplu dersi var. */
+  function cakismaSebebi(istekId, tarih, saat, ogretmenId) {
+    var sebepler = [];
+    var db = cakismaDb();
+    if (!db || !tarih || !saat) return sebepler;
+    var dersler = Array.isArray(db.dersler) ? db.dersler : [];
+    var kod = cakismaKod(saat);
+    if (!kod) return sebepler; /* kısa kodda karşılığı olmayan saat (mola vb.) → kontrol yok */
+    var anahtar = cakismaGunIdx(tarih) + "-" + kod;
+    var istek = (Array.isArray(db.istekler) ? db.istekler : []).filter(function (x) {
+      return x && x.id === istekId;
+    })[0] || null;
+
+    /* İsteğin tüm katılımcıları (ana + grup üyeleri) */
+    var uyeler = [];
+    if (istek) {
+      uyeler = (typeof window.istekOgrenciIds === "function") ? (window.istekOgrenciIds(istek) || []) : [];
+      if (!uyeler.length && istek.ogrenciId) uyeler = [istek.ogrenciId];
+    }
+
+    /* 1) Öğretmen dolu */
+    var ogretmenDolu = dersler.some(function (l) {
+      return l && l.ogretmenId === ogretmenId && l.tarih === tarih &&
+        cakismaKod(l.saat) === kod && l.durum !== "iptal";
+    });
+    if (ogretmenDolu) sebepler.push("Öğretmen dolu");
+
+    /* 2) Öğrenci dolu */
+    var ogrenciDolu = uyeler.some(function (oid) {
+      return dersler.some(function (l) {
+        return l && l.tarih === tarih && cakismaKod(l.saat) === kod &&
+          l.durum !== "iptal" && cakismaDersOgrenciler(l).indexOf(oid) >= 0;
+      });
+    });
+    if (ogrenciDolu) sebepler.push("Öğrenci dolu");
+
+    /* 3) Sınıf dolu (öğrencinin sınıfının toplu dersi: DB.sinifProg[sinif] = ["0-3", …]) */
+    var prog = (db.sinifProg && typeof db.sinifProg === "object") ? db.sinifProg : {};
+    var ogrenciler = Array.isArray(db.ogrenciler) ? db.ogrenciler : [];
+    var sinifDolu = uyeler.some(function (oid) {
+      var o = ogrenciler.filter(function (x) { return x && x.id === oid; })[0];
+      return !!(o && o.sinif && Array.isArray(prog[o.sinif]) && prog[o.sinif].indexOf(anahtar) >= 0);
+    });
+    if (sinifDolu) sebepler.push("Sınıf dolu");
+
+    return sebepler;
+  }
+
+  function cakismaVarMi(istekId, tarih, saat, ogretmenId) {
+    return cakismaSebebi(istekId, tarih, saat, ogretmenId).length > 0;
+  }
+
+  /* Hücre boyama — hücrenin özgün inline stili/title'ı saklanır, sürükleme bitince geri konur */
+  var cakismaIsaretli = [];
+  function cakismaYedekle(el) {
+    if (el.__ckYedek) return;
+    el.__ckYedek = {
+      bg: el.style.backgroundColor || "",
+      golge: el.style.boxShadow || "",
+      baslik: el.getAttribute("title")
+    };
+  }
+  function cakismaHucreTemizle(el) {
+    if (!el || !el.__ckYedek) return;
+    var y = el.__ckYedek;
+    el.style.backgroundColor = y.bg || "";
+    el.style.boxShadow = y.golge || "";
+    if (y.baslik === null || typeof y.baslik === "undefined") el.removeAttribute("title");
+    else el.setAttribute("title", y.baslik);
+    el.__ckYedek = null;
+  }
+  function cakismaBoya(el, sebepler) {
+    if (!el || !el.style) return;
+    cakismaYedekle(el);
+    if (cakismaIsaretli.indexOf(el) < 0) cakismaIsaretli.push(el);
+    if (sebepler.length) {
+      el.style.backgroundColor = "#fee2e2";
+      el.style.boxShadow = "inset 0 0 0 2px #ef4444";
+      el.setAttribute("title", "Çakışma: " + sebepler.join(" · "));
+    } else {
+      el.style.backgroundColor = "#dcfce7";
+      el.style.boxShadow = "inset 0 0 0 2px #22c55e";
+      el.setAttribute("title", "Uygun");
+    }
+  }
+  function cakismaHepsiniTemizle() {
+    for (var i = 0; i < cakismaIsaretli.length; i++) cakismaHucreTemizle(cakismaIsaretli[i]);
+    cakismaIsaretli = [];
+  }
+
+  /* Hedef hücrenin TARİHİ: hücrenin kendi ondrop çağrısındaki tarih literali (haftalık ve
+     günlük tabloda tek doğru kaynak); yoksa görüntülenen pencere başlangıcı + gün indeksi. */
+  function cakismaHucreTarihi(el, gunIdx) {
+    var od = (el && el.getAttribute) ? (el.getAttribute("ondrop") || "") : "";
+    var m = od.match(/'([0-9]{4}-[0-9]{2}-[0-9]{2})'/);
+    if (m) return m[1];
+    var p = (typeof window.pencere === "function") ? window.pencere() : null;
+    if (p && p.start && typeof window.addDaysKey === "function") {
+      return window.addDaysKey(p.start, Number(gunIdx) || 0);
+    }
+    return "";
+  }
+
+  /* GÖREV 1 — istekDragOver sarmalı: hücreyi anında yeşil/kırmızı boyar */
+  var cakismaAsilDragOver = window.istekDragOver;
+  if (typeof cakismaAsilDragOver === "function" && !cakismaAsilDragOver.__ckSarmal) {
+    var cakismaDragOverSarmal = function (ev, el) {
+      var sonuc = cakismaAsilDragOver.apply(this, arguments); /* preventDefault + mevcut teal vurgu */
+      try {
+        var istekId = window.istekDropHedef;
+        var dersId = window.dersDropHedef;
+        if (!istekId || dersId || !el || !el.getAttribute) return sonuc; /* ders kartı taşıma → dokunma */
+        var saat = el.getAttribute("data-drop-saat") || "";
+        var ogrtId = el.getAttribute("data-drop-ogrt") || "";
+        var tarih = cakismaHucreTarihi(el, el.getAttribute("data-drop-gun"));
+        if (!tarih || !saat) return sonuc;
+        cakismaBoya(el, cakismaSebebi(istekId, tarih, saat, ogrtId));
+      } catch (e) { /* gösterge hatası sürüklemeyi bozmaz */ }
+      return sonuc;
+    };
+    cakismaDragOverSarmal.__ckSarmal = true;
+    window.istekDragOver = cakismaDragOverSarmal;
+  }
+
+  /* GÖREV 2 — istekBurak sarmalı: çakışma varsa bırakmayı engeller, yoksa orijinali çağırır */
+  var cakismaAsilBurak = window.istekBurak;
+  if (typeof cakismaAsilBurak === "function" && !cakismaAsilBurak.__ckSarmal) {
+    var cakismaBurakSarmal = function (ev, el, ogrtId, tarih, saat) {
+      try {
+        var istekId = window.istekDropHedef;
+        var dersId = window.dersDropHedef;
+        if (istekId && !dersId) {
+          var sebepler = cakismaSebebi(istekId, tarih, saat, ogrtId);
+          if (sebepler.length) {
+            if (ev && ev.preventDefault) ev.preventDefault();
+            if (ev && ev.stopPropagation) ev.stopPropagation();
+            if (el && el.classList) el.classList.remove("dnd-uygun");
+            if (typeof window.toast === "function") {
+              window.toast("Çakışma var: " + sebepler.join(" · "), "hata");
+            }
+            cakismaHepsiniTemizle();
+            return;
+          }
+        }
+      } catch (e) { /* kontrol hatasında orijinal akış engellenmez */ }
+      return cakismaAsilBurak.apply(this, arguments);
+    };
+    cakismaBurakSarmal.__ckSarmal = true;
+    window.istekBurak = cakismaBurakSarmal;
+  }
+
+  /* Boyama kalıcı kalmasın: sürükleme bitişi / bırakma / hücreden çıkışta özgün stil geri konur */
+  document.addEventListener("dragend", cakismaHepsiniTemizle, true);
+  document.addEventListener("drop", cakismaHepsiniTemizle, true);
+  document.addEventListener("dragleave", function (e) {
+    var el = e.target;
+    while (el && el !== document && !el.__ckYedek) el = el.parentNode;
+    if (!el || el === document || !el.__ckYedek) return;
+    if (e.relatedTarget && el.contains && el.contains(e.relatedTarget)) return;
+    cakismaHucreTemizle(el);
+    var i = cakismaIsaretli.indexOf(el);
+    if (i >= 0) cakismaIsaretli.splice(i, 1);
+  }, true);
+
 })();

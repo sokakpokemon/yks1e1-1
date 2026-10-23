@@ -3142,7 +3142,7 @@ window.__sysAnalizAra = function() {
     "GEOMETRİ": "#0ea5e9",
     "İNGİLİZCE": "#64748b"
   };
-  var D64_KAPALI_ARKA = "#6b7280";
+  var D64_KAPALI_ARKA = "#9ca3af";
   var D64_KAPALI_BASLIK_EK = " · Kapalı";
   var D64_NORM_CALISTI = false;
 
@@ -4002,14 +4002,14 @@ window.__sysAnalizAra = function() {
       style.textContent =
         // Öğretmen çizelgesindeki Kapalı hücreler (title içinde "Kapalı" geçer)
         '[title*="Kapalı"] {' +
-          'background-color: #6b7280 !important;' +
-          'color: #ffffff !important;' +
+          'background-color: #9ca3af !important;' +
+          'color: #1e293b !important;' +
           'opacity: 1 !important;' +
           'border-color: #0f172a !important;' +
         '}' +
         // Lejanttaki küçük "Kapalı" karesi
         '.bg-slate-100.border-slate-300 {' +
-          'background-color: #6b7280 !important;' +
+          'background-color: #9ca3af !important;' +
           'border-color: #0f172a !important;' +
         '}';
       document.head.appendChild(style);

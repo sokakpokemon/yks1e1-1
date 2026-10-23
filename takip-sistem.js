@@ -4245,13 +4245,10 @@ window.__sysAnalizAra = function() {
           alert("Dosya okunamadı veya geçersiz.");
         }
       };      reader.readAsText(f);
-    };
-
-    window.yedekOku.__d67Sarmal = true;
+    };    window.yedekOku.__d67Sarmal = true;
   })();
+
 })();
 
-  })();
 
-  })();
 

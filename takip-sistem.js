@@ -4294,6 +4294,20 @@ window.__sysAnalizAra = function() {
       "GEOMETRİ": "#0ea5e9",
       "İNGİLİZCE": "#64748b"
     };
+    /* STANDART PALET (pastel): filtre çipleri + karttaki ders etiketi + Planla butonu aynı ailede.
+       Ders → [arka plan, yazı, kenar] */
+    var PALET = {
+      "MATEMATİK": ["#fee2e2", "#b91c1c", "#fca5a5"],
+      "FİZİK": ["#dbeafe", "#1d4ed8", "#93c5fd"],
+      "KİMYA": ["#dcfce7", "#15803d", "#86efac"],
+      "BİYOLOJİ": ["#fef9c3", "#a16207", "#fde047"],
+      "TÜRKÇE": ["#ffedd5", "#c2410c", "#fdba74"],
+      "EDEBİYAT": ["#fce7f3", "#be185d", "#f9a8d4"],
+      "COĞRAFYA": ["#f3e8ff", "#6b21a8", "#d8b4fe"],
+      "TARİH": ["#f5e0c3", "#78350f", "#e8c99c"],
+      "GEOMETRİ": ["#e0f2fe", "#0369a1", "#7dd3fc"],
+      "İNGİLİZCE": ["#f1f5f9", "#334155", "#cbd5e1"]
+    };
     var CSS_METIN = [
       "/* GRID: >=1024px 4 EŞİT sütun (kompakt kart), >=640px 2 sütun, mobil 1 sütun. gap 8px */",
       "#havuzBolum .relative.md\\:grid.space-y-2{display:grid!important;grid-template-columns:repeat(1,minmax(0,1fr))!important;column-gap:.5rem!important;row-gap:.5rem!important;}",
@@ -4533,6 +4547,46 @@ window.__sysAnalizAra = function() {
       }
     }
 
+    /* FİLTRE ÇİPLERİ + DERS ETİKETİ: tek pastel palet.
+       app.js çip/etiket renkleri dersle tutarsız kalabiliyor (ör. İNGİLİZCE turuncu çıkıyor);
+       burada çipler ve karttaki ders etiketi PALET'e zorlanır — Planla butonu ve sol şeritle aynı aile.
+       CSS :contains() geçersiz olduğu için JS ile metinden ders adı okunur. */
+    function cipleriBoya() {
+      var kok = document.getElementById(KOK_ID);
+      if (!kok) return;
+
+      /* 1) Üst filtre çipleri (onclick="istekFiltrele(...)") */
+      var dugmeler = kok.querySelectorAll('button[onclick^="istekFiltrele"]');
+      for (var i = 0; i < dugmeler.length; i++) {
+        var b = dugmeler[i];
+        var t = (b.textContent || "").replace(/\s+/g, " ").trim();
+        if (!t || /^Tüm Dersler/i.test(t)) continue; /* "Tüm Dersler" nötr kalır */
+        var ad = null;
+        for (var k in PALET) {
+          if (!Object.prototype.hasOwnProperty.call(PALET, k)) continue;
+          if (t.indexOf(k) === 0) { ad = k; break; }
+        }
+        if (!ad || b.getAttribute("data-havuz-cip") === ad) continue;
+        var r = PALET[ad];
+        b.setAttribute("data-havuz-cip", ad);
+        b.style.setProperty("background-color", r[0], "important");
+        b.style.setProperty("color", r[1], "important");
+        b.style.setProperty("border", "1px solid " + r[2], "important");
+      }
+
+      /* 2) Kart içindeki ders etiketi (pill) da aynı paletle boyanır */
+      var etiketler = kok.querySelectorAll(".istek-kart [data-havuz-ders-etiket]");
+      for (var j = 0; j < etiketler.length; j++) {
+        var e = etiketler[j];
+        var dAd = (e.getAttribute("data-havuz-ders-etiket") || "").trim();
+        var p = Object.prototype.hasOwnProperty.call(PALET, dAd) ? PALET[dAd] : null;
+        if (!p || e.getAttribute("data-havuz-palet") === dAd) continue;
+        e.setAttribute("data-havuz-palet", dAd);
+        e.style.setProperty("background-color", p[0], "important");
+        e.style.setProperty("color", p[1], "important");
+      }
+    }
+
     function uygula() {
       var kok = document.getElementById(KOK_ID);
       if (!kok) return;
@@ -4540,6 +4594,7 @@ window.__sysAnalizAra = function() {
       /* YALNIZCA kartlar: form alanlarına (input/select/textarea) hiç dokunulmaz */
       var kartlar = kok.querySelectorAll(".istek-kart");
       for (var i = 0; i < kartlar.length; i++) kartIsle(kartlar[i]);
+      cipleriBoya();
     }
 
     var bekliyor = false;
@@ -4568,6 +4623,9 @@ window.__sysAnalizAra = function() {
           var k = document.getElementById(KOK_ID);
           if (k) formlariKoru(k);
         }, 800);
+        /* Filtre çipleri her render'da yeniden çizilir: 500ms'lik boyama turu renkleri kalıcı tutar
+           (data-havuz-cip damgası sayesinde aynı çip tekrar boyanmaz). */
+        kok.__havuzCipBoya = setInterval(cipleriBoya, 500);
       }
       return true;
     }

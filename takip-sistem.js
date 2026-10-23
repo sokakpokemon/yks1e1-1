@@ -5249,12 +5249,6 @@ window.__sysAnalizAra = function() {
       if (m) return m[3] + "-" + m[2] + "-" + m[1];
       return "";
     }
-    /* === GÜN ÇİPLERİ DÜZELTMESİ ===
-       app.js çip etiketini GUN_KISA[cd] (pencere başlangıcına göre SIRA) ile yazıyor;
-       bugünkü varsayılan pencere 19 Ekim Pazartesi (dowIdx=0) olsa da, app.js '\n'
-       sonra gelecek bir günü GETDAY_ADI'dan türettiğinden etiket "Paz 19" şeklinde
-       yanlış çıkabiliyor. Her çipin onclick'inden gerçek tarih okunur; Gün adı ve numara
-       O tarihten hesaplanır. */
     function gunCipleriTazele() {
       var cipler = document.querySelectorAll('button[onclick*="gunSec("]');
       for (var i = 0; i < cipler.length; i++) {
@@ -5268,14 +5262,30 @@ window.__sysAnalizAra = function() {
         if (String(chip.textContent || "").replace(/\s+/g, " ").trim() !== dogru) chip.textContent = dogru;
       }
     }
+    window.__gunCipleriTazele = gunCipleriTazele;
 
+    /* renderDersler: çipler her render'da ANINDA düzeltilir (500 ms beklenmez). */
+    (function () {
+      if (typeof window.renderDersler !== "function" || window.renderDersler.__gunCip) return;
+      var orijinalRenderDersler = window.renderDersler;
+      var sarmal = function () {
+        var cikti = orijinalRenderDersler.apply(this, arguments);
+        try { gunCipleriTazele(); } catch (e) { /* DOM hazır değilse sessiz */ }
+        return cikti;
+      };
+      sarmal.__gunCip = true;
+      window.renderDersler = sarmal;
+    })();
 
-
+    /* gunAdi: app.js ile AYNI çıktı biçimi, fakat güvenli tarih çözümlemesiyle. */
+    window.gunAdi = function (key) {
       var d = guvenliFromKey(key);
       if (!d || isNaN(d.getTime())) return String(key == null ? "" : key);
       var aylar = (Array.isArray(window.AYLAR) && window.AYLAR.length === 12) ? window.AYLAR : AYLAR_VARSAYILAN;
       return GETDAY_ADI[d.getDay()] + ", " + d.getDate() + " " + aylar[d.getMonth()] + " " + d.getFullYear();
-    };    /* Yeni hesaplamayla chip'leri/tabloyu yeniden üret. */
+    };
+
+    /* Yeni hesaplamayla chip'leri/tabloyu yeniden üret. */
     function gunleriTazele() {
       try {
         if (typeof window.renderDersler === "function") window.renderDersler();
@@ -5288,18 +5298,9 @@ window.__sysAnalizAra = function() {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", gunleriTazele);
     else gunleriTazele();
     /* Geç render'lar için kısa tekrarlar (kalıcı interval YOK). */
-      /* Sayfa yüklendikten sonra çip metinleri doğru olup olmadığını kontrol etmek için
-        500ms sonra bir kez daha çağırlım. console'dan window.__gunCipleriTazele() çağrılırsa
-        çip metinleri hemen güncellenir. */
-      setTimeout(gunCipleriTazele, 500);
-    },
-      /* Sayfa yüklendikten 500ms sonra çiplerin doğru olup olmadığını kontrol etmek için
-         setTimeout(gunCipleriTazele, 500);
-      /* Sayfa yüklendikten 500ms sonra çiplerin doğru olup olmadığını kontrol etmek için
-         console'dan window.__gunCipleriTazele() çağrılabilir; sonuçları görmek için bu ayrı çağrı kullan.
-         Burada sadece bir kez daha çağır (sayfanın ready olduğundan emin olmak için).
-         console'dan window.__gunCipleriTazele() çağrılırsa çip metinleri hemen güncellenir. */
-      setTimeout(gunCipleriTazele, 500);
+    setTimeout(gunleriTazele, 100);
+    setTimeout(gunleriTazele, 400);
+    setTimeout(gunleriTazele, 1200);
   })();
 
   /* === BOŞ GÜN › NORMAL DERS PROGRAMI TABLOSU (BOS-GUN-TABLO-YAMASI) ===

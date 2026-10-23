@@ -3612,7 +3612,16 @@ window.__sysAnalizAra = function() {
       e.preventDefault();
       e.stopPropagation();
 
-      if (d64Program(veri, sinif).indexOf(slot) >= 0) return; /* ders atanmış: dokunma */
+      if (d64Program(veri, sinif).indexOf(slot) >= 0) { /* ders atanmış: dokunma */
+        /* D69: sessiz engelleme yerine öğretmen çizelgesiyle (D68) BİREBİR aynı
+           metin ve turuncu "uyari" tipiyle görsel geri bildirim. */
+        if (typeof window.toast === "function") {
+          window.toast("Bu hücrede ders var, değiştirilemez", "uyari");
+        } else {
+          alert("Bu hücrede ders var, değiştirilemez");
+        }
+        return;
+      }
 
       if (!veri.sinifKapali || typeof veri.sinifKapali !== "object") veri.sinifKapali = {};
       if (!veri.sinifKapali[sinif] || typeof veri.sinifKapali[sinif] !== "object") veri.sinifKapali[sinif] = {};

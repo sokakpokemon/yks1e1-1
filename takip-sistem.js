@@ -4275,8 +4275,8 @@ window.__sysAnalizAra = function() {
      Yalnız bu dosyadan: <style> inject + DOM manipülasyonu.
      app.js'teki renderHavuz() ve index.html DEĞİŞMEDİ.
      - Havuz kart grid'i: masaüstü 4 EŞİT sütun, tablet 2, mobil 1 sütun (gap 8px)
-     - KARE kart (aspect-ratio 1/1): 5 satırlık grid — ad+sınıf | ders | konu (2 satır clamp) | tarih·saat | Planla
-     - Avatar + grup sayacı sağ üstte küçük ikon; Planla butonu en altta tam genişlik
+     - KOMPAKT kart: kare değil, 110-140px yükseklik; dikey flex (ad+sınıf | ders | konu | tarih·saat | Planla)
+     - Avatar, grup sayacı ve sil ikonu sağ üstte küçük; Planla butonu en altta tam genişlik
      - Ders renkli 3px sol şerit
      ===== */
   (function () {
@@ -4295,44 +4295,44 @@ window.__sysAnalizAra = function() {
       "İNGİLİZCE": "#64748b"
     };
     var CSS_METIN = [
-      "/* GRID: >=1024px 4 EŞİT sütun (kare kart), >=640px 2 sütun, mobil 1 sütun. gap 8px */",
+      "/* GRID: >=1024px 4 EŞİT sütun (kompakt kart), >=640px 2 sütun, mobil 1 sütun. gap 8px */",
       "#havuzBolum .relative.md\\:grid.space-y-2{display:grid!important;grid-template-columns:repeat(1,minmax(0,1fr))!important;column-gap:.5rem!important;row-gap:.5rem!important;}",
       "#havuzBolum .relative.md\\:grid.space-y-2>*{margin-top:0!important;}",
       "#havuzBolum .relative.md\\:grid>.md\\:col-span-2{grid-column:1/-1!important;}",
       "@media (min-width:640px){#havuzBolum .relative.md\\:grid.space-y-2{grid-template-columns:repeat(2,minmax(0,1fr))!important;}}",
       "@media (min-width:1024px){#havuzBolum .relative.md\\:grid.space-y-2{grid-template-columns:repeat(4,minmax(0,1fr))!important;column-gap:.5rem!important;row-gap:.5rem!important;}",
       "#havuzBolum .havuz-ayirici{display:none!important;}}",
-      "/* ===== KARE KART (1:1): 8px padding + 5 satırlık grid iskeleti ===== */",
-      "#havuzBolum .istek-kart{aspect-ratio:1/1!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto auto!important;grid-template-rows:auto auto minmax(0,1fr) auto auto!important;gap:4px 6px!important;padding:8px!important;overflow:hidden!important;position:relative!important;align-items:center!important;min-width:0!important;min-height:0!important;border-radius:.75rem!important;}",
-      "/* Kart gövdesi + başlık satırı grid'e açılır: her parça kart grid'inde ayrı yer alır */",
+      "/* ===== KOMPAKT KART: kare zorunluluğu YOK — 110-140px sabit yükseklik, dikey flex ===== */",
+      "#havuzBolum .istek-kart{min-height:110px!important;max-height:140px!important;display:flex!important;flex-direction:column!important;justify-content:space-between!important;gap:2px!important;padding:8px!important;overflow:hidden!important;position:relative!important;min-width:0!important;border-radius:.75rem!important;}",
+      "/* Kart gövdesi + başlık satırı dikey flex akışına açılır: her parça kart flex'inde ayrı sıra olur */",
       "#havuzBolum .istek-kart>div.flex-1{display:contents!important;}",
       "#havuzBolum .istek-kart>div.flex-1>div:first-child{display:contents!important;}",
       "/* SATIR 1 (sol): AD + SINIF yan yana, tek satır, taşarsa ellipsis */",
-      "#havuzBolum .istek-kart>div.flex-1>div:first-child>span:first-child{grid-row:1!important;grid-column:1!important;justify-self:stretch!important;align-self:center!important;min-width:0!important;max-width:100%!important;overflow:hidden!important;background:none!important;border:0!important;padding:0!important;}",
+      "#havuzBolum .istek-kart>div.flex-1>div:first-child>span:first-child{order:1!important;width:100%!important;padding:0 72px 0 0!important;min-width:0!important;max-width:100%!important;overflow:hidden!important;background:none!important;border:0!important;line-height:1.2!important;}",
       "#havuzBolum .istek-kart .birebir-etiket{display:flex!important;flex-wrap:nowrap!important;align-items:baseline!important;gap:3px!important;min-width:0!important;overflow:hidden!important;}",
       "#havuzBolum .istek-kart .birebir-etiket>span:first-child{font-size:11px!important;line-height:1.2!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;min-width:0!important;}",
       "#havuzBolum .istek-kart .birebir-etiket>span+span{font-size:9px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:42%!important;}",
       "/* Grup üye adları kartta gizli: sağ üstteki sayaç ikonunun title'ında durur */",
       "#havuzBolum .istek-kart .grup-istek-uyeler{display:none!important;}",
       "/* SATIR 2: ders etiketi (renkli pill) tek satır */",
-      "#havuzBolum .istek-kart>div.flex-1>div:first-child>[data-havuz-ders-etiket]{grid-row:2!important;grid-column:1/-1!important;justify-self:start!important;align-self:center!important;font-size:9px!important;line-height:1.5!important;padding:0 .375rem!important;white-space:nowrap!important;}",
+      "#havuzBolum .istek-kart>div.flex-1>div:first-child>[data-havuz-ders-etiket]{order:2!important;align-self:flex-start!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:9px!important;line-height:1.5!important;padding:0 .375rem!important;white-space:nowrap!important;}",
       "/* SATIR 3: konu metni — 'Eksik konu' başlığı yok, en fazla 2 satır (clamp + ellipsis) */",
-      "#havuzBolum .istek-kart>div.flex-1>div:nth-child(2){grid-row:3!important;grid-column:1/-1!important;align-self:start!important;margin:0!important;font-size:10px!important;font-weight:500!important;line-height:1.3!important;color:#475569!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;overflow:hidden!important;text-overflow:ellipsis!important;word-break:break-word!important;overflow-wrap:anywhere!important;}",
+      "#havuzBolum .istek-kart>div.flex-1>div:nth-child(2){order:3!important;flex:1 1 auto!important;width:100%!important;min-height:0!important;align-self:stretch!important;margin:0!important;font-size:10px!important;font-weight:500!important;line-height:1.3!important;color:#475569!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;overflow:hidden!important;text-overflow:ellipsis!important;word-break:break-word!important;overflow-wrap:anywhere!important;}",
       "#havuzBolum .istek-kart>div.flex-1>div:nth-child(2)>i{display:none!important;}",
       "/* SATIR 4: tarih · saat TEK satır (ikonlar gizli, yıl JS'te kırpılır) */",
-      "#havuzBolum .istek-kart>div.flex-1>div:nth-child(3){grid-row:4!important;grid-column:1/3!important;align-self:end!important;margin:0!important;font-size:9px!important;line-height:1.3!important;color:#94a3b8!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}",
+      "#havuzBolum .istek-kart>div.flex-1>div:nth-child(3){order:4!important;width:100%!important;align-self:stretch!important;margin:0!important;font-size:9px!important;line-height:1.3!important;color:#94a3b8!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}",
       "#havuzBolum .istek-kart>div.flex-1>div:nth-child(3) i{display:none!important;}",
-      "/* SATIR 5: Planla butonu en altta, TAM GENİŞLİK */",
-      "#havuzBolum .istek-kart>button[onclick^=\"formaAktar\"]{grid-row:5!important;grid-column:1/-1!important;justify-self:stretch!important;width:100%!important;justify-content:center!important;gap:.25rem!important;font-size:10.5px!important;padding:.3rem .5rem!important;border-radius:.5rem!important;}",
-      "#havuzBolum .istek-kart>span[class*=\"text-emerald\"]{grid-row:5!important;grid-column:1/-1!important;justify-self:center!important;align-self:end!important;font-size:9.5px!important;white-space:nowrap!important;}",
-      "/* Avatar: sağ üst köşede küçük ikon (32px -> 18px) */",
-      "#havuzBolum .istek-kart>div.rounded-full{grid-row:1!important;grid-column:3!important;justify-self:end!important;align-self:center!important;width:18px!important;height:18px!important;font-size:7px!important;line-height:1!important;}",
-      "/* Grup üyeleri: sağ üst köşede küçük ikon + sayı */",
-      "#havuzBolum .istek-kart>.istek-uye-buton{grid-row:1!important;grid-column:2!important;justify-self:end!important;align-self:center!important;width:auto!important;padding:0!important;}",
+      "/* SON SIRA: Planla butonu en altta, TAM GENİŞLİK */",
+      "#havuzBolum .istek-kart>button[onclick^=\"formaAktar\"]{order:5!important;width:100%!important;margin-top:auto!important;justify-content:center!important;gap:.25rem!important;font-size:10.5px!important;padding:.3rem .5rem!important;border-radius:.5rem!important;}",
+      "#havuzBolum .istek-kart>span[class*=\"text-emerald\"]{order:5!important;margin-top:auto!important;align-self:center!important;font-size:9.5px!important;white-space:nowrap!important;}",
+      "/* Avatar: sağ üst köşede mutlak konumlu küçük ikon (32px -> 18px) */",
+      "#havuzBolum .istek-kart>div.rounded-full{position:absolute!important;top:8px!important;right:8px!important;width:18px!important;height:18px!important;font-size:7px!important;line-height:1!important;}",
+      "/* Grup üyeleri: sağ üst köşede mutlak konumlu küçük ikon + sayı */",
+      "#havuzBolum .istek-kart>.istek-uye-buton{position:absolute!important;top:6px!important;right:30px!important;width:auto!important;padding:0!important;}",
       "#havuzBolum .istek-kart>.istek-uye-buton button{font-size:9.5px!important;gap:2px!important;padding:0 .2rem!important;line-height:1!important;}",
       "#havuzBolum .istek-kart .istek-uye-sayi{font-size:9.5px!important;font-weight:700!important;opacity:.85;}",
-      "/* Sil butonu: tarih satırının sağında minik ikon */",
-      "#havuzBolum .istek-kart>button[onclick^=\"istekSil\"]{grid-row:4!important;grid-column:3!important;justify-self:end!important;align-self:end!important;width:16px!important;height:16px!important;padding:0!important;line-height:1!important;opacity:.55;}",
+      "/* Sil butonu: sağ üstte minik ikon (grup ikonunun yanında) */",
+      "#havuzBolum .istek-kart>button[onclick^=\"istekSil\"]{position:absolute!important;top:9px!important;right:50px!important;width:16px!important;height:16px!important;padding:0!important;line-height:1!important;opacity:.55;}",
       "#havuzBolum .istek-kart>button[onclick^=\"istekSil\"]:hover{opacity:1;}",
       "#havuzBolum .istek-kart>button[onclick^=\"istekSil\"] i{font-size:9px!important;}",
       "#havuzBolum .istek-kart span.text-amber-700{display:none!important;}",

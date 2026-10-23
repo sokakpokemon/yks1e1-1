@@ -5614,3 +5614,40 @@ window.__sysAnalizAra = function() {
     gunSecChipDuzelt();
   }
 })();
+
+// === MODERN GÖRÜNÜM: PLUS JAKARTA SANS + AÇIK ARKA PLAN (D1) ===
+// Font Google Fonts'tan çekilir ve tüm arayüze uygulanır; arka plan #f8fafc
+// yapılır, kart gölgeleri yumuşatılır. Font Awesome ikonları (i etiketleri ve
+// ::before sözde elemanları) kapsam dışında bırakıldı ki ikonlar bozulmasın.
+(function () {
+  if (typeof document === "undefined") return;
+
+  // --- GÖREV 1: Modern font (Plus Jakarta Sans) ---
+  if (!document.getElementById("__fontPlusJakarta")) {
+    var link = document.createElement("link");
+    link.id = "__fontPlusJakarta";
+    link.href = "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap";
+    link.rel = "stylesheet";
+    document.head.appendChild(link);
+  }
+
+  if (!document.getElementById("__fontPlusJakartaCSS")) {
+    var fontStil = document.createElement("style");
+    fontStil.id = "__fontPlusJakartaCSS";
+    fontStil.textContent =
+      "body, button, input, select, textarea, div, span, p, h1, h2, h3, h4," +
+      " a, label, li, table, th, td, option { font-family: 'Plus Jakarta Sans', sans-serif !important; }";
+    document.head.appendChild(fontStil);
+  }
+
+  // --- GÖREV 2: Arka plan ve kartlar ---
+  if (!document.getElementById("__genelModernStil")) {
+    var genelStil = document.createElement("style");
+    genelStil.id = "__genelModernStil";
+    genelStil.textContent =
+      "body { background-color: #f8fafc !important; }" +
+      ".kart, [class*='kart'], .rounded-2xl.border { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important; border-color: #e2e8f0 !important; }" +
+      "button, input, select, textarea { border-radius: 10px !important; }";
+    document.head.appendChild(genelStil);
+  }
+})();

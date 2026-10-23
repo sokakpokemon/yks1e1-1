@@ -4673,10 +4673,13 @@ window.__sysAnalizAra = function() {
   }
 
   /* GÖREV 3 — çakışma sebebi (dizi) / çakışma var mı (boolean)
+     TEK ÇEKİRDEK (cakismaSebepDizisi) iki kaynağı da besler:
+       cakismaSebebi      → havuz isteği (öğrenciler istekten)
+       dersCakismaSebebi  → planlı ders kartı (öğrenciler DB.dersler'den, kendi kaydı hariç)
      Kontroller: (0) Pazar günü (kurum kapalı), (1) öğretmen o saatte başka derste,
-     (2) öğretmenin aynı saatte ek dersi, (3) istek öğrencisi/grubu o saatte başka derste,
+     (2) öğretmenin aynı saatte ek dersi, (3) öğrenci/grup o saatte başka derste,
      (4) öğrencinin sınıfının o gün+saat slotunda toplu dersi var. */
-  function cakismaSebebi(istekId, tarih, saat, ogretmenId) {
+  function cakismaSebepDizisi(uyeler, haricId, tarih, saat, ogretmenId) {
     var sebepler = [];
     var db = cakismaDb();
     if (!db || !tarih || !saat) return sebepler;
@@ -4690,20 +4693,12 @@ window.__sysAnalizAra = function() {
     var kod = cakismaKod(saat);
     if (!kod) return sebepler; /* kısa kodda karşılığı olmayan saat (mola vb.) → kontrol yok */
     var anahtar = cakismaGunIdx(tarih) + "-" + kod;
-    var istek = (Array.isArray(db.istekler) ? db.istekler : []).filter(function (x) {
-      return x && x.id === istekId;
-    })[0] || null;
+    var haric = haricId || "";            /* kendi kaydı kendisiyle çakışmasın */
+    var katilimcilar = Array.isArray(uyeler) ? uyeler : [];
 
-    /* İsteğin tüm katılımcıları (ana + grup üyeleri) */
-    var uyeler = [];
-    if (istek) {
-      uyeler = (typeof window.istekOgrenciIds === "function") ? (window.istekOgrenciIds(istek) || []) : [];
-      if (!uyeler.length && istek.ogrenciId) uyeler = [istek.ogrenciId];
-    }
-
-    /* 1) Öğretmen dolu */
+    /* 1) Öğretmen dolu (taşınan dersin kendi kaydı hariç) */
     var ogretmenDolu = dersler.some(function (l) {
-      return l && l.ogretmenId === ogretmenId && l.tarih === tarih &&
+      return l && l.id !== haric && l.ogretmenId === ogretmenId && l.tarih === tarih &&
         cakismaKod(l.saat) === kod && l.durum !== "iptal";
     });
     if (ogretmenDolu) sebepler.push("Öğretmen dolu");
@@ -4717,10 +4712,10 @@ window.__sysAnalizAra = function() {
     });
     if (ekDersVar) sebepler.push("Ek ders var");
 
-    /* 3) Öğrenci dolu */
-    var ogrenciDolu = uyeler.some(function (oid) {
+    /* 3) Öğrenci dolu (taşınan dersin kendi kaydı hariç) */
+    var ogrenciDolu = katilimcilar.some(function (oid) {
       return dersler.some(function (l) {
-        return l && l.tarih === tarih && cakismaKod(l.saat) === kod &&
+        return l && l.id !== haric && l.tarih === tarih && cakismaKod(l.saat) === kod &&
           l.durum !== "iptal" && cakismaDersOgrenciler(l).indexOf(oid) >= 0;
       });
     });
@@ -4729,13 +4724,47 @@ window.__sysAnalizAra = function() {
     /* 4) Sınıf dolu (öğrencinin sınıfının toplu dersi: DB.sinifProg[sinif] = ["0-3", …]) */
     var prog = (db.sinifProg && typeof db.sinifProg === "object") ? db.sinifProg : {};
     var ogrenciler = Array.isArray(db.ogrenciler) ? db.ogrenciler : [];
-    var sinifDolu = uyeler.some(function (oid) {
+    var sinifDolu = katilimcilar.some(function (oid) {
       var o = ogrenciler.filter(function (x) { return x && x.id === oid; })[0];
       return !!(o && o.sinif && Array.isArray(prog[o.sinif]) && prog[o.sinif].indexOf(anahtar) >= 0);
     });
     if (sinifDolu) sebepler.push("Sınıf dolu");
 
     return sebepler;
+  }
+
+  /* Havuz isteği → sebep dizisi (öğrenciler istekten: ana + grup üyeleri) */
+  function cakismaSebebi(istekId, tarih, saat, ogretmenId) {
+    var db = cakismaDb();
+    var uyeler = [];
+    if (db) {
+      var istek = (Array.isArray(db.istekler) ? db.istekler : []).filter(function (x) {
+        return x && x.id === istekId;
+      })[0] || null;
+      if (istek) {
+        uyeler = (typeof window.istekOgrenciIds === "function") ? (window.istekOgrenciIds(istek) || []) : [];
+        if (!uyeler.length && istek.ogrenciId) uyeler = [istek.ogrenciId];
+      }
+    }
+    return cakismaSebepDizisi(uyeler, "", tarih, saat, ogretmenId);
+  }
+
+  /* GÖREV 2 — planlı ders kartı → sebep dizisi.
+     Öğrenci bilgisi DB.dersler'den (cakismaDersOgrenciler: ana + grup üyeleri); dersin
+     KENDİ kaydı tüm kontrollerden hariç tutulur. app.js'teki dersBurak kurallarıyla
+     hizalı yapısal engeller de raporlanır: çizelgede yalnız aynı öğretmenin satırına ve
+     yalnız tek öğrencili dersler taşınabilir (grup dersleri havuza geri bırakılır). */
+  function dersCakismaSebebi(dersId, hedefTarih, hedefSaat, hedefOgretmenId) {
+    var db = cakismaDb();
+    var dersler = (db && Array.isArray(db.dersler)) ? db.dersler : [];
+    var ders = dersler.filter(function (l) { return l && l.id === dersId; })[0] || null;
+    if (!ders) return [];
+    var yapisal = [];
+    if (ders.durum === "iptal" || ders.durum === "tamamlandi") yapisal.push("Ders taşınamaz");
+    if (cakismaDersOgrenciler(ders).length !== 1) yapisal.push("Grup ders taşınamaz");
+    if (ders.ogretmenId && hedefOgretmenId && ders.ogretmenId !== hedefOgretmenId) yapisal.push("Farklı öğretmen");
+    if (yapisal.length) return yapisal;
+    return cakismaSebepDizisi(cakismaDersOgrenciler(ders), ders.id, hedefTarih, hedefSaat, hedefOgretmenId);
   }
 
   function cakismaVarMi(istekId, tarih, saat, ogretmenId) {
@@ -4903,12 +4932,45 @@ window.__sysAnalizAra = function() {
     }
     return sayac;
   }
-  /* Havuz isteği sürükleniyorsa (ders kartı DEĞİL) tüm alanlar anında işaretlenir.
-     istekDropHedef inline ondragstart'ta dolduğu için listener bubble fazındadır
-     (app.js'in kendi dragstart listener'ı gibi); yine de kart DOM'undan yedek okunur. */
+  /* GÖREV 1 — ders kartı sürükleniyorsa: aynı harita, ders kurallarıyla.
+     Dersin KENDİ hücresi (aynı öğretmen + tarih + saat kodu) boyanmaz: orası zaten dolu,
+     taşıma anlamsız. Diğer tüm drop-zone'lar yeşil/kırmızı + sebep etiketiyle işaretlenir. */
+  function cakismaTumHucreleriBoyaDers(dersId) {
+    var sayac = { toplam: 0, uygun: 0, cakisan: 0 };
+    var db = cakismaDb();
+    var ders = (db && Array.isArray(db.dersler) ? db.dersler : []).filter(function (l) {
+      return l && l.id === dersId;
+    })[0] || null;
+    if (!ders) return sayac; /* kayıt yoksa hiçbir hücre boyanmaz */
+    var kaynakKod = cakismaKod(ders.saat);
+    var hucreler = cakismaHedefHucreler();
+    for (var i = 0; i < hucreler.length; i++) {
+      var el = hucreler[i];
+      var saat = el.getAttribute("data-drop-saat") || "";
+      var ogrtId = el.getAttribute("data-drop-ogrt") || "";
+      var tarih = cakismaHucreTarihi(el, el.getAttribute("data-drop-gun"));
+      if (!tarih || !saat) continue;
+      /* KENDİ hücresi → boyama yok */
+      if (ders.ogretmenId && ogrtId === ders.ogretmenId && tarih === ders.tarih && cakismaKod(saat) === kaynakKod) continue;
+      var sebepler = dersCakismaSebebi(dersId, tarih, saat, ogrtId);
+      cakismaBoya(el, sebepler);
+      sayac.toplam++;
+      if (sebepler.length) sayac.cakisan++; else sayac.uygun++;
+    }
+    return sayac;
+  }
+
+  /* Sürükleme başladığı ANDA tüm alanlar işaretlenir: havuz isteği veya ders kartı.
+     istekDropHedef/dersDropHedef inline ondragstart'ta dolduğu için listener bubble
+     fazındadır (app.js'in kendi dragstart listener'ı gibi); istek için kart DOM'undan
+     (data-istek) yedek okunur. */
   document.addEventListener("dragstart", function (e) {
     try {
-      if (window.dersDropHedef) return; /* ders kartı taşıma: havuz göstergesi çizilmez */
+      var dersId = window.dersDropHedef;
+      if (dersId) { /* ders kartı taşıma: aynı görsel harita, ders kurallarıyla */
+        window.__ckSonBoya = cakismaTumHucreleriBoyaDers(dersId);
+        return;
+      }
       var istekId = window.istekDropHedef;
       if (!istekId && e && e.target && e.target.getAttribute) {
         istekId = e.target.getAttribute("data-istek") || "";

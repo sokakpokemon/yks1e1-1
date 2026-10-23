@@ -3708,6 +3708,54 @@ window.__sysAnalizAra = function() {
   }
 
   /* ============================================================
+     D68 — ÖĞRETMEN ÇİZELGESİ DOLU HÜCRE KORUMASI
+     Öğretmen Tanımlama çizelgesindeki hücreler onclick ile
+     app.js'in togOgrSecili() fonksiyonunu çağırır. Sarı
+     (Sınıf Dersi = ders atanmış) hücrelerde bu çağrı ders
+     atamasını silebiliyor / başka sınıfla değiştirebiliyordu.
+     Capture aşamasında tıklama engellenir: dolu hücre değişmez.
+     Boş ve Kapalı hücrelerin mevcut davranışı korunur.
+     ============================================================ */
+  (function () {
+    if (typeof document === "undefined" || !document.addEventListener) return;
+    if (window.__d68OgrKilitHandlerBound) return;
+    window.__d68OgrKilitHandlerBound = true;
+
+    var D68_UYARI = "Bu hücrede ders var, değiştirilemez";
+
+    /* Yalnız öğretmen çizelgesi hücresi: inline tıklaması togOgrSecili(...) */
+    function d68OgrHucresiMi(btn) {
+      var oc = btn.getAttribute ? (btn.getAttribute("onclick") || "") : "";
+      return oc.indexOf("togOgrSecili(") >= 0;
+    }
+
+    /* Dolu = sarı "Sınıf Dersi" hücresi (avail.sinif kaydı). */
+    function d68DoluMu(btn) {
+      var cls = " " + String(btn.className || "") + " ";
+      if (cls.indexOf("bg-amber-200") >= 0) return true;
+      var t = btn.getAttribute ? (btn.getAttribute("title") || "") : (btn.title || "");
+      return t.indexOf("Sınıf Dersi") >= 0;
+    }
+
+    document.addEventListener("click", function (e) {
+      var hedef = e.target;
+      var btn = hedef && hedef.closest ? hedef.closest(".hucreBtn") : null;
+      if (!btn || !d68OgrHucresiMi(btn) || !d68DoluMu(btn)) return;
+
+      /* Dolu hücre: app.js'in inline togOgrSecili() çağrısı hiç çalışmasın. */
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+
+      var eski = btn.getAttribute ? (btn.getAttribute("title") || "") : "";
+      if (eski.indexOf(D68_UYARI) < 0) btn.title = D68_UYARI + (eski ? " — " + eski : "");
+      try {
+        if (typeof window.toast === "function") window.toast(D68_UYARI, "uyari");
+      } catch (eT) {}
+    }, true);
+  })();
+
+  /* ============================================================
      D65 — "KAPALI" SAAT KONTROLÜ: planla() sarmalayıcısı
      Sınıf programında "Kapalı" işaretli slota birebir ders
      yazılmasını engeller. "Çakışmayı Yoksay" (#f-yoksay)

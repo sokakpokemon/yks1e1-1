@@ -3142,7 +3142,7 @@ window.__sysAnalizAra = function() {
     "GEOMETRİ": "#0ea5e9",
     "İNGİLİZCE": "#64748b"
   };
-  var D64_KAPALI_ARKA = "#64748b";
+  var D64_KAPALI_ARKA = "#6b7280";
   var D64_KAPALI_BASLIK_EK = " · Kapalı";
   var D64_NORM_CALISTI = false;
 
@@ -4002,14 +4002,14 @@ window.__sysAnalizAra = function() {
       style.textContent =
         // Öğretmen çizelgesindeki Kapalı hücreler (title içinde "Kapalı" geçer)
         '[title*="Kapalı"] {' +
-          'background-color: #64748b !important;' +
+          'background-color: #6b7280 !important;' +
           'color: #ffffff !important;' +
           'opacity: 1 !important;' +
           'border-color: #0f172a !important;' +
         '}' +
         // Lejanttaki küçük "Kapalı" karesi
         '.bg-slate-100.border-slate-300 {' +
-          'background-color: #64748b !important;' +
+          'background-color: #6b7280 !important;' +
           'border-color: #0f172a !important;' +
         '}';
       document.head.appendChild(style);
@@ -4023,6 +4023,21 @@ window.__sysAnalizAra = function() {
     }
     setInterval(stilEkle, 1000);
   })();
+
+  // === "KAPALI-GORUNUM-YAMASI" YORUM METNİNİ GİZLE ===
+  setInterval(function() {
+    var tumElementler = document.querySelectorAll("div, span, p, small");
+    tumElementler.forEach(function(el) {
+      if (el.textContent && el.textContent.indexOf("KAPALI-GORUNUM-YAMASI") !== -1) {
+        if (el.textContent.trim() === "/* KAPALI-GORUNUM-YAMASI */" ||
+            el.textContent.trim() === "/* KAPALI-GORUNUM-YAMASI */") {
+          el.style.display = "none";
+        } else {
+          el.innerHTML = el.innerHTML.replace(/\/\*\s*KAPALI-GORUNUM-YAMASI\s*\*\//g, "");
+        }
+      }
+    });
+  }, 1000);
 
   setTimeout(function() {
     var kapalilar = document.querySelectorAll('[title*="Kapalı"]');

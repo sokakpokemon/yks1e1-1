@@ -4673,12 +4673,19 @@ window.__sysAnalizAra = function() {
   }
 
   /* GÖREV 3 — çakışma sebebi (dizi) / çakışma var mı (boolean)
-     Kontroller: (1) öğretmen o saatte başka derste, (2) istek öğrencisi/grubu o saatte
-     başka derste, (3) öğrencinin sınıfının o gün+saat slotunda toplu dersi var. */
+     Kontroller: (0) Pazar günü (kurum kapalı), (1) öğretmen o saatte başka derste,
+     (2) öğretmenin aynı saatte ek dersi, (3) istek öğrencisi/grubu o saatte başka derste,
+     (4) öğrencinin sınıfının o gün+saat slotunda toplu dersi var. */
   function cakismaSebebi(istekId, tarih, saat, ogretmenId) {
     var sebepler = [];
     var db = cakismaDb();
     if (!db || !tarih || !saat) return sebepler;
+    /* 0) PAZAR — app.js'teki istekBurak "pazar" (di === 6) guard'ıyla AYNI kural: kurum kapalı.
+       Gün bağımsız bir yasak olduğu için diğer kontrollere bakılmadan dönülür. */
+    if (cakismaGunIdx(tarih) === 6) {
+      sebepler.push("Pazar günü ders yapılamaz");
+      return sebepler;
+    }
     var dersler = Array.isArray(db.dersler) ? db.dersler : [];
     var kod = cakismaKod(saat);
     if (!kod) return sebepler; /* kısa kodda karşılığı olmayan saat (mola vb.) → kontrol yok */
@@ -4701,7 +4708,16 @@ window.__sysAnalizAra = function() {
     });
     if (ogretmenDolu) sebepler.push("Öğretmen dolu");
 
-    /* 2) Öğrenci dolu */
+    /* 2) Ek ders var — aynı öğretmenin aynı tarih + aynı saat kodundaki ek dersi
+       (DB.ekDersler); app.js'teki dersBurak "ekDolu" kontrolüyle aynı eşleşme. */
+    var ekDersler = Array.isArray(db.ekDersler) ? db.ekDersler : [];
+    var ekDersVar = ekDersler.some(function (l) {
+      return l && l.ogretmenId === ogretmenId && l.tarih === tarih &&
+        cakismaKod(l.saat) === kod && l.durum !== "iptal";
+    });
+    if (ekDersVar) sebepler.push("Ek ders var");
+
+    /* 3) Öğrenci dolu */
     var ogrenciDolu = uyeler.some(function (oid) {
       return dersler.some(function (l) {
         return l && l.tarih === tarih && cakismaKod(l.saat) === kod &&
@@ -4710,7 +4726,7 @@ window.__sysAnalizAra = function() {
     });
     if (ogrenciDolu) sebepler.push("Öğrenci dolu");
 
-    /* 3) Sınıf dolu (öğrencinin sınıfının toplu dersi: DB.sinifProg[sinif] = ["0-3", …]) */
+    /* 4) Sınıf dolu (öğrencinin sınıfının toplu dersi: DB.sinifProg[sinif] = ["0-3", …]) */
     var prog = (db.sinifProg && typeof db.sinifProg === "object") ? db.sinifProg : {};
     var ogrenciler = Array.isArray(db.ogrenciler) ? db.ogrenciler : [];
     var sinifDolu = uyeler.some(function (oid) {

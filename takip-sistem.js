@@ -4381,9 +4381,44 @@ window.__sysAnalizAra = function() {
         }
       }
     }
+    /* HAVUZ-FORM-KORUMA: bu blok input/select/textarea'lara değer veya placeholder YAZMAZ;
+       kart DOM'u dışına çıkmaz. Yalnızca bir alan yanlışlıkla "null" metnine düşmüşse
+       orijinaline geri alınır (asla başka bir değer atanmaz). */
+    var FORM_ORIJINAL = {
+      "h-ogrenci": { placeholder: "Öğrenci adı" },
+      "h-konu": { placeholder: "Eksik konu (örn. Paragraf)" },
+      "h-ders": { ilkSecenek: "Ders seçin" }
+    };
+
+    function formlariKoru(kok) {
+      var alanlar = kok.querySelectorAll("input, select, textarea");
+      for (var i = 0; i < alanlar.length; i++) {
+        var el = alanlar[i];
+        var orig = FORM_ORIJINAL[el.id] || {};
+        if (el.tagName === "SELECT") {
+          var secili = (el.options && el.selectedIndex >= 0) ? el.options[el.selectedIndex] : null;
+          var ilk = el.options && el.options[0] ? el.options[0] : null;
+          if (ilk && (ilk.textContent || "").trim() === "null" && orig.ilkSecenek) ilk.textContent = orig.ilkSecenek;
+          if ((secili && (secili.textContent || "").trim() === "null") || String(el.value) === "null") el.selectedIndex = 0;
+        } else {
+          if (String(el.value) === "null") el.value = "";
+          var ph = el.getAttribute("placeholder");
+          if (ph && ph !== "null") {
+            el.__havuzPh = ph; /* sağlam placeholder'ı hatırla (id'siz alanlar dahil) */
+          } else if (ph === "null") {
+            var yedek = orig.placeholder || el.__havuzPh;
+            if (yedek) el.setAttribute("placeholder", yedek);
+            else el.removeAttribute("placeholder");
+          }
+        }
+      }
+    }
+
     function uygula() {
       var kok = document.getElementById(KOK_ID);
       if (!kok) return;
+      formlariKoru(kok);
+      /* YALNIZCA kartlar: form alanlarına (input/select/textarea) hiç dokunulmaz */
       var kartlar = kok.querySelectorAll(".istek-kart");
       for (var i = 0; i < kartlar.length; i++) kartIsle(kartlar[i]);
     }
@@ -4408,6 +4443,12 @@ window.__sysAnalizAra = function() {
         if (window.MutationObserver) {
           new MutationObserver(function () { planla(); }).observe(kok, { childList: true, subtree: true });
         }
+        /* Form alanları kart render'ından bağımsız olarak da "null"a düşmesin:
+           yalnızca bozuk alanı onarır, sağlam alanlara dokunmaz. */
+        kok.__havuzFormKoru = setInterval(function () {
+          var k = document.getElementById(KOK_ID);
+          if (k) formlariKoru(k);
+        }, 800);
       }
       return true;
     }

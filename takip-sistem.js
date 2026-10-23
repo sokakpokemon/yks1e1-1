@@ -4959,6 +4959,94 @@ window.__sysAnalizAra = function() {
     window.istekBurak = cakismaBurakSarmal;
   }
 
+  /* GÖREV 2 — dersBurak sarmalı: AYNI BRANŞTAKİ BAŞKA ÖĞRETMENE TAŞIMA.
+     app.js'in dersBurak'ı yalnız "hedef öğretmen = dersin öğretmeni" iken taşımaya izin verir
+     (satır 4416: "Bu ders hedef öğretmene ait değil"). Burada, hedef öğretmen dersi verebiliyorsa
+     dersin öğretmen alanları GEÇİCİ olarak hedefe çevrilir, orijinal çağrılır; orijinal taşımayı
+     reddederse alanlar birebir geri yüklenir (DB'ye hiçbir şey yazılmaz). app.js değişmez.
+     Çağrı yolu: inline ondrop → istekBurak → dersBurak (global binding) → bu sarmal. */
+  var cakismaAsilDersBurak = window.dersBurak;
+  var dersBurak_sarmal = function dersBurak_sarmal(ogrtId, tarih, saat) {
+    var asil = cakismaAsilDersBurak;
+    if (typeof asil !== "function") return;
+    var dersId = window.dersDropHedef;
+    if (!dersId) return asil.apply(this, arguments);
+
+    var db = cakismaDb();
+    var dersler = (db && Array.isArray(db.dersler)) ? db.dersler : [];
+    var ders = dersler.filter(function (l) { return l && l.id === dersId; })[0] || null;
+    var hedef = (db && Array.isArray(db.ogretmenler) ? db.ogretmenler : []).filter(function (o) {
+      return o && o.id === ogrtId;
+    })[0] || null;
+    if (!ders || !hedef) return asil.apply(this, arguments); /* bilgi eksik → app.js akışı */
+
+    /* Hedef zaten dersin öğretmeni → normal taşıma, dokunma */
+    var ayniOgretmen = (ders.ogretmenId && ders.ogretmenId === hedef.id) ||
+      (!ders.ogretmenId && !!ders.ogretmenAd && ders.ogretmenAd === hedef.ad);
+    if (ayniOgretmen) return asil.apply(this, arguments);
+
+    /* Farklı branş → dokunma; app.js kendi guard'ıyla reddeder (gösterge zaten kırmızı) */
+    if (!hedefBransUygun(ders, hedef)) return asil.apply(this, arguments);
+
+    var eski = { id: ders.ogretmenId, ad: ders.ogretmenAd, tarih: ders.tarih, saat: ders.saat, kod: ders.kod };
+    var geriAl = function () {
+      ders.ogretmenId = eski.id;
+      ders.ogretmenAd = eski.ad;
+      ders.tarih = eski.tarih;
+      ders.saat = eski.saat;
+      ders.kod = eski.kod;
+    };
+    var hedefAd = hedef.ad || hedef.adSoyad || "";
+
+    /* AYNI gün+saat, yalnız öğretmen değişiyor: app.js bu durumda no-op döner (saveDB yok).
+       Bu yüzden taşıma burada tamamlanır — önce MEVCUT çakışma motoruyla doğrulanır
+       (iptal/tamamlanmış, grup ders, Pazar, dolu saat, sınıf programı…). */
+    if (ders.tarih === tarih && cakismaKod(ders.saat) === cakismaKod(saat)) {
+      var engeller = dersCakismaSebebi(ders.id, tarih, saat, hedef.id);
+      if (engeller.length) {
+        if (typeof window.toast === "function") window.toast("Çakışma var: " + engeller.join(" · "), "hata");
+        return;
+      }
+      ders.ogretmenId = hedef.id;
+      ders.ogretmenAd = hedefAd;
+      try {
+        if (typeof window.saveDB === "function") window.saveDB();
+        if (typeof window.renderDersler === "function") window.renderDersler();
+        if (typeof window.renderOzet === "function") window.renderOzet();
+        if (typeof window.renderAnaliz === "function") window.renderAnaliz();
+        if (typeof window.toast === "function") window.toast("Ders " + hedefAd + " öğretmenine aktarıldı ✓");
+      } catch (hata) {
+        geriAl();
+        throw hata;
+      }
+      return;
+    }
+
+    /* Normal taşıma: öğretmen alanlarını geçici olarak hedefe çevir, orijinali çağır */
+    ders.ogretmenId = hedef.id;
+    ders.ogretmenAd = hedefAd;
+    var sonuc;
+    try {
+      sonuc = asil.apply(this, arguments);
+    } catch (hata) {
+      geriAl();
+      throw hata;
+    }
+    /* Başarı ölçütü: orijinal taşımayı yazdı mı? (tarih+saat hedefe eşit ve öğretmen hedefte)
+       Değilse orijinal guard'lardan biri reddetti → alanları geri al, DB'de değişiklik yok. */
+    var tasindi = (ders.tarih === tarih && cakismaKod(ders.saat) === cakismaKod(saat) && ders.ogretmenId === hedef.id);
+    if (!tasindi) {
+      geriAl();
+      return sonuc;
+    }
+    /* Başarılı: orijinal zaten saveDB + renderDersler + renderOzet + renderAnaliz yaptı */
+    return sonuc;
+  };
+  if (typeof cakismaAsilDersBurak === "function" && !cakismaAsilDersBurak.__ckSarmal) {
+    dersBurak_sarmal.__ckSarmal = true;
+    window.dersBurak = dersBurak_sarmal;
+  }
+
   /* GÖREV 1 — dragstart yakalayıcı: sürükleme başladığı ANDA çizelgedeki TÜM drop-zone
      hücreleri boyanır (yeşil = uygun, kırmızı = çakışma + sebep etiketi).
      app.js'in inline ondrop attribute'u taşıyan ve data-drop-* nitelikleri olan hücreleri

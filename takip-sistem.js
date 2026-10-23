@@ -5476,29 +5476,83 @@ window.__sysAnalizAra = function() {
 
 })();
 
-// === KESİN TARİH DÜZELTMESİ (ÇİP ETİKETLERİ) ===
+// === KESİN TARİH DÜZELTMESİ (12:00 öğlen) ===
 (function() {
-  function duzelt() {
+  function guvenliDate(k) {
+    if (k instanceof Date) return new Date(k.getTime());
+    var s = String(k);
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]), 12, 0, 0);
+    m = s.match(/^(\d{2})\.(\d{2})\.(\d{4})/);
+    if (m) return new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]), 12, 0, 0);
+    return new Date(s);
+  }
+  window.fromKey = function(k) { return guvenliDate(k); };
+  window.toKey = function(d) {
+    if (typeof d === "string") return d;
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  };
+  window.addDaysKey = function(k, n) {
+    var d = guvenliDate(k);
+    d.setDate(d.getDate() + n);
+    return window.toKey(d);
+  };
+  window.dowIdx = function(k) {
+    var d = guvenliDate(k);
+    return (d.getDay() + 6) % 7;
+  };
+  window.gunAdi = function(key) {
+    var d = guvenliDate(key);
+    var i = (d.getDay() + 6) % 7;
+    var gunler = ["Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi","Pazar"];
+    var aylar = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+    return gunler[i] + ", " + d.getDate() + " " + aylar[d.getMonth()] + " " + d.getFullYear();
+  };
+  window.todayKey = function() {
+    var d = new Date();
+    return window.toKey(d);
+  };
+  window.fmtTR = function(k) {
+    if (!k) return "";
+    var p = String(k).split("-");
+    if (p.length === 3) return p[2] + "." + p[1] + "." + p[0];
+    return k;
+  };
+})();
+
+// === ÇİP TARİH ETİKETLERİ + TİTRENMESİNİ DURDURMA (sadece metin farklıysa güncellenir) ===
+(function() {
+  // Sabit genişlik + ortalama ile çip genişliğinin metne göre değişip titremesini önle
+  if (!document.getElementById("__gunSecChipCSS")) {
+    var st = document.createElement("style");
+    st.id = "__gunSecChipCSS";
+    st.textContent = 'button[onclick*="gunSec("] { min-width: 62px !important; text-align: center !important; display: inline-block !important; }';
+    document.head.appendChild(st);
+  }
+
+  function gunSecChipDuzelt() {
     if (!document.querySelector) return;
     var cipler = document.querySelectorAll('button[onclick*="gunSec("]');
     for (var i = 0; i < cipler.length; i++) {
       var c = cipler[i];
-      var m = String(c.getAttribute("onclick") || "").match(/gunSec\('([^']+)'\)/);
-      if (!m) continue;
-      var d = new Date(m[1] + "T12:00:00");
+      var attr = String(c.getAttribute("onclick") || "").match(/gunSec\('([^']+)'\)/);
+      if (!attr) continue;
+      var key = attr[1];
+      var raw = String(c.textContent || "").replace(/\s+/g, " ").trim();
+      var d = window.fromKey(key);
       if (isNaN(d.getTime())) continue;
       var idx = (d.getDay() + 6) % 7;
-      var gunAdi = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"][idx];
-      var yeni = gunAdi + " " + d.getDate();
-      if (String(c.textContent || "").replace(/\s+/g, " ").trim() !== yeni) {
+      var gunKisa = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"][idx];
+      var yeni = gunKisa + " " + d.getDate();
+      if (raw !== yeni) {
         c.textContent = yeni;
       }
     }
   }
+
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", duzelt);
+    document.addEventListener("DOMContentLoaded", gunSecChipDuzelt);
   } else {
-    duzelt();
+    gunSecChipDuzelt();
   }
-  setInterval(duzelt, 500);
 })();

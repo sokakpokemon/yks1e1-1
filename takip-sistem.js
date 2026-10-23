@@ -4447,14 +4447,24 @@ window.__sysAnalizAra = function() {
       if (tarihDiv && tarihDiv.getAttribute("data-havuz-tarih") !== "1") {
         var ham = (tarihDiv.textContent || "").replace(/\s+/g, " ").trim();
         if (ham) {
-          /* Önce yıl kırpılır (19.10.2026 -> 19.10), sonra aradaki DERS SAATİ KODU silinir:
-             "19.10 · 8 · 15:30-16:10" -> "19.10 · 15:30-16:10".
-             Kod deseni: " · " + 1-2 hane + (" · " + saat) — saatsiz metne dokunulmaz. */
-          var kisa = ham
-            .replace(/(\d{2})\.(\d{2})\.(\d{4})/, "$1.$2")
-            .replace(/\s*·\s*\d{1,2}(?=\s*·\s*\d)/g, "");
-          tarihDiv.textContent = kisa.replace(/\s+/g, " ").trim();
-          tarihDiv.setAttribute("data-havuz-tarih", "1");
+          /* Okunaklı tarih/saat: "19.10.2026 · 8 · 15:30-16:10" -> "19 Ekim saat 15:30"
+             - Gün korunur ("05" -> "05"), ay SAYISAL yerine TÜRKÇE adıyla yazılır
+             - Ders saati kodu (tırnaksız sayı) ve bitiş saati atlanır; yalnız BAŞLANGIÇ saati kalır
+             - Saatsiz metin "19 Ekim", tarihsiz metin "saat 15:30" olarak bozulmadan çıkar */
+          var AYLAR_HAVUZ = ["", "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+            "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+          var gunAy = ham.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+          var saatEs = ham.match(/(\d{1,2}:\d{2})/);
+          var parcalar = [];
+          if (gunAy) {
+            var ayNo = parseInt(gunAy[2], 10);
+            parcalar.push(gunAy[1] + " " + (AYLAR_HAVUZ[ayNo] || gunAy[2]));
+          }
+          if (saatEs) parcalar.push("saat " + saatEs[1]);
+          if (parcalar.length) {
+            tarihDiv.textContent = parcalar.join(" ");
+            tarihDiv.setAttribute("data-havuz-tarih", "1");
+          }
         }
       }
 

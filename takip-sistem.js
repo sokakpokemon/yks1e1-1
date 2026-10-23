@@ -3605,16 +3605,12 @@ window.__sysAnalizAra = function() {
       var veri = d64Veri();
       if (!veri) return;
 
-      /* D66: tıklama yalnız "Kapalı" modu açıkken işlenir. Mod kapalıyken
-         uygulamanın kendi togSinif() davranışı bozulmadan çalışır. */
-      if (!D64_KAPALI_MOD) return;
-
-      e.preventDefault();
-      e.stopPropagation();
-
+      /* D69: dolu hücre koruması moddan BAĞIMSIZDIR. Öğretmen çizelgesiyle
+         (D68) BİREBİR aynı metin ve turuncu uyarı; tıklama her zaman engellenir
+         ve ders ataması silinmez. */
       if (d64Program(veri, sinif).indexOf(slot) >= 0) { /* ders atanmış: dokunma */
-        /* D69: sessiz engelleme yerine öğretmen çizelgesiyle (D68) BİREBİR aynı
-           metin ve turuncu "uyari" tipiyle görsel geri bildirim. */
+        e.preventDefault();
+        e.stopPropagation();
         if (typeof window.toast === "function") {
           window.toast("Bu hücrede ders var, değiştirilemez", "uyari");
         } else {
@@ -3622,6 +3618,13 @@ window.__sysAnalizAra = function() {
         }
         return;
       }
+
+      /* D66: "Kapalı" işaretleme yalnız mod açıkken yapılır. Mod kapalıyken
+         boş hücrede uygulamanın kendi togSinif() davranışı bozulmadan çalışır. */
+      if (!D64_KAPALI_MOD) return;
+
+      e.preventDefault();
+      e.stopPropagation();
 
       if (!veri.sinifKapali || typeof veri.sinifKapali !== "object") veri.sinifKapali = {};
       if (!veri.sinifKapali[sinif] || typeof veri.sinifKapali[sinif] !== "object") veri.sinifKapali[sinif] = {};

@@ -4271,4 +4271,158 @@ window.__sysAnalizAra = function() {
     window.yedekOku.__d67Sarmal = true;
   })();
 
+  /* ===== HAVUZ-3-KOLON-YAMASI v1 =====
+     Yalnız bu dosyadan: <style> inject + DOM manipülasyonu.
+     app.js'teki renderHavuz() ve index.html DEĞİŞMEDİ.
+     - Havuz kart grid'i: masaüstü 3, tablet 2, mobil 1 sütun
+     - Kart minimalizasyonu (Bekliyor etiketi gizli, avatar -20%, padding, kısa buton)
+     - Ders renkli 3px sol şerit
+     ===== */
+  (function () {
+    var STIL_ID = "yk-havuz-3kolon-stil";
+    var KOK_ID = "havuzBolum";
+    var DERS_RENK = {
+      "MATEMATİK": "#ef4444",
+      "FİZİK": "#3b82f6",
+      "KİMYA": "#22c55e",
+      "BİYOLOJİ": "#eab308",
+      "TÜRKÇE": "#f97316",
+      "EDEBİYAT": "#ec4899",
+      "COĞRAFYA": "#8b5cf6",
+      "TARİH": "#78350f",
+      "GEOMETRİ": "#0ea5e9",
+      "İNGİLİZCE": "#64748b"
+    };
+    var CSS_METIN = [
+      "/* GRID: >=1024px 3 sütun, >=640px 2 sütun, mobil 1 sütun */",
+      "#havuzBolum .relative.md\\:grid.space-y-2{display:grid!important;grid-template-columns:repeat(1,minmax(0,1fr))!important;column-gap:.75rem!important;row-gap:.5rem!important;}",
+      "#havuzBolum .relative.md\\:grid.space-y-2>*{margin-top:0!important;}",
+      "#havuzBolum .relative.md\\:grid>.md\\:col-span-2{grid-column:1/-1!important;}",
+      "@media (min-width:640px){#havuzBolum .relative.md\\:grid.space-y-2{grid-template-columns:repeat(2,minmax(0,1fr))!important;}}",
+      "@media (min-width:1024px){#havuzBolum .relative.md\\:grid.space-y-2{grid-template-columns:repeat(3,minmax(0,1fr))!important;column-gap:1rem!important;}",
+      "#havuzBolum .havuz-ayirici{display:none!important;}}",
+      "/* KART MİNİMALİZASYONU: padding px-3.5/py-2.5 -> px-2.5/py-1.5, gap küçültme */",
+      "#havuzBolum .istek-kart{padding:.375rem .625rem!important;gap:.5rem!important;}",
+      "/* Avatar: w-8/h-8 (32px) -> 25.6px (~%20 küçük) */",
+      "#havuzBolum .istek-kart>div.rounded-full{width:25.6px!important;height:25.6px!important;font-size:10px!important;}",
+      "/* 'Bekliyor' durum etiketi gizli (span.text-amber-700; FİZİK ders etiketi text-amber-800 olduğu için etkilenmez) */",
+      "#havuzBolum .istek-kart span.text-amber-700{display:none!important;}",
+      "/* Ad 12px -> 11px, sınıf etiketi 10px -> 9.5px */",
+      "#havuzBolum .istek-kart .birebir-etiket>span:first-child{font-size:11px!important;}",
+      "#havuzBolum .istek-kart .birebir-etiket>span+span{font-size:9.5px!important;}",
+      "/* Ders etiketi 11px -> 10px (JS'in işaretlediği span) + planla butonu kompakt */",
+      "#havuzBolum .istek-kart [data-havuz-ders-etiket]{font-size:10px!important;padding-left:.375rem!important;padding-right:.375rem!important;}",
+      "#havuzBolum .istek-kart button[onclick^=\"formaAktar\"]{font-size:11px!important;padding:.375rem .625rem!important;gap:.25rem!important;}",
+      "/* Grup üye butonu: yazı yerine ikon + üye sayısı */",
+      "#havuzBolum .istek-uye-buton button{font-size:10px!important;gap:.25rem!important;}",
+      "#havuzBolum .istek-uye-sayi{font-size:10px!important;font-weight:700;opacity:.85;}",
+      "/* DERS RENKLİ SOL ŞERİT: 3px border-left (renk JS'ten) */",
+      "#havuzBolum .istek-kart[data-havuz-ders]{border-left:3px solid var(--havuz-ders-renk,#cbd5e1)!important;}",
+      ""
+    ].join("\n");
+
+    function stilEkle() {
+      if (document.getElementById(STIL_ID)) return;
+      var st = document.createElement("style");
+      st.id = STIL_ID;
+      st.textContent = CSS_METIN;
+      (document.head || document.documentElement).appendChild(st);
+    }
+
+    function metinDugumleriniTemizle(el) {
+      for (var i = el.childNodes.length - 1; i >= 0; i--) {
+        if (el.childNodes[i].nodeType === 3) el.removeChild(el.childNodes[i]);
+      }
+    }
+
+    /* Ders etiketini METNE göre bulur (class/token bağımlılığı yok) */
+    function dersEtiketiBul(kart) {
+      var spanlar = kart.querySelectorAll("span");
+      for (var i = 0; i < spanlar.length; i++) {
+        var t = (spanlar[i].textContent || "").trim();
+        if (t && Object.prototype.hasOwnProperty.call(DERS_RENK, t)) return spanlar[i];
+      }
+      return null;
+    }
+    function kartIsle(kart) {
+      /* 1) Ders renkli 3px sol şerit */
+      var etiket = dersEtiketiBul(kart);
+      if (etiket) {
+        var ders = (etiket.textContent || "").trim();
+        etiket.setAttribute("data-havuz-ders-etiket", ders);
+        if (kart.getAttribute("data-havuz-ders") !== ders) {
+          kart.setAttribute("data-havuz-ders", ders);
+          kart.style.setProperty("--havuz-ders-renk", DERS_RENK[ders]);
+        }
+      }
+
+      /* 2) "Eşleştir & Planla" -> "Planla" (ikon korunur) */
+      var planBtn = kart.querySelector('button[onclick^="formaAktar"]');
+      if (planBtn && planBtn.getAttribute("data-havuz-kisa") !== "1") {
+        metinDugumleriniTemizle(planBtn);
+        planBtn.appendChild(document.createTextNode("Planla"));
+        planBtn.setAttribute("data-havuz-kisa", "1");
+        planBtn.setAttribute("title", "Eşleştir & Planla");
+      }
+
+      /* 3) "Grup üyelerini ekle/çıkar (N)" -> ikon + N */
+      var uyeBtn = kart.querySelector(".istek-uye-buton button");
+      if (uyeBtn && uyeBtn.getAttribute("data-havuz-uye") !== "1") {
+        var yazi = (uyeBtn.textContent || "").trim();
+        var sayi = (yazi.match(/\((\d+)\)/) || [])[1] || "";
+        uyeBtn.setAttribute("data-havuz-uye", "1");
+        if (yazi) uyeBtn.setAttribute("title", yazi);
+        metinDugumleriniTemizle(uyeBtn);
+        if (sayi) {
+          var span = document.createElement("span");
+          span.className = "istek-uye-sayi";
+          span.textContent = sayi;
+          uyeBtn.appendChild(span);
+        }
+      }
+    }
+    function uygula() {
+      var kok = document.getElementById(KOK_ID);
+      if (!kok) return;
+      var kartlar = kok.querySelectorAll(".istek-kart");
+      for (var i = 0; i < kartlar.length; i++) kartIsle(kartlar[i]);
+    }
+
+    var bekliyor = false;
+    function planla() {
+      if (bekliyor) return;
+      bekliyor = true;
+      var calistir = function () { bekliyor = false; uygula(); };
+      if (window.requestAnimationFrame) window.requestAnimationFrame(calistir);
+      else setTimeout(calistir, 16);
+    }
+
+    /* renderHavuz() #havuzBolum.innerHTML'i baştan yazar; DOM'u izleyip yeniden uygularız */
+    function baglan() {
+      stilEkle();
+      uygula();
+      var kok = document.getElementById(KOK_ID);
+      if (!kok) return false;
+      if (!kok.__havuz3KolonIzle) {
+        kok.__havuz3KolonIzle = true;
+        if (window.MutationObserver) {
+          new MutationObserver(function () { planla(); }).observe(kok, { childList: true, subtree: true });
+        }
+      }
+      return true;
+    }
+
+    function baslat() {
+      if (baglan()) return;
+      var deneme = 0;
+      var zaman = setInterval(function () {
+        deneme++;
+        if (baglan() || deneme > 40) clearInterval(zaman);
+      }, 150);
+    }
+
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", baslat);
+    else baslat();
+  })();
+
 })();

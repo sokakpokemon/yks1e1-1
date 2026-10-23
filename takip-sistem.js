@@ -5146,6 +5146,68 @@ window.__sysAnalizAra = function() {
     if (i >= 0) cakismaIsaretli.splice(i, 1);
   }, true);
 
+  /* === GÜN HESAPLAMA KAYNAK DÜZELTMESİ (GUVENLI-GUN-IDX) ===
+     "2026-10-24" 2026'da CUMARTESİ'dir (dowIdx = 5). Chips/etiketler bir gün geriye
+     kayıyorsa kaynak, tarihin saat dilimine duyarlı biçimde çözülmesidir (UTC gece yarısı
+     → yerel saatte önceki gün). Bu blok app.js'in kendi tarih yardımcılarını GLOBAL olarak
+     override eder; tüm gün hesapları YEREL öğlen (12:00) üzerinden yapılır:
+       fromKey   → YYYY-MM-DD'yi yerel 12:00 Date'e çevirir (saat dilimi kayması yok)
+       dowIdx    → Pazartesi=0 … Pazar=6 (kanonik)
+       GUN_KISA  → ["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"]
+       GUNLER    → uzun adlar (Pazartesi=0)
+       gunAdi    → "Cumartesi, 24 Ekim 2026" biçimi korunur
+     app.js/index.html değişmez; sadece çalışma zamanı global fonksiyonları düzeltilir. */
+  (function () {
+    var KISA = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]; /* Pazartesi=0 */
+    var UZUN = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
+    var GETDAY_ADI = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"]; /* Date.getDay() sırası */
+    var AYLAR_VARSAYILAN = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+
+    function guvenliFromKey(tarih) {
+      if (tarih instanceof Date) {
+        var dd = new Date(tarih.getFullYear(), tarih.getMonth(), tarih.getDate(), 12, 0, 0);
+        return isNaN(dd.getTime()) ? new Date(NaN) : dd;
+      }
+      var p = String(tarih == null ? "" : tarih).split("-");
+      var y = parseInt(p[0], 10), m = parseInt(p[1], 10), g = parseInt(p[2], 10);
+      if (y && m && g) {
+        var d = new Date(y, m - 1, g, 12, 0, 0); /* YEREL öğlen: DST/saat dilimi kayması yok */
+        if (!isNaN(d.getTime())) return d;
+      }
+      var d2 = new Date(String(tarih));
+      return isNaN(d2.getTime()) ? new Date(NaN) : d2;
+    }
+
+    function guvenliGunIdx(tarih) {
+      var d = guvenliFromKey(tarih);
+      if (!d || isNaN(d.getTime())) return -1;
+      return (d.getDay() + 6) % 7; /* Pazartesi=0, Pazar=6 */
+    }
+
+    /* app.js'in global bağlarını düzelt (var/function global → window ataması etkilidir) */
+    window.fromKey = guvenliFromKey;
+    window.dowIdx = guvenliGunIdx;
+    window.GUN_KISA = KISA.slice();
+    window.GUNLER = UZUN.slice();
+
+    /* gunAdi: app.js ile AYNI çıktı biçimi, fakat güvenli tarih çözümlemesiyle. */
+    window.gunAdi = function (key) {
+      var d = guvenliFromKey(key);
+      if (!d || isNaN(d.getTime())) return String(key == null ? "" : key);
+      var aylar = (Array.isArray(window.AYLAR) && window.AYLAR.length === 12) ? window.AYLAR : AYLAR_VARSAYILAN;
+      return GETDAY_ADI[d.getDay()] + ", " + d.getDate() + " " + aylar[d.getMonth()] + " " + d.getFullYear();
+    };
+
+    /* Yeni hesaplamayla chip'leri/tabloyu bir kez yeniden üret. */
+    function gunleriTazele() {
+      try {
+        if (typeof window.renderDersler === "function") window.renderDersler();
+      } catch (e) { /* render hazır değilse sonraki render doğru değerleri kullanır */ }
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", gunleriTazele);
+    else gunleriTazele();
+  })();
+
   /* === BOŞ GÜN › NORMAL DERS PROGRAMI TABLOSU (BOS-GUN-TABLO-YAMASI) ===
      app.js gunlukTablo(), o gün hiç birebir/ek ders yoksa erken dönüp
      "… günü birebir ders yok / Bu güne ders planlanmamış." kartını basıyor ve

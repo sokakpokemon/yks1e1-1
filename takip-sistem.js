@@ -4738,12 +4738,18 @@ window.__sysAnalizAra = function() {
     return sebepler;
   }
 
-  /* Havuz isteği → sebep dizisi (öğrenciler istekten: ana + grup üyeleri) */
+  /* Havuz isteği → sebep dizisi (öğrenciler istekten: ana + grup üyeleri)
+     BRANŞ KONTROLÜ: hedef öğretmen isteğin dersini VEREMİYORSA "Farklı branş (X)" sebebi
+     eklenir. Kaynak ders kartı taşımayla AYNI: hedefBransUygun() + window.__ksBransHarita
+     (ders kodu → o dersi verebilecek branş kodları; ör. biy: ["biy"]). Burada İKİNCİ bir
+     harita KOPYALANMAZ. Kontrol istekler için ATLANMAZ; hedef öğretmen kimliği ya da
+     isteğin dersId'si yoksa (branş kuralı uygulanamaz) yanlış kırmızı üretmemek için geçilir. */
   function cakismaSebebi(istekId, tarih, saat, ogretmenId) {
     var db = cakismaDb();
     var uyeler = [];
+    var istek = null;
     if (db) {
-      var istek = (Array.isArray(db.istekler) ? db.istekler : []).filter(function (x) {
+      istek = (Array.isArray(db.istekler) ? db.istekler : []).filter(function (x) {
         return x && x.id === istekId;
       })[0] || null;
       if (istek) {
@@ -4751,7 +4757,18 @@ window.__sysAnalizAra = function() {
         if (!uyeler.length && istek.ogrenciId) uyeler = [istek.ogrenciId];
       }
     }
-    return cakismaSebepDizisi(uyeler, "", tarih, saat, ogretmenId);
+    var sebepler = [];
+    /* 5) BRANŞ — hedef öğretmenin branşı isteğin dersini verebiliyor mu?
+       Ders kartında bunu dersCakismaSebebi yapıyor; havuz isteğinde AYNI kural burada. */
+    if (db && istek && istek.dersId && ogretmenId) {
+      var hedefOgretmen = (Array.isArray(db.ogretmenler) ? db.ogretmenler : []).filter(function (o) {
+        return o && o.id === ogretmenId;
+      })[0] || null;
+      if (hedefOgretmen && !hedefBransUygun(istek, hedefOgretmen)) {
+        sebepler.push("Farklı branş (" + bransEtiketi(hedefOgretmen.brans) + ")");
+      }
+    }
+    return sebepler.concat(cakismaSebepDizisi(uyeler, "", tarih, saat, ogretmenId));
   }
 
   /* BRANŞ KURALI — TEK KAYNAK takip-sistem.js'teki HARITA (ders kodu → o dersi verebilecek
@@ -4960,7 +4977,10 @@ window.__sysAnalizAra = function() {
           var istekId = window.istekDropHedef;
           var dersId = window.dersDropHedef;
           if (istekId && !dersId) {
-            var sebepler = cakismaSebebi(istekId, tarih, saat, ogrtId);
+            /* Hedef öğretmen kimliği inline ondrop'tan gelir; boş gelirse hücrenin kendi
+               data-drop-ogrt niteliğinden okunur — branş kontrolü hedefsiz çalışamaz. */
+            var hedefId = ogrtId || ((el && el.getAttribute) ? (el.getAttribute("data-drop-ogrt") || "") : "");
+            var sebepler = cakismaSebebi(istekId, tarih, saat, hedefId);
             if (sebepler.length) {
               if (ev && ev.preventDefault) ev.preventDefault();
               if (ev && ev.stopPropagation) ev.stopPropagation();

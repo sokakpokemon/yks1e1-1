@@ -5666,3 +5666,36 @@ ikonStil.textContent =
   "  transform: scale(1.1) !important; " +
   "}";
 document.head.appendChild(ikonStil);
+
+// === MODERN GÖRÜNÜM: BUTONLAR VE FORM ELEMANLARI (D3) ===
+var butonStil = document.createElement("style");
+butonStil.id = "__butonFormModernStil";
+butonStil.textContent =
+  "button, .btn { " +
+  "  border-radius: 12px !important; " +
+  "  font-weight: 600 !important; " +
+  "  transition: all 0.2s ease !important; " +
+  "  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important; " +
+  "}" +
+  "button:hover:not(:disabled), .btn:hover:not(:disabled) { " +
+  "  transform: translateY(-1px) !important; " +
+  "  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important; " +
+  "}" +
+  "button:active:not(:disabled), .btn:active:not(:disabled) { " +
+  "  transform: translateY(0) !important; " +
+  "  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important; " +
+  "}" +
+  "input, select, textarea { " +
+  "  border-radius: 10px !important; " +
+  "  border: 1px solid #cbd5e1 !important; " +
+  "  padding: 10px 14px !important; " +
+  "  transition: all 0.2s ease !important; " +
+  "  background-color: #ffffff !important; " +
+  "  color: #0f172a !important; " +
+  "}" +
+  "input:focus, select:focus, textarea:focus { " +
+  "  border-color: #14b8a6 !important; " +
+  "  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2) !important; " +
+  "  outline: none !important; " +
+  "}";
+document.head.appendChild(butonStil);

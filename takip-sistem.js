@@ -2706,6 +2706,11 @@ window.__sysAnalizAra = function() {
       return String(v == null ? "" : v).replace(/[ıİğĞüÜşŞöÖçÇ]/g, function (c) { return m[c]; })
         .replace(/[Iİ]/g, "i").toLowerCase().replace(/[^a-z0-9]/g, "");
     }
+    /* ÇAKIŞMA GÖSTERGESİ: aynı branş-ders haritası dosya sonundaki sürükle-bırak modülünde
+       de kullanılır; ikinci bir kopya (drift) oluşmasın diye buradan SALT-OKUMA yayınlanır. */
+    window.__ksBransHarita = HARITA;
+    window.__ksBransNorm = norm;
+    window.__ksBransKodu = bransKodu; /* norm + AD_ES: "Türkçe" → "tur", "Kimya" → "kim" */
     function esc(s) {
       return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
         return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
@@ -4749,21 +4754,76 @@ window.__sysAnalizAra = function() {
     return cakismaSebepDizisi(uyeler, "", tarih, saat, ogretmenId);
   }
 
+  /* BRANŞ KURALI — TEK KAYNAK takip-sistem.js'teki HARITA (ders kodu → o dersi verebilecek
+     branş kodları; ör. kim: ["kim"], mat: ["mat", "geo"], geo: ["geo", "mat"]).
+     Harita yukarıdaki BRANS-DERS-CIFT-YON bloğunda window.__ksBransHarita olarak yayınlanır;
+     burada KOPYALANMAZ. Branş adı normalizasyonu da ("Kimya" → "kim") aynı bloktan gelir.
+     Haritada hiç geçmeyen bir ders için varsayılan: yalnız kendi kodundaki branş verir.
+     Harita hiç yoksa app.js'in bransDersUygun() kaydetme kuralına düşer. */
+  function bransEtiketi(brans) {
+    var ham = String(brans || "");
+    var kod = ham;
+    /* Branş alanı "matematik" / "Kimya" gibi uzun yazılmış olabilir → kanonik ders kodu */
+    if (typeof window.bransDersNorm === "function") kod = window.bransDersNorm(ham);
+    var es = window.BRANS_AD_ES;
+    if (es && es[kod]) kod = es[kod];
+    var D = window.DERS;
+    if (D && D[kod] && D[kod].ad) return String(D[kod].ad);
+    return ham || "?";
+  }
+  function hedefBransUygun(ders, hedefOgretmen) {
+    if (!ders || !ders.dersId) return true;
+    var harita = window.__ksBransHarita;
+    var kodla = window.__ksBransKodu;
+    var norm = window.__ksBransNorm;
+    if (harita && typeof harita === "object" && (typeof kodla === "function" || typeof norm === "function")) {
+      var brans = (typeof kodla === "function") ? kodla(hedefOgretmen) : norm(hedefOgretmen && hedefOgretmen.brans);
+      if (!brans) return true; /* branşsız öğretmen: kural uygulanamaz, yanlış kırmızı üretme */
+      var izinli = harita[ders.dersId];
+      if (!Array.isArray(izinli)) izinli = [ders.dersId]; /* haritada olmayan ders → kendi branşı */
+      return izinli.indexOf(brans) >= 0;
+    }
+    /* Yedek 1: app.js'in kaydetme kuralı (bransDersUygun) */
+    if (typeof window.bransDersUygun === "function" && hedefOgretmen && hedefOgretmen.id) {
+      return !!window.bransDersUygun(hedefOgretmen.id, ders.dersId, ders.konu);
+    }
+    /* Yedek 2: app.js global haritası (ders kodu → branş kodları) */
+    var yedekHarita = window.BRANS_DERS_HARITA;
+    if (yedekHarita && typeof yedekHarita === "object" && Array.isArray(yedekHarita[ders.dersId])) {
+      var ham = String((hedefOgretmen && hedefOgretmen.brans) || "");
+      return yedekHarita[ders.dersId].some(function (b) { return String(b) === ham; });
+    }
+    return true; /* kural okunamıyorsa yanlış kırmızı üretmeyiz */
+  }
+
   /* GÖREV 2 — planlı ders kartı → sebep dizisi.
-     Öğrenci bilgisi DB.dersler'den (cakismaDersOgrenciler: ana + grup üyeleri); dersin
-     KENDİ kaydı tüm kontrollerden hariç tutulur. app.js'teki dersBurak kurallarıyla
-     hizalı yapısal engeller de raporlanır: çizelgede yalnız aynı öğretmenin satırına ve
-     yalnız tek öğrencili dersler taşınabilir (grup dersleri havuza geri bırakılır). */
+     Hedef öğretmen dersi VEREMİYORSA yalnız branş sebebi döner (diğer kontroller anlamsız).
+     Veriyorsa öğretmen dolu / ek ders / öğrenci dolu / sınıf dolu / Pazar kontrolleri ortak
+     çekirdekten gelir; öğrenci bilgisi DB.dersler'den (ana + grup üyeleri), dersin KENDİ
+     kaydı tüm kontrollerden hariç tutulur. */
   function dersCakismaSebebi(dersId, hedefTarih, hedefSaat, hedefOgretmenId) {
     var db = cakismaDb();
-    var dersler = (db && Array.isArray(db.dersler)) ? db.dersler : [];
+    if (!db) return ["Ders bulunamadı"];
+    var dersler = Array.isArray(db.dersler) ? db.dersler : [];
     var ders = dersler.filter(function (l) { return l && l.id === dersId; })[0] || null;
-    if (!ders) return [];
+    if (!ders) return ["Ders bulunamadı"];
+    if (!ders.dersId) return ["Ders kodu bulunamadı"];
+    var hedefOgretmen = (Array.isArray(db.ogretmenler) ? db.ogretmenler : []).filter(function (o) {
+      return o && o.id === hedefOgretmenId;
+    })[0] || null;
+    if (!hedefOgretmen) return ["Hedef öğretmen bulunamadı"];
+
+    /* Yapısal engeller (app.js dersBurak): iptal/tamamlanmış ve grup ders çizelgede taşınamaz */
     var yapisal = [];
     if (ders.durum === "iptal" || ders.durum === "tamamlandi") yapisal.push("Ders taşınamaz");
     if (cakismaDersOgrenciler(ders).length !== 1) yapisal.push("Grup ders taşınamaz");
-    if (ders.ogretmenId && hedefOgretmenId && ders.ogretmenId !== hedefOgretmenId) yapisal.push("Farklı öğretmen");
     if (yapisal.length) return yapisal;
+
+    /* Branş: aynı branştaki başka öğretmen GEÇERLİ (Elif Koç'un Kimya dersi → Selina Kutlu) */
+    if (!hedefBransUygun(ders, hedefOgretmen)) {
+      return ["Farklı branş (" + bransEtiketi(hedefOgretmen.brans) + ")"];
+    }
+
     return cakismaSebepDizisi(cakismaDersOgrenciler(ders), ders.id, hedefTarih, hedefSaat, hedefOgretmenId);
   }
 

@@ -5146,247 +5146,175 @@ window.__sysAnalizAra = function() {
     if (i >= 0) cakismaIsaretli.splice(i, 1);
   }, true);
 
-  /* === BOŞ GÜN › MÜSAİT ÖĞRETMENLER PANELİ (MUSAIT-OGRETMEN-PANELI) ===
-     Günlük takvim görünümünde "... günü birebir ders yok / Bu güne ders planlanmamış."
-     empty state'i göründüğünde, o gün EN AZ 1 boş saati olan öğretmenleri listeler.
-     Veri okuma: DB.ogretmenler[].avail.sinif (Sınıf Dersi) + avail.musait (Kapalı) +
-     DB.dersler + DB.ekDersler (o tarih, aynı saat kodu). Tüm gün dolu ise listeye girmez.
-     app.js/index.html DEĞİŞMEZ: panel render sırasında silinir; buradaki 500 ms tik
-     yalnız empty state varken ve panel yoksa/başka güne aitse yeniden kurar. */
+  /* === BOŞ GÜN › NORMAL DERS PROGRAMI TABLOSU (BOS-GUN-TABLO-YAMASI) ===
+     app.js gunlukTablo(), o gün hiç birebir/ek ders yoksa erken dönüp
+     "… günü birebir ders yok / Bu güne ders planlanmamış." kartını basıyor ve
+     tablo HİÇ üretilmiyor. Bu sarmalayıcı yalnız o empty-state çıktısında devreye girer
+     ve AYNI günlük tablo iskeletini üretir: gün başlığı, saat + Mola sütunları,
+     öğretmen satırları, boş hücrelerde MEVCUT dnd-bos drop-zone'u.
+     Dolu günlerde orijinal HTML AYNEN döner; app.js/index.html değişmez.
+     Sınıf Dersi (avail.sinif) ve Kapalı (avail.musait) hücreleri kilitli çizilir;
+     boş hücreye tıklamak mevcut Birebir Ders Planla formunu öğretmen+tarih+saatle doldurur. */
   (function () {
-    var PANEL_ID = "__musaitOgrtPanel";
-    var VARSAYILAN_KODLAR = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"];
+    if (typeof window.gunlukTablo !== "function" || window.gunlukTablo.__bosGunSarmal) return;
+    var orijinalGunlukTablo = window.gunlukTablo;
 
-    function eleman(id) { return id ? document.getElementById(id) : null; }
-
-    /* Kısa kod slotları: app.js KISA_KOD varsa onun sırası/kodları, yoksa 1..11. */
-    function slotKodlari() {
-      var k = window.KISA_KOD;
-      if (Array.isArray(k) && k.length) {
-        var liste = [];
-        for (var i = 0; i < k.length; i++) {
-          if (k[i] && k[i].no != null) liste.push(String(k[i].no));
-        }
-        if (liste.length) return liste;
-      }
-      return VARSAYILAN_KODLAR.slice();
-    }
-
-    /* Takvim kuralı app.js ile aynı: Pazartesi=0 … Pazar=6. */
-    function gunIndeksi(key) {
-      var p = String(key || "").split("-");
-      var y = parseInt(p[0], 10), m = parseInt(p[1], 10), g = parseInt(p[2], 10);
-      if (!y || !m || !g) return -1;
-      return (new Date(y, m - 1, g).getDay() + 6) % 7;
-    }
-
-    /* "15:30" → "8"; kod zaten "8" ise aynen döner. */
-    function kodOf(saat) {
-      if (typeof window.ksKodOf === "function") {
-        var no = window.ksKodOf(saat);
-        if (no) return String(no);
-      }
-      var kodlar = Array.isArray(window.KISA_KOD) ? window.KISA_KOD : [];
-      var s = String(saat == null ? "" : saat);
-      for (var i = 0; i < kodlar.length; i++) {
-        var k = kodlar[i];
-        if (k && (k.b === s || String(k.no) === s)) return String(k.no);
-      }
-      return s;
-    }
-
-    /* Görüntülenen günün tarihi: ui.gunSecim → (gün modunda) ui.anchor → aktif gün chip'i. */
-    function gunKeyBul() {
-      var u = window.ui;
-      if (u) {
-        if (u.gunSecim) return String(u.gunSecim);
-        if (u.filtre === "gun" && u.anchor) return String(u.anchor);
-      }
-      var cipler = document.querySelectorAll('#derslerBolum button[onclick*="gunSec("]');
-      for (var i = 0; i < cipler.length; i++) {
-        var c = cipler[i];
-        if (!c || !c.className || String(c.className).indexOf("bg-teal-500") < 0) continue;
-        var m = String(c.getAttribute("onclick") || "").match(/gunSec\(\s*["'](\d{4}-\d{2}-\d{2})["']\s*\)/);
-        if (m) return m[1];
-      }
-      return "";
-    }
-
-    /* Günlük empty state'in en içteki kutusu (haftalık "Bu dönemde ders yok" ile karışmaz).
-       querySelectorAll belge sırasındadır: dış kart da metni içerdiği için eşleşir; EN SON
-       eşleşme en derindeki kutudur (panel onun hemen altına girer). */
-    function bosDurumKutusu() {
-      var kok = eleman("derslerBolum");
-      if (!kok) return null;
-      var adaylar = kok.querySelectorAll("div");
-      var secili = null;
-      for (var i = 0; i < adaylar.length; i++) {
-        var el = adaylar[i];
-        var yazi = String(el.textContent || "");
-        if (yazi.indexOf("birebir ders yok") < 0) continue;
-        if (yazi.indexOf("Bu güne ders planlanmamış") < 0) continue;
-        secili = el;
-      }
-      return secili;
-    }
-
-    function bransAdi(brans) {
-      var b = String(brans == null ? "" : brans).trim();
-      if (!b) return "Branş belirtilmemiş";
-      if (window.DERS && window.DERS[b] && window.DERS[b].ad) return window.DERS[b].ad;
-      var liste = Array.isArray(window.DERSLER) ? window.DERSLER : [];
-      for (var i = 0; i < liste.length; i++) {
-        if (liste[i] && liste[i].id === b && liste[i].ad) return liste[i].ad;
-      }
-      return b;
-    }
-
-    /* O gün müsait öğretmenler + her birinin boş saat sayısı. */
-    function musaitListesi(gunKey) {
-      var db = window.DB;
-      if (!db || !Array.isArray(db.ogretmenler)) return [];
-      var gi = gunIndeksi(gunKey);
-      if (gi < 0) return [];
-      var kodlar = slotKodlari();
-      var dersler = Array.isArray(db.dersler) ? db.dersler : [];
-      var ekDersler = Array.isArray(db.ekDersler) ? db.ekDersler : [];
-
-      function dersOgre(t, l) {
-        if (!l || l.tarih !== gunKey || l.durum === "iptal") return false;
-        if (t.id && l.ogretmenId) return l.ogretmenId === t.id;
-        return String(l.ogretmenAd || "") === String(t.ad || "");
-      }
-
-      function doluMu(t, kod) {
-        var key = gi + "-" + kod;
-        var av = t.avail;
-        /* Sınıf Dersi: avail.sinif["<gün>-<slot>"] */
-        if (av && av.sinif && typeof av.sinif === "object" && !Array.isArray(av.sinif)) {
-          if (Object.prototype.hasOwnProperty.call(av.sinif, key) && av.sinif[key]) return true;
-        }
-        /* Kapalı: avail.musait içinde "<gün>-<slot>" */
-        if (av && av.musait) {
-          if (Array.isArray(av.musait) && av.musait.indexOf(key) >= 0) return true;
-          if (!Array.isArray(av.musait) && typeof av.musait === "object" && av.musait[key]) return true;
-        }
-        /* Aynı tarih + saatte başka birebir ders / ek ders */
-        for (var i = 0; i < dersler.length; i++) {
-          if (dersOgre(t, dersler[i]) && kodOf(dersler[i].saat) === kod) return true;
-        }
-        for (var j = 0; j < ekDersler.length; j++) {
-          if (dersOgre(t, ekDersler[j]) && kodOf(ekDersler[j].saat) === kod) return true;
-        }
-        return false;
-      }
-
-      var sonuc = [];
-      for (var i = 0; i < db.ogretmenler.length; i++) {
-        var t = db.ogretmenler[i];
-        if (!t || !t.ad) continue;
-        var bos = 0;
-        for (var j = 0; j < kodlar.length; j++) {
-          if (!doluMu(t, kodlar[j])) bos++;
-        }
-        if (!bos) continue; /* tüm gün dolu/kapalı → listeye girmez */
-        sonuc.push({ id: t.id || "", ad: t.ad, brans: bransAdi(t.brans), bos: bos });
-      }
-      sonuc.sort(function (a, b) {
-        if (b.bos !== a.bos) return b.bos - a.bos;
-        return String(a.ad).localeCompare(String(b.ad), "tr");
-      });
-      return sonuc;
-    }
-
-    function escHtml(x) {
+    function escY(x) {
+      if (typeof window.esc === "function") return window.esc(x);
       return String(x == null ? "" : x)
         .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     }
 
-    function panelHTML(gunKey, liste) {
-      var h = '<div id="' + PANEL_ID + '" data-gun="' + escHtml(gunKey) + '" class="no-print px-5 pb-6 pt-1">' +
-        '<div class="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4">' +
-          '<div class="flex flex-wrap items-center justify-between gap-2 mb-3">' +
-            '<h4 class="text-[12.5px] font-extrabold text-emerald-800 uppercase tracking-wide">\u{1F4C5} Bu gün müsait öğretmenler (' + liste.length + ' kişi)</h4>' +
-            '<span class="text-[10.5px] font-semibold text-emerald-600">Karta tıklayın: öğretmen + tarih forma yazılır</span>' +
-          '</div>';
-      if (!liste.length) {
-        h += '<p class="text-[12px] font-semibold text-slate-500 py-2">Bu gün tüm öğretmenler dolu veya kapalı.</p>';
-      } else {
-        h += '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">';
-        for (var i = 0; i < liste.length; i++) {
-          var t = liste[i];
-          h += '<button type="button" data-musait-ogrt="' + escHtml(t.id) + '" data-musait-ad="' + escHtml(t.ad) + '"' +
-            ' class="group text-left rounded-xl border border-emerald-100 bg-white hover:border-emerald-300 hover:bg-emerald-50 px-3 py-2.5 transition-all">' +
-            '<div class="flex items-center justify-between gap-2">' +
-              '<span class="text-[12px] font-black text-slate-800 truncate">' + escHtml(t.ad) + '</span>' +
-              '<span class="shrink-0 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-extrabold px-2 py-0.5">' + t.bos + ' boş saat</span>' +
-            '</div>' +
-            '<div class="text-[10.5px] font-semibold text-slate-400 mt-0.5">' + escHtml(t.brans) + '</div>' +
-          '</button>';
+    function gunIndeksi(key) {
+      var p = String(key || "").split("-");
+      var y = parseInt(p[0], 10), m = parseInt(p[1], 10), g = parseInt(p[2], 10);
+      if (!y || !m || !g) return -1;
+      return (new Date(y, m - 1, g).getDay() + 6) % 7; /* Pazartesi=0 … Pazar=6 */
+    }
+
+    function gunKisa(key) {
+      var adlar = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
+      var p = String(key || "").split("-");
+      var y = parseInt(p[0], 10), m = parseInt(p[1], 10), g = parseInt(p[2], 10);
+      if (!y || !m || !g) return "";
+      return adlar[new Date(y, m - 1, g).getDay()] || "";
+    }
+
+    /* app.js ile AYNI görsel slot sırası: 1-4, Mola (12:00-13:00), 5-11. */
+    function slotListesi() {
+      var k = Array.isArray(window.KISA_KOD) ? window.KISA_KOD : [];
+      return k.slice(0, 4).concat([{ no: "Mola", b: "12:00", e: "13:00", mola: true }], k.slice(4));
+    }
+
+    function sinifChip(ad) {
+      if (typeof window.sinifChipHTML === "function") return window.sinifChipHTML(ad);
+      return '<span class="inline-flex rounded-md bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5 border border-amber-200">' + escY(ad) + '</span>';
+    }
+
+    /* app.js'in günlük boş hücresiyle BİREBİR aynı drop-zone + tıklama ile form doldurma. */
+    function bosHucre(ogrtId, tarih, slot, gi) {
+      return '<td class="dnd-bos px-1.5 py-2 border-r border-slate-200 transition-colors"' +
+        ' data-drop-ogrt="' + escY(ogrtId) + '" data-drop-gun="' + gi + '" data-drop-saat="' + slot.b + '"' +
+        ' ondragover="istekDragOver(event, this)" ondragleave="istekDragLeave(this)"' +
+        ' ondrop="istekBurak(event, this, \'' + escY(ogrtId) + '\', \'' + tarih + '\', \'' + slot.b + '\')"' +
+        ' onclick="__bosGunHucreSec(\'' + escY(ogrtId) + '\', \'' + tarih + '\', \'' + slot.b + '\')"' +
+        ' title="Boş saat — tıklayın ya da ders kartını/havuz isteğini bırakın" style="cursor:pointer">' +
+        '<span class="text-[9px] text-slate-300 select-none">+</span></td>';
+    }
+
+    function bosGunTabloHTML() {
+      var db = window.DB;
+      var u = window.ui;
+      var tarih = u ? String(u.gunSecim || u.anchor || "") : "";
+      if (!db || !Array.isArray(db.ogretmenler) || !tarih) return "";
+      var gi = gunIndeksi(tarih);
+      if (gi < 0) return "";
+
+      var ogretmenler = db.ogretmenler.filter(function (t) { return t && t.ad; });
+      ogretmenler.sort(function (a, b) { return String(a.ad).localeCompare(String(b.ad), "tr"); });
+      var slotlar = slotListesi();
+
+      var html = '<div class="rounded-2xl border border-slate-200 overflow-hidden mb-4 bg-white">' +
+        '<div class="text-center py-3 border-b-2 border-slate-200 bg-slate-50">' +
+          '<h3 class="text-[16px] font-black text-slate-800 tracking-wide uppercase">' + escY(gunKisa(tarih)) + '</h3>' +
+        '</div>' +
+        '<div class="overflow-x-auto"><table class="w-full border-collapse text-center" style="min-width:800px">' +
+        '<thead><tr class="border-b-2 border-slate-200">' +
+          '<th class="px-3 py-2 border-r border-slate-200 bg-slate-50" style="min-width:120px"></th>';
+
+      slotlar.forEach(function (slot) {
+        var bg = slot.mola ? "bg-emerald-200" : "bg-slate-50";
+        var tx = slot.mola ? "text-emerald-700" : "text-slate-600";
+        var alt = slot.mola ? "text-emerald-500" : "text-slate-400";
+        html += '<th class="px-2 py-2 border-r border-slate-200 ' + bg + '" style="min-width:72px">' +
+          '<div class="text-[12px] font-black ' + tx + '">' + slot.no + '</div>' +
+          '<div class="text-[9px] font-semibold ' + alt + '">' + slot.b + '</div>' +
+          '<div class="text-[9px] font-semibold ' + alt + '">' + slot.e + '</div>' +
+          '</th>';
+      });
+      html += '</tr></thead><tbody>';
+
+      ogretmenler.forEach(function (t) {
+        var av = t.avail || {};
+        var sinif = (av.sinif && typeof av.sinif === "object" && !Array.isArray(av.sinif)) ? av.sinif : {};
+        var kapali = Array.isArray(av.musait) ? av.musait : [];
+        html += '<tr class="border-b border-slate-200 bg-white">' +
+          '<td class="px-3 py-3 border-r border-slate-200 text-left">' +
+            '<div class="text-[12px] font-black text-slate-500 uppercase leading-tight">' + escY(t.ad) + '</div>' +
+            '<span class="inline-block mt-1 rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[9px] font-bold text-slate-400 uppercase tracking-wide">Boş</span>' +
+          '</td>';
+
+        slotlar.forEach(function (slot) {
+          if (slot.mola) {
+            html += '<td class="px-1.5 py-2 border-r border-slate-200 bg-emerald-50/60">' +
+              '<div class="text-[10px] font-bold text-emerald-400">Mola</div>' +
+              '<div class="text-[9px] text-emerald-300">' + slot.b + '-' + slot.e + '</div></td>';
+            return;
+          }
+          var key = gi + "-" + slot.no;
+          var sinifAd = Object.prototype.hasOwnProperty.call(sinif, key) ? sinif[key] : "";
+          if (sinifAd || Object.prototype.hasOwnProperty.call(sinif, key)) {
+            /* Sınıf Dersi: normal tablodaki gibi kilitli chip (ad boşsa hücre yine kilitli) */
+            html += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-r border-slate-200">' + (sinifAd ? sinifChip(sinifAd) : "") + '</td>';
+          } else if (kapali.indexOf(key) >= 0) {
+            html += '<td class="px-1.5 py-2 border-r border-slate-200 bg-slate-100/70" title="Kilitli — bu saatte ders veremez">' +
+              '<span class="text-[9px] font-bold text-slate-400 select-none">Kapalı</span></td>';
+          } else if (gi === 6) {
+            /* Pazar: app.js istekBurak bu günü reddediyor — çalışmayan drop-zone çizilmez. */
+            html += '<td class="px-1.5 py-2 border-r border-slate-200 bg-slate-100/70" title="Pazar — kurum kapalı">' +
+              '<span class="text-[9px] font-bold text-slate-400 select-none">Kapalı</span></td>';
+          } else if (t.id) {
+            html += bosHucre(t.id, tarih, slot, gi);
+          } else {
+            html += '<td class="px-1.5 py-2 border-r border-slate-200"></td>'; /* kimliksiz öğretmen: ölü hedef yok */
+          }
+        });
+        html += '</tr>';
+      });
+
+      return html + '</tbody></table></div></div>';
+    }
+
+    /* Boş hücre tıklaması: MEVCUT Birebir Ders Planla formunu doldurur (yeni form/akış yok). */
+    window.__bosGunHucreSec = function (ogrtId, tarih, saat) {
+      try {
+        var db = window.DB;
+        var t = (db && Array.isArray(db.ogretmenler)) ? db.ogretmenler.filter(function (x) { return x.id === ogrtId; })[0] : null;
+        var ogrInp = document.getElementById("f-ogretmen");
+        var tarihInp = document.getElementById("f-tarih");
+        var saatInp = document.getElementById("f-saat");
+        if (ogrInp && t) {
+          ogrInp.value = t.ad;
+          try { ogrInp.dispatchEvent(new Event("input", { bubbles: true })); } catch (e1) {}
+          try { ogrInp.dispatchEvent(new Event("change", { bubbles: true })); } catch (e2) {}
         }
-        h += '</div>';
-      }
-      return h + '</div></div>';
+        if (tarihInp) tarihInp.value = tarih;
+        if (saatInp) saatInp.value = saat;
+        var form = document.getElementById("planKart");
+        if (form && form.scrollIntoView) {
+          try { form.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e3) {}
+        }
+        if (ogrInp && ogrInp.focus) {
+          try { ogrInp.focus({ preventScroll: true }); } catch (e4) {}
+        }
+      } catch (e) { /* form yoksa sessiz geç */ }
+    };
+
+    window.gunlukTablo = function () {
+      var cikti = orijinalGunlukTablo.apply(this, arguments);
+      /* Yalnız empty state çıktısında devreye gir: tablo İÇERMEYEN + boş gün metnini taşıyan HTML.
+         Dolu gün HTML'i (<table> var) AYNEN korunur; ders konusu metni yanlış eşleşme üretmez. */
+      if (typeof cikti !== "string" || cikti.indexOf("<table") >= 0 || cikti.indexOf("Bu güne ders planlanmamış") < 0) return cikti;
+      var tablo = bosGunTabloHTML();
+      return tablo || cikti; /* öğretmen/tarih çözülemezse eski davranış korunur */
+    };
+    window.gunlukTablo.__bosGunSarmal = true;
+
+    /* app.js açılışta bir kez render etti — empty state görünmesin diye tabloyu hemen tazele. */
+    if (typeof window.renderDersler === "function") {
+      try { window.renderDersler(); } catch (e5) {}
     }
-
-    /* Karta tıklama: Ders Planla formunda öğretmen + tarih doldurulur, form görünür alana gelir. */
-    function kartTikla(panel, e) {
-      var btn = e && e.target && e.target.closest ? e.target.closest("[data-musait-ogrt]") : null;
-      if (!btn) return;
-      e.preventDefault();
-      var ad = btn.getAttribute("data-musait-ad") || "";
-      var gunKey = panel.getAttribute("data-gun") || "";
-      var ogrInp = eleman("f-ogretmen");
-      var tarihInp = eleman("f-tarih");
-      if (ogrInp) {
-        ogrInp.value = ad;
-        try { ogrInp.dispatchEvent(new Event("input", { bubbles: true })); } catch (err1) {}
-        try { ogrInp.dispatchEvent(new Event("change", { bubbles: true })); } catch (err2) {}
-      }
-      if (tarihInp && gunKey) tarihInp.value = gunKey;
-      var form = eleman("planKart");
-      if (form && form.scrollIntoView) {
-        try { form.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (err3) {}
-      }
-      if (ogrInp && ogrInp.focus) {
-        try { ogrInp.focus({ preventScroll: true }); } catch (err4) {}
-      }
-    }
-
-    function paneliKaldir() {
-      var p = eleman(PANEL_ID);
-      if (p && p.parentNode) p.parentNode.removeChild(p);
-    }
-
-    function tik() {
-      var kutu = bosDurumKutusu();
-      if (!kutu) { paneliKaldir(); return; } /* empty state yok → panel de yok */
-      var gunKey = gunKeyBul();
-      if (!gunKey) { paneliKaldir(); return; }
-
-      var mevcut = eleman(PANEL_ID);
-      if (mevcut) {
-        /* Panel bu gün için zaten kurulu ve yerinde → dokunma (tıklama 500 ms'de bölünmesin) */
-        if (mevcut.getAttribute("data-gun") === gunKey && mevcut.parentNode === kutu.parentNode) return;
-        paneliKaldir();
-      }
-
-      var liste = musaitListesi(gunKey);
-      var sarici = document.createElement("div");
-      sarici.innerHTML = panelHTML(gunKey, liste);
-      var panel = sarici.firstChild;
-      if (!panel || !kutu.parentNode) return;
-      panel.addEventListener("click", function (e) { kartTikla(panel, e); });
-      kutu.parentNode.insertBefore(panel, kutu.nextSibling);
-    }
-
-    /* Teşhis/test için salt-okunur yardımcı (UI'yi etkilemez). */
-    window.__musaitOgretmenHesapla = musaitListesi;
-
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", tik);
-    else tik();
-    setInterval(tik, 500);
   })();
 
 })();

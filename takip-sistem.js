@@ -5475,3 +5475,30 @@ window.__sysAnalizAra = function() {
   })();
 
 })();
+
+// === KESİN TARİH DÜZELTMESİ (ÇİP ETİKETLERİ) ===
+(function() {
+  function duzelt() {
+    if (!document.querySelector) return;
+    var cipler = document.querySelectorAll('button[onclick*="gunSec("]');
+    for (var i = 0; i < cipler.length; i++) {
+      var c = cipler[i];
+      var m = String(c.getAttribute("onclick") || "").match(/gunSec\('([^']+)'\)/);
+      if (!m) continue;
+      var d = new Date(m[1] + "T12:00:00");
+      if (isNaN(d.getTime())) continue;
+      var idx = (d.getDay() + 6) % 7;
+      var gunAdi = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"][idx];
+      var yeni = gunAdi + " " + d.getDate();
+      if (String(c.textContent || "").replace(/\s+/g, " ").trim() !== yeni) {
+        c.textContent = yeni;
+      }
+    }
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", duzelt);
+  } else {
+    duzelt();
+  }
+  setInterval(duzelt, 500);
+})();

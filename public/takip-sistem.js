@@ -169,26 +169,27 @@
   function sinavVeriOku() {
     try { return JSON.parse(localStorage.getItem("yksOto_arsiv_v1") || "{}"); } catch(e) { return {}; }
   }
-  /* KRİTİK KALICILIK: yazma yolu window.DB + window.saveDB() üzerinden yürür.
-     Doğrudan localStorage'a yazmak app.js'in bellekteki DB'sini atlar; sonraki
-     saveDB() çağrısı bu kayıtları ezer → veri kaybı.
-     v, localStorage'dan okunan TAM arşiv olduğu için DB'ye yalnızca bu modülün
-     gerçekten yazdığı alanlar kopyalanır (bellekteki taze veri korunur). */
+  /* KRİTİK KALICILIK — YAZMA SIRASI: LS → DB → saveDB().
+     window.saveDB, D66 sarmalayıcısıyla sarılıdır: çağrıldığında lsDenDBYeMerge()
+     ÖNCE localStorage'daki kopyayı DB'ye yazar. Bu yüzden LS ÖNCE güncellenir;
+     sarmalayıcı ancak o zaman YENİ değeri okur (eski değeri DB'nin üstüne yazamaz).
+     Sonra DB alanları tazelenir ve saveDB() ile tek yazma noktasından kalıcılaşır.
+     v, localStorage'dan okunan TAM arşivdir; DB'ye yalnızca bu modülün yazdığı
+     alanlar kopyalanır (bellekteki taze veri korunur). */
   var SINAV_YAZILAN_ALANLAR = ["sinavYoklamalari", "kutuphane", "gorusmeler"];
   function sinavVeriYaz(v) {
     if (!v || typeof v !== "object") return;
-    var yazildi = false;
+    /* (a) ÖNCE LS: D66 merge localStorage'dan okur */
+    try { localStorage.setItem("yksOto_arsiv_v1", JSON.stringify(v)); } catch (e) {}
+    /* (b) SONRA DB + saveDB: merge artık yeni LS değerini okur (zararsız) */
     try {
       if (typeof window !== "undefined" && window.DB && typeof window.DB === "object") {
         SINAV_YAZILAN_ALANLAR.forEach(function (k) {
           if (v[k] !== undefined) window.DB[k] = v[k];
         });
-        if (typeof window.saveDB === "function") { window.saveDB(); yazildi = true; }
+        if (typeof window.saveDB === "function") window.saveDB();
       }
-    } catch (e) { yazildi = false; }
-    if (!yazildi) {
-      try { localStorage.setItem("yksOto_arsiv_v1", JSON.stringify(v)); } catch (e2) {}
-    }
+    } catch (e2) {}
   }
   function sinavBugunKey() {
     var d = new Date();
@@ -993,11 +994,13 @@
         }
     }
 
-    /* KRİTİK KALICILIK: doğrudan localStorage'a yazmak window.DB'yi güncellemez;
-       sonraki saveDB() bu kayıtları ezer. Önce DB, sonra tek yazma noktası saveDB(). */
+    /* KRİTİK KALICILIK — YAZMA SIRASI: LS → DB → saveDB().
+       D66 merge'ü localStorage'dan okur; LS ÖNCE yazılmazsa eski yoklamalar
+       değeri DB'nin üstüne geri gelir ve Excel kaydı silinir. */
     var dbVar = (typeof window !== "undefined" && window.DB && typeof window.DB === "object");
     if (dbVar && typeof window.saveDB === "function") {
         window.DB.yoklamalar = veri.yoklamalar;
+        try { localStorage.setItem("yksOto_arsiv_v1", JSON.stringify(window.DB)); } catch (eYazLS) {}
         window.saveDB();
     } else if (dbVar) {
         window.DB.yoklamalar = veri.yoklamalar;

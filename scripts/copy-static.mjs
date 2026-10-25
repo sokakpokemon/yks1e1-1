@@ -22,6 +22,7 @@ import { join, dirname, basename } from "node:path";
 const DOSYALAR = [
   "app.js",
   "ek-ders.js",
+  "takip-sistem.js",
   "vendor/tailwind.js",
   "vendor/fontawesome.css",
   "vendor/fonts.css",

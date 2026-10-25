@@ -202,9 +202,9 @@ function toKey(d) {
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 }
 function todayKey() { return toKey(new Date()); }
-function fromKey(k) { var p = String(k).split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+function fromKey(k) { var p = String(k).split("-").map(Number); return new Date(p[0], p[1] - 1, p[2], 12, 0, 0); }
 function addDaysKey(k, n) { var d = fromKey(k); d.setDate(d.getDate() + n); return toKey(d); }
-function dowIdx(k) { return (fromKey(k).getDay() + 6) % 7; }
+function dowIdx(k) { var p = String(k).split("-").map(Number); var d = new Date(p[0], p[1]-1, p[2], 12, 0, 0); return (d.getDay() + 6) % 7; }
 function fmtTR(k) { if (!k) return "—"; var p = k.split("-"); return p[2] + "." + p[1] + "." + p[0]; }
 function fmtSayi(n) { return Number(n || 0).toLocaleString("tr-TR"); }
 function haftaEtiket(sk) {
@@ -4692,255 +4692,8 @@ function gunlukTablo() {
 }
 
 
-/* ═══════════════════════════════════════════════════════════════
-   FİLTRE ÇUBUĞU + SAYFALAMA — yalnız ders listesi tablosunu etkiler.
-   Özet kartları, PNG, WhatsApp ve Listeyi Kopyala akışları PENCERE'yi
-   (ui.filtre/ui.anchor) kullanmaya devam eder; df durumu onlara dokunmaz.
-   Varsayılan: Bu Hafta · sayfa başına 20 ders.
-   ═══════════════════════════════════════════════════════════════ */
-var dersFiltre = { mod: "hafta", baslangic: "", bitis: "", arama: "", durum: "tumu", limit: 20, sayfa: 1, _odakArama: false };
-
-/* ═══ HIZLI TARİH BUTONLARI — DÖNEM SINIRLARI İÇİNDE HESAP ═══
-   Öncelik: 1) Aktif dönemin (aktifDonemId → DB.donemler kaydı) başlangıç/bitiş
-              tarihleri varsa ONLAR kullanılır.
-           2) Yoksa üstteki aktif pencere dönemi (ör. "Eylül 2026") esas alınır;
-              pencere sınırısızsa new Date() ile içinde bulunulan ayın
-              1'i ve son günü hesaplanır.
-   Ters aralık (bitiş < başlangıç) HİÇ üretilmez; clamp'ler hep b <= e garantilidir. */
-function aktifDonemAraligi() {
-  var id = (typeof aktifDonemId === "function") ? aktifDonemId() : "";
-  var dn = (DB && Array.isArray(DB.donemler) ? DB.donemler : []).filter(function (x) { return x && x.id === id; })[0];
-  if (!dn) return null;
-  var b = dn.baslangic || dn.baslangicTarih || dn.start || "";
-  var e = dn.bitis || dn.bitisTarih || dn.end || "";
-  if (b && e && b <= e) return { b: b, e: e };
-  return null; /* dönem kaydında geçerli tarih aralığı yok */
-}
-function takvimAyAraligi(key) {
-  var d = key ? fromKey(key) : new Date(); /* key yoksa içinde bulunulan ay */
-  var b = toKey(new Date(d.getFullYear(), d.getMonth(), 1));
-  var e = toKey(new Date(d.getFullYear(), d.getMonth() + 1, 0));
-  if (b > e) { var g = b; b = e; e = g; } /* asla olmaz — defansif */
-  return { b: b, e: e };
-}
-function gunuDonemIcindeTut(key) {
-  var s = aktifDonemAraligi();
-  if (!s) return key;
-  if (key < s.b) return s.b;
-  if (key > s.e) return s.e;
-  return key;
-}
-function dersFiltreHizli(mod) {
-  var t = todayKey();
-  dersFiltre.mod = mod;
-  dersFiltre.sayfa = 1;
-  ui.gunSecim = null;
-  if (mod === "bugun") {
-    /* "Bugün": bugün aktif dönem dışındaysa dönem sınırındaki güne oturur */
-    t = gunuDonemIcindeTut(t);
-    dersFiltre.baslangic = t; dersFiltre.bitis = t;
-    ui.filtre = "hafta"; ui.anchor = t;
-  } else if (mod === "hafta") {
-    /* "Bu Hafta": hafta dönem tarihliyse dönem sınırlarıyla kırparır; dönem yoksa pencere (hafta) yeterli */
-    var taban = gunuDonemIcindeTut(t);
-    dersFiltre.baslangic = ""; dersFiltre.bitis = "";
-    var sin = aktifDonemAraligi();
-    if (sin) {
-      var wB = haftaBaslangiciD(taban), wE = addDaysKey(wB, 6);
-      if (wB < sin.b) wB = sin.b;
-      if (wE > sin.e) wE = sin.e;
-      if (wB <= wE) { dersFiltre.baslangic = wB; dersFiltre.bitis = wE; }
-      else { dersFiltre.baslangic = taban; dersFiltre.bitis = taban; } /* imkânsız — ters aralık üretme */
-    }
-    ui.filtre = "hafta"; ui.anchor = taban;
-  } else if (mod === "ay") {
-    /* "Bu Ay": 1) aktif dönemin tarihleri; 2) yoksa üstteki aktif ay (ör. "Eylül 2026");
-       pencere ay değilse new Date() ile içinde bulunulan ayın 1'i .. son günü */
-    var dn = aktifDonemAraligi();
-    var pw = pencere();
-    var hedefKey = dn ? null : ((ui.filtre === "ay" && pw.start) ? pw.start : null);
-    var ayA = dn || takvimAyAraligi(hedefKey);
-    dersFiltre.baslangic = ayA.b; dersFiltre.bitis = ayA.e;
-    if (ayA.b.slice(0, 7) === ayA.e.slice(0, 7)) {
-      /* tek aylık aralık: pencere de aynı aya hizalanır (liste boş kalmasın) */
-      ui.filtre = "ay"; ui.anchor = ayA.b;
-    } else {
-      /* dönem birden çok aya yayılıyorsa pencere aralığı kırpmasın */
-      ui.filtre = "tumu";
-    }
-  } else { /* tumu */
-    dersFiltre.baslangic = ""; dersFiltre.bitis = ""; ui.filtre = "tumu";
-  }
-  istekDropHedef = null;
-  renderOzet(); renderAnaliz(); renderDersler();
-}
-function dersFiltreTarihDegisti() {
-  var b = document.getElementById("fBaslangic"), t = document.getElementById("fBitis");
-  dersFiltre.baslangic = b ? b.value : "";
-  dersFiltre.bitis = t ? t.value : "";
-  dersFiltre.sayfa = 1;
-  if (dersFiltre.baslangic || dersFiltre.bitis) {
-    /* Özel aralık pencereyle sınırlanmasın: pencere tüm arşive açılır */
-    dersFiltre.mod = "ozel";
-    ui.filtre = "tumu"; ui.gunSecim = null;
-    renderOzet(); renderAnaliz(); renderDersler();
-  } else {
-    dersFiltre.mod = "hafta";
-    ui.filtre = "hafta"; ui.anchor = todayKey(); ui.gunSecim = null;
-    renderOzet(); renderAnaliz(); renderDersler();
-  }
-}
-function dersFiltreAramaDegisti(v) { dersFiltre.arama = v; dersFiltre.sayfa = 1; dersFiltre._odakArama = true; renderDersler(); }
-function dersFiltreDurumDegisti(v) { dersFiltre.durum = v || "tumu"; dersFiltre.sayfa = 1; renderDersler(); }
-function dersFiltreLimitDegisti(v) { dersFiltre.limit = parseInt(v, 10) || 20; dersFiltre.sayfa = 1; renderDersler(); }
-function dersFiltreSayfaGit(n) { dersFiltre.sayfa = n; renderDersler(); }
-/* Oklar pencereyi kaydırırken aktif tarih filtresini de aynı adım taşır */
-function dfGit(yon) {
-  if (ui.filtre === "tumu") return;
-  if (dersFiltre.baslangic && dersFiltre.bitis) {
-    /* Tek gün / özel aralık modunda: aralık günlük kayar, pencere yeni aralığı kapsayacak şekilde yeniden çapalanır */
-    var adim = dersFiltre.baslangic === dersFiltre.bitis ? 1 : 7;
-    dersFiltre.baslangic = addDaysKey(dersFiltre.baslangic, yon * adim);
-    dersFiltre.bitis = addDaysKey(dersFiltre.bitis, yon * adim);
-    ui.anchor = dersFiltre.baslangic;
-    dersFiltre.sayfa = 1;
-    renderOzet(); renderAnaliz(); renderDersler();
-    return;
-  }
-  dersFiltre.sayfa = 1;
-  navGit(yon);
-}
-function dfBuguneDon() {
-  var t = todayKey();
-  if (dersFiltre.mod === "bugun" || (dersFiltre.baslangic && dersFiltre.baslangic === dersFiltre.bitis)) {
-    dersFiltre.mod = "bugun"; dersFiltre.baslangic = t; dersFiltre.bitis = t;
-  }
-  dersFiltre.sayfa = 1;
-  ui.anchor = t;
-  istekDropHedef = null;
-  if (ui.gunSecim) { var w = pencere(); if (ui.gunSecim < w.start || ui.gunSecim > w.end) ui.gunSecim = null; }
-  renderOzet(); renderAnaliz(); renderDersler();
-}
-
-function dersFiltreBarHTML() {
-  function hbtn(mod, metin, ikon) {
-    var aktif = dersFiltre.mod === mod;
-    return '<button data-df-hizli="' + mod + '" class="rounded-full px-3 py-1.5 text-[11.5px] font-bold border transition-all ' + (aktif ? "bg-teal-500 border-teal-500 text-white shadow-sm" : "bg-white border-slate-200 text-slate-500 hover:border-teal-300 hover:text-teal-600") + '"><i class="fa-solid ' + ikon + ' mr-1"></i>' + metin + '</button>';
-  }
-  var inpCls = "rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-[12px] font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-400/40";
-  return '<div id="dersFiltreBar" class="no-print flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3 border-b border-slate-100 bg-slate-50/60">' +
-    '<div class="flex items-center gap-1.5 flex-wrap">' +
-      '<span class="text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wide mr-0.5"><i class="fa-solid fa-calendar-days mr-1"></i>Tarih</span>' +
-      hbtn("bugun", "Bugün", "fa-sun") +
-      hbtn("hafta", "Bu Hafta", "fa-calendar-week") +
-      hbtn("ay", "Bu Ay", "fa-calendar") +
-      hbtn("tumu", "Tümü", "fa-infinity") +
-    '</div>' +
-    '<div class="flex items-center gap-1.5">' +
-      '<input type="date" id="fBaslangic" value="' + esc(dersFiltre.baslangic) + '" class="' + inpCls + '" title="Başlangıç tarihi">' +
-      '<span class="text-slate-300 text-[12px] font-bold">–</span>' +
-      '<input type="date" id="fBitis" value="' + esc(dersFiltre.bitis) + '" class="' + inpCls + '" title="Bitiş tarihi">' +
-    '</div>' +
-    '<div class="relative flex-1 min-w-[180px] max-w-[280px]">' +
-      '<i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-[11px]"></i>' +
-      '<input type="text" id="fArama" placeholder="Öğrenci, ders, konu ara..." value="' + esc(dersFiltre.arama) + '" class="w-full rounded-xl border border-slate-200 bg-white pl-8 pr-3 py-2 text-[12.5px] font-medium text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-400/40">' +
-    '</div>' +
-    '<select id="fDurum" class="' + inpCls + '" title="Duruma göre filtrele">' +
-      '<option value="tumu"' + (dersFiltre.durum === "tumu" ? " selected" : "") + '>Tümü</option>' +
-      '<option value="planlandi"' + (dersFiltre.durum === "planlandi" ? " selected" : "") + '>Planlandı</option>' +
-      '<option value="tamamlandi"' + (dersFiltre.durum === "tamamlandi" ? " selected" : "") + '>Tamamlandı</option>' +
-      '<option value="iptal"' + (dersFiltre.durum === "iptal" ? " selected" : "") + '>İptal</option>' +
-    '</select>' +
-    '<div class="flex items-center gap-1.5">' +
-      '<select id="fLimit" class="' + inpCls + '" title="Sayfa başına ders">' +
-        '<option value="20"' + (dersFiltre.limit === 20 ? " selected" : "") + '>20</option>' +
-        '<option value="30"' + (dersFiltre.limit === 30 ? " selected" : "") + '>30</option>' +
-        '<option value="50"' + (dersFiltre.limit === 50 ? " selected" : "") + '>50</option>' +
-      '</select>' +
-      '<span class="text-[11px] font-semibold text-slate-400">sayfa</span>' +
-    '</div>' +
-  '</div>';
-}
-
-function dersFiltreSayfalamaHTML(toplamDers, toplamSayfa) {
-  if (!toplamDers) return "";
-  var s = dersFiltre.sayfa;
-  function pBtn(n) {
-    var aktif = n === s;
-    return '<button data-df-sayfa="' + n + '" class="w-8 h-8 rounded-full text-[12px] font-bold border transition-colors ' + (aktif ? "bg-teal-500 border-teal-500 text-white shadow-sm" : "bg-white border-slate-200 text-slate-500 hover:border-teal-300 hover:text-teal-600") + '" style="font-variant-numeric:tabular-nums">' + n + '</button>';
-  }
-  var navCls = "rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11.5px] font-bold text-slate-500 hover:border-teal-300 hover:text-teal-600 disabled:opacity-40 disabled:hover:border-slate-200 disabled:hover:text-slate-500 transition-colors";
-  var sayfalar = "";
-  var bas = Math.max(1, Math.min(s - 3, toplamSayfa - 6));
-  var bit = Math.min(toplamSayfa, bas + 6);
-  if (bas > 1) { sayfalar += pBtn(1); if (bas > 2) sayfalar += '<span class="px-1 text-slate-300 text-[11px] font-bold">…</span>'; }
-  for (var i = bas; i <= bit; i++) sayfalar += pBtn(i);
-  if (bit < toplamSayfa) { if (bit < toplamSayfa - 1) sayfalar += '<span class="px-1 text-slate-300 text-[11px] font-bold">…</span>'; sayfalar += pBtn(toplamSayfa); }
-  var ilk = (s - 1) * dersFiltre.limit + 1;
-  var son = Math.min(s * dersFiltre.limit, toplamDers);
-  return '<div class="no-print flex flex-wrap items-center justify-between gap-2 px-5 py-3 border-t border-slate-100">' +
-    '<span class="text-[11.5px] font-semibold text-slate-400" style="font-variant-numeric:tabular-nums">' + ilk + "–" + son + " / " + toplamDers + ' ders gösteriliyor</span>' +
-    '<div class="flex items-center gap-1.5">' +
-      '<button data-df-sayfa="' + (s - 1) + '"' + (s <= 1 ? " disabled" : "") + ' class="' + navCls + '"><i class="fa-solid fa-chevron-left mr-1 text-[10px]"></i>Önceki</button>' +
-      sayfalar +
-      '<button data-df-sayfa="' + (s + 1) + '"' + (s >= toplamSayfa ? " disabled" : "") + ' class="' + navCls + '">Sonraki<i class="fa-solid fa-chevron-right ml-1 text-[10px]"></i></button>' +
-    '</div>' +
-  '</div>';
-}
-
-/* Filtre çubuğu ve sayfalama butonlarına sayfa yenilenmeden canlı listener'lar bağlar */
-function dersFiltreBagla() {
-  var kok = $("derslerBolum");
-  var bar = document.getElementById("dersFiltreBar");
-  if (!kok || !bar) return;
-  var i;
-  var hizlilar = bar.querySelectorAll("[data-df-hizli]");
-  for (i = 0; i < hizlilar.length; i++) {
-    hizlilar[i].addEventListener("click", function () { dersFiltreHizli(this.getAttribute("data-df-hizli")); });
-  }
-  var fb = bar.querySelector("#fBaslangic"), ft = bar.querySelector("#fBitis");
-  if (fb) fb.addEventListener("change", dersFiltreTarihDegisti);
-  if (ft) ft.addEventListener("change", dersFiltreTarihDegisti);
-  var fa = bar.querySelector("#fArama");
-  if (fa) fa.addEventListener("input", function () { dersFiltreAramaDegisti(fa.value); });
-  var fd = bar.querySelector("#fDurum");
-  if (fd) fd.addEventListener("change", function () { dersFiltreDurumDegisti(fd.value); });
-  var fl = bar.querySelector("#fLimit");
-  if (fl) fl.addEventListener("change", function () { dersFiltreLimitDegisti(fl.value); });
-  var say = kok.querySelectorAll("[data-df-sayfa]");
-  for (i = 0; i < say.length; i++) {
-    say[i].addEventListener("click", function () { dersFiltreSayfaGit(parseInt(this.getAttribute("data-df-sayfa"), 10)); });
-  }
-  if (dersFiltre._odakArama && fa) {
-    fa.focus();
-    try { fa.setSelectionRange(fa.value.length, fa.value.length); } catch (e) {}
-  }
-  dersFiltre._odakArama = false;
-}
-
 function renderDersler() {
-  var tumListe = penceredeDersler();
-  /* FİLTRE + SAYFALAMA: tarih aralığı, arama metni ve durum süzgeci → yalnız o sayfanın satırları basılır */
-  var fB = dersFiltre.baslangic, fT = dersFiltre.bitis;
-  var fDurum = dersFiltre.durum;
-  var fQ = kucuk(dersFiltre.arama.trim());
-  var liste = tumListe.filter(function (l) {
-    if (fB && l.tarih < fB) return false;
-    if (fT && l.tarih > fT) return false;
-    if (fDurum !== "tumu" && (l.durum || "planlandi") !== fDurum) return false;
-    if (fQ) {
-      var D = DERS[l.dersId] || DERS.tur;
-      var demet = kucuk([l.ogrenciAd, D.ad, l.konu || "", l.ogretmenAd || ""].join(" ") + " " + grupOgrenciAdlari(l).join(" "));
-      if (demet.indexOf(fQ) === -1) return false;
-    }
-    return true;
-  });
-  var toplamDers = liste.length;
-  var toplamSayfa = Math.max(1, Math.ceil(toplamDers / dersFiltre.limit));
-  if (dersFiltre.sayfa > toplamSayfa) dersFiltre.sayfa = toplamSayfa;
-  if (dersFiltre.sayfa < 1) dersFiltre.sayfa = 1;
-  var basInd = (dersFiltre.sayfa - 1) * dersFiltre.limit;
-  var sayfaListe = liste.slice(basInd, basInd + dersFiltre.limit);
+  var liste = penceredeDersler();
   var cumle = pencereAdi();
   var ok = GUNLER[dowIdx(todayKey())];
   var p = pencere();
@@ -4948,13 +4701,13 @@ function renderDersler() {
 
   var oklar = "";
   if (ui.filtre !== "tumu") {
-    oklar = '<button onclick="dfGit(-1)" class="w-8 h-8 rounded-full border border-slate-200 hover:border-teal-300 hover:text-teal-600 text-slate-400 transition-colors"><i class="fa-solid fa-chevron-left text-[11px]"></i></button>' +
+    oklar = '<button onclick="navGit(-1)" class="w-8 h-8 rounded-full border border-slate-200 hover:border-teal-300 hover:text-teal-600 text-slate-400 transition-colors"><i class="fa-solid fa-chevron-left text-[11px]"></i></button>' +
       '<span class="px-1 font-bold text-[13px] text-slate-800 whitespace-nowrap" style="font-variant-numeric:tabular-nums">' + cumle + "</span>" +
-      '<button onclick="dfGit(1)" class="w-8 h-8 rounded-full border border-slate-200 hover:border-teal-300 hover:text-teal-600 text-slate-400 transition-colors"><i class="fa-solid fa-chevron-right text-[11px]"></i></button>';
+      '<button onclick="navGit(1)" class="w-8 h-8 rounded-full border border-slate-200 hover:border-teal-300 hover:text-teal-600 text-slate-400 transition-colors"><i class="fa-solid fa-chevron-right text-[11px]"></i></button>';
   } else {
     oklar = '<span class="px-1 font-bold text-[13px] text-slate-800">Tüm arşiv</span>';
   }
-  if (!guncelMi()) oklar += '<button onclick="dfBuguneDon()" class="text-[11px] font-bold text-teal-600 hover:bg-teal-50 border border-teal-200 rounded-full px-3 py-1.5 transition-colors"><i class="fa-solid fa-rotate-left mr-1"></i>Bugüne dön</button>';
+  if (!guncelMi()) oklar += '<button onclick="buguneDon()" class="text-[11px] font-bold text-teal-600 hover:bg-teal-50 border border-teal-200 rounded-full px-3 py-1.5 transition-colors"><i class="fa-solid fa-rotate-left mr-1"></i>Bugüne dön</button>';
 
   var aksiyon =
     '<button onclick="window.print()" class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-[12px] font-bold text-slate-600 px-3.5 py-2 transition-colors"><i class="fa-solid fa-print text-slate-400"></i><span class="hidden md:inline">Yazdır / PDF Al</span></button>' +
@@ -4974,16 +4727,10 @@ function renderDersler() {
   if (ui.haftalikOgrtId) ogrSecici += '<button onclick="ui.haftalikOgrtId=null; renderDersler();" class="w-6 h-6 rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50"><i class="fa-solid fa-xmark text-[10px]"></i></button>';
   ogrSecici += '</div>';
 
-  if (!sayfaListe.length) {
-    if (liste.length) {
-      satirlar = '<tr><td colspan="8"><div class="py-14 text-center"><div class="text-3xl mb-2">📄</div><p class="text-[13px] font-semibold text-slate-500">Bu sayfada ders yok</p><p class="text-[11.5px] text-slate-400 mt-1">Filtre uyan ' + liste.length + ' ders var — sayfa numarasına tıklayın</p></div></td></tr>';
-    } else if (tumListe.length) {
-      satirlar = '<tr><td colspan="8"><div class="py-14 text-center"><div class="text-3xl mb-2">🔍</div><p class="text-[13px] font-semibold text-slate-500">Filtreye uyan ders bulunamadı</p><p class="text-[11.5px] text-slate-400 mt-1">Arama, tarih aralığı veya durum filtresini değiştirmeyi deneyin</p></div></td></tr>';
-    } else {
-      satirlar = '<tr><td colspan="8"><div class="py-14 text-center"><div class="text-3xl mb-2">🗓️</div><p class="text-[13px] font-semibold text-slate-500">Bu dönemde ders yok</p><p class="text-[11.5px] text-slate-400 mt-1">Yukarıdaki formdan yeni bir birebir ders planlayın</p></div></td></tr>';
-    }
+  if (!liste.length) {
+    satirlar = '<tr><td colspan="8"><div class="py-14 text-center"><div class="text-3xl mb-2">🗓️</div><p class="text-[13px] font-semibold text-slate-500">Bu dönemde ders yok</p><p class="text-[11.5px] text-slate-400 mt-1">Yukarıdaki formdan yeni bir birebir ders planlayın</p></div></td></tr>';
   }
-  sayfaListe.forEach(function (l) {
+  liste.forEach(function (l) {
     var D = DERS[l.dersId] || DERS.tur;
     var durum = l.durum || "planlandi";
     var durumEtiket = { planlandi: ["Planlandı", "bg-sky-100 text-sky-700"], tamamlandi: ["Tamamlandı", "bg-emerald-100 text-emerald-700"], iptal: ["İptal", "bg-rose-100 text-rose-500"] }[durum];
@@ -5045,7 +4792,7 @@ function renderDersler() {
         (gunChips ? gunChips : "") +
         (tekGun ? gunlukTablo() : "") +
         (ui.haftalikOgrtId && !tekGun ? haftalikOgrtTablo() : "") +
-        (tekGun ? "" : dersFiltreBarHTML() +
+        (tekGun ? "" : 
       '<div class="overflow-x-auto">' +
           '<table class="w-full min-w-[980px] text-left border-collapse">' +
             '<thead><tr class="bg-slate-50/80 border-b border-slate-100">' +
@@ -5060,7 +4807,6 @@ function renderDersler() {
             "</tr></thead><tbody>" + satirlar + "</tbody>" +
           "</table>" +
         "</div>" +
-        (tekGun ? "" : dersFiltreSayfalamaHTML(toplamDers, toplamSayfa)) +
         '<div class="flex flex-wrap items-center gap-2 px-5 py-3 border-t border-slate-100 text-[11px] text-slate-400 font-semibold">' +
           '<span class="no-print"><i class="fa-regular fa-calendar mr-1"></i>' + cumle + " · " + aralikYazi + "</span>" +
           '<span class="hidden print:inline">📅 ' + cumle + " · " + aralikYazi + "</span>" +
@@ -5068,11 +4814,9 @@ function renderDersler() {
           '<span class="rounded-full bg-sky-100 text-sky-700 px-2 py-0.5">' + say1 + " planlandı</span>" +
           '<span class="rounded-full bg-emerald-100 text-emerald-700 px-2 py-0.5">' + say2 + " tamamlandı</span>" +
           (say3 ? '<span class="rounded-full bg-rose-100 text-rose-500 px-2 py-0.5">' + say3 + " iptal</span>" : "") +
-          ((fB || fT || fQ || fDurum !== "tumu") ? '<span class="rounded-full bg-teal-100 text-teal-700 px-2 py-0.5"><i class="fa-solid fa-filter mr-1"></i>Filtreli</span>' : "") +
         "</div>") +
       "</div>" +
     "</div>";
-  dersFiltreBagla();
 }
 function durumTik(id, durum) {
   var l = DB.dersler.find(function (x) { return x.id === id; });

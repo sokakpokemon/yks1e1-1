@@ -19,6 +19,7 @@ const BOS_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b85
 const VARLIKLAR = [
   "app.js",
   "ek-ders.js",
+  "takip-sistem.js",
   "vendor/tailwind.js",
   "vendor/fontawesome.css",
   "vendor/fonts.css",
@@ -75,11 +76,13 @@ for (const f of VARLIKLAR) {
 if (kokSha["app.js"] && kokSha["ek-ders.js"]) {
   const app16 = kokSha["app.js"].slice(0, 16);
   const ek16 = kokSha["ek-ders.js"].slice(0, 16);
+  const tak16 = kokSha["takip-sistem.js"] ? kokSha["takip-sistem.js"].slice(0, 16) : null;
   for (const h of DAMGA_DOSYALARI) {
     if (!existsSync(h)) { hatalar.push(h + " YOK — damga doğrulanamıyor"); continue; }
     const html = readFileSync(h, "utf8");
     if (!html.includes('src="app.js?v=' + app16 + '"')) hatalar.push(h + " app.js damgası ≠ app.js SHA16 (" + app16 + ")");
     if (!html.includes('src="ek-ders.js?v=' + ek16 + '"')) hatalar.push(h + " ek-ders.js damgası ≠ ek-ders.js SHA16 (" + ek16 + ")");
+    if (tak16 && !html.includes('src="takip-sistem.js?v=' + tak16 + '"')) hatalar.push(h + " takip-sistem.js damgası ≠ takip-sistem.js SHA16 (" + tak16 + ")");
   }
 }
 

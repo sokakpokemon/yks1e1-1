@@ -58,6 +58,7 @@ export default defineConfig({
         const VARLIKLAR = [
           "app.js",
           "ek-ders.js",
+          "takip-sistem.js",
           ...listele(path.join(kok, "vendor")).map((p) => path.relative(kok, p)),
         ];
 

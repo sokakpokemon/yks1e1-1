@@ -169,7 +169,27 @@
   function sinavVeriOku() {
     try { return JSON.parse(localStorage.getItem("yksOto_arsiv_v1") || "{}"); } catch(e) { return {}; }
   }
-  function sinavVeriYaz(v) { localStorage.setItem("yksOto_arsiv_v1", JSON.stringify(v)); }
+  /* KRİTİK KALICILIK: yazma yolu window.DB + window.saveDB() üzerinden yürür.
+     Doğrudan localStorage'a yazmak app.js'in bellekteki DB'sini atlar; sonraki
+     saveDB() çağrısı bu kayıtları ezer → veri kaybı.
+     v, localStorage'dan okunan TAM arşiv olduğu için DB'ye yalnızca bu modülün
+     gerçekten yazdığı alanlar kopyalanır (bellekteki taze veri korunur). */
+  var SINAV_YAZILAN_ALANLAR = ["sinavYoklamalari", "kutuphane", "gorusmeler"];
+  function sinavVeriYaz(v) {
+    if (!v || typeof v !== "object") return;
+    var yazildi = false;
+    try {
+      if (typeof window !== "undefined" && window.DB && typeof window.DB === "object") {
+        SINAV_YAZILAN_ALANLAR.forEach(function (k) {
+          if (v[k] !== undefined) window.DB[k] = v[k];
+        });
+        if (typeof window.saveDB === "function") { window.saveDB(); yazildi = true; }
+      }
+    } catch (e) { yazildi = false; }
+    if (!yazildi) {
+      try { localStorage.setItem("yksOto_arsiv_v1", JSON.stringify(v)); } catch (e2) {}
+    }
+  }
   function sinavBugunKey() {
     var d = new Date();
     return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
@@ -899,7 +919,11 @@
     var rows = window.__sonExcelRows;
     if (!rows || !rows.length) return alert("Excel verisi bulunamadı. Lütfen dosyayı tekrar yükleyin.");
 
-    var veri = JSON.parse(localStorage.getItem("yksOto_arsiv_v1") || "{}");
+    /* Kanonik kaynak window.DB'dir: localStorage kopyası app.js'in bellekteki
+       (henüz kaydedilmemiş) değişikliklerini içermez. */
+    var veri = (typeof window !== "undefined" && window.DB && typeof window.DB === "object")
+        ? window.DB
+        : JSON.parse(localStorage.getItem("yksOto_arsiv_v1") || "{}");
     if (!veri.yoklamalar) veri.yoklamalar = {};
     var ogrenciler = veri.ogrenciler || [];
     
@@ -969,7 +993,18 @@
         }
     }
 
-    localStorage.setItem("yksOto_arsiv_v1", JSON.stringify(veri));
+    /* KRİTİK KALICILIK: doğrudan localStorage'a yazmak window.DB'yi güncellemez;
+       sonraki saveDB() bu kayıtları ezer. Önce DB, sonra tek yazma noktası saveDB(). */
+    var dbVar = (typeof window !== "undefined" && window.DB && typeof window.DB === "object");
+    if (dbVar && typeof window.saveDB === "function") {
+        window.DB.yoklamalar = veri.yoklamalar;
+        window.saveDB();
+    } else if (dbVar) {
+        window.DB.yoklamalar = veri.yoklamalar;
+        try { localStorage.setItem("yksOto_arsiv_v1", JSON.stringify(window.DB)); } catch (eYaz) {}
+    } else {
+        try { localStorage.setItem("yksOto_arsiv_v1", JSON.stringify(veri)); } catch (eYaz2) {}
+    }
     
     var mesaj = "✅ " + basarili + " kayıt başarıyla yüklendi.";
     if (bulunamayan.length > 0) {

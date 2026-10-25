@@ -5989,3 +5989,126 @@ takipModernStil.textContent =
   "}";
 document.head.appendChild(takipModernStil);
 
+var ultraModernStil = document.createElement("style");
+ultraModernStil.id = "__ultraModern2026Stil";
+ultraModernStil.textContent = 
+  /* === GENEL SAYFA ARKA PLANI === */
+  "body { background-color: #fcfcfd !important; }" +
+  
+  /* === 1. ÖZET RAPOR (BAKIŞ) KARTLARI === */
+  /* Sayaç kartlarını (Bu Haftaki Ders, Aktif Öğrenci vb.) Bento kutusuna çevir */
+  ".ozet-kart, .grid > div.rounded-xl, .kart { " +
+  "  background: #ffffff !important; " +
+  "  border: 1px solid #f1f5f9 !important; " +
+  "  border-radius: 20px !important; " +
+  "  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03) !important; " +
+  "  padding: 24px !important; " +
+  "  transition: transform 0.3s ease, box-shadow 0.3s ease !important; " +
+  "}" +
+  ".ozet-kart:hover, .grid > div.rounded-xl:hover { " +
+  "  transform: translateY(-2px) !important; " +
+  "  box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.06) !important; " +
+  "}" +
+  
+  /* === 2. ÖĞRENCİ TAKİP MERKEZİ BAŞLIĞI === */
+  "#takipBolum .kart { " +
+  "  padding: 16px 24px !important; " +
+  "  border-radius: 24px !important; " +
+  "}" +
+  
+  /* === 3. ÜST SEKMELER (Ödevler, Ders Yoklaması vb.) === */
+  ".takip-alt-btn { " +
+  "  background: transparent !important; " +
+  "  border: 1px solid transparent !important; " +
+  "  color: #64748b !important; " +
+  "  font-weight: 600 !important; " +
+  "  font-size: 14px !important; " +
+  "  padding: 10px 20px !important; " +
+  "  border-radius: 12px !important; " +
+  "  box-shadow: none !important; " +
+  "  transition: all 0.2s ease !important; " +
+  "}" +
+  ".takip-alt-btn:hover { " +
+  "  background: #f8fafc !important; " +
+  "  color: #0f172a !important; " +
+  "}" +
+  ".takip-alt-btn.aktif { " +
+  "  background: #0f172a !important; " + /* Aktif olan siyah/koyu lacivert */
+  "  color: #ffffff !important; " +
+  "  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15) !important; " +
+  "}" +
+  
+  /* === 4. FORM ALANLARI VE İÇERİK KUTULARI === */
+  "#takipIcerik .rounded-xl.border.bg-white { " +
+  "  background: #ffffff !important; " +
+  "  border: 1px solid #f1f5f9 !important; " +
+  "  border-radius: 20px !important; " +
+  "  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.02) !important; " +
+  "  padding: 24px !important; " +
+  "}" +
+  
+  /* Form Etiketleri */
+  "#takipIcerik label { " +
+  "  font-size: 12px !important; " +
+  "  font-weight: 700 !important; " +
+  "  color: #475569 !important; " +
+  "  letter-spacing: 0.02em !important; " +
+  "  margin-bottom: 8px !important; " +
+  "}" +
+  
+  /* Form Girdileri (Input, Select, Textarea) */
+  "#takipIcerik input, #takipIcerik select, #takipIcerik textarea { " +
+  "  background: #f8fafc !important; " +
+  "  border: 1px solid #e2e8f0 !important; " +
+  "  border-radius: 12px !important; " +
+  "  padding: 12px 16px !important; " +
+  "  font-size: 14px !important; " +
+  "  color: #0f172a !important; " +
+  "  box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.01) !important; " +
+  "  transition: all 0.2s ease !important; " +
+  "}" +
+  "#takipIcerik input:focus, #takipIcerik select:focus, #takipIcerik textarea:focus { " +
+  "  background: #ffffff !important; " +
+  "  border-color: #0f172a !important; " + /* Odaklanınca siyah çerçeve */
+  "  box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.05) !important; " +
+  "  outline: none !important; " +
+  "}" +
+  
+  /* === 5. TABLOLAR (Daha ferah ve çizgisiz) === */
+  "#takipIcerik table { " +
+  "  border-collapse: separate !important; " +
+  "  border-spacing: 0 8px !important; " +
+  "}" +
+  "#takipIcerik table th { " +
+  "  background: transparent !important; " +
+  "  color: #64748b !important; " +
+  "  font-size: 11px !important; " +
+  "  font-weight: 800 !important; " +
+  "  text-transform: uppercase !important; " +
+  "  letter-spacing: 0.05em !important; " +
+  "  padding: 12px 16px !important; " +
+  "  border: none !important; " +
+  "}" +
+  "#takipIcerik table td { " +
+  "  background: #ffffff !important; " +
+  "  padding: 16px !important; " +
+  "  border-top: 1px solid #f1f5f9 !important; " +
+  "  border-bottom: 1px solid #f1f5f9 !important; " +
+  "  font-size: 14px !important; " +
+  "}" +
+  /* Tablo satır köşelerini yuvarlat */
+  "#takipIcerik table td:first-child { " +
+  "  border-left: 1px solid #f1f5f9 !important; " +
+  "  border-top-left-radius: 12px !important; " +
+  "  border-bottom-left-radius: 12px !important; " +
+  "}" +
+  "#takipIcerik table td:last-child { " +
+  "  border-right: 1px solid #f1f5f9 !important; " +
+  "  border-top-right-radius: 12px !important; " +
+  "  border-bottom-right-radius: 12px !important; " +
+  "}" +
+  "#takipIcerik table tr:hover td { " +
+  "  background: #f8fafc !important; " +
+  "}";
+document.head.appendChild(ultraModernStil);
+

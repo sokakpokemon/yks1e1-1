@@ -140,21 +140,26 @@
   }, 200);
 
   window.gosterAlt = function (alt) {
-    var btn = document.querySelectorAll(".takip-alt-btn");
-    btn.forEach(function (b) { 
-        if (b.getAttribute("data-alt") === alt) {
-            b.classList.add("aktif"); 
-        } else {
-            b.classList.remove("aktif"); 
-        }
-    });
-    var icerik = document.getElementById("takipIcerik"); if (!icerik) return;
-    if (alt === "yoklama") icerik.innerHTML = window.__sysYoklamaEkran();
-    else if (alt === "odevler") icerik.innerHTML = window.__sysOdevEkran();
-    else if (alt === "kutuphane") icerik.innerHTML = window.__sysKutuphaneEkran();
-    else if (alt === "sinav") icerik.innerHTML = window.__sysSinavEkran();
-    else if (alt === "analiz") icerik.innerHTML = window.__sysAnalizEkran();
-    else if (alt === "gorusmeler") icerik.innerHTML = window.__sysGorusmelerEkran();
+    try {
+      var btn = document.querySelectorAll(".takip-alt-btn");
+      btn.forEach(function (b) { 
+          if (b.getAttribute("data-alt") === alt) {
+              b.classList.add("aktif"); 
+          } else {
+              b.classList.remove("aktif"); 
+          }
+      });
+      var icerik = document.getElementById("takipIcerik"); if (!icerik) return;
+      if (alt === "yoklama" || alt === "odevler" || alt === "kutuphane") {
+          var altBtn = document.querySelector('.takip-alt-btn[data-alt="' + alt + '"]');
+          if (altBtn) altBtn.click();
+      }
+      else if (alt === "sinav") icerik.innerHTML = window.__sysSinavEkran();
+      else if (alt === "analiz") icerik.innerHTML = window.__sysAnalizEkran();
+      else if (alt === "gorusmeler") icerik.innerHTML = window.__sysGorusmelerEkran();
+    } catch (e) {
+      console.warn("[gosterAlt] hata:", alt, e);
+    }
   };
 
   // === SINAV YOKLAMASI (BAĞIMSIZ MODÜL) ===

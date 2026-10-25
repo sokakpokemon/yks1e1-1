@@ -5859,3 +5859,69 @@ document.head.appendChild(takipModernStil);
   window.addEventListener("load", ekDersDonemFiltresiKur);
 })();
 
+/* ================================================================
+   EKDERS-DONEM-SINIRLAMA-2 — kalan sınırlamalar (app.js / index.html /
+   ek-ders.js DEĞİŞTİRİLMEZ; yalnız bu yama katmanı):
+   (1) Liste alt başlığı "Tüm ek ders arşivi" → "Aktif dönem ek dersleri"
+   (2) Çakışma taraması (ek-ders.js › ekDuzeltmeBul) yalnız AKTİF DÖNEM
+       kayıtlarını görür → geçmiş dönem yüzünden yanlış uyarı çıkmaz.
+   ================================================================ */
+(function () {
+  /* ---- (1) ALT BAŞLIK METNİ ----
+     NEDEN "div, span, p, small" GENEL TARAMASI YAPILMIYOR: bir ata div'in
+     textContent'i ALT AĞACIN TÜM metnini içerir; o div'e textContent yazmak
+     formu/tabloyu/butonları SİLER. Bu yüzden yalnız #yonetimBolum içindeki
+     ÇOCUKSUZ <p> düğümleri hedeflenir (alt başlık ek-ders.js:392'de böyle
+     bir <p>: "Tüm ek ders arşivi · tarih ve saate göre sıralı").
+     İdempotent: metin değiştikten sonra eşleşme kalmaz, tekrar yazılmaz. */
+  function ekDersAltBaslikDuzelt() {
+    var kapsam = document.getElementById("yonetimBolum");
+    if (!kapsam || !kapsam.querySelectorAll) return;
+    var adaylar = kapsam.querySelectorAll("p");
+    for (var i = 0; i < adaylar.length; i++) {
+      var el = adaylar[i];
+      if (!el) continue;
+      if (el.children && el.children.length) continue;      /* alt ağacı olan düğüme DOKUNMA */
+      if (typeof el.textContent !== "string") continue;
+      if (el.textContent.indexOf("Tüm ek ders arşivi") === -1) continue;
+      el.textContent = el.textContent.replace("Tüm ek ders arşivi", "Aktif dönem ek dersleri");
+    }
+  }
+  setInterval(ekDersAltBaslikDuzelt, 500);
+
+  /* ---- (2) ÇAKIŞMA TARAMASI: yalnız aktif dönem ----
+     ekDersTab sarmalıyla aynı teknik: ekDuzeltmeBul çalışırken DB.ekDersler
+     geçici olarak aktif dönem dizisine bağlanır, finally ile AYNEN geri konur.
+     Fonksiyon okuma amaçlıdır (push yok) → veri kaybı riski yoktur.
+     ZAMANLAMA: bu dosya ek-ders.js'ten ÖNCE çalışır (index.html:13 → defer).
+     Bu yüzden sarmal DOMContentLoaded'da kurulur; anında çalıştırılsaydı
+     "typeof window.ekDuzeltmeBul !== function" guard'ına takılıp hiç kurulmazdı. */
+  function ekDersCakismaDonemSarmaliKur() {
+    if (typeof window.ekDuzeltmeBul !== "function") return;   /* ek-ders.js henüz yüklenmedi */
+    if (window.ekDuzeltmeBul.__donemSarmal) return;            /* idempotent */
+
+    var orijinalEkDuzeltmeBul = window.ekDuzeltmeBul;
+
+    var sarmal = function () {
+      var orijinalListe = (window.DB && Array.isArray(window.DB.ekDersler)) ? window.DB.ekDersler : null;
+      try {
+        if (orijinalListe && typeof window.aktifDonemKayitlari === "function") {
+          window.DB.ekDersler = window.aktifDonemKayitlari(orijinalListe);
+        }
+        return orijinalEkDuzeltmeBul.apply(this, arguments);
+      } finally {
+        if (window.DB && orijinalListe) window.DB.ekDersler = orijinalListe;
+      }
+    };
+    sarmal.__donemSarmal = true;
+
+    window.ekDuzeltmeBul = sarmal;
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ekDersCakismaDonemSarmaliKur);
+  else ekDersCakismaDonemSarmaliKur();
+
+  /* Güvenlik ağı: DOMContentLoaded anında ek-ders.js yoksa load'da tekrar denenir */
+  window.addEventListener("load", ekDersCakismaDonemSarmaliKur);
+})();
+

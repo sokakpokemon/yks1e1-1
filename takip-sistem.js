@@ -5925,3 +5925,67 @@ document.head.appendChild(takipModernStil);
   window.addEventListener("load", ekDersCakismaDonemSarmaliKur);
 })();
 
+var takipModernStil = document.createElement("style");
+takipModernStil.id = "__takipMerkeziModernStil";
+takipModernStil.textContent = 
+  /* 1. Üstteki sekmeler (Ödevler, Ders Yoklaması vb.) */
+  ".takip-alt-btn { " +
+  "  padding: 8px 20px !important; " +
+  "  border-radius: 99px !important; " +
+  "  font-weight: 700 !important; " +
+  "  font-size: 13px !important; " +
+  "  transition: all 0.2s ease !important; " +
+  "  border: 1px solid #e2e8f0 !important; " +
+  "  background-color: #ffffff !important; " +
+  "  color: #64748b !important; " +
+  "  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05) !important; " +
+  "}" +
+  ".takip-alt-btn:hover { " +
+  "  background-color: #f8fafc !important; " +
+  "  color: #0f766e !important; " +
+  "  border-color: #14b8a6 !important; " +
+  "}" +
+  ".takip-alt-btn.aktif { " +
+  "  background-color: #0f766e !important; " +
+  "  color: #ffffff !important; " +
+  "  border-color: #0f766e !important; " +
+  "  box-shadow: 0 4px 6px -1px rgba(15, 118, 110, 0.3) !important; " +
+  "}" +
+  
+  /* 2. Form Etiketleri (SINIF, DERS, ÖĞRETMEN vb.) */
+  "#takipIcerik label, .takip-form-label { " +
+  "  font-size: 11px !important; " +
+  "  font-weight: 800 !important; " +
+  "  color: #64748b !important; " +
+  "  text-transform: uppercase !important; " +
+  "  letter-spacing: 0.05em !important; " +
+  "  margin-bottom: 6px !important; " +
+  "  display: block !important; " +
+  "}" +
+  
+  /* 3. Form Girdileri (Input/Select) */
+  "#takipIcerik input, #takipIcerik select, #takipIcerik textarea { " +
+  "  border-radius: 10px !important; " +
+  "  border: 1px solid #cbd5e1 !important; " +
+  "  background-color: #f8fafc !important; " +
+  "  padding: 10px 14px !important; " +
+  "  font-size: 13px !important; " +
+  "  color: #1e293b !important; " +
+  "  transition: all 0.2s ease !important; " +
+  "}" +
+  "#takipIcerik input:focus, #takipIcerik select:focus, #takipIcerik textarea:focus { " +
+  "  background-color: #ffffff !important; " +
+  "  border-color: #14b8a6 !important; " +
+  "  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15) !important; " +
+  "  outline: none !important; " +
+  "}" +
+  
+  /* 4. Alt Kısımdaki Form Kartı */
+  "#takipIcerik .rounded-xl.border.bg-white { " +
+  "  padding: 24px !important; " +
+  "  border-radius: 16px !important; " +
+  "  border-color: #e2e8f0 !important; " +
+  "  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02) !important; " +
+  "}";
+document.head.appendChild(takipModernStil);
+

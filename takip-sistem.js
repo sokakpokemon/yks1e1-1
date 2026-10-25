@@ -5806,3 +5806,56 @@ takipModernStil.textContent =
   "}";
 document.head.appendChild(takipModernStil);
 
+/* ================================================================
+   EKDERS-DONEM-FILTRESI — Ek Ders sekmesi YALNIZ aktif dönemi listeler
+   Sorun: sekmedeki tablo (kaynak: ek-ders.js › ekDersTab, liste değişkeni)
+   DB.ekDersler dizisini HAM okuyordu → önceki dönemlerin ek dersleri de
+   aktif dönem listesinde görünüyordu. Özet/CSV/haftalık-günlük çizelge
+   ise app.js › aktifDonemKayitlari() ile süzülüyordu (tutarsızlık).
+   Çözüm: app.js'teki TEK kaynak filtre (aktifDonemKayitlari) burada da
+   kullanılır. ek-ders.js ve app.js DEĞİŞTİRİLMEZ; sarmalama bu yama
+   katmanında yapılır (bu dosya zaten app.js/ek-ders.js arayüzünü saran
+   katmandır).
+   Zamanlama: index.html ek-ders.js'i "defer" ile yükler → bu betikten
+   SONRA çalışır. Bu yüzden sarmalama DOMContentLoaded'da kurulur ve
+   ilk (filtresiz) çizim renderYonetim() ile tazelenir.
+   KURAL: ekDersTab veriyi yalnız OKUR; dizi finally ile aynen geri konur,
+   böylece ekleme/silme/düzenleme (ekPlanla/ekSilOnay) tüm kayıtları görür.
+   ================================================================ */
+(function () {
+  function ekDersDonemFiltresiKur() {
+    if (typeof window.ekDersTab !== "function") return;   /* ek-ders.js yüklü değil */
+    if (window.ekDersTab.__donemFiltreli) return;          /* idempotent: ikinci kez sarmalanmaz */
+
+    var orijinalEkDersTab = window.ekDersTab;
+    var filtreliEkDersTab = function () {
+      /* Filtre yardımcısı yoksa (app.js yüklenemedi) davranış değişmez */
+      if (typeof aktifDonemKayitlari !== "function" || typeof DB === "undefined" || !DB) {
+        return orijinalEkDersTab();
+      }
+      var tumEkDersler = Array.isArray(DB.ekDersler) ? DB.ekDersler : [];
+      DB.ekDersler = aktifDonemKayitlari(tumEkDersler); /* yalnız ÇİZİM süresince aktif dönem */
+      try {
+        return orijinalEkDersTab();
+      } finally {
+        DB.ekDersler = tumEkDersler;                     /* dizi her koşulda geri konur */
+      }
+    };
+    filtreliEkDersTab.__donemFiltreli = true;
+
+    window.ekDersTab = filtreliEkDersTab;
+
+    /* İlk çizim (ek-ders.js yüklenirken) filtresiz yapılmış olabilir → tazele.
+       #yonetimBolum yoksa renderYonetim() zaten bir şey yapamaz, dokunma. */
+    if (typeof renderYonetim === "function" && document.getElementById("yonetimBolum")) {
+      renderYonetim();
+    }
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ekDersDonemFiltresiKur);
+  else ekDersDonemFiltresiKur();
+
+  /* Güvenlik ağı: DOMContentLoaded anında ek-ders.js henüz çalışmamışsa load'da tekrar denenir */
+  window.addEventListener("load", ekDersDonemFiltresiKur);
+})();
+

@@ -877,7 +877,11 @@
   }
 
   // Her sekmenin üstüne Toplu Mesaj butonu ekle
-  setInterval(function() {
+  /* ADIM 8.4: eski setInterval(…, 500) kaldırıldı → gövde fonksiyona çıkarıldı
+     ve ortak MutationObserver'a (__adim83KayitEkle) bağlandı. Gövde idempotent:
+     her buton "yoksa ekle" kontrolüyle eklenir → observer her tetikte güvenle
+     çağırır, ikinci kez DOM'a yazmaz. */
+  function __waTopluMesajButonlariniEkle() {
     // Ders Yoklaması
     var ykTarih = document.getElementById("yoklamaTarih");
     if (ykTarih && !document.getElementById("__waBtnYoklama")) {
@@ -914,7 +918,10 @@
         bo.onclick = function() { window.__waTopluModal("odevler"); };
         odTab.parentNode.appendChild(bo);
     }
-  }, 500);
+  }
+  /* ilk=true: ilk koşum (eski interval'ın ilk 500ms koşumu karşılığı) DOMContentLoaded'da;
+     sonrasında yalnız DOM değişikliğinde, 100ms min. aralıkla tekrar koşar. */
+  __adim83KayitEkle(__waTopluMesajButonlariniEkle, 100, true);
 
   // === EXCEL ONİZLEME YAMASI (index.html HİÇ DOKUNULMADAN — ADIM 1 + ADIM 3) ===
   // window.__ykExcelOnizle, index.html'in inline scripti içinde tanımlanır; takip-sistem.js
@@ -2993,7 +3000,8 @@ window.__sysAnalizAra = function() {
     }
 
     tik();
-    setInterval(tik, 500);
+    // ADIM 8.4: setInterval(tik, 500) kaldırıldı → ortak observer'a kayıt.
+    __adim83KayitEkle(tik, 100);
 
     /* === ODEV-BRANS-CIFT-YON ===
        Ödev formuna (index.html: __odEkran) birebir formun çift yönlü kuralını uygular:
@@ -3218,7 +3226,8 @@ window.__sysAnalizAra = function() {
         }
       }
       odTik();
-      setInterval(odTik, 500);
+      // ADIM 8.4: setInterval(odTik, 500) kaldırıldı → ortak observer'a kayıt.
+      __adim83KayitEkle(odTik, 100);
     })();
   })();
 
@@ -3776,11 +3785,20 @@ window.__sysAnalizAra = function() {
              100ms trailing debounce; her kaydın kendi min. aralığı var
              (d64 100ms, gunCip 100ms, ekDers 200ms).
      ============================================================ */
-  var __adim83Gozlemci = null;
-  var __adim83Kayitlar = [];       /* { fn, gecikme, son } */
-  var __adim83PlanZaman = 0;       /* debounce timer kimliği */
+  /* ADIM 8.4 GENİŞLETME — ERKEN KAYIT GÜVENCESİ:
+     __adim83KayitEkle, bu bloktan ÖNCE gelen satırlardan da çağrılabilir
+     (__waTopluMesajButonlariniEkle, tik, odTik — dosyada daha üstteler).
+     `var` hoisting ile isimler vardır ama değerleri henüz atanmamıştır; bu
+     yüzden başlangıç atamaları varsa MEVCUT (erken) değeri EZMEZ:
+       - erken eklenen kayıtlar kuyrukta kalır (__adim83Kayitlar)
+       - erken kurulan observer referansı + bayrağı korunur (__adim83Gozlemci /
+         __adim83Baglandi) → takeRecords() her zaman GERÇEK observer'a ulaşır,
+         kendi yazımımızın mutation'ları yutulmaya devam eder (döngü yok). */
+  var __adim83Gozlemci = __adim83Gozlemci || null;
+  var __adim83Kayitlar = __adim83Kayitlar || [];  /* { fn, gecikme, son } */
+  var __adim83PlanZaman = 0;       /* debounce timer kimliği (senkron yükleme anında hep 0) */
   var __adim83Yazimda = false;     /* kendi DOM yazımımız sırasında true */
-  var __adim83Baglandi = false;
+  var __adim83Baglandi = __adim83Baglandi || false;
 
   /* KENDİ YAZIM KORUMASI: d64TabloSusle içindeki d64Kaydet(veri)
      (localStorage / saveDB) ve hücre textContent/style yazımları
@@ -3834,6 +3852,9 @@ window.__sysAnalizAra = function() {
      bir kez de korumalı olarak kendisi çalıştır. */
   function __adim83KayitEkle(fn, gecikme, ilk) {
     if (typeof fn !== "function") return;
+    /* Erken çağrı güvencesi: var başlangıçları henüz çalışmadan çağrıldıysa
+       kuyruk burada kurulur; aşağıdaki `var x = x || …` bunu korur. */
+    if (!__adim83Kayitlar) __adim83Kayitlar = [];
     for (var i = 0; i < __adim83Kayitlar.length; i++) {
       if (__adim83Kayitlar[i] && __adim83Kayitlar[i].fn === fn) return;
     }

@@ -5933,7 +5933,7 @@ takipModernStil.textContent =
   "}" +
 
   /* 2. Form Etiketleri (SINIF, DERS, ÖĞRETMEN vb.) */
-  "#takipIcerik label, .takip-form-label { " +
+  "#takipIcerik label { " +
   "  font-size: 11px !important; " +
   "  font-weight: 800 !important; " +
   "  color: #64748b !important; " +
@@ -6105,7 +6105,7 @@ ultraModernStil.textContent =
   
   /* === 1. ÖZET RAPOR (BAKIŞ) KARTLARI === */
   /* Sayaç kartlarını (Bu Haftaki Ders, Aktif Öğrenci vb.) Bento kutusuna çevir */
-  ".ozet-kart, .grid > div.rounded-xl, .kart { " +
+  ".grid > div.rounded-xl, .kart { " +
   "  background: #ffffff !important; " +
   "  border: 1px solid #f1f5f9 !important; " +
   "  border-radius: 20px !important; " +
@@ -6113,7 +6113,7 @@ ultraModernStil.textContent =
   "  padding: 24px !important; " +
   "  transition: transform 0.3s ease, box-shadow 0.3s ease !important; " +
   "}" +
-  ".ozet-kart:hover, .grid > div.rounded-xl:hover { " +
+  ".grid > div.rounded-xl:hover { " +
   "  transform: translateY(-2px) !important; " +
   "  box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.06) !important; " +
   "}" +

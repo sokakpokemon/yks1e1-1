@@ -1827,8 +1827,6 @@ window.__sysAnalizAra = function() {
   // innerHTML ile yeniden kurduğu için kutu 1 saniyelik setInterval ile korunur:
   //   - kutu yoksa eklenir, son arama/filtre değerleri geri yüklenir
   //   - filtre her turda tekrar uygulanır (liste yeniden çizilince gizlenmeler kaybolmaz)
-  // D52: 1000ms periyodik tarama kaldırıldı. KUTU, render sonrası yeniden eklenir.
-  // Yöntem: __yonetimAramaKutusuEnjeksiyonu, render'dan sonra çağrılır.
   var yonetimSonArama = "";
   var yonetimSonSinif = "";
 
@@ -1894,7 +1892,7 @@ window.__sysAnalizAra = function() {
     }
   };
 
-  window.__yonetimAramaKutusuEnjeksiyonu = function () {
+  setInterval(function () {
     var baslik = yonetimOgrBasligi();
     if (!baslik) return; // Yönetim › Öğrenci & Sınıf sekmesi açık değil
 
@@ -1944,19 +1942,7 @@ window.__sysAnalizAra = function() {
     }
 
     window.__yonetimFiltrele();
-    return kutu;
-  };
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", function () {
-      if (document.getElementById("__yonetimAramaKutusu")) return;
-      window.__yonetimAramaKutusuEnjeksiyonu();
-    });
-  } else {
-    if (!document.getElementById("__yonetimAramaKutusu")) {
-      window.__yonetimAramaKutusuEnjeksiyonu();
-    }
-  }
+  }, 1000);
 
   // === GÖRÜŞMELER SEKMESİ (📞) ===
   // Sekme içeriği: üstte yeni görüşme formu, altta tüm öğrencilerin geçmiş görüşmeleri.
@@ -2687,6 +2673,7 @@ window.__sysAnalizAra = function() {
     }
 
     tik();
+    setInterval(tik, 500);
   })();
 
   // === SINIF-SAATI-SAYIM-YAMASI ===
@@ -4858,9 +4845,15 @@ window.__sysAnalizAra = function() {
         if (window.MutationObserver) {
           new MutationObserver(function () { planla(); }).observe(kok, { childList: true, subtree: true });
         }
-        /* Havuz form koruma ve çip boyama işlemleri, artık DOM değişimlerinde
-           (MutationObserver / render sarmalayıcıları) çalışır.
-           800ms / 500ms periyodik interval kaldırıldı. */
+        /* Form alanları kart render'ından bağımsız olarak da "null"a düşmesin:
+           yalnızca bozuk alanı onarır, sağlam alanlara dokunmaz. */
+        kok.__havuzFormKoru = setInterval(function () {
+          var k = document.getElementById(KOK_ID);
+          if (k) formlariKoru(k);
+        }, 800);
+        /* Filtre çipleri her render'da yeniden çizilir: 500ms'lik boyama turu renkleri kalıcı tutar
+           (data-havuz-cip damgası sayesinde aynı çip tekrar boyanmaz). */
+        kok.__havuzCipBoya = setInterval(cipleriBoya, 500);
       }
       return true;
     }

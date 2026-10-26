@@ -578,7 +578,7 @@
     return baslik.parentNode;
   }
 
-  setInterval(function() {
+  function __eskiTaslakYonlendirmeUygula() {
     var eskiPanelBasligi = __eskiSablonKartiBul();
     if (!eskiPanelBasligi) return;
 
@@ -612,7 +612,27 @@
       '</div>';
 
     eskiKart.parentNode.insertBefore(yeniKart, eskiKart.nextSibling);
-  }, 500);
+  }
+
+  /* Eski setInterval(…, 500) kaldırıldı: kart yalnızca DOM değiştiğinde taşınır. */
+  function __eskiTaslakGozlemciKur() {
+    if (!document.body || !window.MutationObserver) {
+      __eskiTaslakYonlendirmeUygula();
+      return;
+    }
+    var gozlemci = new MutationObserver(function() {
+      __eskiTaslakYonlendirmeUygula();
+    });
+    gozlemci.observe(document.body, { childList: true, subtree: true, characterData: true });
+    // Sayfa açılışında bir kez de uygulanır.
+    __eskiTaslakYonlendirmeUygula();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", __eskiTaslakGozlemciKur);
+  } else {
+    __eskiTaslakGozlemciKur();
+  }
 
   // Yönlendirme butonu: Takip sekmesine geç, ardından yeni taslak modalını aç.
   window.__eskiTaslakPaneliniAc = function() {
@@ -4201,11 +4221,11 @@ window.__sysAnalizAra = function() {
     } else {
       stilEkle();
     }
-    setInterval(stilEkle, 1000);
   })();
 
   // === "KAPALI-GORUNUM-YAMASI" YORUM METNİNİ GİZLE ===
-  setInterval(function() {
+  /* Eski setInterval(…, 1000) kaldırıldı: temizlik yalnızca DOM değiştiğinde çalışır. */
+  function __kapaliYorumuTemizle() {
     var tumElementler = document.querySelectorAll("div, span, p, small");
     tumElementler.forEach(function(el) {
       if (el.textContent && el.textContent.indexOf("KAPALI-GORUNUM-YAMASI") !== -1) {
@@ -4217,7 +4237,26 @@ window.__sysAnalizAra = function() {
         }
       }
     });
-  }, 1000);
+  }
+
+  function __kapaliGozlemciKur() {
+    if (!document.body || !window.MutationObserver) {
+      __kapaliYorumuTemizle();
+      return;
+    }
+    var gozlemci = new MutationObserver(function() {
+      __kapaliYorumuTemizle();
+    });
+    gozlemci.observe(document.body, { childList: true, subtree: true, characterData: true });
+    // Sayfa açılışında bir kez de çalışır ki başlangıçtaki metin temizlensin.
+    __kapaliYorumuTemizle();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", __kapaliGozlemciKur);
+  } else {
+    __kapaliGozlemciKur();
+  }
 
   setTimeout(function() {
     var kapalilar = document.querySelectorAll('[title*="Kapalı"]');

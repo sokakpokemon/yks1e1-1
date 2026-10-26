@@ -965,43 +965,59 @@
         var r = rows[i];
         if (!r || r.length === 0) continue;
 
+        // Format B (5+ sütun): [0]=tarih, [1]=sınıf, [2]=isim, [3]=açıklama
+        var formatB = r.length >= 5;
         var colA = String(r[0] || "").trim();
         var colB = String(r[1] || "").trim();
+        var ogrAdi = formatB ? String(r[2] || "").trim() : "";
+        var aciklama = formatB ? String(r[3] || "").trim() : "";
 
-        // Tarih Okuma (Örn: 14.Eki veya 15.Eki)
-        if (colA && colA.match(/\d/) && !colB) {
+        // Tarih Okuma (Örn: 14.Eki, 15.Eki, 15.10.2026, 15/10/2026)
+        if (colA && colA.match(/\d/) && (!colB || formatB)) {
             var tLower = colA.toLowerCase();
-            var ayMap = {"oca":"01", "şub":"02", "sub":"02", "mar":"03", "nis":"04", "may":"05", "haz":"06", "tem":"07", "ağu":"08", "agu":"08", "eyl":"09", "eki":"10", "kas":"11", "ara":"12"};
+            var ayMap = {"oca":"01", "şub":"02", "sub":"02", "mar":"03", "nis":"04", "may":"05", "haz":"06", "tem":"07", "ağu":"08", "agu":"08", "eyl":"09", "eki":"10", "kas":"11", "ara":"12",
+                         "1":"01", "2":"02", "3":"03", "4":"04", "5":"05", "6":"06", "7":"07", "8":"08", "9":"09", "10":"10", "11":"11", "12":"12"};
             
             if (tLower.match(/^\d{4}-\d{2}-\d{2}$/)) {
                 aktifTarih = tLower;
             } else {
-                // Nokta, tire, boşluk gibi ayraçlara göre böl (14.Eki -> ["14", "Eki"])
-                var parcalar = tLower.split(/[\s\-\.]+/);
-                var gun = "01", ay = "01", yil = "2026";
+                // Nokta, tire, eğik çizgi ve boşluğa göre böl (14.Eki, 15/10/2026)
+                var parcalar = tLower.split(/[\s\-\.\/]+/);
+                var gun = "01", ay = "01", yil = String(new Date().getFullYear());
+                var sayiSayaci = 0, tarihBulundu = false;
                 
                 parcalar.forEach(function(p) {
-                    if (p.match(/^\d{1,2}$/)) gun = p.padStart(2, "0");
-                    else if (p.match(/^\d{4}$/)) yil = p;
-                    else {
+                    if (p.match(/^\d{4}$/)) {
+                        yil = p;
+                        tarihBulundu = true;
+                    } else if (p.match(/^\d{1,2}$/)) {
+                        sayiSayaci++;
+                        tarihBulundu = true;
+                        // İlk sayı gün, ikinci sayı aydır (15/10/2026 -> gun=15, ay=10)
+                        if (sayiSayaci === 1) gun = p.padStart(2, "0");
+                        else if (sayiSayaci === 2) ay = ayMap[p] || p.padStart(2, "0");
+                    } else {
                         var kisaAy = p.substring(0, 3);
-                        if (ayMap[kisaAy]) ay = ayMap[kisaAy];
+                        if (ayMap[kisaAy]) { ay = ayMap[kisaAy]; tarihBulundu = true; }
+                        else if (ayMap[p]) { ay = ayMap[p]; tarihBulundu = true; }
                     }
                 });
-                aktifTarih = yil + "-" + ay + "-" + gun;
+                // Format B'de tarih hücresi boşsa önceki aktif tarih korunur
+                if (!formatB || tarihBulundu) aktifTarih = yil + "-" + ay + "-" + gun;
             }
-            continue; 
+            if (!formatB) continue; 
         }
 
-        // Öğrenci Okuma (A sütununda isim varsa)
-        if (colA && aktifTarih && !colA.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            var ogrAdi = colA;
-            var aciklama = colB;
+        // Öğrenci Okuma (Format A: A sütunu isim / Format B: C sütunu isim)
+        var isim = formatB ? ogrAdi : colA;
+        var satirAciklama = formatB ? aciklama : colB;
 
-            var excelAd = normalize(ogrAdi);
+        if (isim && aktifTarih && !isim.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            var excelAd = normalize(isim);
+            // SADECE TAM EŞLEŞME: "Ali" yalnızca "Ali" ile eşleşir ("Aliye" ile değil)
             var ogr = ogrenciler.find(function(o) {
                 var sysAd = normalize(o.adSoyad || o.ad);
-                return sysAd === excelAd || sysAd.includes(excelAd) || excelAd.includes(sysAd);
+                return sysAd === excelAd;
             });
 
             if (ogr) {
@@ -1010,11 +1026,11 @@
                 
                 veri.yoklamalar[aktifTarih][ogr.sinif][ogr.id] = { 
                     durum: "gelmedi", 
-                    aciklama: aciklama || "" 
+                    aciklama: satirAciklama || "" 
                 };
                 basarili++;
             } else {
-                bulunamayan.push(ogrAdi);
+                bulunamayan.push(isim);
             }
         }
     }

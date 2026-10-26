@@ -1892,58 +1892,6 @@ window.__sysAnalizAra = function() {
     }
   };
 
-  setInterval(function () {
-    var baslik = yonetimOgrBasligi();
-    if (!baslik) return; // Yönetim › Öğrenci & Sınıf sekmesi açık değil
-
-    var kutu = document.getElementById("__yonetimAramaKutusu");
-    if (!kutu) {
-      kutu = document.createElement("div");
-      kutu.id = "__yonetimAramaKutusu";
-      kutu.style.cssText = "display:flex; gap:8px; align-items:center; margin:10px 0 12px;";
-
-      var aramaEl = document.createElement("input");
-      aramaEl.type = "text";
-      aramaEl.id = "__yAramaInput";
-      aramaEl.placeholder = "🔍 Öğrenci ara (ad, sınıf, telefon)…";
-      aramaEl.style.cssText = "flex:1; min-width:0; border:1px solid #cbd5e1; border-radius:8px; padding:8px 12px; font-size:13px; outline:none;";
-      aramaEl.value = yonetimSonArama;
-      aramaEl.addEventListener("input", function () {
-        yonetimSonArama = aramaEl.value;
-        window.__yonetimFiltrele();
-      });
-
-      var sinifEl = document.createElement("select");
-      sinifEl.id = "__ySinifSelect";
-      sinifEl.style.cssText = "border:1px solid #cbd5e1; border-radius:8px; padding:8px 10px; font-size:13px; font-weight:600; background:#fff; max-width:45%;";
-      sinifEl.addEventListener("change", function () {
-        yonetimSonSinif = sinifEl.value;
-        window.__yonetimFiltrele();
-      });
-
-      kutu.appendChild(aramaEl);
-      kutu.appendChild(sinifEl);
-      baslik.parentNode.insertBefore(kutu, baslik.nextSibling);
-    }
-
-    // Sınıf seçenekleri DB değiştikçe tazelenir; seçili değer korunur
-    var siniflar = yonetimOgrSiniflar();
-    var anahtar = siniflar.join("|");
-    if (kutu.__sinifAnahtar !== anahtar) {
-      kutu.__sinifAnahtar = anahtar;
-      var sel = document.getElementById("__ySinifSelect");
-      if (sel) {
-        var mevcut = sel.value || yonetimSonSinif;
-        sel.innerHTML = '<option value="">Tüm Sınıflar</option>' +
-          siniflar.map(function (s) { return '<option value="' + sinavEsc(s) + '">' + sinavEsc(s) + "</option>"; }).join("");
-        sel.value = (mevcut && siniflar.indexOf(mevcut) >= 0) ? mevcut : "";
-        yonetimSonSinif = sel.value;
-      }
-    }
-
-    window.__yonetimFiltrele();
-  }, 1000);
-
   // === GÖRÜŞMELER SEKMESİ (📞) ===
   // Sekme içeriği: üstte yeni görüşme formu, altta tüm öğrencilerin geçmiş görüşmeleri.
   // Kayıtlar Görüşmeler modülünün (veri.gorusmeler) aynı yardımcılarıyla okunur/yazılır.
@@ -2673,7 +2621,6 @@ window.__sysAnalizAra = function() {
     }
 
     tik();
-    setInterval(tik, 500);
   })();
 
   // === SINIF-SAATI-SAYIM-YAMASI ===
@@ -4847,13 +4794,6 @@ window.__sysAnalizAra = function() {
         }
         /* Form alanları kart render'ından bağımsız olarak da "null"a düşmesin:
            yalnızca bozuk alanı onarır, sağlam alanlara dokunmaz. */
-        kok.__havuzFormKoru = setInterval(function () {
-          var k = document.getElementById(KOK_ID);
-          if (k) formlariKoru(k);
-        }, 800);
-        /* Filtre çipleri her render'da yeniden çizilir: 500ms'lik boyama turu renkleri kalıcı tutar
-           (data-havuz-cip damgası sayesinde aynı çip tekrar boyanmaz). */
-        kok.__havuzCipBoya = setInterval(cipleriBoya, 500);
       }
       return true;
     }

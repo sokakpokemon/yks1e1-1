@@ -3767,7 +3767,94 @@ window.__sysAnalizAra = function() {
   } else {
     setTimeout(d64Baslat, 0);
   }
-  setInterval(d64TabloSusle, 500);
+  /* ============================================================
+     ADIM 8.3 — 3 AYRI 500ms ARIKLI TARAMA TEK MutationObserver'A TAŞINDI
+     Kaldırılan (eski 3755 / 4057 / 5988):
+       d64TabloSusle · gunCipleriDuzelt · ekDersAltBaslikDuzelt
+       — her biri 500ms'de bir kör DOM taraması yapıyordu.
+     Yerine: document.body üzerinde TEK observer { childList, subtree },
+             100ms trailing debounce; her kaydın kendi min. aralığı var
+             (d64 100ms, gunCip 100ms, ekDers 200ms).
+     ============================================================ */
+  var __adim83Gozlemci = null;
+  var __adim83Kayitlar = [];       /* { fn, gecikme, son } */
+  var __adim83PlanZaman = 0;       /* debounce timer kimliği */
+  var __adim83Yazimda = false;     /* kendi DOM yazımımız sırasında true */
+  var __adim83Baglandi = false;
+
+  /* KENDİ YAZIM KORUMASI: d64TabloSusle içindeki d64Kaydet(veri)
+     (localStorage / saveDB) ve hücre textContent/style yazımları
+     observer'ı GERİ TETİKLEYEMEZ. Yazımlar senkron bittiği için
+     takeRecords() ile mutation kuyruğu boşaltılır ve flag senkron
+     blok içinde kapanır → sonsuz döngü oluşmaz. */
+  function __adim83KorumluCalistir(fn) {
+    if (typeof fn !== "function") return;
+    __adim83Yazimda = true;
+    try {
+      fn();
+    } finally {
+      try { if (__adim83Gozlemci) __adim83Gozlemci.takeRecords(); } catch (eTake) {}
+      __adim83Yazimda = false;
+    }
+  }
+
+  /* Kayıtlı fonksiyonları kendi aralıklarıyla çalıştırır. */
+  function __adim83Calistir() {
+    var simdi = Date.now();
+    var ilkHata = null;
+    for (var i = 0; i < __adim83Kayitlar.length; i++) {
+      var kayit = __adim83Kayitlar[i];
+      if (!kayit || typeof kayit.fn !== "function") continue;
+      if (simdi - kayit.son < kayit.gecikme) continue;
+      kayit.son = simdi;
+      try { __adim83KorumluCalistir(kayit.fn); } catch (e) { if (!ilkHata) ilkHata = e; }
+    }
+    if (ilkHata) throw ilkHata; /* eski aralıklı taramanın hata görünürlüğü korunur */
+  }
+
+  /* Observer callback: kendi yazımımızsa yut, değilse 100ms debounce. */
+  function __adim83Planla() {
+    if (__adim83Yazimda) return;
+    if (__adim83PlanZaman) return;
+    __adim83PlanZaman = setTimeout(function () {
+      __adim83PlanZaman = 0;
+      __adim83Calistir();
+    }, 100);
+  }
+
+  function __adim83GozlemciKur() {
+    if (__adim83Baglandi) return;
+    if (typeof document === "undefined" || !document.body || typeof window.MutationObserver !== "function") return;
+    __adim83Baglandi = true;
+    __adim83Gozlemci = new window.MutationObserver(__adim83Planla);
+    __adim83Gozlemci.observe(document.body, { childList: true, subtree: true });
+  }
+
+  /* fn'yi ortak observer'a kaydeder; ilk=true ise DOMContentLoaded'da
+     bir kez de korumalı olarak kendisi çalıştır. */
+  function __adim83KayitEkle(fn, gecikme, ilk) {
+    if (typeof fn !== "function") return;
+    for (var i = 0; i < __adim83Kayitlar.length; i++) {
+      if (__adim83Kayitlar[i] && __adim83Kayitlar[i].fn === fn) return;
+    }
+    var kayit = { fn: fn, gecikme: gecikme > 0 ? gecikme : 100, son: 0 };
+    __adim83Kayitlar.push(kayit);
+    var basla = function () {
+      __adim83GozlemciKur();
+      if (ilk) { kayit.son = Date.now(); __adim83KorumluCalistir(fn); }
+    };
+    if (typeof document !== "undefined" && document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", basla);
+    } else {
+      basla();
+    }
+  }
+  /* Dosyanın sonundaki bağımsız IIFE'ler de bu kaydı kullanabilsin. */
+  window.__adim83Kayit = __adim83KayitEkle;
+
+  /* ADIM 8.3: d64TabloSusle 500ms aralığı kaldırıldı → ortak observer'a
+     kayıt. İlk koşum zaten d64Baslat (DOMContentLoaded / setTimeout 0) içinde. */
+  __adim83KayitEkle(d64TabloSusle, 100);
 
   /* ============================================================
      D66 — SINIF TOPLU DERS PROGRAMI "KAPALI" MODU
@@ -4069,7 +4156,9 @@ window.__sysAnalizAra = function() {
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", gunCipleriDuzelt);
   gunCipleriDuzelt();
-  setInterval(gunCipleriDuzelt, 500);
+  /* ADIM 8.3: gunCipleriDuzelt 500ms aralığı kaldırıldı → ortak observer'a
+     kayıt. İlk koşum yukarıdaki satırlarda (hemen + DOMContentLoaded) korunur. */
+  __adim83KayitEkle(gunCipleriDuzelt, 100);
 
   // === VERİ KAYBI ÖNLEME (saveDB SARMALAMASI) ===
   (function() {
@@ -6000,7 +6089,15 @@ document.head.appendChild(takipModernStil);
       el.textContent = el.textContent.replace("Tüm ek ders arşivi", "Aktif dönem ek dersleri");
     }
   }
-  setInterval(ekDersAltBaslikDuzelt, 500);
+  /* ADIM 8.3: ekDersAltBaslikDuzelt 500ms aralığı kaldırıldı → ortak
+     observer'a kayıt. En ucuz iş: 200ms aralık + ilk koşum DOMContentLoaded'da. */
+  if (typeof window.__adim83Kayit === "function") {
+    window.__adim83Kayit(ekDersAltBaslikDuzelt, 200, true);
+  } else if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", ekDersAltBaslikDuzelt);
+  } else {
+    ekDersAltBaslikDuzelt();
+  }
 
   /* ---- (2) ÇAKIŞMA TARAMASI: yalnız aktif dönem ----
      ekDersTab sarmalıyla aynı teknik: ekDuzeltmeBul çalışırken DB.ekDersler

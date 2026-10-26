@@ -1892,9 +1892,6 @@ window.__sysAnalizAra = function() {
     }
   };
 
-  setInterval(function () {
-    var baslik = yonetimOgrBasligi();
-    if (!baslik) return; // Yönetim › Öğrenci & Sınıf sekmesi açık değil
 
     var kutu = document.getElementById("__yonetimAramaKutusu");
     if (!kutu) {
@@ -2673,7 +2670,6 @@ window.__sysAnalizAra = function() {
     }
 
     tik();
-    setInterval(tik, 500);
   })();
 
   // === SINIF-SAATI-SAYIM-YAMASI ===
@@ -4847,13 +4843,8 @@ window.__sysAnalizAra = function() {
         }
         /* Form alanları kart render'ından bağımsız olarak da "null"a düşmesin:
            yalnızca bozuk alanı onarır, sağlam alanlara dokunmaz. */
-        kok.__havuzFormKoru = setInterval(function () {
-          var k = document.getElementById(KOK_ID);
-          if (k) formlariKoru(k);
-        }, 800);
         /* Filtre çipleri her render'da yeniden çizilir: 500ms'lik boyama turu renkleri kalıcı tutar
            (data-havuz-cip damgası sayesinde aynı çip tekrar boyanmaz). */
-        kok.__havuzCipBoya = setInterval(cipleriBoya, 500);
       }
       return true;
     }
@@ -5753,8 +5744,6 @@ window.__sysAnalizAra = function() {
     if (typeof window.renderDersler === "function") {
       try { window.renderDersler(); } catch (e5) {}
     }
-  })();
-
 })();
 
 // === KESİN TARİH DÜZELTMESİ (12:00 öğlen) ===

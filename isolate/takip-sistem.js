@@ -40,13 +40,14 @@
       '</div>';
       takipBolum.insertAdjacentHTML('afterbegin', baslikHTML);
     }
+    if (typeof __taslakButonuEkle === "function") __taslakButonuEkle();
   }, 150);
 
   // Kütüphane listesi dosya sonundaki sınıf bazlı modülden gelir; giriş/çıkış
   // saati tutan eski "Tümünü Giriş Yap" bloğu tamamen kaldırıldı.
 
   // === ALT SEKMELERİ GÜNCELLE ===
-  setInterval(function() {
+  function __altSekmeleriGuncelle() {
     var btnYoklama = document.querySelector('.takip-alt-btn[data-alt="yoklama"]');
     var btnOdevler = document.querySelector('.takip-alt-btn[data-alt="odevler"]');
     var btnKutuphane = document.querySelector('.takip-alt-btn[data-alt="kutuphane"]');
@@ -137,7 +138,14 @@
         b.addEventListener("click", function() { btnGorusmeMevcut.classList.remove("aktif"); });
       });
     }
-  }, 200);
+  }
+
+  // Eski 200ms setInterval kaldırıldı; DOMContentLoaded'da 1 kez çalışır.
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", __altSekmeleriGuncelle);
+  } else {
+    __altSekmeleriGuncelle();
+  }
 
   window.gosterAlt = function (alt) {
     try {
@@ -537,7 +545,7 @@
   };
 
   // Taslak butonunu Takip başlığına ekle
-  setInterval(function(){
+  function __taslakButonuEkle() {
     var header = document.getElementById("__takipBaslikEklendi");
     if(header && !document.getElementById("__waTaslakBtn")) {
       var btn = document.createElement("button");
@@ -548,7 +556,14 @@
       header.style.position = "relative"; // butonun konumlanması için
       header.appendChild(btn);
     }
-  }, 500);
+  }
+
+  // Eski 500ms setInterval kaldırıldı; DOMContentLoaded'da 1 kez çalışır.
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", __taslakButonuEkle);
+  } else {
+    __taslakButonuEkle();
+  }
 
   // === ESKİ "WhatsApp Mesaj Şablonu" PANELİ → MESAJ TASLAKLARI YÖNLENDİRMESİ ===
   // Ayarlar & Yedekleme sekmesindeki eski kart (app.js › waSablonKartHTML) gizlenir;

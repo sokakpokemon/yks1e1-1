@@ -40,6 +40,7 @@
       '</div>';
       takipBolum.insertAdjacentHTML('afterbegin', baslikHTML);
     }
+    if (typeof __taslakButonuEkle === "function") __taslakButonuEkle();
   }, 150);
 
   // Kütüphane listesi dosya sonundaki sınıf bazlı modülden gelir; giriş/çıkış

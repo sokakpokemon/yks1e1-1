@@ -1103,18 +1103,20 @@ function penceredeDersler() {
     if (!p.start) return true;
     return l.tarih >= p.start && l.tarih <= p.end;
   }); /* DONEM-SECICI-YAMASI: yalnız aktif dönemin dersleri */
-  /* DERS-ARAMA: tarih filtresinden SONRA, arama doluysa öğrenci / öğretmen / konu içinde ara.
-     Sıralama en sonda kaldığı için sonuç kümesi daima tarih-saat sıralıdır. */
-  var q = (ui.aramaMetni || "").toLowerCase();
-  if (q) {
-    liste = liste.filter(function (l) {
-      return (l.ogrenciAd || "").toLowerCase().includes(q) ||
-        (l.ogretmenAd || "").toLowerCase().includes(q) ||
-        (l.konu || "").toLowerCase().includes(q);
-    });
-  }
   liste.sort(function (a, b) { return a.tarih === b.tarih ? (a.saat < b.saat ? -1 : 1) : (a.tarih < b.tarih ? -1 : 1); });
   return liste;
+}
+/* DERS-ARAMA: arama YALNIZ ders tablosuna uygulanır — Özet / Analiz / PNG / WhatsApp / kopyala
+   penceredeDersler()'i filtresiz kullanmaya devam eder. Sıralama bozulmasın diye
+   filtre, sıralanmış listenin üzerine uygulanır ve tek kaynak bu yardımcıdır. */
+function dersAramaUygula(liste) {
+  var q = (ui.aramaMetni || "").toLowerCase();
+  if (!q) return liste;
+  return liste.filter(function (l) {
+    return (l.ogrenciAd || "").toLowerCase().includes(q) ||
+      (l.ogretmenAd || "").toLowerCase().includes(q) ||
+      (l.konu || "").toLowerCase().includes(q);
+  });
 }
 function aktif(liste) { return liste.filter(function (l) { return l.durum !== "iptal"; }); }
 
@@ -4098,7 +4100,7 @@ function setFiltre(f) {
 function haftalikOgrtSec(id) { ui.haftalikOgrtId = id || null; ui.sayfa = 1; renderDersler(); }
 /* DERS-LISTE-SAYFALAMA: sayfa gezinme — filtre sonucu (penceredeDersler) DEĞİŞMEZ, yalnız sayfa değişir */
 function sayfaGit(yon) {
-  var toplam = Math.max(1, Math.ceil(penceredeDersler().length / (ui.sayfaBoyut || 20)));
+  var toplam = Math.max(1, Math.ceil(dersAramaUygula(penceredeDersler()).length / (ui.sayfaBoyut || 20)));
   ui.sayfa = Math.min(Math.max(1, (ui.sayfa || 1) + yon), toplam);
   renderDersler();
   var bolum = null;
@@ -4732,7 +4734,8 @@ function gunlukTablo() {
 
 
 function renderDersler() {
-  var liste = penceredeDersler();
+  /* DERS-ARAMA: arama metni YALNIZ bu tabloyu filtreler (üstteki özet/analiz etkilenmez) */
+  var liste = dersAramaUygula(penceredeDersler());
   var cumle = pencereAdi();
   var ok = GUNLER[dowIdx(todayKey())];
   var p = pencere();

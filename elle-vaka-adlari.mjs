@@ -2364,7 +2364,7 @@ export const elleVakaAdlari = {
       "renderDersler çıktısında dersKartiAc butonu VAR",
       "renderDersler çıktısında waSatir butonu VAR",
       "renderDersler çıktısında WhatsApp ikonu VAR",
-      "çıkışta kart butonu sayısı = penceredeki uygun ders sayısı",
+      "sayfalanmış ekran: kart butonu = ilk sayfa (min(uygun, 20)) · PDF gizli bloğunda TÜM dersler",
       "renderDersler liste HTML'i satır başına kart+wa üretiyor",
       "uygun birebir ders bulundu",
       "dersKartiVeri: ad + ders + konu + sinif dolu",

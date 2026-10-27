@@ -113,10 +113,18 @@ try {
   t("renderDersler çıktısında dersKartiAc butonu VAR", out.includes("dersKartiAc"));
   t("renderDersler çıktısında waSatir butonu VAR", out.includes("waSatir"));
   t("renderDersler çıktısında WhatsApp ikonu VAR", out.includes("fa-whatsapp"));
-  t("çıkışta kart butonu sayısı = penceredeki uygun ders sayısı", (() => {
-    const btnSay = (out.match(/dersKartiAc/g) || []).length;
+  /* DERS-LISTE-SAYFALAMA (ADIM 2.1): "tüm dersler aynı anda DOM'da" varsayımı GEÇERSİZ.
+     Yeni sözleşme: EKRANDA yalnız geçerli sayfanın dilimi (varsayılan 20 kayıt) vardır;
+     PDF/yazdırma için gizli print:block bloğunda TÜM filtrelenmiş liste bulunur. */
+  t("sayfalanmış ekran: kart butonu = ilk sayfa (min(uygun, 20)) · PDF gizli bloğunda TÜM dersler", (() => {
+    const iPdf = out.indexOf("hidden print:block");
+    const ekran = iPdf >= 0 ? out.slice(0, iPdf) : out;
+    const pdf = iPdf >= 0 ? out.slice(iPdf) : "";
     const uygun = fn.penceredeDersler().filter((l) => fn.dersKartiUygun(l)).length;
-    return btnSay === uygun;
+    const btnEkran = (ekran.match(/dersKartiAc/g) || []).length;
+    const beklenenEkran = Math.min(uygun, 20); /* varsayılan sayfa boyutu (ui.sayfaBoyut) */
+    const pdfSatir = (pdf.match(/<tr class="border-b border-slate-50 hover/g) || []).length;
+    return btnEkran === beklenenEkran && pdfSatir === fn.penceredeDersler().length;
   })());
   t("renderDersler liste HTML'i satır başına kart+wa üretiyor", out.includes("dersKartiAc") && out.includes("waSatir"));
 } catch (e) { /* beklenmeyen catch: THROW — SAYAÇ KAPISI kuralları */ console.error(e && e.message); throw e; }

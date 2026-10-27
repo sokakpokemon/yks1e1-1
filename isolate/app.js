@@ -1005,7 +1005,10 @@ var ui = {
   grupPanelBaglam: "plan" /* GRUP İSTEK: panelin aktif form bağlamı ("plan" | "havuz") */,
   havuzAnaId: null /* GRUP İSTEK: havuz bağlamında İLK seçilen öğrenci (ana/sahip) */,
   grupAcikOgrId: null /* GRUP GORUNUM: tum uye adlari acik olan ders id'si (badge toggle) */,
-  istekUyeArama: "" /* D39-UYE-ARAMA: havuz grup üyesi editörü öğrenci arama sorgusu (açılış/kart değişimi/kapanış/İptal/Kaydet'te TEMİZLENİR) */
+  istekUyeArama: "" /* D39-UYE-ARAMA: havuz grup üyesi editörü öğrenci arama sorgusu (açılış/kart değişimi/kapanış/İptal/Kaydet'te TEMİZLENİR) */,
+  sayfa: 1 /* DERS-LISTE-SAYFALAMA: ders tablosu geçerli sayfa (1 tabanlı) */,
+  sayfaBoyut: 20 /* DERS-LISTE-SAYFALAMA: sayfa başına kayıt (9999 = Tümünü Göster) */,
+  aramaMetni: "" /* DERS-ARAMA: ders tablosu arama çubuğu sorgusu (öğrenci / öğretmen / konu) */
 };
 
 // ---------- Durum seçici çubuk (takvim düzenlemesi) ----------
@@ -1102,6 +1105,18 @@ function penceredeDersler() {
   }); /* DONEM-SECICI-YAMASI: yalnız aktif dönemin dersleri */
   liste.sort(function (a, b) { return a.tarih === b.tarih ? (a.saat < b.saat ? -1 : 1) : (a.tarih < b.tarih ? -1 : 1); });
   return liste;
+}
+/* DERS-ARAMA: arama YALNIZ ders tablosuna uygulanır — Özet / Analiz / PNG / WhatsApp / kopyala
+   penceredeDersler()'i filtresiz kullanmaya devam eder. Sıralama bozulmasın diye
+   filtre, sıralanmış listenin üzerine uygulanır ve tek kaynak bu yardımcıdır. */
+function dersAramaUygula(liste) {
+  var q = (ui.aramaMetni || "").toLowerCase();
+  if (!q) return liste;
+  return liste.filter(function (l) {
+    return (l.ogrenciAd || "").toLowerCase().includes(q) ||
+      (l.ogretmenAd || "").toLowerCase().includes(q) ||
+      (l.konu || "").toLowerCase().includes(q);
+  });
 }
 function aktif(liste) { return liste.filter(function (l) { return l.durum !== "iptal"; }); }
 
@@ -4072,6 +4087,8 @@ function haftaBaslangiciD(k) { return addDaysKey(k, -dowIdx(k)); }
    ================================================================ */
 function setFiltre(f) {
   ui.filtre = f;
+  ui.sayfa = 1; /* DERS-LISTE-SAYFALAMA: filtre değişti → ilk sayfaya dön */
+  ui.aramaMetni = ""; /* DERS-ARAMA: filtre değişiminde arama metni sıfırlanır */
   istekDropHedef = null;
   if (f === "tumu") { /* anchor kullanılmaz */ }
   else if (f === "hafta") ui.anchor = haftaBaslangiciD(ui.anchor);
@@ -4080,10 +4097,32 @@ function setFiltre(f) {
   if (f !== "hafta" && f !== "gun") ui.gunSecim = null;
   renderOzet(); renderAnaliz(); renderDersler();
 }
-function haftalikOgrtSec(id) { ui.haftalikOgrtId = id || null; renderDersler(); }
+function haftalikOgrtSec(id) { ui.haftalikOgrtId = id || null; ui.sayfa = 1; renderDersler(); }
+/* DERS-LISTE-SAYFALAMA: sayfa gezinme — filtre sonucu (penceredeDersler) DEĞİŞMEZ, yalnız sayfa değişir */
+function sayfaGit(yon) {
+  var toplam = Math.max(1, Math.ceil(dersAramaUygula(penceredeDersler()).length / (ui.sayfaBoyut || 20)));
+  ui.sayfa = Math.min(Math.max(1, (ui.sayfa || 1) + yon), toplam);
+  renderDersler();
+  var bolum = null;
+  try { bolum = document.getElementById("derslerBolum"); } catch (e) { bolum = null; }
+  if (bolum && typeof bolum.scrollIntoView === "function") { try { bolum.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e2) {} }
+}
+/* DERS-ARAMA: yazdıkça filtrele; render sonrası odak + imleç korunur (kutu yazarken kaybolmaz) */
+function dersArama(v) {
+  ui.aramaMetni = v == null ? "" : String(v);
+  ui.sayfa = 1;
+  renderDersler();
+  var el = null;
+  try { el = document.getElementById("dersAramaInput"); } catch (e) { el = null; }
+  if (el) {
+    try { if (typeof el.focus === "function") el.focus(); } catch (e1) {}
+    try { if (typeof el.setSelectionRange === "function") { var n = String(el.value || "").length; el.setSelectionRange(n, n); } } catch (e2) {}
+  }
+}
 function gunSec(k) {
   if (!k || ui.gunSecim === k) ui.gunSecim = null;
   else ui.gunSecim = k;
+  ui.sayfa = 1;
   renderDersler();
 }
 function navGit(yon) {
@@ -4099,13 +4138,15 @@ function navGit(yon) {
   else if (ui.filtre === "ay") {
     var d = fromKey(a.slice(0, 7) + "-01");
     ui.anchor = toKey(new Date(d.getFullYear(), d.getMonth() + yon, 1));
-  } else {
+  }  else {
     ui.anchor = (parseInt(a.slice(0, 4), 10) + yon) + "-01-01";
   }
+  ui.sayfa = 1; /* DERS-LISTE-SAYFALAMA: tarih penceresi değişti → ilk sayfa */
   renderOzet(); renderAnaliz(); renderDersler();
 }
 function buguneDon() {
   ui.anchor = todayKey();
+  ui.sayfa = 1; /* DERS-LISTE-SAYFALAMA: bugüne dönüş → ilk sayfa */
   istekDropHedef = null;
   if (ui.gunSecim) { var _w2 = pencere(); if (ui.gunSecim < _w2.start || ui.gunSecim > _w2.end) ui.gunSecim = null; }
   renderOzet(); renderAnaliz(); renderDersler();
@@ -4693,11 +4734,19 @@ function gunlukTablo() {
 
 
 function renderDersler() {
-  var liste = penceredeDersler();
+  /* DERS-ARAMA: arama metni YALNIZ bu tabloyu filtreler (üstteki özet/analiz etkilenmez) */
+  var liste = dersAramaUygula(penceredeDersler());
   var cumle = pencereAdi();
   var ok = GUNLER[dowIdx(todayKey())];
   var p = pencere();
   var aralikYazi = p.start ? fmtTR(p.start) + " – " + fmtTR(p.end) : "Tüm arşiv";
+
+  /* DERS-LISTE-SAYFALAMA: sayfa hesabı — filtre sonucu (liste) KORUNUR, yalnız görünüm dilimlenir.
+     sayfaBoyut 9999 = "Tümünü Göster" (dilim = liste). */
+  if (!ui.sayfaBoyut || ui.sayfaBoyut < 1) ui.sayfaBoyut = 20;
+  var toplamSayfa = Math.max(1, Math.ceil(liste.length / ui.sayfaBoyut));
+  if (!ui.sayfa || ui.sayfa < 1 || ui.sayfa > toplamSayfa) ui.sayfa = Math.min(Math.max(1, ui.sayfa || 1), toplamSayfa);
+  var baslangic = (ui.sayfa - 1) * ui.sayfaBoyut;
 
   var oklar = "";
   if (ui.filtre !== "tumu") {
@@ -4705,7 +4754,8 @@ function renderDersler() {
       '<span class="px-1 font-bold text-[13px] text-slate-800 whitespace-nowrap" style="font-variant-numeric:tabular-nums">' + cumle + "</span>" +
       '<button onclick="navGit(1)" class="w-8 h-8 rounded-full border border-slate-200 hover:border-teal-300 hover:text-teal-600 text-slate-400 transition-colors"><i class="fa-solid fa-chevron-right text-[11px]"></i></button>';
   } else {
-    oklar = '<span class="px-1 font-bold text-[13px] text-slate-800">Tüm arşiv</span>';
+    oklar = '<span class="px-1 font-bold text-[13px] text-slate-800">Tüm arşiv</span>' +
+      '<span class="text-[11px] text-slate-400 ml-2"><i class="fa-solid fa-circle-info mr-1 text-teal-500"></i>Belirli bir tarihe gitmek için yukarıdaki sekmeleri kullanın.</span>';
   }
   if (!guncelMi()) oklar += '<button onclick="buguneDon()" class="text-[11px] font-bold text-teal-600 hover:bg-teal-50 border border-teal-200 rounded-full px-3 py-1.5 transition-colors"><i class="fa-solid fa-rotate-left mr-1"></i>Bugüne dön</button>';
 
@@ -4714,6 +4764,13 @@ function renderDersler() {
     '<button onclick="pngAc()" class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-[12px] font-bold text-slate-600 px-3.5 py-2 transition-colors"><i class="fa-solid fa-image text-violet-400"></i><span class="hidden md:inline">Rapor Görseli (PNG)</span></button>' +
     '<button onclick="waAc()" class="inline-flex items-center gap-1.5 rounded-full bg-green-500 hover:bg-green-600 text-white text-[12px] font-bold px-3.5 py-2 shadow-sm transition-colors"><i class="fa-brands fa-whatsapp"></i><span class="hidden md:inline">WhatsApp Bilgilendirmesi</span></button>' +
     '<button onclick="kopyala()" class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-[12px] font-bold text-slate-600 px-3.5 py-2 transition-colors"><i class="fa-regular fa-copy text-slate-400"></i><span class="hidden md:inline">Listeyi Kopyala</span></button>';
+
+  /* DERS-ARAMA: tablo üstü arama çubuğu — yazarken odak korunur (dersArama) */
+  var aramaKutu =
+    '<div class="relative w-full max-w-xs no-print">' +
+      '<i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>' +
+      '<input type="text" id="dersAramaInput" value="' + esc(ui.aramaMetni || "") + '" oninput="dersArama(this.value)" placeholder="Öğrenci, öğretmen veya konu ara..." autocomplete="off" class="w-full rounded-full border border-slate-200 bg-slate-50 pl-9 pr-4 py-2 text-[12px] font-semibold focus:outline-none focus:ring-2 focus:ring-teal-400/40" />' +
+    '</div>';
 
   var satirlar = "";
 
@@ -4728,31 +4785,48 @@ function renderDersler() {
   ogrSecici += '</div>';
 
   if (!liste.length) {
-    satirlar = '<tr><td colspan="8"><div class="py-14 text-center"><div class="text-3xl mb-2">🗓️</div><p class="text-[13px] font-semibold text-slate-500">Bu dönemde ders yok</p><p class="text-[11.5px] text-slate-400 mt-1">Yukarıdaki formdan yeni bir birebir ders planlayın</p></div></td></tr>';
+    satirlar = ui.aramaMetni
+      ? '<tr><td colspan="8"><div class="py-14 text-center"><div class="text-3xl mb-2">🔍</div><p class="text-[13px] font-semibold text-slate-500">Aramanızla eşleşen ders yok</p><p class="text-[11.5px] text-slate-400 mt-1">“' + esc(ui.aramaMetni) + '” için sonuç bulunamadı — arama çubuğunu temizleyin</p></div></td></tr>'
+      : '<tr><td colspan="8"><div class="py-14 text-center"><div class="text-3xl mb-2">🗓️</div><p class="text-[13px] font-semibold text-slate-500">Bu dönemde ders yok</p><p class="text-[11.5px] text-slate-400 mt-1">Yukarıdaki formdan yeni bir birebir ders planlayın</p></div></td></tr>';
   }
-  liste.forEach(function (l) {
+  /* DERS-LISTE-SAYFALAMA: satır üreticisi tek yerde — ekran dilimi ve PDF (tam liste) AYNI markup'ı kullanır */
+  function satirHTML(l, sade) {
     var D = DERS[l.dersId] || DERS.tur;
     var durum = l.durum || "planlandi";
     var durumEtiket = { planlandi: ["Planlandı", "bg-sky-100 text-sky-700"], tamamlandi: ["Tamamlandı", "bg-emerald-100 text-emerald-700"], iptal: ["İptal", "bg-rose-100 text-rose-500"] }[durum];
     var gunAd = GUN_KISA[dowIdx(l.tarih)];
-    satirlar += '<tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">' +
+    return '<tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">' +
       '<td class="px-4 py-3 whitespace-nowrap"><div class="text-[13px] font-semibold text-slate-700" style="font-variant-numeric:tabular-nums">' + fmtTR(l.tarih) + '</div><div class="text-[10px] text-slate-400 font-semibold">' + gunAd + "</div></td>" +
       '<td class="px-4 py-3 text-[13px] font-bold text-slate-600 whitespace-nowrap" style="font-variant-numeric:tabular-nums">' + esc(saatEtiket(l.saat)) + "</td>" +
       '<td class="px-4 py-3"><div class="flex items-center gap-2">' + avatar(l.ogrenciAd, 0) + '<span class="text-[13px] font-semibold text-slate-700 truncate max-w-[140px]">' + esc(l.ogrenciAd) + "</span>" + grupBadgeHTML(l) + "</div></td>" +
       '<td class="px-4 py-3"><span class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold whitespace-nowrap ' + D.bg + " " + D.tx + '">' + D.ad + "</span></td>" +
       '<td class="px-4 py-3 text-[12.5px] text-slate-500 max-w-[180px] truncate">' + (l.konu ? esc(l.konu) : '<span class="italic text-slate-300">Genel tekrar</span>') + "</td>" +
       '<td class="px-4 py-3 text-[12.5px] font-semibold text-slate-600 truncate max-w-[140px]">' + esc(l.ogretmenAd) + "</td>" +
-      '<td class="px-4 py-3"><div class="flex items-center gap-1">' +
-        '<button title="Tamamlandı işaretle" onclick="durumTik(\'' + l.id + '\',\'tamamlandi\')" class="w-7 h-7 rounded-full flex items-center justify-center border transition-colors ' + (durum === "tamamlandi" ? "bg-emerald-500 border-emerald-500 text-white shadow-sm" : "border-slate-200 text-slate-300 hover:border-emerald-300 hover:text-emerald-500") + '"><i class="fa-solid fa-check text-[11px]"></i></button>' +
-        '<button title="İptal et" onclick="durumTik(\'' + l.id + '\',\'iptal\')" class="w-7 h-7 rounded-full flex items-center justify-center border transition-colors ' + (durum === "iptal" ? "bg-rose-500 border-rose-500 text-white shadow-sm" : "border-slate-200 text-slate-300 hover:border-rose-300 hover:text-rose-400") + '"><i class="fa-solid fa-xmark text-[11px]"></i></button>' +
-        '<span class="ml-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-bold whitespace-nowrap ' + durumEtiket[1] + '">' + durumEtiket[0] + "</span></div></td>" +
-      '<td class="px-4 py-3"><div class="flex items-center gap-1">' +
-        '<button title="Öğrenciye WhatsApp bilgilendirmesi" onclick="waSatir(\'' + l.id + '\')" class="w-8 h-8 rounded-full text-green-400 hover:bg-green-50 transition-colors"><i class="fa-brands fa-whatsapp text-[14px]"></i></button>' +
-        (dersKartiUygun(l) ? '<button title="Ders Kartı görseli (PNG) üret" draggable="false" onmousedown="event.stopPropagation()" onclick="event.preventDefault();dersKartiAc(\'' + l.id + '\')" class="w-8 h-8 rounded-full text-violet-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"><i class="fa-solid fa-image text-[12px]"></i></button>' : '') + /* DERS-KARTI-TASIMA-YAMASI: kart butonu ISLEM alanına taşındı (waSatir yanına) */
-        '<button title="Dersi düzenle" onclick="duzenle(\'' + l.id + '\')" class="w-8 h-8 rounded-full text-slate-300 hover:text-blue-500 hover:bg-blue-50 transition-colors"><i class="fa-solid fa-pen text-[12px]"></i></button>' +
-        '<button title="Dersi sil" onclick="silOnay(\'' + l.id + '\')" class="w-8 h-8 rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-colors"><i class="fa-solid fa-trash-can text-[12px]"></i></button>' +
-        "</div></td></tr>";
-  });
+      (sade
+        ? '<td class="px-4 py-3"><span class="rounded-full px-2.5 py-1 text-[10.5px] font-bold whitespace-nowrap ' + durumEtiket[1] + '">' + durumEtiket[0] + "</span></td>"
+        : '<td class="px-4 py-3"><div class="flex items-center gap-1">' +
+          '<button title="Tamamlandı işaretle" onclick="durumTik(\'' + l.id + '\',\'tamamlandi\')" class="w-7 h-7 rounded-full flex items-center justify-center border transition-colors ' + (durum === "tamamlandi" ? "bg-emerald-500 border-emerald-500 text-white shadow-sm" : "border-slate-200 text-slate-300 hover:border-emerald-300 hover:text-emerald-500") + '"><i class="fa-solid fa-check text-[11px]"></i></button>' +
+          '<button title="İptal et" onclick="durumTik(\'' + l.id + '\',\'iptal\')" class="w-7 h-7 rounded-full flex items-center justify-center border transition-colors ' + (durum === "iptal" ? "bg-rose-500 border-rose-500 text-white shadow-sm" : "border-slate-200 text-slate-300 hover:border-rose-300 hover:text-rose-400") + '"><i class="fa-solid fa-xmark text-[11px]"></i></button>' +
+          '<span class="ml-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-bold whitespace-nowrap ' + durumEtiket[1] + '">' + durumEtiket[0] + "</span></div></td>") +
+      (sade
+        ? '<td class="px-4 py-3 text-slate-300 select-none">—</td>'
+        : '<td class="px-4 py-3"><div class="flex items-center gap-1">' +
+          '<button title="Öğrenciye WhatsApp bilgilendirmesi" onclick="waSatir(\'' + l.id + '\')" class="w-8 h-8 rounded-full text-green-400 hover:bg-green-50 transition-colors"><i class="fa-brands fa-whatsapp text-[14px]"></i></button>' +
+          (dersKartiUygun(l) ? '<button title="Ders Kartı görseli (PNG) üret" draggable="false" onmousedown="event.stopPropagation()" onclick="event.preventDefault();dersKartiAc(\'' + l.id + '\')" class="w-8 h-8 rounded-full text-violet-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"><i class="fa-solid fa-image text-[12px]"></i></button>' : '') + /* DERS-KARTI-TASIMA-YAMASI: kart butonu ISLEM alanına taşındı (waSatir yanına) */
+          '<button title="Dersi düzenle" onclick="duzenle(\'' + l.id + '\')" class="w-8 h-8 rounded-full text-slate-300 hover:text-blue-500 hover:bg-blue-50 transition-colors"><i class="fa-solid fa-pen text-[12px]"></i></button>' +
+          '<button title="Dersi sil" onclick="silOnay(\'' + l.id + '\')" class="w-8 h-8 rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-colors"><i class="fa-solid fa-trash-can text-[12px]"></i></button>' +
+          "</div></td>") +
+      "</tr>";
+  }
+
+  /* DERS-LISTE-SAYFALAMA: ekranda YALNIZ geçerli sayfanın dilimi (9999 = Tümünü Göster) */
+  var dilim = ui.sayfaBoyut === 9999 ? liste : liste.slice(baslangic, baslangic + ui.sayfaBoyut);
+  /* Boş liste → yukarıdaki boş-durum satırı KORUNUR (aksi halde [] map ile silinirdi).
+     sade=false: işlem butonları AÇIK — map'in 2. argümanı index olduğu için doğrudan map(satirHTML) YANLIŞ olurdu. */
+  if (dilim.length) satirlar = dilim.map(function (l) { return satirHTML(l, false); }).join("");
+  /* PDF / yazdırma: TÜM filtrelenmiş liste — sayfadan bağımsız (gizli print:block tablosu).
+     sade=true: işlem/durum BUTONLARI basılmaz (gizli DOM'da çift buton yok, çıktı okunur kalır) */
+  var pdfSatirlar = liste.map(function (l) { return satirHTML(l, true); }).join("");
 
   var say1 = liste.filter(function (l) { return l.durum === "planlandi"; }).length;
   var say2 = liste.filter(function (l) { return l.durum === "tamamlandi"; }).length;
@@ -4773,6 +4847,24 @@ function renderDersler() {
     gunChips += '</div>';
   }
 
+  /* DERS-LISTE-SAYFALAMA: ekran tablosu ve PDF tablosu AYNI başlığı kullanır (tek kaynak) */
+  var tabloBaslik =
+    '<thead class="sticky top-0 z-10 bg-white shadow-sm"><tr class="bg-slate-50/80 border-b border-slate-100">' +
+      "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Tarih</th>" +
+      "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Saat</th>" +
+      "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Öğrenci</th>" +
+      "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Ders</th>" +
+      "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Eksik Konu</th>" +
+      "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Öğretmen</th>" +
+      "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Durum</th>" +
+      "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>İşlem</th>" +
+    "</tr></thead>";
+
+  /* DERS-LISTE-SAYFALAMA: kayıt aralığı yazısı (boş liste "0 kayıt") */
+  var kayitYazi = liste.length
+    ? (baslangic + 1) + "–" + Math.min(baslangic + (ui.sayfaBoyut === 9999 ? liste.length : ui.sayfaBoyut), liste.length) + " / " + liste.length + " kayıt"
+    : "0 kayıt";
+
   $("derslerBolum").innerHTML =
     '<div class="kart overflow-hidden">' +
       '<div class="no-print flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b border-slate-100">' +
@@ -4780,6 +4872,7 @@ function renderDersler() {
         (ogrSecici && !tekGun ? '<div class="flex items-center gap-2 mt-2 flex-wrap">' + ogrSecici + '</div>' : '') +
         '<div class="flex items-center gap-2 flex-wrap">' + aksiyon + "</div>" +
       "</div>" +
+      (tekGun ? "" : '<div class="no-print px-5 pb-4">' + aramaKutu + "</div>") +
       '<div id="yazdir" class="bg-white">' +
         ksRaporHTML() +
         '<div class="print-goster px-6 pt-6 pb-2 flex items-center justify-between">' +
@@ -4793,20 +4886,37 @@ function renderDersler() {
         (tekGun ? gunlukTablo() : "") +
         (ui.haftalikOgrtId && !tekGun ? haftalikOgrtTablo() : "") +
         (tekGun ? "" : 
-      '<div class="overflow-x-auto">' +
+      /* EKRAN TABLOSU: yalnız sayfa dilimi · sticky başlık · print'te gizli (tam liste ayrı basılır) */
+      '<div class="max-h-[70vh] overflow-auto print:hidden">' +
           '<table class="w-full min-w-[980px] text-left border-collapse">' +
-            '<thead><tr class="bg-slate-50/80 border-b border-slate-100">' +
-              "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Tarih</th>" +
-              "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Saat</th>" +
-              "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Öğrenci</th>" +
-              "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Ders</th>" +
-              "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Eksik Konu</th>" +
-              "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Öğretmen</th>" +
-              "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Durum</th>" +
-              "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>İşlem</th>" +
-            "</tr></thead><tbody>" + satirlar + "</tbody>" +
+            tabloBaslik +
+            "<tbody>" + satirlar + "</tbody>" +
           "</table>" +
         "</div>" +
+        /* PDF / YAZDIRMA TABLOSU: tüm filtrelenmiş liste (sayfadan bağımsız), ekranda gizli */
+        '<div class="hidden print:block">' +
+          '<table class="w-full text-left border-collapse">' +
+            tabloBaslik +
+            "<tbody>" + pdfSatirlar + "</tbody>" +
+          "</table>" +
+        "</div>" +
+        /* SAYFALAMA + SAYFA BOYUTU ÇUBUĞU (print'te gizli) */
+        '<div class="no-print flex flex-wrap items-center justify-between gap-4 px-5 py-4 border-t border-slate-100 bg-white">' +
+          '<div class="flex items-center gap-3">' +
+            '<span class="text-[11px] font-semibold text-slate-400">' + kayitYazi + '</span>' +
+            '<select onchange="ui.sayfaBoyut=parseInt(this.value); ui.sayfa=1; renderDersler();" class="text-[11px] font-bold text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none">' +
+              '<option value="20"' + (ui.sayfaBoyut === 20 ? ' selected' : '') + '>20 Kayıt</option>' +
+              '<option value="50"' + (ui.sayfaBoyut === 50 ? ' selected' : '') + '>50 Kayıt</option>' +
+              '<option value="100"' + (ui.sayfaBoyut === 100 ? ' selected' : '') + '>100 Kayıt</option>' +
+              '<option value="9999"' + (ui.sayfaBoyut === 9999 ? ' selected' : '') + '>Tümünü Göster</option>' +
+            '</select>' +
+          '</div>' +
+          '<div class="flex items-center gap-1">' +
+            '<button onclick="sayfaGit(-1)" ' + (ui.sayfa === 1 ? "disabled" : "") + ' class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 transition"><i class="fa-solid fa-chevron-left text-xs"></i></button>' +
+            '<span class="text-[12px] font-bold px-3 text-slate-700">' + ui.sayfa + ' / ' + toplamSayfa + '</span>' +
+            '<button onclick="sayfaGit(1)" ' + (ui.sayfa === toplamSayfa ? "disabled" : "") + ' class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 transition"><i class="fa-solid fa-chevron-right text-xs"></i></button>' +
+          '</div>' +
+        '</div>' +
         '<div class="flex flex-wrap items-center gap-2 px-5 py-3 border-t border-slate-100 text-[11px] text-slate-400 font-semibold">' +
           '<span class="no-print"><i class="fa-regular fa-calendar mr-1"></i>' + cumle + " · " + aralikYazi + "</span>" +
           '<span class="hidden print:inline">📅 ' + cumle + " · " + aralikYazi + "</span>" +

@@ -4515,17 +4515,20 @@ window.__sysAnalizAra = function() {
   (function () {
     var STIL_ID = "yk-havuz-3kolon-stil";
     var KOK_ID = "havuzBolum";
+    /* DERS_RENK: sol şerit VE Ders Planla butonu aynı değeri kullanır (--havuz-ders-renk).
+       Her değer PALET'in yazı tonudur → pill/çip/şerit/buton aynı renk ailesinde ve beyaz
+       buton yazısı koyu ton üzerinde okunur. Renk değiştirmek için iki tablo birlikte güncellenir. */
     var DERS_RENK = {
-      "MATEMATİK": "#ef4444",
-      "FİZİK": "#3b82f6",
-      "KİMYA": "#22c55e",
-      "BİYOLOJİ": "#eab308",
-      "TÜRKÇE": "#f97316",
-      "EDEBİYAT": "#ec4899",
-      "COĞRAFYA": "#8b5cf6",
-      "TARİH": "#78350f",
-      "GEOMETRİ": "#0ea5e9",
-      "İNGİLİZCE": "#64748b"
+      "MATEMATİK": "#b91c1c",
+      "FİZİK": "#1d4ed8",
+      "KİMYA": "#15803d",
+      "BİYOLOJİ": "#a16207",
+      "TÜRKÇE": "#c2410c",
+      "EDEBİYAT": "#be185d",
+      "COĞRAFYA": "#6b21a8",
+      "TARİH": "#92400e",
+      "GEOMETRİ": "#0369a1",
+      "İNGİLİZCE": "#334155"
     };
     /* STANDART PALET (pastel): filtre çipleri + karttaki ders etiketi + Planla butonu aynı ailede.
        Ders → [arka plan, yazı, kenar] */
@@ -4537,7 +4540,7 @@ window.__sysAnalizAra = function() {
       "TÜRKÇE": ["#ffedd5", "#c2410c", "#fdba74"],
       "EDEBİYAT": ["#fce7f3", "#be185d", "#f9a8d4"],
       "COĞRAFYA": ["#f3e8ff", "#6b21a8", "#d8b4fe"],
-      "TARİH": ["#f5e0c3", "#78350f", "#e8c99c"],
+      "TARİH": ["#fef3c7", "#92400e", "#fcd34d"],
       "GEOMETRİ": ["#e0f2fe", "#0369a1", "#7dd3fc"],
       "İNGİLİZCE": ["#f1f5f9", "#334155", "#cbd5e1"]
     };
@@ -4549,53 +4552,33 @@ window.__sysAnalizAra = function() {
       "@media (min-width:640px){#havuzBolum .relative.md\\:grid.space-y-2{grid-template-columns:repeat(2,minmax(0,1fr))!important;}}",
       "@media (min-width:1024px){#havuzBolum .relative.md\\:grid.space-y-2{grid-template-columns:repeat(4,minmax(0,1fr))!important;column-gap:.5rem!important;row-gap:.5rem!important;}",
       "#havuzBolum .havuz-ayirici{display:none!important;}}",
-      "/* ===== KOMPAKT KART: kare zorunluluğu YOK — 110-140px sabit yükseklik, dikey flex ===== */",
-      "#havuzBolum .istek-kart{min-height:110px!important;max-height:140px!important;display:flex!important;flex-direction:column!important;justify-content:space-between!important;gap:2px!important;padding:8px!important;overflow:hidden!important;position:relative!important;min-width:0!important;border-radius:.75rem!important;}",
+      "/* ===== MODERN KART: ferah yükseklik — min 130px, max YOK, dikey flex ===== */",
+      "#havuzBolum .istek-kart{min-height:130px!important;display:flex!important;flex-direction:column!important;justify-content:space-between!important;gap:4px!important;padding:10px!important;overflow:hidden!important;position:relative!important;min-width:0!important;border-radius:.75rem!important;}",
       "/* Kart gövdesi + başlık satırı dikey flex akışına açılır: her parça kart flex'inde ayrı sıra olur */",
       "#havuzBolum .istek-kart>div.flex-1{display:contents!important;}",
       "#havuzBolum .istek-kart>div.flex-1>div:first-child{display:contents!important;}",
       "/* SATIR 1 (sol): AD + SINIF yan yana, tek satır, taşarsa ellipsis */",
       "#havuzBolum .istek-kart>div.flex-1>div:first-child>span:first-child{order:1!important;flex:0 0 auto!important;width:100%!important;padding:0 72px 0 0!important;min-width:0!important;max-width:100%!important;overflow:hidden!important;background:none!important;border:0!important;line-height:1.2!important;}",
       "/* Ad + sınıf flex-wrap: sığmazsa sınıf ALT SATIRA iner (JS yok) */",
-      "#havuzBolum .istek-kart .birebir-etiket{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:2px 4px!important;min-width:0!important;overflow:hidden!important;}",
-      "#havuzBolum .istek-kart .birebir-etiket>span:first-child{font-size:12.5px!important;font-weight:700!important;color:#0f172a!important;line-height:1.2!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;min-width:0!important;}",
-      "#havuzBolum .istek-kart .birebir-etiket>span+span{font-size:9.5px!important;color:#64748b!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important;}",
+      "#havuzBolum .istek-kart .birebir-etiket{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:3px 6px!important;min-width:0!important;overflow:hidden!important;}",
+      "#havuzBolum .istek-kart .birebir-etiket>span:first-child{font-size:13px!important;font-weight:700!important;color:#0f172a!important;line-height:1.25!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;min-width:0!important;}",
+      "/* SINIF: adın yanında ayrı gri rozet */",
+      "#havuzBolum .istek-kart .birebir-etiket>span+span{font-size:10px!important;font-weight:600!important;color:#475569!important;line-height:1.4!important;background:#f1f5f9!important;border:1px solid #e2e8f0!important;border-radius:9999px!important;padding:1px 7px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important;}",
       "/* Grup üye adları kartta gizli: sağ üstteki sayaç ikonunun title'ında durur */",
       "#havuzBolum .istek-kart .grup-istek-uyeler{display:none!important;}",
       "/* SATIR 2: ders etiketi (renkli pill) tek satır */",
-      "#havuzBolum .istek-kart>div.flex-1>div:first-child>[data-havuz-ders-etiket]{order:2!important;align-self:flex-start!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:9px!important;line-height:1.5!important;padding:0 .375rem!important;white-space:nowrap!important;}",
+      "#havuzBolum .istek-kart>div.flex-1>div:first-child>[data-havuz-ders-etiket]{order:2!important;align-self:flex-start!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:10px!important;font-weight:700!important;letter-spacing:.2px!important;line-height:1.6!important;border-radius:9999px!important;padding:0 .55rem!important;white-space:nowrap!important;}",
       "/* SATIR 3: konu metni — 'Eksik konu' başlığı yok, en fazla 2 satır (clamp + ellipsis) */",
-      "#havuzBolum .istek-kart>div.flex-1>div:nth-child(2){order:3!important;flex:1 1 auto!important;width:100%!important;min-height:0!important;align-self:stretch!important;margin:0!important;font-size:10px!important;font-weight:500!important;line-height:1.3!important;color:#475569!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;overflow:hidden!important;text-overflow:ellipsis!important;word-break:break-word!important;overflow-wrap:anywhere!important;}",
+      "#havuzBolum .istek-kart>div.flex-1>div:nth-child(2){order:3!important;flex:1 1 auto!important;width:100%!important;min-height:0!important;align-self:stretch!important;margin:2px 0 0 0!important;font-size:11px!important;font-weight:500!important;line-height:1.45!important;color:#475569!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;overflow:hidden!important;text-overflow:ellipsis!important;word-break:break-word!important;overflow-wrap:anywhere!important;}",
       "#havuzBolum .istek-kart>div.flex-1>div:nth-child(2)>i{display:none!important;}",
       "/* SATIR 4: tarih · saat TEK satır (ikonlar gizli, yıl JS'te kırpılır) */",
-      "#havuzBolum .istek-kart>div.flex-1>div:nth-child(3){order:4!important;width:100%!important;align-self:stretch!important;margin:0!important;font-size:9px!important;line-height:1.3!important;color:#94a3b8!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}",
+      "#havuzBolum .istek-kart>div.flex-1>div:nth-child(3){order:4!important;width:100%!important;align-self:stretch!important;margin:0 0 2px 0!important;font-size:10.5px!important;font-weight:500!important;line-height:1.35!important;color:#94a3b8!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}",
       "#havuzBolum .istek-kart>div.flex-1>div:nth-child(3) i{display:none!important;}",
-      "/* SON SIRA: Planla butonu en altta, TAM GENİŞLİK */",
-      "#havuzBolum .istek-kart>button[onclick^=\"formaAktar\"]{order:5!important;width:100%!important;margin-top:auto!important;justify-content:center!important;gap:.25rem!important;font-size:10.5px!important;padding:.3rem .5rem!important;border-radius:.5rem!important;flex:0 0 auto!important;background-color:#ccfbf1!important;color:#0f766e!important;border:1px solid #99f6e4!important;font-weight:600!important;box-shadow:none!important;transition:all .2s ease!important;}",
-      "#havuzBolum .istek-kart>button[onclick^=\"formaAktar\"]:hover,#havuzBolum .istek-kart>button[onclick^=\"formaAktar\"]:focus{background-color:#99f6e4!important;color:#0f766e!important;border-color:#5eead4!important;}",
-      "/* ===== PLANLA BUTONU: derse göre pastel renk (data-havuz-ders) ===== */",
-      "#havuzBolum .istek-kart[data-havuz-ders=\"MATEMATİK\"]>button[onclick^=\"formaAktar\"]{background-color:#fee2e2!important;color:#b91c1c!important;border-color:#fca5a5!important;}",
-      "#havuzBolum .istek-kart[data-havuz-ders=\"FİZİK\"]>button[onclick^=\"formaAktar\"]{background-color:#dbeafe!important;color:#1d4ed8!important;border-color:#93c5fd!important;}",
-      "#havuzBolum .istek-kart[data-havuz-ders=\"KİMYA\"]>button[onclick^=\"formaAktar\"]{background-color:#dcfce7!important;color:#15803d!important;border-color:#86efac!important;}",
-      "#havuzBolum .istek-kart[data-havuz-ders=\"BİYOLOJİ\"]>button[onclick^=\"formaAktar\"]{background-color:#fef9c3!important;color:#a16207!important;border-color:#fde047!important;}",
-      "#havuzBolum .istek-kart[data-havuz-ders=\"TÜRKÇE\"]>button[onclick^=\"formaAktar\"]{background-color:#ffedd5!important;color:#c2410c!important;border-color:#fdba74!important;}",
-      "#havuzBolum .istek-kart[data-havuz-ders=\"EDEBİYAT\"]>button[onclick^=\"formaAktar\"]{background-color:#fce7f3!important;color:#be185d!important;border-color:#f9a8d4!important;}",
-      "#havuzBolum .istek-kart[data-havuz-ders=\"COĞRAFYA\"]>button[onclick^=\"formaAktar\"]{background-color:#f3e8ff!important;color:#6b21a8!important;border-color:#d8b4fe!important;}",
-      "#havuzBolum .istek-kart[data-havuz-ders=\"TARİH\"]>button[onclick^=\"formaAktar\"]{background-color:#f5e0c3!important;color:#78350f!important;border-color:#e8c99c!important;}",
-      "#havuzBolum .istek-kart[data-havuz-ders=\"GEOMETRİ\"]>button[onclick^=\"formaAktar\"]{background-color:#e0f2fe!important;color:#0369a1!important;border-color:#7dd3fc!important;}",
-      "#havuzBolum .istek-kart[data-havuz-ders=\"İNGİLİZCE\"]>button[onclick^=\"formaAktar\"]{background-color:#f1f5f9!important;color:#334155!important;border-color:#cbd5e1!important;}",
-      "/* Planla hover: ders rengi bir ton koyulaşır */",
-      "#havuzBolum .istek-kart[data-havuz-ders=\"MATEMATİK\"]>button[onclick^=\"formaAktar\"]:hover{background-color:#fecaca!important;}",
-      "#havuzBolum .istek-kart[data-havuz-ders=\"FİZİK\"]>button[onclick^=\"formaAktar\"]:hover{background-color:#bfdbfe!important;}",
-      "#havuzBolum .istek-kart[data-havuz-ders=\"KİMYA\"]>button[onclick^=\"formaAktar\"]:hover{background-color:#bbf7d0!important;}",
-      "#havuzBolum .istek-kart[data-havuz-ders=\"BİYOLOJİ\"]>button[onclick^=\"formaAktar\"]:hover{background-color:#fef08a!important;}",
-      "#havuzBolum .istek-kart[data-havuz-ders=\"TÜRKÇE\"]>button[onclick^=\"formaAktar\"]:hover{background-color:#fed7aa!important;}",
-      "#havuzBolum .istek-kart[data-havuz-ders=\"EDEBİYAT\"]>button[onclick^=\"formaAktar\"]:hover{background-color:#fbcfe8!important;}",
-      "#havuzBolum .istek-kart[data-havuz-ders=\"COĞRAFYA\"]>button[onclick^=\"formaAktar\"]:hover{background-color:#e9d5ff!important;}",
-      "#havuzBolum .istek-kart[data-havuz-ders=\"TARİH\"]>button[onclick^=\"formaAktar\"]:hover{background-color:#ebd2ad!important;}",
-      "#havuzBolum .istek-kart[data-havuz-ders=\"GEOMETRİ\"]>button[onclick^=\"formaAktar\"]:hover{background-color:#bae6fd!important;}",
-      "#havuzBolum .istek-kart[data-havuz-ders=\"İNGİLİZCE\"]>button[onclick^=\"formaAktar\"]:hover{background-color:#e2e8f0!important;}",
-      "#havuzBolum .istek-kart>span[class*=\"text-emerald\"]{order:5!important;margin-top:auto!important;align-self:center!important;font-size:9.5px!important;white-space:nowrap!important;}",
+      "/* SON SIRA: Ders Planla butonu en altta, TAM GENİŞLİK — canlı ders rengi + yumuşak gölge */",
+      "#havuzBolum .istek-kart>button[onclick^=\"formaAktar\"]{order:5!important;width:100%!important;margin-top:auto!important;justify-content:center!important;gap:.35rem!important;font-size:11px!important;font-weight:bold!important;letter-spacing:.2px!important;padding:.5rem .6rem!important;border-radius:8px!important;border:1px solid rgba(255,255,255,.18)!important;flex:0 0 auto!important;background-color:var(--havuz-ders-renk,#0d9488)!important;background-image:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,0))!important;color:#fff!important;box-shadow:0 2px 6px rgba(15,23,42,.18)!important;transition:filter .2s ease,box-shadow .2s ease,transform .15s ease!important;}",
+      "#havuzBolum .istek-kart>button[onclick^=\"formaAktar\"]:hover,#havuzBolum .istek-kart>button[onclick^=\"formaAktar\"]:focus{filter:brightness(.92)!important;box-shadow:0 5px 12px rgba(15,23,42,.24)!important;transform:translateY(-1px)!important;color:#fff!important;}",
+      "/* TEK KAYNAK: buton + sol şerit aynı --havuz-ders-renk değişkenini kullanır (DERS_RENK); pill/çipler PALET'in aynı ton ailesinden boyanır. Ders başına ayrı buton rengi KURALI YOK. */",
+      "#havuzBolum .istek-kart>span[class*=\"text-emerald\"]{order:5!important;margin-top:auto!important;align-self:center!important;font-size:10px!important;white-space:nowrap!important;}",
       "/* Avatar: sağ üst köşede mutlak konumlu küçük ikon (32px -> 18px) */",
       "#havuzBolum .istek-kart>div.rounded-full{position:absolute!important;top:8px!important;right:8px!important;width:18px!important;height:18px!important;font-size:7px!important;line-height:1!important;}",
       "/* Grup üyeleri: sağ üst köşede mutlak konumlu küçük ikon + sayı */",
@@ -4651,7 +4634,7 @@ window.__sysAnalizAra = function() {
       var planBtn = kart.querySelector('button[onclick^="formaAktar"]');
       if (planBtn && planBtn.getAttribute("data-havuz-kisa") !== "1") {
         metinDugumleriniTemizle(planBtn);
-        planBtn.appendChild(document.createTextNode("Planla"));
+        planBtn.appendChild(document.createTextNode("Ders Planla"));
         planBtn.setAttribute("data-havuz-kisa", "1");
         planBtn.setAttribute("title", "Eşleştir & Planla");
       }
@@ -4727,11 +4710,11 @@ window.__sysAnalizAra = function() {
           var parcalar = [];
           if (gunAy) {
             var ayNo = parseInt(gunAy[2], 10);
-            parcalar.push(gunAy[1] + " " + (AYLAR_HAVUZ[ayNo] || gunAy[2]));
+            parcalar.push("📅 " + gunAy[1] + " " + (AYLAR_HAVUZ[ayNo] || gunAy[2]));
           }
-          if (saatEs) parcalar.push("saat " + saatEs[1]);
+          if (saatEs) parcalar.push("🕒 saat " + saatEs[1]);
           if (parcalar.length) {
-            tarihDiv.textContent = parcalar.join(" ");
+            tarihDiv.textContent = parcalar.join(" · ");
             tarihDiv.setAttribute("data-havuz-tarih", "1");
           }
         }

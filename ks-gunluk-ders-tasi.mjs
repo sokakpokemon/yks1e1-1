@@ -437,7 +437,7 @@ console.log("9) Süit kaydı ve dosya bütünlüğü:");
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 t("bu süit test.mjs'te tam 1 kez", (readFileSync("test.mjs", "utf8").match(/ks-gunluk-ders-tasi\.mjs/g) || []).length === 1);
 t("haftalık süit hâlâ test.mjs'te tam 1 kez", (readFileSync("test.mjs", "utf8").match(/ks-ders-tasi\.mjs/g) || []).length === 1);
-t("ek-ders.js değişmedi (bilinen hash)", sha(readFileSync("ek-ders.js", "utf8")) === "3d2dd38ff517c64fb488714edac932381daa79bd1e87a3831941b9d04a37233f");
+t("ek-ders.js değişmedi (bilinen hash)", sha(readFileSync("ek-ders.js", "utf8")) === "7e315d2baf4d82ec42e480925269102421f49fd1a01d77badb8d5351ab2546d6");
 t("EK-DERS-GORUNUM mark sayısı 5 (değişmedi)", kez("EK-DERS-GORUNUM") === 5);
 t("haftalık süitteki stale günlük assert güncellendi (draggable DEĞİL → birebir draggable)",
   readFileSync("ks-ders-tasi.mjs", "utf8").includes("günlük tablo birebir hücresi draggable"));

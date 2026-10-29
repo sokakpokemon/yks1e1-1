@@ -1308,7 +1308,8 @@ function renderOzet() {
   var planlanan = ak.filter(function (l) { return l.durum === "planlandi"; }).length;
   var tumArsiv = aktif(DB.dersler).length;
 
-  var seg = '<div class="inline-flex items-center rounded-full bg-slate-100 p-1 gap-0.5 shadow-inner">';
+  /* MOBIL-SUTUN: telefonda sığmazsa butonlar alt alta/satır sonuna sarar; md+ ekranda eski pill görünümü korunur */
+  var seg = '<div class="flex flex-wrap justify-center gap-1 items-center rounded-2xl md:rounded-full bg-slate-100 p-1 shadow-inner">';
   [["gun","Bugün"],["hafta","Bu Hafta"],["ay","Bu Ay"],["yil","Bu Yıl"],["tumu","Tümü"]].forEach(function (o) {
     var aktifMi = ui.filtre === o[0];
     seg += '<button onclick="setFiltre(\'' + o[0] + '\')" class="px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all ' +
@@ -4795,13 +4796,17 @@ function renderDersler() {
     var durum = l.durum || "planlandi";
     var durumEtiket = { planlandi: ["Planlandı", "bg-sky-100 text-sky-700"], tamamlandi: ["Tamamlandı", "bg-emerald-100 text-emerald-700"], iptal: ["İptal", "bg-rose-100 text-rose-500"] }[durum];
     var gunAd = GUN_KISA[dowIdx(l.tarih)];
+    /* MOBIL-SUTUN: ekran tablosunda (sade=false) "Ders / Eksik Konu / Öğretmen" telefonda gizlenir ve
+       Tarih hücresi yatay kaydırmada sabitlenir. sade=true (PDF/yazdırma) TÜM sütunları korur. */
+    var mGizle = sade ? "" : " hidden md:table-cell";
+    var mTarih = sade ? "" : " sticky left-0 z-10 bg-white shadow-[2px_0_5px_rgba(0,0,0,0.05)]";
     return '<tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">' +
-      '<td class="px-4 py-3 whitespace-nowrap"><div class="text-[13px] font-semibold text-slate-700" style="font-variant-numeric:tabular-nums">' + fmtTR(l.tarih) + '</div><div class="text-[10px] text-slate-400 font-semibold">' + gunAd + "</div></td>" +
+      '<td class="px-4 py-3 whitespace-nowrap' + mTarih + '"><div class="text-[13px] font-semibold text-slate-700" style="font-variant-numeric:tabular-nums">' + fmtTR(l.tarih) + '</div><div class="text-[10px] text-slate-400 font-semibold">' + gunAd + "</div></td>" +
       '<td class="px-4 py-3 text-[13px] font-bold text-slate-600 whitespace-nowrap" style="font-variant-numeric:tabular-nums">' + esc(saatEtiket(l.saat)) + "</td>" +
       '<td class="px-4 py-3"><div class="flex items-center gap-2">' + avatar(l.ogrenciAd, 0) + '<span class="text-[13px] font-semibold text-slate-700 truncate max-w-[140px]">' + esc(l.ogrenciAd) + "</span>" + grupBadgeHTML(l) + "</div></td>" +
-      '<td class="px-4 py-3"><span class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold whitespace-nowrap ' + D.bg + " " + D.tx + '">' + D.ad + "</span></td>" +
-      '<td class="px-4 py-3 text-[12.5px] text-slate-500 max-w-[180px] truncate">' + (l.konu ? esc(l.konu) : '<span class="italic text-slate-300">Genel tekrar</span>') + "</td>" +
-      '<td class="px-4 py-3 text-[12.5px] font-semibold text-slate-600 truncate max-w-[140px]">' + esc(l.ogretmenAd) + "</td>" +
+      '<td class="px-4 py-3' + mGizle + '"><span class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold whitespace-nowrap ' + D.bg + " " + D.tx + '">' + D.ad + "</span></td>" +
+      '<td class="px-4 py-3 text-[12.5px] text-slate-500 max-w-[180px] truncate' + mGizle + '">' + (l.konu ? esc(l.konu) : '<span class="italic text-slate-300">Genel tekrar</span>') + "</td>" +
+      '<td class="px-4 py-3 text-[12.5px] font-semibold text-slate-600 truncate max-w-[140px]' + mGizle + '">' + esc(l.ogretmenAd) + "</td>" +
       (sade
         ? '<td class="px-4 py-3"><span class="rounded-full px-2.5 py-1 text-[10.5px] font-bold whitespace-nowrap ' + durumEtiket[1] + '">' + durumEtiket[0] + "</span></td>"
         : '<td class="px-4 py-3"><div class="flex items-center gap-1">' +
@@ -4847,18 +4852,23 @@ function renderDersler() {
     gunChips += '</div>';
   }
 
-  /* DERS-LISTE-SAYFALAMA: ekran tablosu ve PDF tablosu AYNI başlığı kullanır (tek kaynak) */
-  var tabloBaslik =
-    '<thead class="sticky top-0 z-10 bg-white shadow-sm"><tr class="bg-slate-50/80 border-b border-slate-100">' +
-      "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Tarih</th>" +
+  /* DERS-LISTE-SAYFALAMA: ekran tablosu ve PDF tablosu AYNI başlığı kullanır (tek kaynak).
+     MOBIL-SUTUN: sade=false (ekran) → "Ders / Eksik Konu / Öğretmen" başlıkları telefonda gizlenir,
+     Tarih başlığı yatay kaydırmada sticky kalır. sade=true (PDF/yazdırma) → tüm sütunlar basılır. */
+  function tabloBaslikHTML(sade) {
+    var g = sade ? "" : " hidden md:table-cell";
+    var t = sade ? "" : " sticky left-0 z-20 bg-slate-50 shadow-[2px_0_5px_rgba(0,0,0,0.05)]";
+    return '<thead class="sticky top-0 z-10 bg-white shadow-sm"><tr class="bg-slate-50/80 border-b border-slate-100">' +
+      "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider" + t + "'>Tarih</th>" +
       "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Saat</th>" +
       "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Öğrenci</th>" +
-      "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Ders</th>" +
-      "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Eksik Konu</th>" +
-      "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Öğretmen</th>" +
+      "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider" + g + "'>Ders</th>" +
+      "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider" + g + "'>Eksik Konu</th>" +
+      "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider" + g + "'>Öğretmen</th>" +
       "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Durum</th>" +
       "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>İşlem</th>" +
     "</tr></thead>";
+  }
 
   /* DERS-LISTE-SAYFALAMA: kayıt aralığı yazısı (boş liste "0 kayıt") */
   var kayitYazi = liste.length
@@ -4887,16 +4897,17 @@ function renderDersler() {
         (ui.haftalikOgrtId && !tekGun ? haftalikOgrtTablo() : "") +
         (tekGun ? "" : 
       /* EKRAN TABLOSU: yalnız sayfa dilimi · sticky başlık · print'te gizli (tam liste ayrı basılır) */
+      /* MOBIL-SUTUN: min-w-[980px] yalnız md+ ekranda; telefonda tablo daralıp gizlenen sütunlarla birlikte sığar/az kaydırır */
       '<div class="max-h-[70vh] overflow-auto print:hidden">' +
-          '<table class="w-full min-w-[980px] text-left border-collapse">' +
-            tabloBaslik +
+          '<table class="w-full text-left border-collapse md:min-w-[980px]">' +
+            tabloBaslikHTML(false) +
             "<tbody>" + satirlar + "</tbody>" +
           "</table>" +
         "</div>" +
         /* PDF / YAZDIRMA TABLOSU: tüm filtrelenmiş liste (sayfadan bağımsız), ekranda gizli */
         '<div class="hidden print:block">' +
           '<table class="w-full text-left border-collapse">' +
-            tabloBaslik +
+            tabloBaslikHTML(true) +
             "<tbody>" + pdfSatirlar + "</tbody>" +
           "</table>" +
         "</div>" +

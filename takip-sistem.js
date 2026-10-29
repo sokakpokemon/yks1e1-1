@@ -1365,7 +1365,7 @@
     html += '</div>';
 
     // YENİ: GRAFİKLER
-    html += '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:16px; margin-bottom:20px;">';
+    html += '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap:16px; margin-bottom:20px;">';
     html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">' +
       '<h3 style="margin:0 0 12px; font-size:14px; font-weight:800; color:#0f172a;">Son 7 Günün Katılımı</h3>' +
       '<div style="position:relative; height:200px; width:100%;"><canvas id="__anChartLine"></canvas></div></div>';
@@ -1732,13 +1732,13 @@ window.__sysAnalizAra = function() {
         birebirDersler.slice(0, 15).forEach(function(d) { // Son 15 kaydı göster
             var durumRenk = { 'tamamlandi': '#22c55e', 'iptal': '#ef4444', 'planlandi': '#3b82f6' }[d.durum] || '#64748b';
             var durumLbl = { 'tamamlandi': 'Tamamlandı', 'iptal': 'İptal', 'planlandi': 'Planlandı' }[d.durum] || String(d.durum || "-");
-            h += '<div style="display:flex; justify-content:space-between; gap:8px; padding:8px; background:#f8fafc; border-radius:6px; font-size:12px;">' +
+            h += '<div style="display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; padding:8px; background:#f8fafc; border-radius:6px; font-size:12px;">' +
                 '<div style="flex:1; min-width:0;">' +
                     '<div style="font-weight:700; color:#1e293b;">' + sinavEsc(String(d.tarih || "-")) +
                         ' <span style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:10px; color:#475569;">' + birebirDersAdi(d) + '</span></div>' +
                     '<div style="color:#64748b; font-size:11px; margin-top:2px;">' + sinavEsc(String(d.konu || 'Genel tekrar')) + ' · ' + sinavEsc(String(d.ogretmenAd || '')) + '</div>' +
                 '</div>' +
-                '<div style="font-weight:700; color:' + durumRenk + '; display:flex; align-items:center; white-space:nowrap;">' + durumLbl + '</div>' +
+                '<div style="font-weight:700; color:' + durumRenk + '; display:flex; align-items:center; flex-wrap:wrap; gap:4px;">' + durumLbl + '</div>' +
                 '</div>';
         });
         h += '</div>';
@@ -1755,7 +1755,7 @@ window.__sysAnalizAra = function() {
             else if(item.durum === "gelmedi" || item.durum === "girmedi" || item.durum === "yapmadi") renk = "#ef4444";
             else if(item.durum === "gec") renk = "#f59e0b";
 
-            h += '<div style="display:flex; justify-content:space-between; padding:8px; background:#f8fafc; border-radius:6px; font-size:12px;">' +
+            h += '<div style="display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px; padding:8px; background:#f8fafc; border-radius:6px; font-size:12px;">' +
                 '<div><span style="font-weight:700;">' + item.tarih + '</span>';
             if(type === 'odev') h += ' <span style="color:#64748b;">(' + item.ders + ' - ' + item.konu + ')</span>';
             h += '</div><div style="font-weight:700; color:' + renk + ';">' + item.durum.toUpperCase();
@@ -1767,7 +1767,7 @@ window.__sysAnalizAra = function() {
     }
 
     var html = '<div style="font-family:system-ui; padding:6px;">' +
-        '<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">' +
+        '<div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:16px;">' +
             '<div>' +
                 '<div style="font-size:18px; font-weight:800; color:#0f172a;">' + sinavEsc(ad) + '</div>' +
                 '<div style="font-size:13px; color:#0f766e; font-weight:600; margin-top:2px;">' + sinavEsc(sinif) + ' Sınıfı</div>' +
@@ -1775,7 +1775,7 @@ window.__sysAnalizAra = function() {
             '</div>' +
         '</div>' +
         
-        '<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">' +
+        '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:12px;">' +
             '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:12px;">' +
                 '<div style="font-size:12px; font-weight:800; color:#0f172a; margin-bottom:8px; border-bottom:1px solid #f1f5f9; padding-bottom:4px;">📚 Ders Yoklaması</div>' +
                 makeList(dersler, 'ders') +
@@ -1793,7 +1793,7 @@ window.__sysAnalizAra = function() {
                 makeList(odevler, 'odev') +
             '</div>' +
             '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:12px; grid-column:1 / -1;">' +
-                '<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; border-bottom:1px solid #f1f5f9; padding-bottom:4px;">' +
+                '<div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; border-bottom:1px solid #f1f5f9; padding-bottom:4px;">' +
                     '<div style="font-size:12px; font-weight:800; color:#0f172a;">📞 Görüşmeler (' + gorusmeler.length + ')</div>' +
                     '<button type="button" onclick="window.__gorusmeFormAc(\'' + gorusmeGuvenliId(ogrId) + '\')" style="border:none; background:#0d9488; color:#fff; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">+ Görüşme Ekle</button>' +
                 '</div>' +
@@ -1973,9 +1973,9 @@ window.__sysAnalizAra = function() {
         '</div>' +
       '</div>' +
 
-      '<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin:14px 0 8px;">' +
+      '<div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; margin:14px 0 8px;">' +
         '<div style="font-size:12px; font-weight:800; color:#0f172a;">Geçmiş Görüşmeler</div>' +
-        '<input type="text" id="__ggAra" placeholder="🔍 Öğrenci / not ara..." oninput="window.__gorusmeTabAra()" style="' + stil + ' width:200px;">' +
+        '<input type="text" id="__ggAra" placeholder="🔍 Öğrenci / not ara..." oninput="window.__gorusmeTabAra()" style="' + stil + ' width:100%; flex:1; min-width:150px;">' +
       '</div>';
 
     if (!liste.length) {

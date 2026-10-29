@@ -365,12 +365,12 @@ if (
       var durumEtiket = { planlandi: ["Planlandı", "bg-sky-100 text-sky-700"], tamamlandi: ["Tamamlandı", "bg-emerald-100 text-emerald-700"], iptal: ["İptal", "bg-rose-100 text-rose-500"] }[durum];
       var gunAd = GUN_KISA[dowIdx(l.tarih)];
       satirlar += '<tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">' +
-        '<td class="px-4 py-3 whitespace-nowrap"><div class="text-[13px] font-semibold text-slate-700" style="font-variant-numeric:tabular-nums">' + fmtTR(l.tarih) + '</div><div class="text-[10px] text-slate-400 font-semibold">' + gunAd + "</div></td>" +
+        '<td class="px-4 py-3 whitespace-nowrap sticky left-0 z-10 bg-white shadow-[2px_0_5px_rgba(0,0,0,0.05)]"><div class="text-[13px] font-semibold text-slate-700" style="font-variant-numeric:tabular-nums">' + fmtTR(l.tarih) + '</div><div class="text-[10px] text-slate-400 font-semibold">' + gunAd + "</div></td>" +
         '<td class="px-4 py-3 text-[13px] font-bold text-slate-600 whitespace-nowrap" style="font-variant-numeric:tabular-nums">' + esc(saatEtiket(l.saat)) + "</td>" +
         '<td class="px-4 py-3"><div class="flex items-center gap-2">' + avatar(l.sinif, 0) + '<span class="text-[13px] font-semibold text-slate-700 truncate max-w-[140px]">' + esc(l.sinif) + "</span></div></td>" +
-        '<td class="px-4 py-3"><span class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold whitespace-nowrap ' + D.bg + " " + D.tx + '">' + D.ad + "</span></td>" +
-        '<td class="px-4 py-3 text-[12.5px] text-slate-500 max-w-[180px] truncate">' + (l.konu ? esc(l.konu) : '<span class="italic text-slate-300">Genel tekrar</span>') + "</td>" +
-        '<td class="px-4 py-3 text-[12.5px] font-semibold text-slate-600 truncate max-w-[140px]">' + esc(l.ogretmenAd) + "</td>" +
+        '<td class="px-4 py-3 hidden md:table-cell"><span class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold whitespace-nowrap ' + D.bg + " " + D.tx + '">' + D.ad + "</span></td>" +
+        '<td class="px-4 py-3 text-[12.5px] text-slate-500 max-w-[180px] truncate hidden md:table-cell">' + (l.konu ? esc(l.konu) : '<span class="italic text-slate-300">Genel tekrar</span>') + "</td>" +
+        '<td class="px-4 py-3 text-[12.5px] font-semibold text-slate-600 truncate max-w-[140px] hidden md:table-cell">' + esc(l.ogretmenAd) + "</td>" +
         '<td class="px-4 py-3"><div class="flex items-center gap-1">' +
           '<button title="Tamamlandı işaretle" onclick="ekDurumTik(\'' + l.id + '\',\'tamamlandi\')" class="w-7 h-7 rounded-full flex items-center justify-center border transition-colors ' + (durum === "tamamlandi" ? "bg-emerald-500 border-emerald-500 text-white shadow-sm" : "border-slate-200 text-slate-300 hover:border-emerald-300 hover:text-emerald-500") + '"><i class="fa-solid fa-check text-[11px]"></i></button>' +
           '<button title="İptal et" onclick="ekDurumTik(\'' + l.id + '\',\'iptal\')" class="w-7 h-7 rounded-full flex items-center justify-center border transition-colors ' + (durum === "iptal" ? "bg-rose-500 border-rose-500 text-white shadow-sm" : "border-slate-200 text-slate-300 hover:border-rose-300 hover:text-rose-400") + '"><i class="fa-solid fa-xmark text-[11px]"></i></button>' +
@@ -392,14 +392,15 @@ if (
           '<p class="text-[11.5px] text-slate-400 font-medium">Tüm ek ders arşivi · tarih ve saate göre sıralı</p></div>' +
           '<button onclick="ekKopyala()" class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-[12px] font-bold text-slate-600 px-3.5 py-2 transition-colors"><i class="fa-regular fa-copy text-slate-400"></i>Listeyi Kopyala</button>' +
         "</div>" +
-        '<div class="overflow-x-auto"><table class="w-full min-w-[900px] text-left border-collapse">' +
+        /* MOBIL-SUTUN: min-w-[900px] yalnız md+; telefonda Ders / Eksik Konu / Öğretmen gizlenir, Tarih sticky kalır */
+        '<div class="overflow-x-auto"><table class="w-full text-left border-collapse md:min-w-[900px]">' +
           '<thead><tr class="bg-slate-50/80 border-b border-slate-100">' +
-            "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Tarih</th>" +
+            "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider sticky left-0 z-20 bg-slate-50 shadow-[2px_0_5px_rgba(0,0,0,0.05)]'>Tarih</th>" +
             "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Ders Saati</th>" +
             "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Sınıf</th>" +
-            "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Ders</th>" +
-            "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Eksik Konu</th>" +
-            "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Öğretmen</th>" +
+            "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider hidden md:table-cell'>Ders</th>" +
+            "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider hidden md:table-cell'>Eksik Konu</th>" +
+            "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider hidden md:table-cell'>Öğretmen</th>" +
             "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>Durum</th>" +
             "<th class='px-4 py-2.5 text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider'>İşlem</th>" +
           "</tr></thead><tbody>" + satirlar + "</tbody></table></div>" +

@@ -1492,7 +1492,7 @@ export const elleVakaAdlari = {
       "İstek havuzu tam bir kez",
       "Wrapper TAM 2 çocuklu (üst→alt, kaynak sırası) → [\"ks-kart-kolon-sol\",\"ks-kart-kolon-sag\"]",
       "Plan kartı ÜST panelde (statik parent) → sol=11032 plan=11088 sag=16890",
-      "İstek havuzu ALT panelde (statik parent) → sag=16890 havuz=16999 kapa=21537",
+      "İstek havuzu ALT panelde (statik parent) → sag=16890 havuz=16999 kapa=21840",
       "Üst panel ilk (plan üstte)",
       "Alt panel ikinci (havuz altta)",
       "Wrapper CSS TEK kolon (grid-template-columns: minmax(0,1fr) tek değer)",

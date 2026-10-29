@@ -4279,6 +4279,64 @@ window.__sysAnalizAra = function() {
       }
     };
     window.waSatir.__d66Sarmal = true;
+
+    /* D69-TOPLU-WA: tablonun üstündeki yeşil "WhatsApp Bilgilendirmesi" butonu waAc()
+       modalını açar; bu modalın Önizle (göz) / Gönder / Kopyala metni TEK üreticiden gelir:
+       ogrenciMesajMetni(). app.js DEĞİŞMEZ — üretici burada sarmalanır ve tıpkı waSatir
+       sarmalayıcısı gibi "Birebir Ders Planı" taslağını (birebir.plan) kullanır.
+       Taslak okunamazsa / plan boşsa / öğrencinin dersi yoksa eski hardcoded metne dönülür. */
+    if (typeof window.ogrenciMesajMetni === "function" && !window.ogrenciMesajMetni.__d69Sarmal) {
+      var orijinalMesaj = window.ogrenciMesajMetni;
+
+      window.ogrenciMesajMetni = function(ogrenciId) {
+        var varsayilan = orijinalMesaj.apply(this, arguments);
+        if (varsayilan == null) return varsayilan; /* ders yok → mevcut davranış korunur */
+        try {
+          var db = window.DB;
+          if (!db || !db.ogrenciler) return varsayilan;
+          var ogr = db.ogrenciler.filter(function(o){ return o.id === ogrenciId; })[0];
+          if (!ogr) return varsayilan;
+
+          var t = (typeof window.taslakOku === "function") ? window.taslakOku() : null;
+          if (!t || !t.birebir || !String(t.birebir.plan == null ? "" : t.birebir.plan).trim()) return varsayilan;
+
+          /* {dersler}: modalın kendi kapsamı — seçili dönem + gün filtresi, iptal hariç.
+             app.js ogrenciMesajMetni ile aynı liste → satırdaki "N ders" ile metin uyumlu. */
+          var gunSec = (typeof window.waGunKaynak === "function") ? window.waGunKaynak() : null;
+          var kaynak = (typeof window.penceredeDersler === "function") ? window.penceredeDersler() : [];
+          var liste = kaynak.filter(function(l){
+            if (gunSec && gunSec.indexOf(l) === -1) return false;
+            if (l.durum === "iptal") return false;
+            var uyeler = (typeof window.dersOgrenciIds === "function") ? window.dersOgrenciIds(l) : [];
+            return uyeler.indexOf(ogr.id) !== -1 || l.ogrenciAd === ogr.ad;
+          }).sort(function(a, b) {
+            var s = String(a.tarih || "").localeCompare(String(b.tarih || ""));
+            return s !== 0 ? s : String(a.saat || "").localeCompare(String(b.saat || ""));
+          });
+          if (!liste.length) return varsayilan;
+
+          var dersListesi = "";
+          liste.forEach(function(d, i) {
+            dersListesi += (i + 1) + ". " + dersAdi(d.dersId) +
+              (d.ogretmenAd ? " (" + d.ogretmenAd + ")" : "") + "\n" +
+              tarihYaz(d.tarih) + " · " + saatAraligi(d.saat) + "\n";
+          });
+          dersListesi = dersListesi.replace(/\s+$/, "");
+
+          var mesaj = String(t.birebir.plan)
+            .replace(/{ad}/g, ogr.adSoyad || ogr.ad || "Öğrenci")
+            .replace(/{sinif}/g, ogr.sinif || "")
+            .replace(/{dersler}/g, dersListesi);
+          /* yerleştirme sonrası kalan fazladan tire/boşluk temizliği (waSatir ile aynı kural) */
+          mesaj = mesaj.replace(/[\s\-–—]+$/, "");
+          return mesaj || varsayilan;
+        } catch (e) {
+          console.warn("[D69-TOPLU-WA] Hata:", e);
+          return varsayilan;
+        }
+      };
+      window.ogrenciMesajMetni.__d69Sarmal = true;
+    }
   })();
 
   // === ÖĞRETMEN ÇİZELGESİ "KAPALI" HÜCRE KOYULAŞTIRMA ===

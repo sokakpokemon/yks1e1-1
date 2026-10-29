@@ -1287,6 +1287,10 @@
   };
 
   // === ANALİZ EKRANI (AŞAMA 1) ===
+  // Grafik örnekleri modül düzeyinde tutulur: ekran her yeniden çizildiğinde
+  // innerHTML canvas'ları DOM'dan düşürür ve Chart.getChart(yeniCanvas) eski
+  // örneği bulamaz. Bu dizi, önceki çizimin Chart nesnelerini destroy etmek için kullanılır.
+  var __anChartlar = [];
   window.__sysAnalizEkran = function () {
     var veri = (typeof veriOku === "function") ? veriOku() : sinavVeriOku();
     var ogrenciler = veri.ogrenciler || [];
@@ -1372,6 +1376,15 @@
     html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">' +
       '<h3 style="margin:0 0 12px; font-size:14px; font-weight:800; color:#0f172a;">Bugünün Yoklama Dağılımı</h3>' +
       '<div style="position:relative; height:200px; width:100%;"><canvas id="__anChartDoughnut"></canvas></div></div>';
+    html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">' +
+      '<h3 style="margin:0 0 12px; font-size:14px; font-weight:800; color:#0f172a;">Son 4 Haftalık Katılım Oranı</h3>' +
+      '<div style="position:relative; height:240px; width:100%;"><canvas id="__anChartLine4Hafta"></canvas></div></div>';
+    html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">' +
+      '<h3 style="margin:0 0 12px; font-size:14px; font-weight:800; color:#0f172a;">En Çok Devamsızlık Yapanlar (30 Gün)</h3>' +
+      '<div style="position:relative; height:240px; width:100%;"><canvas id="__anChartDevamsizlik"></canvas></div></div>';
+    html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">' +
+      '<h3 style="margin:0 0 12px; font-size:14px; font-weight:800; color:#0f172a;">Ders Bazlı Ödev Tamamlama</h3>' +
+      '<div style="position:relative; height:240px; width:100%;"><canvas id="__anChartOdevDers"></canvas></div></div>';
     html += '</div>';
 
     // Görüşme sayıları tek geçişte öğrenci bazında toplanır (liste başına tek okuma).
@@ -1534,6 +1547,12 @@
     setTimeout(function() {
         if (typeof Chart === 'undefined') return; // Chart.js yüklü değilse atla
 
+        // --- BELLEK: önceki çizimin Chart nesneleri yok edilir ---
+        // Ekran innerHTML ile yenilendiğinde canvas'lar DOM'dan düşer; bu yüzden
+        // Chart.getChart(yeniCanvas) eski örneği bulamaz ve destroy edemez.
+        __anChartlar.forEach(function(c) { try { c.destroy(); } catch (e) {} });
+        __anChartlar = [];
+
         // --- 1. Çizgi Grafik: Son 7 Gün ---
         var son7Gun = [];
         var son7Ders = [];
@@ -1560,7 +1579,7 @@
         var ctxLine = document.getElementById('__anChartLine');
         if (ctxLine && Chart.getChart(ctxLine)) Chart.getChart(ctxLine).destroy();
         if (ctxLine) {
-            new Chart(ctxLine, {
+            __anChartlar.push(new Chart(ctxLine, {
                 type: 'line',
                 data: {
                     labels: son7Gun,
@@ -1574,7 +1593,7 @@
                     }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
-            });
+            }));
         }
 
         // --- 2. Pasta Grafik: Bugünün Dağılımı ---
@@ -1594,7 +1613,7 @@
         var ctxDough = document.getElementById('__anChartDoughnut');
         if (ctxDough && Chart.getChart(ctxDough)) Chart.getChart(ctxDough).destroy();
         if (ctxDough) {
-            new Chart(ctxDough, {
+            __anChartlar.push(new Chart(ctxDough, {
                 type: 'doughnut',
                 data: {
                     labels: ['Geldi', 'Gelmedi', 'Geç'],
@@ -1605,7 +1624,178 @@
                     }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
+            }));
+        }
+
+        // --- 3. Çizgi Grafik: Son 4 Haftalık Katılım Oranı (%) ---
+        function __anGunKey(dt) {
+            return dt.getFullYear() + "-" + String(dt.getMonth()+1).padStart(2,"0") + "-" + String(dt.getDate()).padStart(2,"0");
+        }
+        var haftaEtiket = [];
+        var haftaOran = [];
+        for (var h = 3; h >= 0; h--) {
+            haftaEtiket.push((4 - h) + ". Hafta"); // en eski dilim 1. Hafta
+            var haftaToplam = 0, haftaGelen = 0;
+            for (var gi = 6; gi >= 0; gi--) {
+                var hd = new Date();
+                hd.setDate(hd.getDate() - (h * 7 + gi));
+                var hGun = yoklamalar[__anGunKey(hd)];
+                if (!hGun) continue;
+                Object.keys(hGun).forEach(function(s) {
+                    Object.keys(hGun[s]).forEach(function(id) {
+                        var st = typeof hGun[s][id] === 'string' ? hGun[s][id] : hGun[s][id].durum;
+                        if (st === 'iptal') return;
+                        haftaToplam++;
+                        if (st === 'geldi' || st === 'gec') haftaGelen++;
+                    });
+                });
+            }
+            // Oran: (geldi+gec) / (toplam-iptal) * 100 — veri yoksa boşluk (null)
+            haftaOran.push(haftaToplam > 0 ? Math.round((haftaGelen / haftaToplam) * 100) : null);
+        }
+
+        var ctxLine4 = document.getElementById('__anChartLine4Hafta');
+        if (ctxLine4) {
+            __anChartlar.push(new Chart(ctxLine4, {
+                type: 'line',
+                data: {
+                    labels: haftaEtiket,
+                    datasets: [{
+                        label: 'Katılım Oranı',
+                        data: haftaOran,
+                        borderColor: '#14b8a6',
+                        backgroundColor: 'rgba(20, 184, 166, 0.12)',
+                        pointBackgroundColor: '#14b8a6',
+                        tension: 0.3,
+                        fill: true,
+                        spanGaps: false
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, labels: { boxWidth: 10, font: { size: 10 } } },
+                        tooltip: { callbacks: { label: function(c) { return c.parsed.y == null ? 'Veri yok' : ' %' + c.parsed.y; } } }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true, max: 100,
+                            ticks: { font: { size: 10 }, callback: function(v) { return v + '%'; } }
+                        },
+                        x: { ticks: { font: { size: 10 }, maxRotation: 0, autoSkip: true } }
+                    }
+                }
+            }));
+        }
+
+        // --- 4. Yatay Bar: Son 30 Gün En Çok Devamsızlık Yapanlar ---
+        var devamsizSayac = {};
+        Object.keys(yoklamalar).forEach(function(tarih) {
+            if (tarih < limitKey) return;
+            var gun = yoklamalar[tarih];
+            Object.keys(gun).forEach(function(sinif) {
+                Object.keys(gun[sinif]).forEach(function(ogrId) {
+                    var st = typeof gun[sinif][ogrId] === 'string' ? gun[sinif][ogrId] : gun[sinif][ogrId].durum;
+                    if (st === 'gelmedi') devamsizSayac[ogrId] = (devamsizSayac[ogrId] || 0) + 1;
+                });
             });
+        });
+        var devamsizAd = {};
+        ogrenciler.forEach(function(o) { devamsizAd[o.id] = String(o.adSoyad || o.ad || o.isim || "Öğrenci"); });
+        var devamsizListe = Object.keys(devamsizSayac).map(function(id) {
+            return { ad: devamsizAd[id] || "Öğrenci", n: devamsizSayac[id] };
+        }).sort(function(a, b) { return b.n - a.n; }).slice(0, 8);
+
+        var ctxBar = document.getElementById('__anChartDevamsizlik');
+        if (ctxBar) {
+            __anChartlar.push(new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: devamsizListe.map(function(x) { return x.ad; }),
+                    datasets: [{
+                        label: 'Gelmedi',
+                        data: devamsizListe.map(function(x) { return x.n; }),
+                        backgroundColor: 'rgba(239, 68, 68, 0.75)',
+                        borderColor: '#ef4444',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        maxBarThickness: 18
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: function(c) { return ' ' + c.parsed.x + ' gün gelmedi'; } } }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { precision: 0, font: { size: 10 } } },
+                        y: {
+                            ticks: {
+                                font: { size: 10 },
+                                autoSkip: false,
+                                callback: function(value) {
+                                    var ad = this.getLabelForValue(value);
+                                    return ad.length > 18 ? ad.substring(0, 17) + '…' : ad;
+                                }
+                            }
+                        }
+                    }
+                }
+            }));
+        }
+
+        // --- 5. Donut: Ders Bazlı Ödev Tamamlama (%) ---
+        // Ders adı ödev kaydında düz metin olarak tutulur (o.ders = "MATEMATİK" gibi).
+        var odevDers = {};
+        odevler.forEach(function(o) {
+            var dersAd = String(o.ders || "Diğer").trim() || "Diğer";
+            if (!odevDers[dersAd]) odevDers[dersAd] = { yapildi: 0, toplam: 0 };
+            Object.keys(o.durumlar || {}).forEach(function(id) {
+                var d = o.durumlar[id];
+                if (d === 'bekliyor') return;
+                odevDers[dersAd].toplam++;
+                if (d === 'yapildi') odevDers[dersAd].yapildi++;
+            });
+        });
+        var odevDersListe = Object.keys(odevDers).filter(function(k) { return odevDers[k].toplam > 0; }).map(function(k) {
+            var x = odevDers[k];
+            return { ders: k, oran: Math.round((x.yapildi / x.toplam) * 100), yapildi: x.yapildi, toplam: x.toplam };
+        }).sort(function(a, b) { return b.oran - a.oran; });
+        var odevDersRenk = odevDersListe.map(function(x, i) {
+            var tanim = (typeof DERSLER !== 'undefined' && Array.isArray(DERSLER)) ? DERSLER.filter(function(d) { return d && d.ad === x.ders; })[0] : null;
+            if (tanim && tanim.seg) return tanim.seg;
+            return ['#14b8a6', '#f59e0b', '#8b5cf6', '#22c55e', '#ef4444', '#3b82f6', '#ec4899', '#64748b'][i % 8];
+        });
+
+        var ctxOdevDers = document.getElementById('__anChartOdevDers');
+        if (ctxOdevDers) {
+            __anChartlar.push(new Chart(ctxOdevDers, {
+                type: 'doughnut',
+                data: {
+                    labels: odevDersListe.map(function(x) { return x.ders; }),
+                    datasets: [{
+                        data: odevDersListe.map(function(x) { return x.oran; }),
+                        backgroundColor: odevDersRenk,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '62%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 }, padding: 8 } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(c) {
+                                    var x = odevDersListe[c.dataIndex];
+                                    return ' ' + c.label + ': %' + c.parsed + ' (' + x.yapildi + '/' + x.toplam + ')';
+                                }
+                            }
+                        }
+                    }
+                }
+            }));
         }
     }, 100);
 
@@ -1632,24 +1822,6 @@ window.__sysAnalizAra = function() {
     });
 };
 
-window.__sysAnalizAra = function() {
-    var aramaAlani = document.getElementById("__anArama");
-    var sinifAlani = document.getElementById("__anSinif");
-    if (!aramaAlani || !sinifAlani) return;
-    var arama = (aramaAlani.value || "").toLowerCase();
-    var seciliSinif = sinifAlani.value;
-    var kartlar = document.querySelectorAll(".an-kart");
-    
-    kartlar.forEach(function(kart) {
-        var ad = kart.getAttribute("data-ad");
-        var sinif = kart.getAttribute("data-sinif");
-        var uygunAd = ad.includes(arama);
-        var uygunSinif = !seciliSinif || sinif === seciliSinif;
-        
-        if (uygunAd && uygunSinif) kart.style.display = "flex";
-        else kart.style.display = "none";
-    });
-};
 
 
   // === ÖĞRENCİ DETAY MODALI ===

@@ -2577,37 +2577,30 @@ function aylikAylarGetir() {
   });
 }
 function aylikExcelKartHTML() {
-  var aylar = aylikAylarGetir();
-  var ops = "";
-  if (!aylar.length) {
-    ops = '<option value="">Kayıt yok</option>';
-  } else {
-    aylar.forEach(function (a) { ops += '<option value="' + esc(a.ay) + '">' + esc(a.etiket) + "</option>"; });
-  }
   return '<div class="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-5 mt-4">' +
       '<div class="flex items-center gap-3 mb-1"><div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-[15px]"><i class="fa-solid fa-file-excel"></i></div>' +
       '<h4 class="text-[14px] font-bold text-slate-900">📊 Aylık Excel Raporu</h4></div>' +
-      '<p class="text-[11.5px] text-slate-500 mt-1 leading-relaxed">Birebir ve ek dersleri ay bazında Excel olarak indirin.</p>' +
+      '<p class="text-[11.5px] text-slate-500 mt-1 leading-relaxed">Tüm ayları ve branşları kapsayan detaylı Excel raporu.</p>' +
       '<div class="flex flex-wrap items-center gap-2 mt-3">' +
-        '<select id="aylikExcelAySec" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[12.5px] font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400/40 max-w-full">' + ops + "</select>" +
-        '<button onclick="aylikExcelIndir()" class="rounded-full bg-indigo-500 hover:bg-indigo-600 text-white text-[11.5px] font-bold px-3.5 py-2 shadow-sm transition-colors">📥 Excel İndir</button>' +
+        '<button onclick="aylikExcelIndir()" class="rounded-full bg-indigo-500 hover:bg-indigo-600 text-white text-[11.5px] font-bold px-3.5 py-2 shadow-sm transition-colors">📥 Tüm Raporu İndir (Excel)</button>' +
       "</div>" +
-      '<p class="text-[10.5px] text-slate-400 mt-2"><i class="fa-solid fa-circle-info mr-1"></i>4 sayfa: Özet · Öğretmen-Branş · Öğrenci · Ek Ders. İptal edilen dersler rapora girmez.</p>' +
+      '<p class="text-[10.5px] text-slate-400 mt-2"><i class="fa-solid fa-circle-info mr-1"></i>7 sayfa: Genel Özet · Birebir (Çapraz Tablo / Öğrenci / Öğretmen) · Ek Ders (Çapraz Tablo / Sınıf / Öğretmen). İptal edilen dersler toplamlara girmez.</p>' +
     "</div>";
 }
 function aylikExcelIndir() {
-  var sel = null;
-  try { sel = document.getElementById("aylikExcelAySec"); } catch (e) { sel = null; }
-  var seciliAy = sel ? String(sel.value || "") : "";
-  if (!seciliAy) { toast("Rapor için bir ay seçin.", "uyari"); return; }
   if (typeof XLSX === "undefined") { toast("Excel kütüphanesi yüklenemedi, internet bağlantınızı kontrol edin.", "hata"); return; }
 
-  function ayaAit(liste) {
-    if (!Array.isArray(liste)) return [];
-    return liste.filter(function (l) {
-      return l && typeof l === "object" && String(l.tarih || "").slice(0, 7) === seciliAy;
-    });
-  }
+  /* Tek kaynak: aktif dönem. İptaller hiçbir toplama girmez; Genel Özet'te ayrı satırda sayılır. */
+  var birebirTum = aktifDonemKayitlari(DB.dersler).filter(function (l) { return l && typeof l === "object"; });
+  var ekTum = aktifDonemKayitlari(Array.isArray(DB.ekDersler) ? DB.ekDersler : []).filter(function (l) { return l && typeof l === "object"; });
+  var birebir = birebirTum.filter(function (l) { return l.durum !== "iptal"; });
+  var ekler = ekTum.filter(function (l) { return l.durum !== "iptal"; });
+  var birebirIptal = birebirTum.length - birebir.length;
+  var ekIptal = ekTum.length - ekler.length;
+
+  /* Çapraz tablo sütunları: kayıtlı tüm aylar (global), eskiden yeniye */
+  var tumAylar = aylikAylarGetir().map(function (a) { return a.ay; }).sort();
+
   function dersAdi(dersId) {
     var D = DERS[dersId];
     return D ? D.ad : (dersId || "Bilinmiyor");
@@ -2615,98 +2608,180 @@ function aylikExcelIndir() {
   function tamamlananSayi(liste) {
     return liste.filter(function (l) { return l.durum === "tamamlandi"; }).length;
   }
-
-  /* Tek kaynak: aktif dönem + seçili ay. İptaller toplamlara GİRMEZ, ayrı satırda raporlanır. */
-  var birebirTum = ayaAit(aktifDonemKayitlari(DB.dersler));
-  var ekTum = ayaAit(aktifDonemKayitlari(Array.isArray(DB.ekDersler) ? DB.ekDersler : []));
-  var birebir = birebirTum.filter(function (l) { return l.durum !== "iptal"; });
-  var iptalSayi = birebirTum.filter(function (l) { return l.durum === "iptal"; }).length;
-  var ekler = ekTum.filter(function (l) { return l.durum !== "iptal"; });
-
-  var ayEtiket = seciliAy;
-  var bulunan = aylikAylarGetir().filter(function (a) { return a.ay === seciliAy; })[0];
-  if (bulunan) ayEtiket = bulunan.etiket;
-
-  /* ---- SAYFA 1: Özet ---- */
-  var ozetSatirlar = [
-    ["Aylık Excel Raporu"],
-    ["Ay", ayEtiket],
-    ["Toplam Birebir Ders Saati", birebir.length],
-    ["Toplam Tamamlanan Birebir Ders Saati", tamamlananSayi(birebir)],
-    ["Toplam İptal Edilen Birebir Ders Saati", iptalSayi],
-    ["Toplam Ek Ders Saati", ekler.length]
-  ];
-
-  /* ---- SAYFA 2: Öğretmen-Branş (birebir) ---- */
-  var ogrtMap = {};
-  birebir.forEach(function (l) {
-    var ad = l.ogretmenAd || "Bilinmiyor";
-    var brans = dersAdi(l.dersId);
-    var key = ad + "|" + brans;
-    if (!ogrtMap[key]) ogrtMap[key] = { ad: ad, brans: brans, toplam: 0, tamamlanan: 0 };
-    ogrtMap[key].toplam++;
-    if (l.durum === "tamamlandi") ogrtMap[key].tamamlanan++;
-  });
-  var ogrtListe = Object.keys(ogrtMap).map(function (k) { return ogrtMap[k]; });
-  ogrtListe.sort(function (a, b) { return b.toplam - a.toplam || a.ad.localeCompare(b.ad, "tr"); });
-  var ogrtSatirlar = [["Öğretmen Adı", "Branş", "Toplam Saat", "Tamamlanan Saat"]];
-  ogrtListe.forEach(function (x) { ogrtSatirlar.push([x.ad, x.brans, x.toplam, x.tamamlanan]); });
-  if (!ogrtListe.length) ogrtSatirlar.push(["Bu ay için kayıt yok.", "", "", ""]);
-
-  /* ---- SAYFA 3: Öğrenci (grup üyeleri dersOgrenciIds ile) ---- */
-  var ogrMap = {};
-  birebir.forEach(function (l) {
-    var ders = dersAdi(l.dersId);
-    var kimlikler = dersOgrenciIds(l);
-    (kimlikler.length ? kimlikler : [null]).forEach(function (oid) {
-      var o = oid ? DB.ogrenciler.find(function (x) { return x && x.id === oid; }) : null;
-      var ad = o ? o.ad : (l.ogrenciAd || "Bilinmiyor");
-      var key = oid || ad;
-      if (!ogrMap[key]) ogrMap[key] = { ad: ad, sinif: (o && o.sinif) ? o.sinif : "", dersler: {}, toplam: 0 };
-      ogrMap[key].dersler[ders] = 1;
-      ogrMap[key].toplam++;
+  function ayAdi(ay) {
+    var n = parseInt(String(ay).slice(5, 7), 10);
+    return (AYLAR[n - 1] || ay) + " " + String(ay).slice(0, 4);
+  }
+  function sutunHarf(n) {
+    var s = "";
+    while (n > 0) { var m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); }
+    return s;
+  }
+  /* Branşları DERSLER sırasına göre dizer; tanınmayan ders adları sona (alfabetik) düşer. */
+  function dersSirala(adlar) {
+    var sira = {};
+    DERSLER.forEach(function (d, i) { sira[d.ad] = i; });
+    return adlar.slice().sort(function (a, b) {
+      var ia = sira[a] == null ? 999 : sira[a];
+      var ib = sira[b] == null ? 999 : sira[b];
+      return ia - ib || a.localeCompare(b, "tr");
     });
-  });
-  var ogrListe = Object.keys(ogrMap).map(function (k) { return ogrMap[k]; });
-  ogrListe.sort(function (a, b) { return b.toplam - a.toplam || a.ad.localeCompare(b.ad, "tr"); });
-  var ogrSatirlar = [["Öğrenci Adı", "Sınıfı", "Aldığı Dersler", "Toplam Saat"]];
-  ogrListe.forEach(function (x) { ogrSatirlar.push([x.ad, x.sinif, Object.keys(x.dersler).join(", "), x.toplam]); });
-  if (!ogrListe.length) ogrSatirlar.push(["Bu ay için kayıt yok.", "", "", ""]);
+  }
+  /* Sayfa kurucu: !cols + başlık autofilter + başlık biçimi (koyu mavi zemin / beyaz kalın yazı). */
+  function sayfaKur(rows, cols) {
+    var ws = XLSX.utils.aoa_to_sheet(rows);
+    ws["!cols"] = cols;
+    ws["!autofilter"] = { ref: "A1:" + sutunHarf(cols.length) + "1" };
+    for (var c = 0; c < cols.length; c++) {
+      var adres = XLSX.utils.encode_cell({ r: 0, c: c });
+      if (ws[adres]) ws[adres].s = { font: { bold: true, color: { rgb: "FFFFFF" } }, fill: { fgColor: { rgb: "1F4E79" } }, alignment: { horizontal: "center" } };
+    }
+    return ws;
+  }
+  function toplamSatiriKalın(ws, satirIdx, kolonSayisi) {
+    if (satirIdx < 0) return;
+    for (var c = 0; c < kolonSayisi; c++) {
+      var adres = XLSX.utils.encode_cell({ r: satirIdx, c: c });
+      if (ws[adres]) ws[adres].s = { font: { bold: true } };
+    }
+  }
+  function caprazCols(kolonSayisi) {
+    var cols = [{ wch: 20 }];
+    for (var i = 0; i < kolonSayisi - 2; i++) cols.push({ wch: 15 });
+    cols.push({ wch: 12 });
+    return cols;
+  }
+  /* Çapraz tablo: Branş × Ay (+ TOPLAM) — tüm branşlar sabit sırada, altta TOPLAM satırı. */
+  function caprazSatirlar(liste) {
+    var didler = DERSLER.map(function (d) { return d.id; });
+    var bilinmeyen = {};
+    liste.forEach(function (l) { if (didler.indexOf(l.dersId) < 0) bilinmeyen[l.dersId || ""] = 1; });
+    Object.keys(bilinmeyen).forEach(function (k) { didler.push(k || ""); });
+    var hucre = {};
+    liste.forEach(function (l) {
+      var k = (l.dersId || "") + "|" + String(l.tarih || "").slice(0, 7);
+      hucre[k] = (hucre[k] || 0) + 1;
+    });
+    var baslik = ["Branş"].concat(tumAylar.map(ayAdi)).concat(["TOPLAM"]);
+    var satirlar = [baslik];
+    var ayToplam = tumAylar.map(function () { return 0; });
+    var genel = 0;
+    didler.forEach(function (did) {
+      var satir = [dersAdi(did)];
+      var satirToplam = 0;
+      tumAylar.forEach(function (ay, i) {
+        var n = hucre[(did || "") + "|" + ay] || 0;
+        satir.push(n); satirToplam += n; ayToplam[i] += n;
+      });
+      satir.push(satirToplam); genel += satirToplam;
+      satirlar.push(satir);
+    });
+    satirlar.push(["TOPLAM"].concat(ayToplam).concat([genel]));
+    return { satirlar: satirlar, kolonSayisi: baslik.length };
+  }
+  /* Kişi/sınıf tablosu: [Ad, Branşlar, Toplam Saat, Tamamlanan Saat] + TOPLAM satırı. */
+  function grupSatirlar(liste, anahtarFn, baslikAdi) {
+    var harita = {};
+    liste.forEach(function (l) {
+      var ad = anahtarFn(l) || "Bilinmiyor";
+      var ders = dersAdi(l.dersId);
+      if (!harita[ad]) harita[ad] = { ad: ad, dersler: {}, toplam: 0, tamamlanan: 0 };
+      harita[ad].dersler[ders] = 1;
+      harita[ad].toplam++;
+      if (l.durum === "tamamlandi") harita[ad].tamamlanan++;
+    });
+    var arr = Object.keys(harita).map(function (k) { return harita[k]; });
+    arr.sort(function (a, b) { return b.toplam - a.toplam || a.ad.localeCompare(b.ad, "tr"); });
+    var satirlar = [[baslikAdi, "Branşlar", "Toplam Saat", "Tamamlanan Saat"]];
+    var t = 0, tt = 0;
+    arr.forEach(function (x) {
+      satirlar.push([x.ad, dersSirala(Object.keys(x.dersler)).join(", "), x.toplam, x.tamamlanan]);
+      t += x.toplam; tt += x.tamamlanan;
+    });
+    satirlar.push(["TOPLAM", "", t, tt]);
+    return { satirlar: satirlar, kolonSayisi: 4 };
+  }
+  /* Öğrenci tablosu: grup derslerinde dersOgrenciIds ile her üye sayılır. */
+  function ogrenciSatirlar(liste) {
+    var harita = {};
+    liste.forEach(function (l) {
+      var ders = dersAdi(l.dersId);
+      var kimlikler = dersOgrenciIds(l);
+      (kimlikler.length ? kimlikler : [null]).forEach(function (oid) {
+        var o = oid ? DB.ogrenciler.find(function (x) { return x && x.id === oid; }) : null;
+        var ad = o ? o.ad : (l.ogrenciAd || "Bilinmiyor");
+        var key = oid || ad;
+        if (!harita[key]) harita[key] = { ad: ad, sinif: (o && o.sinif) ? o.sinif : "", dersler: {}, toplam: 0 };
+        harita[key].dersler[ders] = 1;
+        harita[key].toplam++;
+      });
+    });
+    var arr = Object.keys(harita).map(function (k) { return harita[k]; });
+    arr.sort(function (a, b) { return b.toplam - a.toplam || a.ad.localeCompare(b.ad, "tr"); });
+    var satirlar = [["Öğrenci Adı", "Sınıfı", "Branşlar", "Toplam Saat"]];
+    var t = 0;
+    arr.forEach(function (x) {
+      satirlar.push([x.ad, x.sinif, dersSirala(Object.keys(x.dersler)).join(", "), x.toplam]);
+      t += x.toplam;
+    });
+    satirlar.push(["TOPLAM", "", "", t]);
+    return { satirlar: satirlar, kolonSayisi: 4 };
+  }
 
-  /* ---- SAYFA 4: Ek Ders (sınıf + öğretmen + branş) ---- */
-  var ekMap = {};
-  ekler.forEach(function (l) {
-    var sinif = l.sinif || "Bilinmiyor";
-    var ad = l.ogretmenAd || "Bilinmiyor";
-    var brans = dersAdi(l.dersId);
-    var key = sinif + "|" + ad + "|" + brans;
-    if (!ekMap[key]) ekMap[key] = { sinif: sinif, ad: ad, brans: brans, toplam: 0, tamamlanan: 0 };
-    ekMap[key].toplam++;
-    if (l.durum === "tamamlandi") ekMap[key].tamamlanan++;
-  });
-  var ekListe = Object.keys(ekMap).map(function (k) { return ekMap[k]; });
-  ekListe.sort(function (a, b) { return b.toplam - a.toplam || a.sinif.localeCompare(b.sinif, "tr"); });
-  var ekSatirlar = [["Sınıf", "Öğretmen Adı", "Branş", "Toplam Saat", "Tamamlanan Saat"]];
-  ekListe.forEach(function (x) { ekSatirlar.push([x.sinif, x.ad, x.brans, x.toplam, x.tamamlanan]); });
-  if (!ekListe.length) ekSatirlar.push(["Bu ay için kayıt yok.", "", "", "", ""]);
-
-  /* ---- Çalışma kitabı: 4 sayfa ---- */
   var wb = XLSX.utils.book_new();
-  var ws1 = XLSX.utils.aoa_to_sheet(ozetSatirlar);
-  ws1["!cols"] = [{ wch: 42 }, { wch: 24 }];
-  XLSX.utils.book_append_sheet(wb, ws1, "Özet");
-  var ws2 = XLSX.utils.aoa_to_sheet(ogrtSatirlar);
-  ws2["!cols"] = [{ wch: 30 }, { wch: 18 }, { wch: 12 }, { wch: 16 }];
-  XLSX.utils.book_append_sheet(wb, ws2, "Öğretmen-Branş");
-  var ws3 = XLSX.utils.aoa_to_sheet(ogrSatirlar);
-  ws3["!cols"] = [{ wch: 30 }, { wch: 16 }, { wch: 44 }, { wch: 12 }];
-  XLSX.utils.book_append_sheet(wb, ws3, "Öğrenci");
-  var ws4 = XLSX.utils.aoa_to_sheet(ekSatirlar);
-  ws4["!cols"] = [{ wch: 18 }, { wch: 30 }, { wch: 18 }, { wch: 12 }, { wch: 16 }];
-  XLSX.utils.book_append_sheet(wb, ws4, "Ek Ders");
 
-  XLSX.writeFile(wb, "Aylik-Rapor-" + seciliAy + ".xlsx");
-  toast("Aylık Excel raporu indirildi ✓ (" + ayEtiket + ")");
+  /* ---- SAYFA 1: Genel Özet ---- */
+  var ozetSatirlar = [
+    ["Alan", "Değer"],
+    ["Toplam Birebir Ders Saati", birebir.length],
+    ["Tamamlanan Birebir Ders Saati", tamamlananSayi(birebir)],
+    ["İptal Edilen Birebir Ders Saati", birebirIptal],
+    ["Toplam Ek Ders Saati", ekler.length],
+    ["Tamamlanan Ek Ders Saati", tamamlananSayi(ekler)],
+    ["İptal Edilen Ek Ders Saati", ekIptal],
+    ["Toplam Öğrenci Sayısı", DB.ogrenciler.length],
+    ["Toplam Öğretmen Sayısı", DB.ogretmenler.length]
+  ];
+  XLSX.utils.book_append_sheet(wb, sayfaKur(ozetSatirlar, [{ wch: 42 }, { wch: 20 }]), "Genel Özet");
+
+  /* ---- SAYFA 2: Birebir - Çapraz Tablo ---- */
+  var capB = caprazSatirlar(birebir);
+  var ws2 = sayfaKur(capB.satirlar, caprazCols(capB.kolonSayisi));
+  toplamSatiriKalın(ws2, capB.satirlar.length - 1, capB.kolonSayisi);
+  XLSX.utils.book_append_sheet(wb, ws2, "Birebir - Çapraz Tablo");
+
+  /* ---- SAYFA 3: Birebir - Öğrenci Toplam ---- */
+  var ogrB = ogrenciSatirlar(birebir);
+  var ws3 = sayfaKur(ogrB.satirlar, [{ wch: 30 }, { wch: 16 }, { wch: 44 }, { wch: 12 }]);
+  toplamSatiriKalın(ws3, ogrB.satirlar.length - 1, ogrB.kolonSayisi);
+  XLSX.utils.book_append_sheet(wb, ws3, "Birebir - Öğrenci Toplam");
+
+  /* ---- SAYFA 4: Birebir - Öğretmen Toplam ---- */
+  var ogrtB = grupSatirlar(birebir, function (l) { return l.ogretmenAd; }, "Öğretmen Adı");
+  var ws4 = sayfaKur(ogrtB.satirlar, [{ wch: 30 }, { wch: 40 }, { wch: 12 }, { wch: 16 }]);
+  toplamSatiriKalın(ws4, ogrtB.satirlar.length - 1, ogrtB.kolonSayisi);
+  XLSX.utils.book_append_sheet(wb, ws4, "Birebir - Öğretmen Toplam");
+
+  /* ---- SAYFA 5: Ek Ders - Çapraz Tablo ---- */
+  var capE = caprazSatirlar(ekler);
+  var ws5 = sayfaKur(capE.satirlar, caprazCols(capE.kolonSayisi));
+  toplamSatiriKalın(ws5, capE.satirlar.length - 1, capE.kolonSayisi);
+  XLSX.utils.book_append_sheet(wb, ws5, "Ek Ders - Çapraz Tablo");
+
+  /* ---- SAYFA 6: Ek Ders - Sınıf Toplam ---- */
+  var sinifE = grupSatirlar(ekler, function (l) { return l.sinif; }, "Sınıf");
+  var ws6 = sayfaKur(sinifE.satirlar, [{ wch: 18 }, { wch: 40 }, { wch: 12 }, { wch: 16 }]);
+  toplamSatiriKalın(ws6, sinifE.satirlar.length - 1, sinifE.kolonSayisi);
+  XLSX.utils.book_append_sheet(wb, ws6, "Ek Ders - Sınıf Toplam");
+
+  /* ---- SAYFA 7: Ek Ders - Öğretmen Toplam ---- */
+  var ogrtE = grupSatirlar(ekler, function (l) { return l.ogretmenAd; }, "Öğretmen Adı");
+  var ws7 = sayfaKur(ogrtE.satirlar, [{ wch: 30 }, { wch: 40 }, { wch: 12 }, { wch: 16 }]);
+  toplamSatiriKalın(ws7, ogrtE.satirlar.length - 1, ogrtE.kolonSayisi);
+  XLSX.utils.book_append_sheet(wb, ws7, "Ek Ders - Öğretmen Toplam");
+
+  XLSX.writeFile(wb, "Kapsamli-Rapor-" + new Date().getFullYear() + ".xlsx");
+  toast("Kapsamlı Excel raporu indirildi ✓ (7 sayfa)");
 }
 
 /* ---- D63-CAKISMA-RAPORU: Öğrenci Saat Çakışma Raporu (SALT-OKUMA) ----

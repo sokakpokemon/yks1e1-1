@@ -4574,10 +4574,10 @@ window.__sysAnalizAra = function() {
       "/* SATIR 4: tarih · saat TEK satır (ikonlar gizli, yıl JS'te kırpılır) */",
       "#havuzBolum .istek-kart>div.flex-1>div:nth-child(3){order:4!important;width:100%!important;align-self:stretch!important;margin:0 0 2px 0!important;font-size:10.5px!important;font-weight:500!important;line-height:1.35!important;color:#94a3b8!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}",
       "#havuzBolum .istek-kart>div.flex-1>div:nth-child(3) i{display:none!important;}",
-      "/* SON SIRA: Ders Planla butonu en altta, TAM GENİŞLİK — canlı ders rengi + yumuşak gölge */",
-      "#havuzBolum .istek-kart>button[onclick^=\"formaAktar\"]{order:5!important;width:100%!important;margin-top:auto!important;justify-content:center!important;gap:.35rem!important;font-size:11px!important;font-weight:bold!important;letter-spacing:.2px!important;padding:.5rem .6rem!important;border-radius:8px!important;border:1px solid rgba(255,255,255,.18)!important;flex:0 0 auto!important;background-color:var(--havuz-ders-renk,#0d9488)!important;background-image:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,0))!important;color:#fff!important;box-shadow:0 2px 6px rgba(15,23,42,.18)!important;transition:filter .2s ease,box-shadow .2s ease,transform .15s ease!important;}",
-      "#havuzBolum .istek-kart>button[onclick^=\"formaAktar\"]:hover,#havuzBolum .istek-kart>button[onclick^=\"formaAktar\"]:focus{filter:brightness(.92)!important;box-shadow:0 5px 12px rgba(15,23,42,.24)!important;transform:translateY(-1px)!important;color:#fff!important;}",
-      "/* TEK KAYNAK: buton + sol şerit aynı --havuz-ders-renk değişkenini kullanır (DERS_RENK); pill/çipler PALET'in aynı ton ailesinden boyanır. Ders başına ayrı buton rengi KURALI YOK. */",
+      "/* SON SIRA: Ders Planla butonu en altta, TAM GENİŞLİK — PALET pastel zemin/yazı/kenar (kartIsle değişkenleri) */",
+      "#havuzBolum .istek-kart>button[onclick^=\"formaAktar\"]{order:5!important;width:100%!important;margin-top:auto!important;justify-content:center!important;gap:.35rem!important;font-size:11px!important;font-weight:bold!important;letter-spacing:.2px!important;padding:.5rem .6rem!important;border-radius:8px!important;border:1px solid var(--btn-bd,#99f6e4)!important;flex:0 0 auto!important;background-color:var(--btn-bg,#f0fdfa)!important;background-image:none!important;color:var(--btn-fg,#0f766e)!important;box-shadow:0 1px 2px rgba(15,23,42,.06)!important;transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease!important;}",
+      "#havuzBolum .istek-kart>button[onclick^=\"formaAktar\"]:hover,#havuzBolum .istek-kart>button[onclick^=\"formaAktar\"]:focus{background-color:var(--btn-bg-hover,#99f6e4)!important;color:var(--btn-fg,#0f766e)!important;border-color:var(--btn-bd,#5eead4)!important;box-shadow:0 3px 8px rgba(15,23,42,.10)!important;}",
+      "/* TEK KAYNAK: sol şerit DERS_RENK (koyu) kullanır; buton PALET'in pastel üçlüsünü (--btn-bg/--btn-fg/--btn-bd) kullanır. Ders başına ayrı buton rengi KURALI YOK. */",
       "#havuzBolum .istek-kart>span[class*=\"text-emerald\"]{order:5!important;margin-top:auto!important;align-self:center!important;font-size:10px!important;white-space:nowrap!important;}",
       "/* Avatar: sağ üst köşede mutlak konumlu küçük ikon (32px -> 18px) */",
       "#havuzBolum .istek-kart>div.rounded-full{position:absolute!important;top:8px!important;right:8px!important;width:18px!important;height:18px!important;font-size:7px!important;line-height:1!important;}",
@@ -4619,7 +4619,12 @@ window.__sysAnalizAra = function() {
       return null;
     }
     function kartIsle(kart) {
-      /* 1) Ders renkli 3px sol şerit */
+      /* 1) Ders renkli 3px sol şerit (KOYU ton: DERS_RENK) + buton için PALET değişkenleri
+         --havuz-ders-renk : sol şerit (koyu ders rengi, DEĞİŞMEDİ)
+         --btn-bg : buton arka planı = PALET[0] (pastel)
+         --btn-fg : buton yazısı = PALET[1] (koyu ton)
+         --btn-bd : buton kenarı = PALET[2]
+         --btn-bg-hover : hover arka planı = PALET[2] (bir tık daha koyu pastel) */
       var etiket = dersEtiketiBul(kart);
       if (etiket) {
         var ders = (etiket.textContent || "").trim();
@@ -4627,6 +4632,11 @@ window.__sysAnalizAra = function() {
         if (kart.getAttribute("data-havuz-ders") !== ders) {
           kart.setAttribute("data-havuz-ders", ders);
           kart.style.setProperty("--havuz-ders-renk", DERS_RENK[ders]);
+          var _pal = Object.prototype.hasOwnProperty.call(PALET, ders) ? PALET[ders] : ["#f0fdfa", "#0f766e", "#99f6e4"];
+          kart.style.setProperty("--btn-bg", _pal[0]);
+          kart.style.setProperty("--btn-fg", _pal[1]);
+          kart.style.setProperty("--btn-bd", _pal[2]);
+          kart.style.setProperty("--btn-bg-hover", _pal[2]);
         }
       }
 

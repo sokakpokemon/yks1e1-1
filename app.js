@@ -184,6 +184,7 @@ function ksRaporKapat() { ui.ksRaporKapat = true; renderDersler(); }
 
 var LS_KEY = "yksOto_arsiv_v1"; /* D58-YEDEK-GUVENLIK: bozuk kayıt kurtarma alanı */
   var LS_KEY_KURTARMA = "yksOto_arsiv_kurtarma_v1";
+  var SON_YEDEK_KEY = "yksOto_sonYedek_v1"; /* son yedek zamanı — DB'ye YAZILMAZ, ayrı anahtar */
 
 // ===== SECTION: YARDIMCILAR VE VERİ KATMANI =====
 // ---------- Yardımcılar ----------
@@ -3265,6 +3266,12 @@ function disListeVazgec() {
 function ayarTab() {
   var boyut = 0;
   try { boyut = (localStorage.getItem(LS_KEY) || "").length; } catch (e) {}
+  /* Son yedek zamanı: ayrı localStorage anahtarı; yoksa "Henüz yedek alınmadı" */
+  var sonYedek = "Henüz yedek alınmadı";
+  try {
+    var _sy = localStorage.getItem(SON_YEDEK_KEY);
+    if (_sy) { var _sd = new Date(_sy); if (!isNaN(_sd.getTime())) sonYedek = _sd.toLocaleString("tr-TR"); }
+  } catch (e) {}
   return '<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">' +
     '<div class="lg:col-span-1 rounded-2xl border border-slate-100 p-5">' +
       '<div class="w-11 h-11 rounded-2xl bg-teal-100 text-teal-600 flex items-center justify-center text-lg mb-3"><i class="fa-solid fa-database"></i></div>' +
@@ -3286,6 +3293,7 @@ function ayarTab() {
         '<div class="bg-slate-50 rounded-xl px-3 py-2.5"><div class="text-[18px] font-extrabold text-slate-800" style="font-variant-numeric:tabular-nums">' + DB.dersler.length + '</div><div class="text-[10.5px] text-slate-400 font-semibold">Ders kaydı</div></div>' +
       "</div>" +
       '<div class="text-[10.5px] text-slate-400 mt-3"><i class="fa-solid fa-hard-drive mr-1"></i>Yerel depolama: ~' + Math.max(1, Math.round(boyut / 1024)) + " KB · Kuruluş: " + fmtTR(DB.kurulus || todayKey()) + "</div>" +
+      '<div class="text-[11px] text-slate-400 mt-1">Son Yedek: <b>' + esc(sonYedek) + "</b></div>" +
     "</div>" +
     '<div class="lg:col-span-1 rounded-2xl border border-slate-100 p-5">' +
       '<div class="w-11 h-11 rounded-2xl bg-rose-100 text-rose-500 flex items-center justify-center text-lg mb-3"><i class="fa-solid fa-rotate-left"></i></div>' +
@@ -3545,6 +3553,7 @@ function yedekAl() {
   a.download = "yks-birebir-yedek-" + todayKey() + "_" + saatDk + ".json";
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+  try { localStorage.setItem(SON_YEDEK_KEY, new Date().toISOString()); } catch(e) {}
   toast("Yedek dosyası indirildi ✓");
 }
 function yedekOku(input) {

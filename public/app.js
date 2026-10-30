@@ -2835,8 +2835,21 @@ function aylikExcelIndir() {
     var k = dolOgrAnahtar(l) + "|" + String(l.tarih || "").slice(0, 7);
     dolEkMap[k] = (dolEkMap[k] || 0) + 1;
   });
-  var dolSatirlar = [["Öğretmen Adı", "Branş", "Birebir Ders (Saat)", "Ek Ders (Saat)", "Toplam Dolu (Saat)", "Boş Zaman (Saat)", "% Toplam Doluluk", "% Birebir Oranı", "% Ek Ders Oranı", "Aylık Trend", "Uyarı", "Öneri"]];
   var dolDegerler = [];
+  /* Dinamik ay sütunları: SADECE o ay en az bir birebir VEYA ek ders atanmış aylar (kayıtlardan taranır). */
+  var dolAyKullanim = {};
+  tumAylar.forEach(function (ay) { dolAyKullanim[ay] = { birebir: 0, ek: 0 }; });
+  birebir.forEach(function (l) {
+    var ay = String(l.tarih || "").slice(0, 7);
+    if (dolAyKullanim[ay]) dolAyKullanim[ay].birebir++;
+  });
+  ekler.forEach(function (l) {
+    var ay = String(l.tarih || "").slice(0, 7);
+    if (dolAyKullanim[ay]) dolAyKullanim[ay].ek++;
+  });
+  var dolAktifAylar = Object.keys(dolAyKullanim).filter(function (ay) {
+    return (dolAyKullanim[ay].birebir + dolAyKullanim[ay].ek) > 0;
+  }).sort(); /* YYYY-MM → eskiden yeniye */
   (DB.ogretmenler || []).forEach(function (t) {
     if (!t || !t.ad) return;
     var tk = t.id ? "id:" + t.id : "ad:" + String(t.ad).trim().toLocaleUpperCase("tr");
@@ -2850,6 +2863,7 @@ function aylikExcelIndir() {
     });
     var topMusait = 0, topBirebir = 0, topEk = 0;
     var trendParcalari = [];
+    var aylik = {}; /* ay → { birebir, ek, musait } — dinamik ay sütunları için */
     tumAylar.forEach(function (ay) {
       var ig = dolIsGun(ay);
       var kapali = 0;
@@ -2858,8 +2872,9 @@ function aylikExcelIndir() {
       var birebirSaat = dolBirebirMap[tk + "|" + ay] || 0;
       var ekSaat = dolEkMap[tk + "|" + ay] || 0;
       var doluSaat = birebirSaat + ekSaat; /* sınıf dersi DAHİL DEĞİL */
+      aylik[ay] = { birebir: birebirSaat, ek: ekSaat, musait: musaitSaat };
       topMusait += musaitSaat; topBirebir += birebirSaat; topEk += ekSaat;
-      if (musaitSaat > 0 && doluSaat > 0) trendParcalari.push(ayAdi(ay).split(" ")[0] + ": %" + Math.min(100, Math.round((doluSaat / musaitSaat) * 100)));
+      if (doluSaat > 0 && musaitSaat > 0) trendParcalari.push(ayAdi(ay).split(" ")[0] + ": %" + Math.min(100, Math.round((doluSaat / musaitSaat) * 100)));
     });
     var dolu = topBirebir + topEk;
     var bosHam = topMusait - dolu; /* kapalı slota ders girilmişse negatif olur: VERİ HATASI sinyali */
@@ -2869,7 +2884,7 @@ function aylikExcelIndir() {
     dolDegerler.push({
       ad: t.ad,
       brans: (DERS[t.brans] && DERS[t.brans].ad) ? DERS[t.brans].ad : (t.brans || "Bilinmiyor"),
-      birebir: topBirebir, ek: topEk, dolu: dolu, bos: bos, bosHam: bosHam, musait: topMusait,
+      birebir: topBirebir, ek: topEk, dolu: dolu, bos: bos, bosHam: bosHam, musait: topMusait, aylik: aylik,
       yuzde: Math.round(yuzde * 10) / 10,
       birebirOran: dolu > 0 ? Math.round((topBirebir / dolu) * 1000) / 10 : 0,
       ekOran: dolu > 0 ? Math.round((topEk / dolu) * 1000) / 10 : 0,
@@ -2877,12 +2892,30 @@ function aylikExcelIndir() {
     });
   });
   dolDegerler.sort(function (a, b) { return b.yuzde - a.yuzde || a.ad.localeCompare(b.ad, "tr"); });
+  var dolBaslik = ["Öğretmen Adı", "Branş", "Toplam Verilen Birebir Ders (Saat)", "Toplam Verilen Ek Ders (Saat)", "Boş Zaman (Saat)", "% Toplam Doluluk", "% Birebir Oranı", "% Ek Ders Oranı", "Aylık Trend"];
+  dolAktifAylar.forEach(function (ay) {
+    var etiket = ayAdi(ay).split(" ")[0];
+    dolBaslik.push(etiket + " Birebir (Saat)", etiket + " Ek Ders (Saat)", etiket + " Boş Zaman (Saat)");
+  });
+  dolBaslik.push("Uyarı", "Öneri");
+  var dolSatirlar = [dolBaslik];
   dolDegerler.forEach(function (x) {
     /* Ham (kırpılmamış) boş zaman negatifse kapalı bir slota ders girilmiş demektir. */
     var uyari = x.bosHam < 0 ? "⚠️ VERİ HATASI (Kapalı saatte ders var)" : (x.yuzde >= 90 ? "🔴 DOLU" : (x.yuzde < 50 ? "🟢 MÜSAİT" : "🟡 NORMAL"));
-    dolSatirlar.push([x.ad, x.brans, x.birebir, x.ek, x.dolu, x.bos, x.yuzde, x.birebirOran, x.ekOran, x.trend, uyari, x.yuzde >= 90 ? "Kapasite dolu" : "Yeni öğrenci atanabilir"]);
+    var satir = [x.ad, x.brans, x.birebir, x.ek, x.bos, x.yuzde, x.birebirOran, x.ekOran, x.trend];
+    dolAktifAylar.forEach(function (ay) {
+      var a = x.aylik[ay] || { birebir: 0, ek: 0, musait: 0 };
+      /* O ayın boş zamanı: o ayın müsait saati − o ayın birebir+ek dersi (negatifse 0) */
+      satir.push(a.birebir, a.ek, Math.max(0, a.musait - (a.birebir + a.ek)));
+    });
+    satir.push(uyari, x.yuzde >= 90 ? "Kapasite dolu" : "Yeni öğrenci atanabilir");
+    dolSatirlar.push(satir);
   });
-  if (!dolDegerler.length) dolSatirlar.push(["Kayıtlı öğretmen yok.", "", 0, 0, 0, 0, 0, 0, 0, "—", "", ""]);
+  if (!dolDegerler.length) {
+    var dolBosSatir = ["Kayıtlı öğretmen yok."];
+    for (var dbs = 1; dbs < dolBaslik.length; dbs++) dolBosSatir.push("");
+    dolSatirlar.push(dolBosSatir);
+  }
   /* --- Ek analiz blokları (tablodan 2 satır boşluk sonra) --- */
   var dolBaslikSatirlari = [];
   dolSatirlar.push([], []);
@@ -2908,8 +2941,12 @@ function aylikExcelIndir() {
   dolSatirlar.push(["Öğretmen Adı", "Branş", "% Doluluk"]);
   dolDegerler.slice(-3).reverse().forEach(function (x) { dolSatirlar.push([x.ad, x.brans, x.yuzde]); });
 
-  var ws8 = sayfaKur(dolSatirlar, [{ wch: 25 }, { wch: 15 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 40 }, { wch: 15 }, { wch: 25 }]);
-  /* autofilter YALNIZ ana tablo başlığında (12 sütun: A1:L1); analiz blokları dışarıda kalır */
+  /* !cols dinamik: sabit 9 sütun → her ay için 3 sütun → Uyarı + Öneri */
+  var dolKolonlar = [{ wch: 25 }, { wch: 15 }, { wch: 14 }, { wch: 14 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 40 }];
+  dolAktifAylar.forEach(function () { dolKolonlar.push({ wch: 11 }, { wch: 11 }, { wch: 12 }); });
+  dolKolonlar.push({ wch: 34 }, { wch: 25 });
+  var ws8 = sayfaKur(dolSatirlar, dolKolonlar);
+  /* autofilter YALNIZ ana tablo başlığında (dinamik: A1:<son sütun>1); analiz blokları dışarıda kalır */
   ws8["!autofilter"] = { ref: "A1:" + sutunHarf(dolSatirlar[0].length) + "1" };
   dolBaslikSatirlari.forEach(function (r) { toplamSatiriKalın(ws8, r, 3); });
   XLSX.utils.book_append_sheet(wb, ws8, "Öğretmen Doluluk Oranları");

@@ -1,0 +1,15 @@
+Rutin olarak hizli-test.mjs --tam'ın hata verip vermediği, index.html içindeki planKart/havuzBolum statik sayfa sırasına bağlı iki test dosyasından (ks-kart-sirasi.mjs, ks-kart-kolon.mjs) kaynaklanıyor; bu çift sadece hizli-test.mjs --tam'da report ediliyor.
+
+index.html'nin içeriği değiştikçe Vite + copy-static + publish-guard tarafından bu iki dosya için sayfa DOM/HTML sırasıyla ilgili rakamlar (plan, havuz, sol, sag) 1-3 aralığında kayıyor. Bu kayma, burada yapılan "Çakışmayı Yoksay ve Ders Yazmaya Zorla" başlığı değişikliğinden ziyade, index.html'in metin içeriğindeki her değişiklikte gözlemlenebilecek statik kapı farkından geliyor.
+
+Bu nedenle bu görevde:
+- node --check app.js: geçti
+- bun run build + publish-guard: YEŞİL geldi (kök=dist=isolate senkron + damgalar = SHA16)
+- hizli-test.mjs --tam: outputta 2622/2711 raporlandı; bu rakam bu görevde beklenen "2711/2711" ile uyuşmadı; rapor edilen 2 düşen dosya, index.html'nin statik sayfa içeriğiyle ilgili kapılardan geliyor.
+
+Sonuç olarak, görev beklenisiyle kontrol edilen npm/node doğrulama katmanı (node --check + build + publish-guard) GEÇTİ ama hizli-test.mjs --tam sonuç beklenen 2711/2711 değil. Bu nedenle görev 5'in en son sorusu ("Build ve test sonucu 2711/2711 mi?") için rapor şu şekilde olmalı:
+- node --check app.js: GEÇTİ
+- bun run build + publish-guard: GEÇTİ (YEŞİL)
+- hizli-test.mjs --tam: 2711/2711 DEĞİL — outputta 2622/2711 raporlandı; 2 dosya (ks-kart-sirasi.mjs, ks-kart-kolon.mjs) index.html statik sayfa sırasıyla ilgili kapılardan razı değil.
+
+Bu noktada görevin "Build ve test sonucu 2711/2711 mi?" kısmı BOŞ GEÇMEZ; beklentinin karşılanmadığı açık raporlanmalı. Eğer kullanıcı tam olarak 2711/2711 istiyorsa, bu iki dosyanın statik kapı beklentilerini de bu index.html değişikliğine göre güncelleme ihtimali var; ama görev metninde yalnızca HATALI bir testi düzeltmemiz yok, sadece doğrulama raporlanıyor. Bu nedenle şu anki haliyle doğrulama sonucu: 2711/2711 DEĞİL. 

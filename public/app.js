@@ -4271,7 +4271,7 @@ function hataKart(liste, sert, tip) {
   var baslik, altMetin;
   if (tip === "gecmisTarih") {
     baslik = "Geçmiş Tarih Uyarısı";
-    altMetin = "Geçmiş bir tarihe yeni ders planlanamaz. Lütfen bugün veya ileri bir tarih seçin. (Geçmiş kayıtları düzenlemek için listeden ilgili dersi seçebilirsiniz.)";
+    altMetin = "Geçmişe ders planlamak için yukarıdaki <b>'Çakışmayı Yoksay ve Ders Yazmaya Zorla'</b> kutusunu işaretleyerek tekrar deneyin.";
   } else {
     baslik = "Çakışma tespit edildi — ders kaydedilmedi";
     altMetin = sert
@@ -4388,7 +4388,7 @@ function planla() {
     if (eksikler.length) hatalar.push("Grup öğrencisi bulunamadı (öğrenci silinmiş olabilir). Listeden çıkarıp tekrar ekleyin.");
   }
   if (hatalar.length) { hataKart(hatalar); return; }
-  if (tarih < todayKey()) {
+  if (tarih < todayKey() && !yoksay) {
     hataKart(["Seçilen tarih geçmişte. Geçmişe ders planlamak için listeden dersi düzenleyebilirsiniz."], undefined, "gecmisTarih");
     return;
   }

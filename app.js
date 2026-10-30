@@ -3270,7 +3270,7 @@ function ayarTab() {
   var sonYedek = "Henüz yedek alınmadı";
   try {
     var _sy = localStorage.getItem(SON_YEDEK_KEY);
-    if (_sy) { var _sd = new Date(_sy); if (!isNaN(_sd.getTime())) sonYedek = _sd.toLocaleString("tr-TR"); }
+    if (_sy) { var _sd = new Date(_sy); if (!isNaN(_sd.getTime())) sonYedek = _sd.toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }); }
   } catch (e) {}
   return '<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">' +
     '<div class="lg:col-span-1 rounded-2xl border border-slate-100 p-5">' +

@@ -865,7 +865,10 @@ if (globalThis.__kurtarmaDurumu) {
     onay: 'Kurtarma kopyasını indir', tehlikeli: true },
     function () {
       try {
-        var _paket = JSON.stringify({ uygulama: 'YKS Birebir Takip', kurtarma: true, surum: 1, tarih: new Date().toISOString(), hamVeri: _kd.raw });
+        var _zarf = { uygulama: 'YKS Birebir Takip', surum: 1, kurtarma: true, tarih: new Date().toISOString(), hamVeri: _kd.raw };
+        /* Ham veri çözülebiliyorsa `veri` de yazılır: dosya 'Yedekten Veri Yükle' zarf kontrolünden geçebilsin. */
+        try { var _c = JSON.parse(_kd.raw); if (_c && Array.isArray(_c.dersler)) _zarf.veri = _c; } catch (_pe) {}
+        var _paket = JSON.stringify(_zarf);
         var _b = new Blob([_paket], { type: 'application/json' });
         var _u = URL.createObjectURL(_b);
         var _a = document.createElement('a');

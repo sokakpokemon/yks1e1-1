@@ -4633,7 +4633,8 @@ window.__sysAnalizAra = function() {
           var mevcutVeri = localStorage.getItem("yksOto_arsiv_v1");
           if (mevcutVeri) {
             var yedekPaket = {
-              uygulama: "YKS Birebir Takip OTOMATİK YEDEK",
+              uygulama: "YKS Birebir Takip",
+              surum: 1,
               tarih: new Date().toISOString(),
               veri: JSON.parse(mevcutVeri)
             };

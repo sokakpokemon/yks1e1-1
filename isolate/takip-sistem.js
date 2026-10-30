@@ -4629,31 +4629,14 @@ window.__sysAnalizAra = function() {
                          eksikler.join(", ") + ". Yükleme yaparsanız mevcut verilerinizdeki bu alanlar silinecek!";
           }
 
-          // 1. Önce mevcut veriyi otomatik yedekle
+          // 1. Mevcut veri var mı? (varsa ONAYDAN SONRA OTO-YEDEK olarak indirilir)
           var mevcutVeri = localStorage.getItem("yksOto_arsiv_v1");
-          if (mevcutVeri) {
-            var simdi = new Date();
-            /* Yerel saat/dakika (UTC DEĞİL): aynı gün alınan yedekler ad çakışmasın */
-            var saatDk = String(simdi.getHours()).padStart(2, "0") + "-" + String(simdi.getMinutes()).padStart(2, "0");
-            var yedekPaket = {
-              uygulama: "YKS Birebir Takip",
-              surum: 1,
-              tarih: simdi.toISOString(),
-              veri: JSON.parse(mevcutVeri)
-            };
-            var blob = new Blob([JSON.stringify(yedekPaket, null, 2)], { type: "application/json" });
-            var a = document.createElement("a");
-            a.href = URL.createObjectURL(blob);
-            a.download = "OTO-YEDEK-" + todayKey() + "_" + saatDk + ".json";
-            document.body.appendChild(a); a.click(); a.remove();
-            console.log("[GÜVENLİ-YEDEK] Mevcut veriler otomatik indirildi.");
-          }
 
-          // 2. Uyarı göster ve yükle
+          // 2. Uyarı göster; yükleme YALNIZ onaylanırsa yapılır
           var mesaj = "Yedek dosyası yüklenecek ve mevcut verileriniz bununla değiştirilecek.\n\n";
           if (uyariMetni) mesaj += uyariMetni + "\n\n";
           mesaj += mevcutVeri
-            ? "Mevcut verileriniz otomatik olarak indirildi (OTO-YEDEK dosyası).\n\nDevam etmek istiyor musunuz?"
+            ? "Onaylarsanız mevcut verileriniz önce OTO-YEDEK dosyası olarak indirilecek.\n\nDevam etmek istiyor musunuz?"
             : "Devam etmek istiyor musunuz?";
 
           /* Tarayıcının confirm() kutusu yerine uygulamanın kendi onay modalı (app.js onayAc).
@@ -4664,17 +4647,44 @@ window.__sysAnalizAra = function() {
             onay: "Evet, Yükle",
             tehlikeli: true
           }, function () {
-            // Onaylandı, orijinal yüklemeyi yap (app.js yedekOku ile aynı adımlar)
-            var vNormalized = (typeof window.normalize === "function") ? window.normalize(v) : v;
-            window.DB = vNormalized;
-            if (typeof window.ksGec === "function") window.ksGec();
-            if (window.ui && typeof window.ui === "object") {
-              window.ui.editId = null; window.ui.ogrId = null; window.ui.sinifAd = null;
+            /* ONAY SONRASI: mevcut veri OTO-YEDEK olarak indirilir ("Vazgeç"te indirme YOK).
+               İndirme hatası yüklemeyi ENGELLEMEZ — kendi try'ında yutulur. */
+            if (mevcutVeri) {
+              try {
+                var simdi = new Date();
+                /* Yerel saat/dakika (UTC DEĞİL): aynı gün alınan yedekler ad çakışmasın */
+                var saatDk = String(simdi.getHours()).padStart(2, "0") + "-" + String(simdi.getMinutes()).padStart(2, "0");
+                var yedekPaket = {
+                  uygulama: "YKS Birebir Takip",
+                  surum: 1,
+                  tarih: simdi.toISOString(),
+                  veri: JSON.parse(mevcutVeri)
+                };
+                var blob = new Blob([JSON.stringify(yedekPaket, null, 2)], { type: "application/json" });
+                var a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = "OTO-YEDEK-" + todayKey() + "_" + saatDk + ".json";
+                document.body.appendChild(a); a.click(); a.remove();
+                console.log("[GÜVENLİ-YEDEK] Mevcut veriler otomatik indirildi.");
+              } catch (eIndir) { console.warn("[GÜVENLİ-YEDEK] OTO-YEDEK indirilemedi:", eIndir); }
             }
-            if (typeof window.saveDB === "function") window.saveDB();
-            if (typeof window.yenile === "function") window.yenile();
-            if (typeof window.toast === "function") window.toast("Arşiv başarıyla yüklendi ✓");
-            else alert("Arşiv başarıyla yüklendi.");
+            // Onaylandı, orijinal yüklemeyi yap (app.js yedekOku ile aynı adımlar)
+            try {
+              var vNormalized = (typeof window.normalize === "function") ? window.normalize(v) : v;
+              window.DB = vNormalized;
+              if (typeof window.ksGec === "function") window.ksGec();
+              if (window.ui && typeof window.ui === "object") {
+                window.ui.editId = null; window.ui.ogrId = null; window.ui.sinifAd = null;
+              }
+              if (typeof window.saveDB === "function") window.saveDB();
+              if (typeof window.yenile === "function") window.yenile();
+              if (typeof window.toast === "function") window.toast("Arşiv başarıyla yüklendi ✓");
+              else alert("Arşiv başarıyla yüklendi.");
+            } catch (eYukle) {
+              console.warn("[GÜVENLİ-YEDEK] Yükleme hatası:", eYukle);
+              if (typeof window.toast === "function") window.toast("Yedek yüklenirken bir hata oluştu. Dosya bozuk olabilir.", "hata");
+              else alert("Yedek yüklenirken bir hata oluştu. Dosya bozuk olabilir.");
+            }
           });
         } catch(err) {
           console.warn("[GÜVENLİ-YEDEK] Hata:", err);

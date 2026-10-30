@@ -4389,7 +4389,7 @@ function planla() {
   }
   if (hatalar.length) { hataKart(hatalar); return; }
   if (tarih < todayKey() && !yoksay) {
-    hataKart(["Seçilen tarih geçmişte. Geçmişe ders planlamak için listeden dersi düzenleyebilirsiniz."], undefined, "gecmisTarih");
+    hataKart(["Seçilen tarih geçmişte. Geçmişe ders planlamak için yukarıdaki <b>'Çakışmayı Yoksay ve Ders Yazmaya Zorla'</b> kutusunu işaretleyerek tekrar deneyin."], undefined, "gecmisTarih");
     return;
   }
 

@@ -2873,12 +2873,13 @@ function aylikExcelIndir() {
       if (musaitSaat > 0 && doluSaat > 0) trendParcalari.push(ayAdi(ay).split(" ")[0] + ": %" + Math.round((doluSaat / musaitSaat) * 100));
     });
     var dolu = topSinif + topBirebir + topEk;
-    var bos = topMusait - dolu;
+    var bosHam = topMusait - dolu; /* kapalı slota ders girilmişse negatif olur: VERİ HATASI sinyali */
+    var bos = Math.max(0, bosHam);
     var yuzde = topMusait > 0 ? (dolu / topMusait) * 100 : 0;
     dolDegerler.push({
       ad: t.ad,
       brans: (DERS[t.brans] && DERS[t.brans].ad) ? DERS[t.brans].ad : (t.brans || "Bilinmiyor"),
-      sinif: topSinif, birebir: topBirebir, ek: topEk, dolu: dolu, bos: bos, musait: topMusait,
+      sinif: topSinif, birebir: topBirebir, ek: topEk, dolu: dolu, bos: bos, bosHam: bosHam, musait: topMusait,
       yuzde: Math.round(yuzde * 10) / 10,
       birebirOran: dolu > 0 ? Math.round((topBirebir / dolu) * 1000) / 10 : 0,
       ekOran: dolu > 0 ? Math.round((topEk / dolu) * 1000) / 10 : 0,
@@ -2887,7 +2888,8 @@ function aylikExcelIndir() {
   });
   dolDegerler.sort(function (a, b) { return b.yuzde - a.yuzde || a.ad.localeCompare(b.ad, "tr"); });
   dolDegerler.forEach(function (x) {
-    var uyari = x.yuzde >= 90 ? "🔴 DOLU" : (x.yuzde < 50 ? "🟢 MÜSAİT" : "🟡 NORMAL");
+    /* Ham (kırpılmamış) boş zaman negatifse kapalı bir slota ders girilmiş demektir. */
+    var uyari = x.bosHam < 0 ? "⚠️ VERİ HATASI (Kapalı saatte ders var)" : (x.yuzde >= 90 ? "🔴 DOLU" : (x.yuzde < 50 ? "🟢 MÜSAİT" : "🟡 NORMAL"));
     dolSatirlar.push([x.ad, x.brans, x.sinif, x.birebir, x.ek, x.dolu, x.bos, x.yuzde, x.birebirOran, x.ekOran, x.trend, uyari, x.yuzde >= 90 ? "Kapasite dolu" : "Yeni öğrenci atanabilir"]);
   });
   if (!dolDegerler.length) dolSatirlar.push(["Kayıtlı öğretmen yok.", "", 0, 0, 0, 0, 0, 0, 0, 0, "—", "", ""]);

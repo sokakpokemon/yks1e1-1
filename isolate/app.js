@@ -2780,8 +2780,150 @@ function aylikExcelIndir() {
   toplamSatiriKalın(ws7, ogrtE.satirlar.length - 1, ogrtE.kolonSayisi);
   XLSX.utils.book_append_sheet(wb, ws7, "Ek Ders - Öğretmen Toplam");
 
+  /* ---- SAYFA 8: Öğretmen Doluluk Oranları (ham veriden; ekran/renk OKUNMAZ) ----
+     Müsait zaman = (gerçek iş günü × 11 slot) − (o ayda kapalı olan slotlar).
+     Kapalı slot sayısı haftalık değil, HER HAFTA GÜNÜNÜN o aydaki tekrar sayısıyla
+     ağırlıklandırılır (Cmt/Paz kapalıları müsait zamanı yanlışlıkla düşürmesin).
+     Sınıf dersi: öğretmenin avail.sinif slotları (dönem programıyla doğrulanır),
+     birebir: DB.dersler, ek ders: DB.ekDersler — iptaller hiçbir toplama girmez. */
+  var DOL_TATIL_SABIT = ["01-01", "04-23", "05-01", "05-19", "07-15", "08-30", "10-29"];
+  /* Ramazan/Kurban Bayramı (tam gün kapanış aralıkları; Diyanet takvimine göre yıllık) */
+  var DOL_TATIL_DINI = {
+    2024: [["04-10", "04-12"], ["06-16", "06-19"]],
+    2025: [["03-30", "04-01"], ["06-06", "06-09"]],
+    2026: [["03-20", "03-22"], ["05-27", "05-30"]],
+    2027: [["03-09", "03-11"], ["05-17", "05-20"]],
+    2028: [["02-26", "02-28"], ["05-05", "05-08"]],
+    2029: [["02-14", "02-16"], ["04-24", "04-27"]],
+    2030: [["02-04", "02-06"], ["04-13", "04-16"]]
+  };
+  function dolTatilMi(key) {
+    var md = String(key).slice(5, 10);
+    if (DOL_TATIL_SABIT.indexOf(md) >= 0) return true;
+    var araliklar = DOL_TATIL_DINI[parseInt(String(key).slice(0, 4), 10)] || [];
+    for (var i = 0; i < araliklar.length; i++) if (md >= araliklar[i][0] && md <= araliklar[i][1]) return true;
+    return false;
+  }
+  /* Ay → gerçek iş günü sayısı + hafta günü başına iş günü sayısı (Pzt-Cum, tatil hariç) */
+  var dolIsGunOnbellek = {};
+  function dolIsGun(ay) {
+    if (dolIsGunOnbellek[ay]) return dolIsGunOnbellek[ay];
+    var y = parseInt(ay.slice(0, 4), 10), m = parseInt(ay.slice(5, 7), 10);
+    var son = new Date(y, m, 0).getDate();
+    var gunSay = [0, 0, 0, 0, 0, 0, 0], isGun = 0;
+    for (var g = 1; g <= son; g++) {
+      var key = y + "-" + (m < 10 ? "0" + m : "" + m) + "-" + (g < 10 ? "0" + g : "" + g);
+      var idx = (new Date(y, m - 1, g, 12, 0, 0).getDay() + 6) % 7;
+      if (idx > 4) continue; /* Cmt/Paz */
+      if (dolTatilMi(key)) continue;
+      gunSay[idx]++; isGun++;
+    }
+    dolIsGunOnbellek[ay] = { gunSay: gunSay, isGun: isGun };
+    return dolIsGunOnbellek[ay];
+  }
+  function dolOgrAnahtar(l) {
+    if (l.ogretmenId) return "id:" + l.ogretmenId;
+    return "ad:" + String(l.ogretmenAd || "").trim().toLocaleUpperCase("tr");
+  }
+  var dolBirebirMap = {}, dolEkMap = {};
+  birebir.forEach(function (l) {
+    var k = dolOgrAnahtar(l) + "|" + String(l.tarih || "").slice(0, 7);
+    dolBirebirMap[k] = (dolBirebirMap[k] || 0) + 1;
+  });
+  ekler.forEach(function (l) {
+    var k = dolOgrAnahtar(l) + "|" + String(l.tarih || "").slice(0, 7);
+    dolEkMap[k] = (dolEkMap[k] || 0) + 1;
+  });
+  var dolProgHarita = (DB.sinifProgDonemler && DB.sinifProgDonemler[aktifDonemId()]) || DB.sinifProg || {};
+  var dolSatirlar = [["Öğretmen Adı", "Branş", "Sınıf Dersi (Saat)", "Birebir Ders (Saat)", "Ek Ders (Saat)", "Toplam Dolu (Saat)", "Boş Zaman (Saat)", "% Toplam Doluluk", "% Birebir Oranı", "% Ek Ders Oranı", "Aylık Trend", "Uyarı", "Öneri"]];
+  var dolDegerler = [];
+  (DB.ogretmenler || []).forEach(function (t) {
+    if (!t || !t.ad) return;
+    var tk = t.id ? "id:" + t.id : "ad:" + String(t.ad).trim().toLocaleUpperCase("tr");
+    var avail = t.avail || {};
+    var musait = Array.isArray(avail.musait) ? avail.musait : [];
+    var sinifMap = (avail.sinif && typeof avail.sinif === "object") ? avail.sinif : {};
+    /* Haftalık kapalı/sınıf slotlarını gün indeksine göre say */
+    var kapaliGun = [0, 0, 0, 0, 0], sinifGun = [0, 0, 0, 0, 0];
+    musait.forEach(function (k) {
+      var g = parseInt(String(k).split("-")[0], 10);
+      if (g >= 0 && g <= 4) kapaliGun[g]++;
+    });
+    Object.keys(sinifMap).forEach(function (k) {
+      var p = String(k).split("-"), g = parseInt(p[0], 10), kod = p[1];
+      if (!(g >= 0 && g <= 4)) return;
+      var cls = sinifMap[k];
+      if (!cls || typeof cls !== "string" || cls === "Sınıf Dersi") return;
+      var prog = dolProgHarita[cls];
+      /* Dönem programı varsa ve bu slot orada YOKSA bayat kayıttır: sayılmaz */
+      if (Array.isArray(prog) && prog.length && prog.indexOf(g + "-" + kod) < 0) return;
+      sinifGun[g]++;
+    });
+    var topMusait = 0, topSinif = 0, topBirebir = 0, topEk = 0;
+    var trendParcalari = [];
+    tumAylar.forEach(function (ay) {
+      var ig = dolIsGun(ay);
+      var kapali = 0, sinif = 0;
+      for (var g = 0; g <= 4; g++) { kapali += kapaliGun[g] * ig.gunSay[g]; sinif += sinifGun[g] * ig.gunSay[g]; }
+      var musaitSaat = ig.isGun * KISA_KOD.length - kapali;
+      var birebirSaat = dolBirebirMap[tk + "|" + ay] || 0;
+      var ekSaat = dolEkMap[tk + "|" + ay] || 0;
+      var doluSaat = sinif + birebirSaat + ekSaat;
+      topMusait += musaitSaat; topSinif += sinif; topBirebir += birebirSaat; topEk += ekSaat;
+      if (musaitSaat > 0 && doluSaat > 0) trendParcalari.push(ayAdi(ay).split(" ")[0] + ": %" + Math.round((doluSaat / musaitSaat) * 100));
+    });
+    var dolu = topSinif + topBirebir + topEk;
+    var bos = topMusait - dolu;
+    var yuzde = topMusait > 0 ? (dolu / topMusait) * 100 : 0;
+    dolDegerler.push({
+      ad: t.ad,
+      brans: (DERS[t.brans] && DERS[t.brans].ad) ? DERS[t.brans].ad : (t.brans || "Bilinmiyor"),
+      sinif: topSinif, birebir: topBirebir, ek: topEk, dolu: dolu, bos: bos, musait: topMusait,
+      yuzde: Math.round(yuzde * 10) / 10,
+      birebirOran: dolu > 0 ? Math.round((topBirebir / dolu) * 1000) / 10 : 0,
+      ekOran: dolu > 0 ? Math.round((topEk / dolu) * 1000) / 10 : 0,
+      trend: trendParcalari.length ? trendParcalari.join(", ") : "—"
+    });
+  });
+  dolDegerler.sort(function (a, b) { return b.yuzde - a.yuzde || a.ad.localeCompare(b.ad, "tr"); });
+  dolDegerler.forEach(function (x) {
+    var uyari = x.yuzde >= 90 ? "🔴 DOLU" : (x.yuzde < 50 ? "🟢 MÜSAİT" : "🟡 NORMAL");
+    dolSatirlar.push([x.ad, x.brans, x.sinif, x.birebir, x.ek, x.dolu, x.bos, x.yuzde, x.birebirOran, x.ekOran, x.trend, uyari, x.yuzde >= 90 ? "Kapasite dolu" : "Yeni öğrenci atanabilir"]);
+  });
+  if (!dolDegerler.length) dolSatirlar.push(["Kayıtlı öğretmen yok.", "", 0, 0, 0, 0, 0, 0, 0, 0, "—", "", ""]);
+  /* --- Ek analiz blokları (tablodan 2 satır boşluk sonra) --- */
+  var dolBaslikSatirlari = [];
+  dolSatirlar.push([], []);
+  dolBaslikSatirlari.push(dolSatirlar.length);
+  dolSatirlar.push(["Branş Bazlı Doluluk (ortalama %)"]);
+  dolSatirlar.push(["Branş", "Öğretmen Sayısı", "Ortalama % Doluluk"]);
+  var bransTop = {};
+  dolDegerler.forEach(function (x) {
+    if (!bransTop[x.brans]) bransTop[x.brans] = { adet: 0, toplam: 0 };
+    bransTop[x.brans].adet++; bransTop[x.brans].toplam += x.yuzde;
+  });
+  Object.keys(bransTop).sort(function (a, b) { return bransTop[b].toplam / bransTop[b].adet - bransTop[a].toplam / bransTop[a].adet || a.localeCompare(b, "tr"); }).forEach(function (br) {
+    dolSatirlar.push([br, bransTop[br].adet, Math.round((bransTop[br].toplam / bransTop[br].adet) * 10) / 10]);
+  });
+  dolSatirlar.push([], []);
+  dolBaslikSatirlari.push(dolSatirlar.length);
+  dolSatirlar.push(["En Çok Dolu 3 Öğretmen"]);
+  dolSatirlar.push(["Öğretmen Adı", "Branş", "% Doluluk"]);
+  dolDegerler.slice(0, 3).forEach(function (x) { dolSatirlar.push([x.ad, x.brans, x.yuzde]); });
+  dolSatirlar.push([], []);
+  dolBaslikSatirlari.push(dolSatirlar.length);
+  dolSatirlar.push(["En Az Dolu 3 Öğretmen"]);
+  dolSatirlar.push(["Öğretmen Adı", "Branş", "% Doluluk"]);
+  dolDegerler.slice(-3).reverse().forEach(function (x) { dolSatirlar.push([x.ad, x.brans, x.yuzde]); });
+
+  var ws8 = sayfaKur(dolSatirlar, [{ wch: 25 }, { wch: 15 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 40 }, { wch: 15 }, { wch: 25 }]);
+  /* autofilter YALNIZ ana tablo başlığında (13 sütun: A1:M1); analiz blokları dışarıda kalır */
+  ws8["!autofilter"] = { ref: "A1:" + sutunHarf(dolSatirlar[0].length) + "1" };
+  dolBaslikSatirlari.forEach(function (r) { toplamSatiriKalın(ws8, r, 3); });
+  XLSX.utils.book_append_sheet(wb, ws8, "Öğretmen Doluluk Oranları");
+
   XLSX.writeFile(wb, "Kapsamli-Rapor-" + new Date().getFullYear() + ".xlsx");
-  toast("Kapsamlı Excel raporu indirildi ✓ (7 sayfa)");
+  toast("Kapsamlı Excel raporu indirildi ✓ (8 sayfa)");
 }
 
 /* ---- D63-CAKISMA-RAPORU: Öğrenci Saat Çakışma Raporu (SALT-OKUMA) ----

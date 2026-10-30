@@ -4656,7 +4656,14 @@ window.__sysAnalizAra = function() {
             ? "Mevcut verileriniz otomatik olarak indirildi (OTO-YEDEK dosyası).\n\nDevam etmek istiyor musunuz?"
             : "Devam etmek istiyor musunuz?";
 
-          if (confirm(mesaj)) {
+          /* Tarayıcının confirm() kutusu yerine uygulamanın kendi onay modalı (app.js onayAc).
+             mesaj \n içeriyor; onayMetin innerHTML'e yazıldığı için satır sonları <br> olur. */
+          window.onayAc({
+            baslik: "Yedekten Veri Yüklensin mi?",
+            metin: mesaj.replace(/\n/g, "<br>"),
+            onay: "Evet, Yükle",
+            tehlikeli: true
+          }, function () {
             // Onaylandı, orijinal yüklemeyi yap (app.js yedekOku ile aynı adımlar)
             var vNormalized = (typeof window.normalize === "function") ? window.normalize(v) : v;
             window.DB = vNormalized;
@@ -4668,7 +4675,7 @@ window.__sysAnalizAra = function() {
             if (typeof window.yenile === "function") window.yenile();
             if (typeof window.toast === "function") window.toast("Arşiv başarıyla yüklendi ✓");
             else alert("Arşiv başarıyla yüklendi.");
-          }
+          });
         } catch(err) {
           console.warn("[GÜVENLİ-YEDEK] Hata:", err);
           alert("Dosya okunamadı veya geçersiz.");

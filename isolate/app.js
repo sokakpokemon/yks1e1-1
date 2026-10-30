@@ -2584,7 +2584,7 @@ function aylikExcelKartHTML() {
       '<div class="flex flex-wrap items-center gap-2 mt-3">' +
         '<button onclick="aylikExcelIndir()" class="rounded-full bg-indigo-500 hover:bg-indigo-600 text-white text-[11.5px] font-bold px-3.5 py-2 shadow-sm transition-colors">📥 Tüm Raporu İndir (Excel)</button>' +
       "</div>" +
-      '<p class="text-[10.5px] text-slate-400 mt-2"><i class="fa-solid fa-circle-info mr-1"></i>7 sayfa: Genel Özet · Birebir (Çapraz Tablo / Öğrenci / Öğretmen) · Ek Ders (Çapraz Tablo / Sınıf / Öğretmen). İptal edilen dersler toplamlara girmez.</p>' +
+      '<p class="text-[10.5px] text-slate-400 mt-2"><i class="fa-solid fa-circle-info mr-1"></i>8 sayfa: Genel Özet · Birebir (Çapraz Tablo / Öğrenci / Öğretmen) · Ek Ders (Çapraz Tablo / Sınıf / Öğretmen) · Öğretmen Doluluk Oranları (aylık kırılım). İptal edilen dersler toplamlara girmez.</p>' +
     "</div>";
 }
 function aylikExcelIndir() {
@@ -2894,7 +2894,7 @@ function aylikExcelIndir() {
   dolDegerler.sort(function (a, b) { return b.yuzde - a.yuzde || a.ad.localeCompare(b.ad, "tr"); });
   var dolBaslik = ["Öğretmen Adı", "Branş", "Toplam Verilen Birebir Ders (Saat)", "Toplam Verilen Ek Ders (Saat)", "Boş Zaman (Saat)", "% Toplam Doluluk", "% Birebir Oranı", "% Ek Ders Oranı", "Aylık Trend"];
   dolAktifAylar.forEach(function (ay) {
-    var etiket = ayAdi(ay).split(" ")[0];
+    var etiket = ayAdi(ay); /* "Ekim 2026" → yıl dahil, iki yıl aynı tabloda karışmaz */
     dolBaslik.push(etiket + " Birebir (Saat)", etiket + " Ek Ders (Saat)", etiket + " Boş Zaman (Saat)");
   });
   dolBaslik.push("Uyarı", "Öneri");

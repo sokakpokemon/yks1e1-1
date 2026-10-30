@@ -4632,16 +4632,19 @@ window.__sysAnalizAra = function() {
           // 1. Önce mevcut veriyi otomatik yedekle
           var mevcutVeri = localStorage.getItem("yksOto_arsiv_v1");
           if (mevcutVeri) {
+            var simdi = new Date();
+            /* Yerel saat/dakika (UTC DEĞİL): aynı gün alınan yedekler ad çakışmasın */
+            var saatDk = String(simdi.getHours()).padStart(2, "0") + "-" + String(simdi.getMinutes()).padStart(2, "0");
             var yedekPaket = {
               uygulama: "YKS Birebir Takip",
               surum: 1,
-              tarih: new Date().toISOString(),
+              tarih: simdi.toISOString(),
               veri: JSON.parse(mevcutVeri)
             };
             var blob = new Blob([JSON.stringify(yedekPaket, null, 2)], { type: "application/json" });
             var a = document.createElement("a");
             a.href = URL.createObjectURL(blob);
-            a.download = "OTO-YEDEK-" + new Date().toISOString().slice(0, 10) + ".json";
+            a.download = "OTO-YEDEK-" + todayKey() + "_" + saatDk + ".json";
             document.body.appendChild(a); a.click(); a.remove();
             console.log("[GÜVENLİ-YEDEK] Mevcut veriler otomatik indirildi.");
           }

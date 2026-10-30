@@ -3535,11 +3535,14 @@ function sablonKopyaUygula(kaynakId, hedefId) {
 /* SABLON-KOPYA-YAMASI sonu */
 
 function yedekAl() {
-  var paket = { uygulama: "YKS Birebir Takip", surum: 1, tarih: new Date().toISOString(), veri: DB };
+  var simdi = new Date();
+  /* Yerel saat/dakika (UTC DEĞİL): aynı gün alınan yedekler ad çakışmasın */
+  var saatDk = String(simdi.getHours()).padStart(2, "0") + "-" + String(simdi.getMinutes()).padStart(2, "0");
+  var paket = { uygulama: "YKS Birebir Takip", surum: 1, tarih: simdi.toISOString(), veri: DB };
   var blob = new Blob([JSON.stringify(paket, null, 2)], { type: "application/json" });
   var a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "yks-birebir-yedek-" + todayKey() + ".json";
+  a.download = "yks-birebir-yedek-" + todayKey() + "_" + saatDk + ".json";
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
   toast("Yedek dosyası indirildi ✓");

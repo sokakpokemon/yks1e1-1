@@ -4266,14 +4266,24 @@ function temizleForm() {
   ui.panelSecim = { acik: false, arama: "", sinif: "", anaId: null };
   renderFormDestek();
 }
-function hataKart(liste, sert) {
+function hataKart(liste, sert, tip) {
   $("cakismaUyari").classList.remove("hidden");
+  var baslik, altMetin;
+  if (tip === "gecmisTarih") {
+    baslik = "Geçmiş Tarih Uyarısı";
+    altMetin = "Geçmiş bir tarihe yeni ders planlanamaz. Lütfen bugün veya ileri bir tarih seçin. (Geçmiş kayıtları düzenlemek için listeden ilgili dersi seçebilirsiniz.)";
+  } else {
+    baslik = "Çakışma tespit edildi — ders kaydedilmedi";
+    altMetin = sert
+      ? "Bu bir ogrenci cakismasidir — <b>yoksayilamaz</b>. Ders kaydedilmedi."
+      : "Gerçekten planlamak istiyorsanız <b>“Çakışmayı Yoksay / Ekstra Kontenjan”</b> kutusunu işaretleyip tekrar kaydedin.";
+  }
   $("cakismaUyari").innerHTML =
     '<div class="flex items-start gap-3.5 bg-rose-50 border border-rose-200 rounded-2xl px-4 py-3.5 belir">' +
     '<span class="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center shrink-0 mt-0.5"><i class="fa-solid fa-triangle-exclamation"></i></span>' +
-    '<div class="flex-1"><b class="text-[13px] text-rose-700 block">Çakışma tespit edildi — ders kaydedilmedi</b>' +
+    '<div class="flex-1"><b class="text-[13px] text-rose-700 block">' + baslik + '</b>' +
     '<ul class="text-[12.5px] text-rose-600/90 mt-1.5 space-y-1 list-disc list-inside">' + liste.map(function (m) { return "<li>" + m + "</li>"; }).join("") + "</ul>" +
-    (sert ? '<p class="text-[11px] text-rose-400 mt-2">Bu bir ogrenci cakismasidir — <b>yoksayilamaz</b>. Ders kaydedilmedi.</p>' : '<p class="text-[11px] text-rose-400 mt-2">Gerçekten planlamak istiyorsanız <b>“Çakışmayı Yoksay / Ekstra Kontenjan”</b> kutusunu işaretleyip tekrar kaydedin.</p>') + '</div></div>';
+    (tip === "gecmisTarih" ? '' : '<p class="text-[11px] text-rose-400 mt-2">' + altMetin + '</p>') + '</div></div>';
   $("cakismaUyari").scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 /* D59-OGRENCI-SLOT-KURALI: ayni tarih+saat kodunda bir ogrenci (ana + grup uyeleri) en fazla 1 aktif derste olur. Cakismayi Yoksay bunu GECEMEZ. */
@@ -4379,7 +4389,7 @@ function planla() {
   }
   if (hatalar.length) { hataKart(hatalar); return; }
   if (tarih < todayKey()) {
-    hataKart(["Seçilen tarih geçmişte. Geçmişe ders planlamak için listeden dersi düzenleyebilirsiniz."]);
+    hataKart(["Seçilen tarih geçmişte. Geçmişe ders planlamak için listeden dersi düzenleyebilirsiniz."], undefined, "gecmisTarih");
     return;
   }
 

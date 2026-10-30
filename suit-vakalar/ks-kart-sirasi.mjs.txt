@@ -1,5 +1,5 @@
 boot hatasız
-index.html'de planKart havuzBolum'den ÖNCE (statik sıra) → plan=11088 havuz=17002
+index.html'de planKart havuzBolum'den ÖNCE (statik sıra) → plan=11265 havuz=17179
 havuzBolum derslerBolum'den önce
 planKart bloğu ile havuzBolum arasına başka kart girmedi (bitişik)
 havuzBolum render hedefi app.js'te tek (id tabanlı lookup korunur)

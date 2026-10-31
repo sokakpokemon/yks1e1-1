@@ -1012,8 +1012,17 @@ var ui = {
   istekUyeArama: "" /* D39-UYE-ARAMA: havuz grup üyesi editörü öğrenci arama sorgusu (açılış/kart değişimi/kapanış/İptal/Kaydet'te TEMİZLENİR) */,
   sayfa: 1 /* DERS-LISTE-SAYFALAMA: ders tablosu geçerli sayfa (1 tabanlı) */,
   sayfaBoyut: 20 /* DERS-LISTE-SAYFALAMA: sayfa başına kayıt (9999 = Tümünü Göster) */,
-  aramaMetni: "" /* DERS-ARAMA: ders tablosu arama çubuğu sorgusu (öğrenci / öğretmen / konu) */
+  aramaMetni: "" /* DERS-ARAMA: ders tablosu arama çubuğu sorgusu (öğrenci / öğretmen / konu) */,
+  cizelgeKilitli: true /* CIZELGE-KILIT: haftalık öğretmen çizelgesi KİLİTLİ (varsayılan) — düzenleme yalnız kilit açıkken */
 };
+/* CIZELGE-KILIT: kilit tercihi kalıcıdır (yksOto_cizelgeKilitli_v1). Kayıt yoksa varsayılan KİLİTLİ kalır;
+   yalnız açıkça "0" yazılmışsa kilit açılır. Okuma try/catch içinde: localStorage'sız ortamda (test/SSR) varsayılan korunur. */
+(function () {
+  try {
+    var _ckHam = localStorage.getItem("yksOto_cizelgeKilitli_v1");
+    if (_ckHam !== null && _ckHam !== "") ui.cizelgeKilitli = _ckHam !== "0";
+  } catch (e) {}
+})();
 
 // ---------- Durum seçici çubuk (takvim düzenlemesi) ----------
 /* Kapalı = eski "Müsait Değil" (kaydın temsili değişmedi, yalnızca görünür etiket) */
@@ -4529,6 +4538,14 @@ function setFiltre(f) {
   else ui.anchor = ui.anchor.slice(0, 4) + "-01-01";
   if (f !== "hafta" && f !== "gun") ui.gunSecim = null;
   renderOzet(); renderAnaliz(); renderDersler();
+}
+/* CIZELGE-KILIT: haftalık öğretmen çizelgesinin TEK açma/kapama kapısı. Mevcut slot bazlı `kilitli`
+   değişkenlerine (istekBurak/dersBurak) DOKUNMAZ; ayrı bir global durumdur (ui.cizelgeKilitli). */
+function cizelgeKilitDegistir() {
+  ui.cizelgeKilitli = !ui.cizelgeKilitli;
+  try { localStorage.setItem("yksOto_cizelgeKilitli_v1", ui.cizelgeKilitli ? "1" : "0"); } catch(e) {}
+  renderDersler();
+  toast(ui.cizelgeKilitli ? "Çizelge kilitlendi 🔒" : "Çizelge kilidi açıldı 🔓");
 }
 function haftalikOgrtSec(id) { ui.haftalikOgrtId = id || null; ui.sayfa = 1; renderDersler(); }
 /* DERS-LISTE-SAYFALAMA: sayfa gezinme — filtre sonucu (penceredeDersler) DEĞİŞMEZ, yalnız sayfa değişir */

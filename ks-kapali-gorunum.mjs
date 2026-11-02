@@ -21,6 +21,8 @@ let fail = 0;
 const t = (name, cond) => { __kosan++;  console.log("  " + (cond ? "✓" : "✗") + " " + name); if (!cond) fail = 1; };
 
 const api = new Function(scripts + "\n;return { gridTablo, durumSec, togOgrSecili, togOgr, DB, ui, saveDB, yenile: () => {} };")();
+/* CIZELGE-KILIT: bu süit AÇIK kilit varsayımıyla hücre düzenleme akışını test eder (assertion'lar değişmedi). */
+api.ui.cizelgeKilitli = false;
 
 /* 1) Kapalı hücre render */
 const avail = { sinif: {}, musait: ["0-1"] };

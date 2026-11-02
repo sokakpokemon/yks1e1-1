@@ -50,6 +50,8 @@ try {
   throw e;
 }
 const { DB, ui, durumSeciciHTML, durumSec, togOgrSecili, ogretmenTab, tumSiniflar } = api;
+/* CIZELGE-KILIT: bu süit AÇIK kilit varsayımıyla hücre düzenleme akışını test eder (assertion'lar değişmedi). */
+ui.cizelgeKilitli = false;
 
 /* 1) Buton sayısı = DB'deki kayıtlı sınıf sayısı + 1 (Kapalı) */
 const snflar = tumSiniflar();

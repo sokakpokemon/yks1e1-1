@@ -1055,6 +1055,7 @@ function durumSec(val, snfAd) {
   renderYonetim();
 }
 function togOgrSecili(tid, di, saat) {
+  if (ui.cizelgeKilitli) { toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
   if (!ui.seciliDurum) { togOgr(tid, di, saat); return; }
   var t = DB.ogretmenler.find(function (x) { return x.id === tid; });
   if (!t) return;
@@ -1652,7 +1653,12 @@ function gridTablo(onclickOnce, avail, tip, sinifAd) { /* DV-ETIKET-YAMASI */
     h += "</tr>";
   });
   h += "</tbody>";
-  return '<div class="overflow-x-auto rounded-xl border border-slate-100"><table class="w-full min-w-[640px] text-center border-separate border-spacing-0.5">' + h + "</table></div>";
+  /* CIZELGE-KILIT: YÖNETİM grid'i başlık şeridi — kilit butonu çizelgenin EN ÜSTÜNDE.
+     Buton cizelgeKilitBtnHTML()'den gelir: inline stilli (kırmızı= kilitli / yeşil= açık). */
+  var kilitBar = '<div data-cizelge-baslik-yonetim="1" style="display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:8px;">' +
+    '<span style="font-size:10.5px;font-weight:700;color:' + (ui.cizelgeKilitli ? "#be123c" : "#047857") + ';">' + (ui.cizelgeKilitli ? "Hücreler kilitli" : "Hücreler düzenlenebilir") + '</span>' +
+    cizelgeKilitBtnHTML() + '</div>';
+  return kilitBar + '<div class="overflow-x-auto rounded-xl border border-slate-100"><table class="w-full min-w-[640px] text-center border-separate border-spacing-0.5">' + h + "</table></div>";
 }
 
 function ogretmenEkle() {
@@ -1686,6 +1692,7 @@ function ogretmenEkle() {
 }
 function secOgr(id) { ui.ogrId = id; renderYonetim(); }
 function togOgr(tid, di, saat) {
+  if (ui.cizelgeKilitli) { toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
   var t = DB.ogretmenler.find(function (x) { return x.id === tid; });
   if (!t) return;
   var k = di + "-" + saat;
@@ -1990,6 +1997,7 @@ function sinifSil() {
   });
 }
 function togSinif(sinifAd, di, saat) {
+  if (ui.cizelgeKilitli) { toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
   if (!DB.sinifProg[sinifAd]) DB.sinifProg[sinifAd] = [];
   var key = di + "-" + saat;
   var prog = DB.sinifProg[sinifAd];
@@ -4545,6 +4553,8 @@ function cizelgeKilitDegistir() {
   ui.cizelgeKilitli = !ui.cizelgeKilitli;
   try { localStorage.setItem("yksOto_cizelgeKilitli_v1", ui.cizelgeKilitli ? "1" : "0"); } catch(e) {}
   renderDersler();
+  /* CIZELGE-KILIT: Yönetim grid'i de aynı anahtarla çizilir — buton durumu hemen yansısın */
+  try { if (typeof renderYonetim === "function") renderYonetim(); } catch (e) {}
   toast(ui.cizelgeKilitli ? "Çizelge kilitlendi 🔒" : "Çizelge kilidi açıldı 🔓");
 }
 /* CIZELGE-KILIT: inline onclick="window.cizelgeKilitDegistir()" her ortamda çalışsın diye AÇIK global atama

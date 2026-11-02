@@ -4547,6 +4547,9 @@ function cizelgeKilitDegistir() {
   renderDersler();
   toast(ui.cizelgeKilitli ? "Çizelge kilitlendi 🔒" : "Çizelge kilidi açıldı 🔓");
 }
+/* CIZELGE-KILIT: inline onclick="window.cizelgeKilitDegistir()" her ortamda çalışsın diye AÇIK global atama
+   (fonksiyon zaten top-level; bu atama yalnız güvence — davranış aynı). */
+if (typeof window !== "undefined") window.cizelgeKilitDegistir = cizelgeKilitDegistir;
 function haftalikOgrtSec(id) { ui.haftalikOgrtId = id || null; ui.sayfa = 1; renderDersler(); }
 /* DERS-LISTE-SAYFALAMA: sayfa gezinme — filtre sonucu (penceredeDersler) DEĞİŞMEZ, yalnız sayfa değişir */
 function sayfaGit(yon) {
@@ -4744,12 +4747,12 @@ function haftalikOgrtTablo() {
   }
 
   return '<div class="rounded-2xl border border-slate-100 overflow-hidden mb-4">' +
-    '<div class="flex items-center gap-3 px-5 py-3.5 bg-gradient-to-r from-violet-50 to-blue-50 border-b border-slate-100">' +
+    '<div class="flex flex-wrap items-center gap-3 px-5 py-3.5 bg-gradient-to-r from-violet-50 to-blue-50 border-b border-slate-100">' + /* CIZELGE-KILIT: flex-wrap — dar kolonda sağ blok alt satıra iner, kırpılmaz */
       '<div class="w-9 h-9 rounded-xl bg-violet-500 flex items-center justify-center text-white shadow-sm shrink-0"><i class="fa-solid fa-calendar-week text-sm"></i></div>' +
       '<div><h3 class="text-[14px] font-extrabold text-slate-800">ÖĞRETMEN — ' + esc(t.ad.toUpperCase()) + '</h3>' +
       '<p class="text-[11px] text-slate-400">' + (brans ? brans.ad : 'Branş yok') + " · " + pencereAdi() + '</p></div>' +
       /* CIZELGE-KILIT: sağ blok — ipucu yalnız kilit AÇIKKEN görünür (kilitliyken yanıltıcı olmasın) + kilit butonu */
-      '<div class="ml-auto flex items-center gap-2">' + (cizelgeKilit ? "" : '<span class="hidden md:inline-flex items-center gap-1.5 rounded-full bg-white border border-teal-200 text-teal-600 text-[10.5px] font-bold px-3 py-1.5"><i class="fa-solid fa-hand-pointer"></i> Boş + hücrelerine istek kartı bırakabilirsiniz</span>') + '<button type="button" onclick="cizelgeKilitDegistir()" aria-pressed="' + (cizelgeKilit ? "true" : "false") + '" title="' + (cizelgeKilit ? "Çizelge kilitli — düzenlemek için kilidi açın" : "Çizelgeyi kilitle") + '" class="inline-flex items-center gap-1.5 rounded-full border text-[10.5px] font-bold px-3 py-1.5 transition-colors ' + (cizelgeKilit ? "bg-rose-500 border-rose-500 text-white hover:bg-rose-600" : "bg-white border-emerald-300 text-emerald-600 hover:bg-emerald-50") + '"><i class="fa-solid ' + (cizelgeKilit ? "fa-lock" : "fa-lock-open") + '"></i> ' + (cizelgeKilit ? "Kilitli" : "Kilit Açık") + '</button>' + /* CIZELGE-KILIT */
+      '<div class="ml-auto flex items-center gap-2 shrink-0">' + (cizelgeKilit ? "" : '<span class="hidden md:inline-flex items-center gap-1.5 rounded-full bg-white border border-teal-200 text-teal-600 text-[10.5px] font-bold px-3 py-1.5"><i class="fa-solid fa-hand-pointer"></i> Boş + hücrelerine istek kartı bırakabilirsiniz</span>') + '<button type="button" onclick="window.cizelgeKilitDegistir()" aria-pressed="' + (cizelgeKilit ? "true" : "false") + '" title="' + (cizelgeKilit ? "Çizelge kilitli — düzenlemek için kilidi açın" : "Çizelgeyi kilitle") + '" class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border text-[10.5px] font-bold px-3 py-1.5 transition-colors ' + (cizelgeKilit ? "bg-rose-500 border-rose-500 text-white hover:bg-rose-600" : "bg-white border-emerald-300 text-emerald-600 hover:bg-emerald-50") + '"><i class="fa-solid ' + (cizelgeKilit ? "fa-lock" : "fa-lock-open") + '"></i> ' + (cizelgeKilit ? "Kilitli" : "Kilit Açık") + '</button>' + /* CIZELGE-KILIT */
       '</div>' + /* CIZELGE-KILIT */
     '</div>' +
     '<div class="overflow-x-auto"><table class="w-full border-collapse">' +

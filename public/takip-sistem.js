@@ -4077,6 +4077,10 @@ window.__sysAnalizAra = function() {
     }
 
     document.addEventListener("click", function (e) {
+      /* CIZELGE-KILIT: kilit AÇIKKEN D68 dolu hücre koruması DEVRE DIŞI — tıklama normal akışına
+         (app.js togOgrSecili) devam eder. Kilitliyken (varsayılan) koruma aynen çalışır.
+         app.js durumu boolean tutar; eski/string değerler ("0", 0) da "açık" sayılır. */
+      if (window.ui && (window.ui.cizelgeKilitli === false || window.ui.cizelgeKilitli === "0" || window.ui.cizelgeKilitli === 0)) return;
       var hedef = e.target;
       var btn = hedef && hedef.closest ? hedef.closest(".hucreBtn") : null;
       if (!btn || !d68OgrHucresiMi(btn) || !d68DoluMu(btn)) return;

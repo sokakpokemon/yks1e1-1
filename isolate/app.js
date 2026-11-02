@@ -1055,7 +1055,8 @@ function durumSec(val, snfAd) {
   renderYonetim();
 }
 function togOgrSecili(tid, di, saat) {
-  if (ui.cizelgeKilitli) { toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
+  console.log("togOgrSecili çağrıldı, kilit:", ui.cizelgeKilitli, "(aktif:", cizelgeKilitAktifMi(), ")"); /* GEÇİCİ TEŞHİS */
+  if (cizelgeKilitAktifMi()) { toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
   if (!ui.seciliDurum) { togOgr(tid, di, saat); return; }
   var t = DB.ogretmenler.find(function (x) { return x.id === tid; });
   if (!t) return;
@@ -1656,7 +1657,7 @@ function gridTablo(onclickOnce, avail, tip, sinifAd) { /* DV-ETIKET-YAMASI */
   /* CIZELGE-KILIT: YÖNETİM grid'i başlık şeridi — kilit butonu çizelgenin EN ÜSTÜNDE.
      Buton cizelgeKilitBtnHTML()'den gelir: inline stilli (kırmızı= kilitli / yeşil= açık). */
   var kilitBar = '<div data-cizelge-baslik-yonetim="1" style="display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:8px;">' +
-    '<span style="font-size:10.5px;font-weight:700;color:' + (ui.cizelgeKilitli ? "#be123c" : "#047857") + ';">' + (ui.cizelgeKilitli ? "Hücreler kilitli" : "Hücreler düzenlenebilir") + '</span>' +
+    '<span style="font-size:10.5px;font-weight:700;color:' + (cizelgeKilitAktifMi() ? "#be123c" : "#047857") + ';">' + (cizelgeKilitAktifMi() ? "Hücreler kilitli" : "Hücreler düzenlenebilir") + '</span>' +
     cizelgeKilitBtnHTML() + '</div>';
   return kilitBar + '<div class="overflow-x-auto rounded-xl border border-slate-100"><table class="w-full min-w-[640px] text-center border-separate border-spacing-0.5">' + h + "</table></div>";
 }
@@ -1692,7 +1693,7 @@ function ogretmenEkle() {
 }
 function secOgr(id) { ui.ogrId = id; renderYonetim(); }
 function togOgr(tid, di, saat) {
-  if (ui.cizelgeKilitli) { toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
+  if (cizelgeKilitAktifMi()) { toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
   var t = DB.ogretmenler.find(function (x) { return x.id === tid; });
   if (!t) return;
   var k = di + "-" + saat;
@@ -1997,7 +1998,7 @@ function sinifSil() {
   });
 }
 function togSinif(sinifAd, di, saat) {
-  if (ui.cizelgeKilitli) { toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
+  if (cizelgeKilitAktifMi()) { toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
   if (!DB.sinifProg[sinifAd]) DB.sinifProg[sinifAd] = [];
   var key = di + "-" + saat;
   var prog = DB.sinifProg[sinifAd];
@@ -4549,12 +4550,25 @@ function setFiltre(f) {
 }
 /* CIZELGE-KILIT: haftalık öğretmen çizelgesinin TEK açma/kapama kapısı. Mevcut slot bazlı `kilitli`
    değişkenlerine (istekBurak/dersBurak) DOKUNMAZ; ayrı bir global durumdur (ui.cizelgeKilitli). */
+/* CIZELGE-KILIT: TEK doğruluk kaynağı — durum her zaman BOOLEAN'a normalize edilir.
+   localStorage/eski sürüm/başka bir katman `"0"`, `"false"`, 0 gibi değer yazsa bile
+   `if (ui.cizelgeKilitli)` truthy tuzağına düşülmez ("0" string'i truthy'dir). */
+function cizelgeKilitAktifMi() {
+  var v = ui.cizelgeKilitli;
+  return v === true || v === 1 || v === "1" || v === "true";
+}
 function cizelgeKilitDegistir() {
-  ui.cizelgeKilitli = !ui.cizelgeKilitli;
+  ui.cizelgeKilitli = !cizelgeKilitAktifMi(); /* CIZELGE-KILIT: normalize oku → tersine çevir */
   try { localStorage.setItem("yksOto_cizelgeKilitli_v1", ui.cizelgeKilitli ? "1" : "0"); } catch(e) {}
+  /* CIZELGE-KILIT: önceki "kilitli" uyarı toast'ları ekranda kalıp yanıltmasın (3.2 sn yaşıyorlar). */
+  try {
+    var alan = document.getElementById("toastAlan");
+    if (alan && typeof alan.innerHTML === "string") alan.innerHTML = "";
+  } catch (eT) {}
   renderDersler();
   /* CIZELGE-KILIT: Yönetim grid'i de aynı anahtarla çizilir — buton durumu hemen yansısın */
   try { if (typeof renderYonetim === "function") renderYonetim(); } catch (e) {}
+  console.log("Kilit durumu:", ui.cizelgeKilitli); /* GEÇİCİ TEŞHİS — sorun çözülünce kaldırılabilir */
   toast(ui.cizelgeKilitli ? "Çizelge kilitlendi 🔒" : "Çizelge kilidi açıldı 🔓");
 }
 /* CIZELGE-KILIT: inline onclick="window.cizelgeKilitDegistir()" her ortamda çalışsın diye AÇIK global atama
@@ -4563,7 +4577,7 @@ if (typeof window !== "undefined") window.cizelgeKilitDegistir = cizelgeKilitDeg
 /* CIZELGE-KILIT: buton markup'ı — TÜM görsel özellikler INLINE (Tailwind sınıfı üretimine bağımlı değil),
    böylece sınıf/JIT sorunu olsa bile buton her zaman kırmızı/yeşil ve okunur kalır. */
 function cizelgeKilitBtnHTML() {
-  var k = !!ui.cizelgeKilitli;
+  var k = cizelgeKilitAktifMi();
   var stil = "display:inline-flex;align-items:center;gap:6px;white-space:nowrap;border-radius:9999px;padding:6px 14px;font-size:11px;font-weight:800;line-height:1.2;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.15);" +
     (k ? "background:#e11d48;color:#ffffff;border:1px solid #9f1239;" : "background:#ecfdf5;color:#047857;border:1px solid #6ee7b7;");
   return '<button type="button" data-cizelge-kilit-btn="1" onclick="window.cizelgeKilitDegistir()" aria-pressed="' + (k ? "true" : "false") + '"' +
@@ -4580,7 +4594,7 @@ function cizelgeKilitBtnOnar() {
     var bas = bolum.querySelector('[data-cizelge-baslik="1"]');
     if (!bas || typeof bas.appendChild !== "function") return;
     if (typeof bas.querySelector === "function" && bas.querySelector("[data-cizelge-kilit-btn]")) return;
-    var k = !!ui.cizelgeKilitli;
+    var k = cizelgeKilitAktifMi();
     var b = document.createElement("button");
     b.setAttribute("type", "button");
     b.setAttribute("data-cizelge-kilit-btn", "1");
@@ -4697,7 +4711,7 @@ function haftalikOgrtTablo() {
     ekMap[gunIdx + "-" + ksKodOf(l.saat)] = l; /* TEK kayıt: harita anahtarı duplicate yazmayı imkânsız kılar */
   });
 
-  var cizelgeKilit = !!ui.cizelgeKilitli; /* CIZELGE-KILIT: kilitliyken sürükleme/bırakma özellikleri markup'a HİÇ basılmaz */
+  var cizelgeKilit = cizelgeKilitAktifMi(); /* CIZELGE-KILIT: kilitliyken sürükleme/bırakma özellikleri markup'a HİÇ basılmaz */
   var avail = t.avail || { sinif: {}, musait: [] };
 
   /* DÖNGÜ-17: 3 satırlı saat başlığı (no / b / e — b ve e EŞİT stil) + Mola kolonu (4 ile 5 arası,
@@ -4811,7 +4825,7 @@ function haftalikOgrtTablo() {
 // HAVUZ KARTI → HAFTALIK TAKVİM SÜRÜKLE-BIRAK
 // ═══════════════════════════════════════════════════════════════
 function istekDragOver(ev, el) {
-  if (ui.cizelgeKilitli) { toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
+  if (cizelgeKilitAktifMi()) { toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
   if (!istekDropHedef && !dersDropHedef) return; // havuz kartı ya da haftalık ders kartı sürüklenmiyorsa tepki verme
   ev.preventDefault();
   if (ev.dataTransfer) ev.dataTransfer.dropEffect = dersDropHedef ? "move" : "copy";
@@ -4819,7 +4833,7 @@ function istekDragOver(ev, el) {
 }
 function istekDragLeave(el) { el.classList.remove("dnd-uygun"); }
 function istekBurak(ev, el, ogrtId, tarih, saat) {
-  if (ui.cizelgeKilitli) { toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
+  if (cizelgeKilitAktifMi()) { toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
   ev.preventDefault();
   el.classList.remove("dnd-uygun");
   /* DERS-TASI-YAMASI: AYNI drop yolu — haftalıktan sürüklenen birebir ders kartı taşınır.
@@ -4883,7 +4897,7 @@ function istekBurak(ev, el, ogrtId, tarih, saat) {
    → onaylıysa ders SİLİNİR + tüm üyeleri/ders/konu ile TEK "bekliyor" istek oluşur.
    ui.aktifIstekId ve ui.editId temizlenir; düzenleme formu sıfırlanır. */
 function dersHavuzaGeriBurak(dersId) {
-  if (ui.cizelgeKilitli) { dersDropHedef = null; toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
+  if (cizelgeKilitAktifMi()) { dersDropHedef = null; toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
   dersDropHedef = null;
   var l = DB.dersler.find(function (x) { return x.id === dersId; });
   if (!l) { toast("Ders bulunamadı — geri bırakma iptal.", "hata"); return; }
@@ -4942,13 +4956,13 @@ function dersHavuzaGeriBurak(dersId) {
 }
 
 function dersDrag(ev, id) {
-  if (ui.cizelgeKilitli) { toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
+  if (cizelgeKilitAktifMi()) { toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
   dersDropHedef = id;                       // kaynak ders ID'si drag boyunca taşınır
   istekDropHedef = null;                    // havuz kartı akışıyla karışmaz
   if (ev.dataTransfer) { ev.dataTransfer.effectAllowed = "move"; try { ev.dataTransfer.setData("text/plain", id); } catch (e) {} }
 }
 function dersBurak(ogrtId, tarih, saat) {
-  if (ui.cizelgeKilitli) { dersDropHedef = null; toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
+  if (cizelgeKilitAktifMi()) { dersDropHedef = null; toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
   var dersId = dersDropHedef; dersDropHedef = null;
   if (!dersId) return;
   var l = DB.dersler.find(function (x) { return x.id === dersId; });

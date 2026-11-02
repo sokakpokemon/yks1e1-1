@@ -4651,6 +4651,7 @@ function haftalikOgrtTablo() {
     ekMap[gunIdx + "-" + ksKodOf(l.saat)] = l; /* TEK kayıt: harita anahtarı duplicate yazmayı imkânsız kılar */
   });
 
+  var cizelgeKilit = !!ui.cizelgeKilitli; /* CIZELGE-KILIT: kilitliyken sürükleme/bırakma özellikleri markup'a HİÇ basılmaz */
   var avail = t.avail || { sinif: {}, musait: [] };
 
   /* DÖNGÜ-17: 3 satırlı saat başlığı (no / b / e — b ve e EŞİT stil) + Mola kolonu (4 ile 5 arası,
@@ -4722,14 +4723,18 @@ function haftalikOgrtTablo() {
            Uzun metin taşması: truncate + min-w-0 + orantılı padding/font/leading korunur. */
         /* BIREBIR-GORUNUM-ORTAK-YAMASI: ortak yardımcıyla günlük tablo ile AYNI hücre (ders adı yok) */
         /* DERS-TASI-YAMASI: dnd-kilit hücresi — yalnız AKTİF TEK ÖĞRENCİLİ birebir ders sürüklenebilir; grup ve rose Sınıf Dersi / amber Ek Ders / gri Kapalı sürüklenemez. */
-        satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100"' +
+        satirlar += '<td class="dnd-kilit px-1.5 py-1.5 text-center border-l border-slate-100"' + (cizelgeKilit ? ' style="cursor:not-allowed"' : "") + /* CIZELGE-KILIT */
           /* DÖNGÜ-29-YAMASI: grup birebir dersler de draggable — yalnız havuz hedefi kabul eder (dersBurak reddeder); iptal/tamamlanmış draggable değil */
-          (ders.durum !== "iptal" && ders.durum !== "tamamlandi" ? ' draggable="true" style="cursor:grab" ondragstart="dersDrag(event, \'' + esc(ders.id) + '\'); this.style.opacity=\'0.45\'" ondragend="dersDropHedef=null; this.style.opacity=\'\'"' : '') + '>' +
+          /* CIZELGE-KILIT: kilitliyken draggable/ondragstart/ondragend HİÇ basılmaz — sürükleme tamamen kapalı */
+          (!cizelgeKilit && ders.durum !== "iptal" && ders.durum !== "tamamlandi" ? ' draggable="true" style="cursor:grab" ondragstart="dersDrag(event, \'' + esc(ders.id) + '\'); this.style.opacity=\'0.45\'" ondragend="dersDropHedef=null; this.style.opacity=\'\'"' : '') + '>' +
           birebirHucreHTML(ders, ogrenci, ogrenciAd, sinif, durumRenk) + '</td>'; /* D35-AD-SINIF: üyeler birebirHucreHTML hücresi İÇİNDE (ayrı virgüllü üye satırı KALDIRILDI). DERS-KARTI-TASIMA-YAMASI: haftalik hücreden kart butonu kaldırıldı — ders listesi ISLEM alanına taşındı */
       } else {
         // BOŞ HÜCRE → DROP ZONE (havuzdaki istek kartı buraya bırakılabilir)
+        /* CIZELGE-KILIT: kilitliyken drop handler'ları HİÇ basılmaz — hücre yalnız "+" gösterir, bırakma kabul etmez */
         var hk = slotH.b;
-        satirlar += '<td class="dnd-bos px-1.5 py-1.5 text-center border-l border-slate-100 transition-colors"' +
+        satirlar += cizelgeKilit
+          ? '<td class="dnd-bos px-1.5 py-1.5 text-center border-l border-slate-100" style="cursor:not-allowed"' + ' data-drop-ogrt="' + esc(t.id) + '" data-drop-gun="' + g + '" data-drop-saat="' + hk + '"' + ' title="Çizelge kilitli — düzenlemek için kilidi açın">' + '<span class="text-[9px] text-slate-300 select-none">+</span></td>'
+          : '<td class="dnd-bos px-1.5 py-1.5 text-center border-l border-slate-100 transition-colors"' + /* CIZELGE-KILIT */
           ' data-drop-ogrt="' + esc(t.id) + '" data-drop-gun="' + g + '" data-drop-saat="' + hk + '"' +
           ' ondragover="istekDragOver(event, this)" ondragleave="istekDragLeave(this)" ondrop="istekBurak(event, this, \'' + esc(t.id) + '\', \'' + addDaysKey(p.start, g) + '\', \'' + hk + '\')" title="Boş saat — havuzdan istek kartı sürükleyip bırakın">' +
           '<span class="text-[9px] text-slate-300 select-none">+</span></td>';
@@ -4743,7 +4748,9 @@ function haftalikOgrtTablo() {
       '<div class="w-9 h-9 rounded-xl bg-violet-500 flex items-center justify-center text-white shadow-sm shrink-0"><i class="fa-solid fa-calendar-week text-sm"></i></div>' +
       '<div><h3 class="text-[14px] font-extrabold text-slate-800">ÖĞRETMEN — ' + esc(t.ad.toUpperCase()) + '</h3>' +
       '<p class="text-[11px] text-slate-400">' + (brans ? brans.ad : 'Branş yok') + " · " + pencereAdi() + '</p></div>' +
-      '<span class="ml-auto hidden md:inline-flex items-center gap-1.5 rounded-full bg-white border border-teal-200 text-teal-600 text-[10.5px] font-bold px-3 py-1.5"><i class="fa-solid fa-hand-pointer"></i> Boş + hücrelerine istek kartı bırakabilirsiniz</span>' +
+      /* CIZELGE-KILIT: sağ blok — ipucu yalnız kilit AÇIKKEN görünür (kilitliyken yanıltıcı olmasın) + kilit butonu */
+      '<div class="ml-auto flex items-center gap-2">' + (cizelgeKilit ? "" : '<span class="hidden md:inline-flex items-center gap-1.5 rounded-full bg-white border border-teal-200 text-teal-600 text-[10.5px] font-bold px-3 py-1.5"><i class="fa-solid fa-hand-pointer"></i> Boş + hücrelerine istek kartı bırakabilirsiniz</span>') + '<button type="button" onclick="cizelgeKilitDegistir()" aria-pressed="' + (cizelgeKilit ? "true" : "false") + '" title="' + (cizelgeKilit ? "Çizelge kilitli — düzenlemek için kilidi açın" : "Çizelgeyi kilitle") + '" class="inline-flex items-center gap-1.5 rounded-full border text-[10.5px] font-bold px-3 py-1.5 transition-colors ' + (cizelgeKilit ? "bg-rose-500 border-rose-500 text-white hover:bg-rose-600" : "bg-white border-emerald-300 text-emerald-600 hover:bg-emerald-50") + '"><i class="fa-solid ' + (cizelgeKilit ? "fa-lock" : "fa-lock-open") + '"></i> ' + (cizelgeKilit ? "Kilitli" : "Kilit Açık") + '</button>' + /* CIZELGE-KILIT */
+      '</div>' + /* CIZELGE-KILIT */
     '</div>' +
     '<div class="overflow-x-auto"><table class="w-full border-collapse">' +
       '<thead><tr class="bg-slate-50/80 border-b border-slate-100">' +
@@ -4757,6 +4764,7 @@ function haftalikOgrtTablo() {
 // HAVUZ KARTI → HAFTALIK TAKVİM SÜRÜKLE-BIRAK
 // ═══════════════════════════════════════════════════════════════
 function istekDragOver(ev, el) {
+  if (ui.cizelgeKilitli) { toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
   if (!istekDropHedef && !dersDropHedef) return; // havuz kartı ya da haftalık ders kartı sürüklenmiyorsa tepki verme
   ev.preventDefault();
   if (ev.dataTransfer) ev.dataTransfer.dropEffect = dersDropHedef ? "move" : "copy";
@@ -4764,6 +4772,7 @@ function istekDragOver(ev, el) {
 }
 function istekDragLeave(el) { el.classList.remove("dnd-uygun"); }
 function istekBurak(ev, el, ogrtId, tarih, saat) {
+  if (ui.cizelgeKilitli) { toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
   ev.preventDefault();
   el.classList.remove("dnd-uygun");
   /* DERS-TASI-YAMASI: AYNI drop yolu — haftalıktan sürüklenen birebir ders kartı taşınır.
@@ -4827,6 +4836,7 @@ function istekBurak(ev, el, ogrtId, tarih, saat) {
    → onaylıysa ders SİLİNİR + tüm üyeleri/ders/konu ile TEK "bekliyor" istek oluşur.
    ui.aktifIstekId ve ui.editId temizlenir; düzenleme formu sıfırlanır. */
 function dersHavuzaGeriBurak(dersId) {
+  if (ui.cizelgeKilitli) { dersDropHedef = null; toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
   dersDropHedef = null;
   var l = DB.dersler.find(function (x) { return x.id === dersId; });
   if (!l) { toast("Ders bulunamadı — geri bırakma iptal.", "hata"); return; }
@@ -4885,11 +4895,13 @@ function dersHavuzaGeriBurak(dersId) {
 }
 
 function dersDrag(ev, id) {
+  if (ui.cizelgeKilitli) { toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
   dersDropHedef = id;                       // kaynak ders ID'si drag boyunca taşınır
   istekDropHedef = null;                    // havuz kartı akışıyla karışmaz
   if (ev.dataTransfer) { ev.dataTransfer.effectAllowed = "move"; try { ev.dataTransfer.setData("text/plain", id); } catch (e) {} }
 }
 function dersBurak(ogrtId, tarih, saat) {
+  if (ui.cizelgeKilitli) { dersDropHedef = null; toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
   var dersId = dersDropHedef; dersDropHedef = null;
   if (!dersId) return;
   var l = DB.dersler.find(function (x) { return x.id === dersId; });

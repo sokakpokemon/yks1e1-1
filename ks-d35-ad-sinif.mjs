@@ -57,6 +57,8 @@ try {
   throw e;
 }
 const { DB, ui, haftalikOgrtTablo, gunlukTablo, birebirEtiketHTML, kisaAdlik, adHarfSayisi, gorselAd, MAX_SOYAD_HARF, MAX_AD_UZUNLUK, ogrenciMesajMetni, pngAc, renderHavuz } = P;
+/* CIZELGE-KILIT: bu süit AÇIK kilit varsayımıyla düzenleme akışını test eder (assertion'lar değişmedi). */
+ui.cizelgeKilitli = false;
 
 /* ---------- FIXTURE (demo öğrenciler + kısaltma sınavı için sentetik adlar) ---------- */
 const ana = DB.ogrenciler.find((o) => o.ad === "Ayşe Demir");

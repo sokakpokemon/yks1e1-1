@@ -61,6 +61,8 @@ try {
   process.exit(1);
 }
 const { DB, ui, dersHavuzaGeriBurak, dersBurak, dersOgrenciIds, onayOnayla } = P;
+/* CIZELGE-KILIT: bu süit AÇIK kilit varsayımıyla düzenleme akışını test eder (assertion'lar değişmedi). */
+ui.cizelgeKilitli = false;
 
 const gelecekPzt = (() => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + 7); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); })();
 

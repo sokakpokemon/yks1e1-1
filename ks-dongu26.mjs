@@ -61,6 +61,8 @@ global.document = {
 };
 P = new Function(scripts + "\n return { DB, ui, istekBurak, setIstekDrop: function(v){ istekDropHedef = v; }, formaAktar, haftalikOgrtTablo, gunlukTablo, renderHavuz, dersOgrenciIds, pencere };\n")();
 const { DB, ui, istekBurak, setIstekDrop, formaAktar, haftalikOgrtTablo, gunlukTablo, renderHavuz, dersOgrenciIds, pencere } = P;
+/* CIZELGE-KILIT: bu süit AÇIK kilit varsayımıyla düzenleme akışını test eder (assertion'lar değişmedi). */
+ui.cizelgeKilitli = false;
 
 /* Gelecek haftanın Pazartesi'si + Pzt 2. ders slotu (KISA_KOD[1].b = 09:40; slot 1 öğretmende sınıf dersi olabilir) */
 const gelecekPzt = (() => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + 7); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); })();

@@ -47,6 +47,8 @@ try { (0, eval)(app + sondaj); } catch (e) { console.error("BOOT HATASI:", e.mes
 /* RESMİ SAYAÇ: yalnız t() assertion satırları satır-başı '✓ ' basar; boot satırı bilinçli işaretsizdir. */
 console.log("boot hatasız");
 const DB = global.__DB, fn = global.__fn;
+/* CIZELGE-KILIT: bu süit AÇIK kilit varsayımıyla düzenleme akışını test eder (assertion'lar değişmedi). */
+ui.cizelgeKilitli = false;
 
 /* 1) Yama varlığı + idempotans hedefleri */
 console.log("1) Yama işareti + tanım bütünlüğü:");

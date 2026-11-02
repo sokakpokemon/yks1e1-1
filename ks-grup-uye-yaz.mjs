@@ -68,6 +68,8 @@ try {
   throw e;
 }
 const { DB, ui, planla, formaAktar, dersOgrenciIds, istekOgrenciIds, grupUyeYaz, istekDrag, istekBurak, dersHavuzaGeriBurak, onayOnayla, waAc, ogrenciMesajMetni, duzenle, grupPanelSec, istekUyeAc, istekUyeSec, istekUyeKaydet, istekUyeIptal, istekUyeAra, istekUyeListeHTML, istekUyeAramaNorm, renderHavuz } = P;
+/* CIZELGE-KILIT: bu süit AÇIK kilit varsayımıyla düzenleme akışını test eder (assertion'lar değişmedi). */
+ui.cizelgeKilitli = false;
 
 /* ---------- FIXTURE ---------- */
 const ana = DB.ogrenciler.find(o => o.ad === "Ayşe Demir");

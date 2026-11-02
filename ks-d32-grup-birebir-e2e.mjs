@@ -65,6 +65,8 @@ try {
   throw e;
 }
 const { DB, ui, planla, waAc, ogrenciMesajMetni, dersOgrenciIds, haftalikOgrtTablo, gunlukTablo, dersHavuzaGeriBurak, onayOnayla } = P;
+/* CIZELGE-KILIT: bu süit AÇIK kilit varsayımıyla düzenleme akışını test eder (assertion'lar değişmedi). */
+ui.cizelgeKilitli = false;
 
 /* ---------- GERÇEK DB FIXTURE ---------- */
 const ana = DB.ogrenciler[0], ek = DB.ogrenciler[1], ucuncu = DB.ogrenciler[2];

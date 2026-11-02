@@ -89,6 +89,8 @@ try {
 const { DB, ui, gunlukTablo, haftalikOgrtTablo, dersDrag, dersBurak, istekDrag, istekBurak,
         istekDragOver, istekDragLeave, dersOgrenciIds, duzeltmeBul, KISA_KOD, ksKodOf,
         addDaysKey, dowIdx, aktifDonemId, DERS } = P;
+/* CIZELGE-KILIT: bu süit AÇIK kilit varsayımıyla düzenleme akışını test eder (assertion'lar değişmedi). */
+ui.cizelgeKilitli = false;
 
 /* ---------- Test ortamı: izole öğretmen + izole öğrenciler ---------- */
 const gelecekPzt = (() => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + 7); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); })();

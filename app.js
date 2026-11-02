@@ -4550,6 +4550,39 @@ function cizelgeKilitDegistir() {
 /* CIZELGE-KILIT: inline onclick="window.cizelgeKilitDegistir()" her ortamda çalışsın diye AÇIK global atama
    (fonksiyon zaten top-level; bu atama yalnız güvence — davranış aynı). */
 if (typeof window !== "undefined") window.cizelgeKilitDegistir = cizelgeKilitDegistir;
+/* CIZELGE-KILIT: buton markup'ı — TÜM görsel özellikler INLINE (Tailwind sınıfı üretimine bağımlı değil),
+   böylece sınıf/JIT sorunu olsa bile buton her zaman kırmızı/yeşil ve okunur kalır. */
+function cizelgeKilitBtnHTML() {
+  var k = !!ui.cizelgeKilitli;
+  var stil = "display:inline-flex;align-items:center;gap:6px;white-space:nowrap;border-radius:9999px;padding:6px 14px;font-size:11px;font-weight:800;line-height:1.2;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.15);" +
+    (k ? "background:#e11d48;color:#ffffff;border:1px solid #9f1239;" : "background:#ecfdf5;color:#047857;border:1px solid #6ee7b7;");
+  return '<button type="button" data-cizelge-kilit-btn="1" onclick="window.cizelgeKilitDegistir()" aria-pressed="' + (k ? "true" : "false") + '"' +
+    ' title="' + (k ? "Çizelge kilitli — düzenlemek için kilidi açın" : "Çizelgeyi kilitle") + '"' +
+    ' style="' + stil + '">' + (k ? "🔒 Kilitli" : "🔓 Kilit Açık") + "</button>";
+}
+/* CIZELGE-KILIT: GÜVENCE — render sonrası başlıkta buton yoksa (bir katman markup'ı düşürdüyse)
+   buton doğrudan DOM'a eklenir. Normal durumda hiçbir şey yapmaz (idempotent). */
+function cizelgeKilitBtnOnar() {
+  try {
+    if (typeof document === "undefined" || !document.getElementById) return;
+    var bolum = document.getElementById("derslerBolum");
+    if (!bolum || typeof bolum.querySelector !== "function") return;
+    var bas = bolum.querySelector('[data-cizelge-baslik="1"]');
+    if (!bas || typeof bas.appendChild !== "function") return;
+    if (typeof bas.querySelector === "function" && bas.querySelector("[data-cizelge-kilit-btn]")) return;
+    var k = !!ui.cizelgeKilitli;
+    var b = document.createElement("button");
+    b.setAttribute("type", "button");
+    b.setAttribute("data-cizelge-kilit-btn", "1");
+    b.setAttribute("onclick", "window.cizelgeKilitDegistir()");
+    b.setAttribute("aria-pressed", k ? "true" : "false");
+    b.setAttribute("title", k ? "Çizelge kilitli — düzenlemek için kilidi açın" : "Çizelgeyi kilitle");
+    b.setAttribute("style", "margin-left:auto;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;border-radius:9999px;padding:6px 14px;font-size:11px;font-weight:800;line-height:1.2;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.15);" +
+      (k ? "background:#e11d48;color:#ffffff;border:1px solid #9f1239;" : "background:#ecfdf5;color:#047857;border:1px solid #6ee7b7;"));
+    b.textContent = k ? "🔒 Kilitli" : "🔓 Kilit Açık";
+    bas.appendChild(b);
+  } catch (e) {}
+}
 function haftalikOgrtSec(id) { ui.haftalikOgrtId = id || null; ui.sayfa = 1; renderDersler(); }
 /* DERS-LISTE-SAYFALAMA: sayfa gezinme — filtre sonucu (penceredeDersler) DEĞİŞMEZ, yalnız sayfa değişir */
 function sayfaGit(yon) {
@@ -4747,13 +4780,14 @@ function haftalikOgrtTablo() {
   }
 
   return '<div class="rounded-2xl border border-slate-100 overflow-hidden mb-4">' +
-    '<div class="flex flex-wrap items-center gap-3 px-5 py-3.5 bg-gradient-to-r from-violet-50 to-blue-50 border-b border-slate-100">' + /* CIZELGE-KILIT: flex-wrap — dar kolonda sağ blok alt satıra iner, kırpılmaz */
+    '<div class="flex items-center justify-between gap-3 px-5 py-3.5 bg-gradient-to-r from-violet-50 to-blue-50 border-b border-slate-100" data-cizelge-baslik="1" style="display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;">' + /* CIZELGE-KILIT: başlık — justify-between + relative + işaret */
+      '<div class="flex items-center gap-3" style="display:flex;align-items:center;gap:12px;min-width:0;">' + /* CIZELGE-KILIT: SOL blok */
       '<div class="w-9 h-9 rounded-xl bg-violet-500 flex items-center justify-center text-white shadow-sm shrink-0"><i class="fa-solid fa-calendar-week text-sm"></i></div>' +
       '<div><h3 class="text-[14px] font-extrabold text-slate-800">ÖĞRETMEN — ' + esc(t.ad.toUpperCase()) + '</h3>' +
       '<p class="text-[11px] text-slate-400">' + (brans ? brans.ad : 'Branş yok') + " · " + pencereAdi() + '</p></div>' +
-      /* CIZELGE-KILIT: sağ blok — ipucu yalnız kilit AÇIKKEN görünür (kilitliyken yanıltıcı olmasın) + kilit butonu */
-      '<div class="ml-auto flex items-center gap-2 shrink-0">' + (cizelgeKilit ? "" : '<span class="hidden md:inline-flex items-center gap-1.5 rounded-full bg-white border border-teal-200 text-teal-600 text-[10.5px] font-bold px-3 py-1.5"><i class="fa-solid fa-hand-pointer"></i> Boş + hücrelerine istek kartı bırakabilirsiniz</span>') + '<button type="button" onclick="window.cizelgeKilitDegistir()" aria-pressed="' + (cizelgeKilit ? "true" : "false") + '" title="' + (cizelgeKilit ? "Çizelge kilitli — düzenlemek için kilidi açın" : "Çizelgeyi kilitle") + '" class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border text-[10.5px] font-bold px-3 py-1.5 transition-colors ' + (cizelgeKilit ? "bg-rose-500 border-rose-500 text-white hover:bg-rose-600" : "bg-white border-emerald-300 text-emerald-600 hover:bg-emerald-50") + '"><i class="fa-solid ' + (cizelgeKilit ? "fa-lock" : "fa-lock-open") + '"></i> ' + (cizelgeKilit ? "Kilitli" : "Kilit Açık") + '</button>' + /* CIZELGE-KILIT */
-      '</div>' + /* CIZELGE-KILIT */
+      '</div>' + /* CIZELGE-KILIT: SOL blok kapanış */
+      /* CIZELGE-KILIT: SAĞ blok — ipucu yalnız kilit AÇIKKEN; buton inline stilli (sınıf üretimine bağımlı DEĞİL) */
+      '<div style="display:flex;align-items:center;gap:8px;flex:0 0 auto;margin-left:auto;">' + (cizelgeKilit ? "" : '<span class="hidden md:inline-flex items-center gap-1.5 rounded-full bg-white border border-teal-200 text-teal-600 text-[10.5px] font-bold px-3 py-1.5"><i class="fa-solid fa-hand-pointer"></i> Boş + hücrelerine istek kartı bırakabilirsiniz</span>') + cizelgeKilitBtnHTML() + '</div>' + /* CIZELGE-KILIT */
     '</div>' +
     '<div class="overflow-x-auto"><table class="w-full border-collapse">' +
       '<thead><tr class="bg-slate-50/80 border-b border-slate-100">' +
@@ -5402,6 +5436,9 @@ function renderDersler() {
         "</div>") +
       "</div>" +
     "</div>";
+
+  /* CIZELGE-KILIT: render sonrası güvence — başlıkta buton yoksa DOM'a doğrudan eklenir (idempotent) */
+  cizelgeKilitBtnOnar();
 }
 function durumTik(id, durum) {
   var l = DB.dersler.find(function (x) { return x.id === id; });

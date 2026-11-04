@@ -4843,7 +4843,9 @@ function haftalikOgrtTablo() {
 // HAVUZ KARTI → HAFTALIK TAKVİM SÜRÜKLE-BIRAK
 // ═══════════════════════════════════════════════════════════════
 function istekDragOver(ev, el) {
-  if (cizelgeKilitAktifMi()) { toast("Çizelge kilitli — önce kilidi açın.", "uyari"); return; }
+  /* CIZELGE-KILIT: dragover saniyede birkaç kez tetiklenir — burada toast BASILMAZ (fırtına olur).
+     Tek uyarı kaynaklarda: ondragstart (dersDrag) ve ondrop (istekBurak/dersBurak). */
+  if (cizelgeKilitAktifMi()) { return; }
   if (!istekDropHedef && !dersDropHedef) return; // havuz kartı ya da haftalık ders kartı sürüklenmiyorsa tepki verme
   ev.preventDefault();
   if (ev.dataTransfer) ev.dataTransfer.dropEffect = dersDropHedef ? "move" : "copy";
@@ -5140,9 +5142,13 @@ function gunlukTablo() {
 
   // Tablo başlığı
   var html = '<div class="rounded-2xl border border-slate-200 overflow-hidden mb-4 bg-white">' +
-    // Gün başlığı
-    '<div class="text-center py-3 border-b-2 border-slate-200 bg-slate-50">' +
-      '<h3 class="text-[16px] font-black text-slate-800 tracking-wide uppercase">' + gunAdi + '</h3>' +
+    // Gün başlığı — CIZELGE-KILIT: günlük çizelgede de kilit butonu (haftalık başlık deseniyle AYNI)
+    '<div class="flex items-center justify-between gap-3 px-5 py-3 border-b-2 border-slate-200 bg-slate-50" data-cizelge-baslik="1">' +
+      '<div class="text-center flex-1"><h3 class="text-[16px] font-black text-slate-800 tracking-wide uppercase">' + gunAdi + '</h3></div>' +
+      '<div style="display:flex;align-items:center;gap:8px;flex:0 0 auto;">' +
+        (cizelgeKilitAktifMi() ? "" : '<span class="text-[10.5px] text-slate-400 hidden md:inline">Ders kartlarını sürükleyebilirsiniz</span>') +
+        cizelgeKilitBtnHTML() +
+      '</div>' +
     '</div>' +
     '<div class="overflow-x-auto"><table class="w-full border-collapse text-center" style="min-width:800px">';
 
@@ -5203,7 +5209,8 @@ function gunlukTablo() {
              Taşıma MEVCUT dersDrag/dersBurak yoluyla yapılır — paralel DnD sistemi kurulmaz. */
           html += '<td class="px-1.5 py-2 border-r border-slate-200 hover:bg-blue-50 transition-colors"' +
             /* DÖNGÜ-29-YAMASI: grup birebir dersler de draggable — yalnız havuz hedefi kabul eder (dersBurak reddeder); iptal/tamamlanmış draggable değil */
-          (ders.durum !== "iptal" && ders.durum !== "tamamlandi" ? ' draggable="true" style="cursor:grab" ondragstart="dersDrag(event, \'' + esc(ders.id) + '\'); this.style.opacity=\'0.45\'" ondragend="dersDropHedef=null; this.style.opacity=\'\'"' : '') + '>' +
+            /* CIZELGE-KILIT: kilitliyken draggable/ondragstart/ondragend HİÇ basılmaz (haftalık 4807 ile AYNI desen) */
+          (cizelgeKilitAktifMi() ? ' style="cursor:not-allowed"' : (ders.durum !== "iptal" && ders.durum !== "tamamlandi" ? ' draggable="true" style="cursor:grab" ondragstart="dersDrag(event, \'' + esc(ders.id) + '\'); this.style.opacity=\'0.45\'" ondragend="dersDropHedef=null; this.style.opacity=\'\'"' : '')) + '>' +
             birebirHucreHTML(ders, ogrenci, ders.ogrenciAd || "", sinif, durumRenkG); /* DERS-KARTI-TASIMA-YAMASI: gunluk hücreden kart butonu kaldırıldı. D35-AD-SINIF: üyeler hücre İÇİNDE (ayrı üye satırı KALDIRILDI) */
 
           html += '</td>';
@@ -5218,7 +5225,13 @@ function gunlukTablo() {
           /* GUNLUK-DERS-TASI-YAMASI: boş hücre = MEVCUT drop-zone yolu (aynı dnd-bos + istekDragOver/istekDragLeave +
              istekBurak → dersBurak devri). Mola hücresi bu dala HİÇ girmez (slot.mola dalı üstte).
              Hedef gün SABİTTİR (gunKey); gün değişikliği bu tabloda YOK. Saat MEVCUT SAAT_SLOTLARI yardımcısından (slot.b). */
-          html += '<td class="dnd-bos px-1.5 py-2 border-r border-slate-200 transition-colors"' +
+          /* CIZELGE-KILIT: kilitliyken drop handler'ları HİÇ basılmaz (haftalık 4813 ile AYNI desen) */
+          html += cizelgeKilitAktifMi()
+            ? '<td class="dnd-bos px-1.5 py-2 border-r border-slate-200" style="cursor:not-allowed"' +
+            ' data-drop-ogrt="' + esc(ogrtId) + '" data-drop-gun="' + dowIdx(gunKey) + '" data-drop-saat="' + slot.b + '"' +
+            ' title="Çizelge kilitli — düzenlemek için kilidi açın">' +
+            '<span class="text-[9px] text-slate-300 select-none">+</span></td>'
+            : '<td class="dnd-bos px-1.5 py-2 border-r border-slate-200 transition-colors"' +
             ' data-drop-ogrt="' + esc(ogrtId) + '" data-drop-gun="' + dowIdx(gunKey) + '" data-drop-saat="' + slot.b + '"' +
             ' ondragover="istekDragOver(event, this)" ondragleave="istekDragLeave(this)" ondrop="istekBurak(event, this, \'' + esc(ogrtId) + '\', \'' + gunKey + '\', \'' + slot.b + '\')" title="Boş saat — ders kartını ya da havuz isteğini bırakın">' +
             '<span class="text-[9px] text-slate-300 select-none">+</span></td>';
@@ -5260,7 +5273,13 @@ function gunlukTablo() {
               '<span class="text-[9px] font-bold text-slate-400 select-none">' + (dolu28 ? "Dolu" : "Kapalı") + '</span></td>';
           }
         } else {
-          html += '<td class="dnd-bos px-1.5 py-2 border-r border-slate-200 transition-colors"' +
+          /* CIZELGE-KILIT: "Boş" ek satırlarında da kilitliyken drop handler'ları basılmaz */
+          html += cizelgeKilitAktifMi()
+            ? '<td class="dnd-bos px-1.5 py-2 border-r border-slate-200" style="cursor:not-allowed"' +
+            ' data-drop-ogrt="' + esc(ogrtId) + '" data-drop-gun="' + dowIdx28 + '" data-drop-saat="' + slot.b + '"' +
+            ' title="Çizelge kilitli — düzenlemek için kilidi açın">' +
+            '<span class="text-[9px] text-slate-300 select-none">+</span></td>'
+            : '<td class="dnd-bos px-1.5 py-2 border-r border-slate-200 transition-colors"' +
             ' data-drop-ogrt="' + esc(ogrtId) + '" data-drop-gun="' + dowIdx28 + '" data-drop-saat="' + slot.b + '"' +
             ' ondragover="istekDragOver(event, this)" ondragleave="istekDragLeave(this)" ondrop="istekBurak(event, this, \'' + esc(ogrtId) + '\', \'' + gunKey + '\', \'' + slot.b + '\')" title="Boş saat — ders kartını ya da havuz isteğini bırakın">' +
             '<span class="text-[9px] text-slate-300 select-none">+</span></td>';

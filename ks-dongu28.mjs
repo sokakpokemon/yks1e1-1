@@ -64,6 +64,10 @@ try {
   process.exit(1);
 }
 const { DB, ui, renderHavuz, gunlukTablo, haftalikOgrtTablo } = P;
+/* CIZELGE-KILIT önkoşulu: günlük çizelge de kilit durumuna bağlı çiziliyor (varsayılan KİLİTLİ).
+   Bu süit düzenlenebilir markup'ı (drop-zone + draggable) doğruladığı için kilidi AÇIYORUZ;
+   iddialar aynen korunur. */
+ui.cizelgeKilitli = false;
 
 /* Gelecek pazartesi + ertesi gün (Salı) — dersli senaryo günü */
 const gelecekPzt = (() => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + 7); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); })();

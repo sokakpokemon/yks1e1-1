@@ -3332,6 +3332,8 @@ function ayarTab() {
       '<div class="flex flex-col gap-2 mt-4">' +
         '<button onclick="yedekAl()" class="rounded-full bg-teal-500 hover:bg-teal-600 text-white text-[13px] font-bold px-5 py-2.5 shadow-sm transition-colors"><i class="fa-solid fa-download mr-1.5"></i>Sistem Verilerini Bilgisayara Yedekle (.json)</button>' +
         '<button onclick="document.getElementById(\'dosyaYukle\').click()" class="rounded-full border-2 border-teal-200 text-teal-600 hover:bg-teal-50 text-[13px] font-bold px-5 py-2.5 transition-colors"><i class="fa-solid fa-upload mr-1.5"></i>Yedekten Veri Yükle</button>' +
+        /* D67-OTOMATIK-YEDEK: depo-indexeddb.js'in yazdığı yerel yedeği geri yükler (ikizi: yedekOku). */
+        '<button onclick="otomatikYedektenYukle()" class="rounded-full border-2 border-slate-200 text-slate-600 hover:bg-slate-50 text-[13px] font-bold px-5 py-2.5 transition-colors"><i class="fa-solid fa-clock-rotate-left mr-1.5"></i>Otomatik Yedekten Geri Yükle</button>' +
       "</div>" +
       '<p class="text-[10.5px] text-slate-400 mt-3"><i class="fa-solid fa-circle-info mr-1"></i>Yedek dosyası tek bir .json dosyasıdır; USB belleğe veya buluta kopyalayabilirsiniz.</p>' +
     "</div>" +
@@ -3641,6 +3643,50 @@ function yedekOku(input) {
   };
   oku.readAsText(f);
 }
+/* D67-OTOMATIK-YEDEK: depo-indexeddb.js'in tuttuğu yerel yedekten geri yükleme.
+   - Yedek yok / IndexedDB yok / depo bozuk → HİÇBİR veri değişmez (yalnız toast).
+   - Onay sonrası yol yedekOku ile AYNI kapıdır: LS → DB(normalize) → ksGec → saveDB → yenile.
+   - LS ÖNCE yazılır: D66 sarmalayıcısı saveDB'de LS'ten merge ettiği için, eski arşivin
+     yoklama/görüşme alanları geri yüklenen verinin üstüne geri gelmesin.
+   - Zarf kontrolü: uygulama/sürüm uyuşmazsa RED (yedekOku ile aynı sözleşme). */
+window.otomatikYedektenYukle = function () {
+  if (!window.indexedDB) { toast("Tarayıcı IndexedDB desteklemiyor.", "hata"); return; }
+  var req;
+  try { req = indexedDB.open("yksOto_yedekDB", 1); }
+  catch (e) { toast("Otomatik yedek deposu açılamadı.", "hata"); return; }
+  /* İlk açılış / boş profil: store yoksa oluştur (yoksa transaction NotFoundError atar). */
+  req.onupgradeneeded = function (e) {
+    var db = e.target.result;
+    if (!db.objectStoreNames.contains("yedekler")) db.createObjectStore("yedekler", { keyPath: "tarih" });
+  };
+  req.onerror = function () { toast("Otomatik yedek deposu açılamadı.", "hata"); };
+  req.onsuccess = function (e) {
+    var db = e.target.result;
+    var okuma;
+    try { okuma = db.transaction("yedekler", "readonly").objectStore("yedekler").getAll(); }
+    catch (err) { db.close(); toast("Otomatik yedek bulunamadı.", "uyari"); return; }
+    okuma.onerror = function () { db.close(); toast("Otomatik yedekler okunamadı.", "hata"); };
+    okuma.onsuccess = function () {
+      db.close();
+      var yedekler = (okuma.result || []).filter(function (y) {
+        return y && typeof y.tarih === "string" && y.uygulama === "YKS Birebir Takip" && y.surum === 1 && y.veri && Array.isArray(y.veri.dersler);
+      }).sort(function (a, b) { return b.tarih.localeCompare(a.tarih); });
+      if (!yedekler.length) { toast("Otomatik yedek bulunamadı.", "uyari"); return; }
+      var son = yedekler[0];
+      var o = son.ozet || {};
+      var metin = "Son otomatik yedek: " + new Date(son.tarih).toLocaleString("tr-TR") + "<br>Ders: " + (o.ders || 0) + " · Öğrenci: " + (o.ogrenci || 0) + " · Öğretmen: " + (o.ogretmen || 0) + "<br><br>Mevcut tüm veriler bununla değiştirilecek. Onaylıyor musunuz?";
+      onayAc({ baslik: "Otomatik Yedekten Geri Yükle", metin: metin, onay: "Evet, Yükle", tehlikeli: true }, function () {
+        try { localStorage.setItem(LS_KEY, JSON.stringify(son.veri)); } catch (eLS) { /* LS dolu: DB yine yüklenir, saveDB uyarır */ }
+        DB = normalize(son.veri);
+        ksGec();
+        saveDB();
+        ui.editId = null; ui.ogrId = null; ui.sinifAd = null;
+        yenile();
+        toast("Otomatik yedek başarıyla geri yüklendi ✓");
+      });
+    };
+  };
+};
 function ornekYukle() {
   onayAc({
     baslik: "Örnek veriler yüklensin mi?",

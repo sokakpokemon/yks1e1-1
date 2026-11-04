@@ -1291,6 +1291,77 @@
   // innerHTML canvas'ları DOM'dan düşürür ve Chart.getChart(yeniCanvas) eski
   // örneği bulamaz. Bu dizi, önceki çizimin Chart nesnelerini destroy etmek için kullanılır.
   var __anChartlar = [];
+
+  // === RİSKLİ ÖĞRENCİ HESABI (TEK KAYNAK) ===
+  // Analiz ekranındaki "Acil Müdahale Gerektirenler" listesi ve ana sayfa panosu
+  // (app.js renderOzet) aynı fonksiyonu çağırır; kural değişirse yalnız burası güncellenir.
+  // Kriterler:
+  //   1) Son 3 dersin hepsi "gelmedi" (iptal edilen dersler devamsızlık sayılmaz)
+  //   2) Son 3 değerlendirilmiş ödevin hepsi "yapmadi"/"eksik" (olusturmaTarihi: en yeni → en eski)
+  //   3) En az 1 "acil" öncelikli görüşme
+  window.__riskliOgrencileriHesapla = function () {
+    var veri = (typeof veriOku === "function") ? veriOku() : sinavVeriOku();
+    var ogrenciler = veri.ogrenciler || [];
+    var yoklamalar = veri.yoklamalar || {};
+    var odevler = veri.odevler || [];
+
+    // Acil görüşme sayısı (geçersiz öncelik "genel" sayılır — mevcut davranış korunur)
+    var acilSayac = {};
+    gorusmeleriOku().forEach(function (g) {
+      if (!g || !g.ogrId) return;
+      var onc = (g.oncelik && GORUSME_ONCELK[g.oncelik]) ? g.oncelik : "genel";
+      if (onc === "acil") acilSayac[g.ogrId] = (acilSayac[g.ogrId] || 0) + 1;
+    });
+
+    var riskliOgr = [];
+    ogrenciler.forEach(function (ogr) {
+      var devamsizlik = 0, odevSorun = 0;
+      var dersGecmisi = [], odevGecmisi = [];
+
+      Object.keys(yoklamalar).sort().reverse().forEach(function (tarih) {
+        var gun = yoklamalar[tarih];
+        if (!gun || !gun[ogr.sinif] || !gun[ogr.sinif][ogr.id]) return;
+        var d = gun[ogr.sinif][ogr.id];
+        var st = (typeof d === 'string') ? d : ((d && d.durum) || "");
+        if (st === 'iptal') return; // iptal edilen ders devamsızlık sayılmaz
+        dersGecmisi.push(st);
+      });
+      if (dersGecmisi.slice(0, 3).length === 3 && dersGecmisi.slice(0, 3).every(function (d) { return d === 'gelmedi'; })) devamsizlik = 1;
+
+      // Ödevler olusturmaTarihi'ne göre en yeniden eskiye sıralanır
+      odevler.slice().sort(function (a, b) {
+        return String((b && b.olusturmaTarihi) || "").localeCompare(String((a && a.olusturmaTarihi) || ""));
+      }).forEach(function (o) {
+        if (o && o.durumlar && o.durumlar[ogr.id]) {
+          var d = o.durumlar[ogr.id];
+          if (d !== 'bekliyor') odevGecmisi.push(d);
+        }
+      });
+      if (odevGecmisi.slice(0, 3).length === 3 && odevGecmisi.slice(0, 3).every(function (d) { return d === 'yapmadi' || d === 'eksik'; })) odevSorun = 1;
+
+      var gAcil = acilSayac[ogr.id] || 0;
+
+      if (devamsizlik || odevSorun || gAcil > 0) {
+        var nedenler = [];
+        if (devamsizlik) nedenler.push("Son 3 ders gelmedi");
+        if (odevSorun) nedenler.push("Son 3 ödev yapılmadı");
+        if (gAcil > 0) nedenler.push("Acil görüşmesi var");
+        riskliOgr.push({ ad: ogr.adSoyad || ogr.ad, sinif: ogr.sinif, neden: nedenler.join(", ") });
+      }
+    });
+    return riskliOgr;
+  };
+
+  // İlk açılış: app.js'in boot yenile()'si bu dosya yüklenmeden koştuğu için Özet panosu
+  // risk listesi olmadan çizilir. DOM hazır olunca bir kez tazelenir (risk yoksa HTML değişmez).
+  (function () {
+    function __riskPanoTazele() {
+      try { if (typeof window.renderOzet === "function") window.renderOzet(); } catch (e) {}
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", __riskPanoTazele);
+    else setTimeout(__riskPanoTazele, 0);
+  })();
+
   window.__sysAnalizEkran = function () {
     var veri = (typeof veriOku === "function") ? veriOku() : sinavVeriOku();
     var ogrenciler = veri.ogrenciler || [];
@@ -1385,11 +1456,18 @@
     html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">' +
       '<h3 style="margin:0 0 12px; font-size:14px; font-weight:800; color:#0f172a;">Ders Bazlı Ödev Tamamlama</h3>' +
       '<div style="position:relative; height:240px; width:100%;"><canvas id="__anChartOdevDers"></canvas></div></div>';
+    html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">' +
+      '<h3 style="margin:0 0 12px; font-size:14px; font-weight:800; color:#0f172a;">Öğretmen Doluluk Oranı</h3>' +
+      '<div style="position:relative; height:240px; width:100%;"><canvas id="__anChartOgretmenDoluluk"></canvas></div></div>';
+    html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">' +
+      '<h3 style="margin:0 0 12px; font-size:14px; font-weight:800; color:#0f172a;">Aylık Devamsızlık Trendi</h3>' +
+      '<div style="position:relative; height:240px; width:100%;"><canvas id="__anChartAylikDevamsizlik"></canvas></div></div>';
     html += '</div>';
 
     // Görüşme sayıları tek geçişte öğrenci bazında toplanır (liste başına tek okuma).
     // Tür sayıları (ogrenci/veli/sikayet) + öncelik sayıları (acil/onemli/genel):
-    // karne rozetleri ve "Acil Müdahale" kriteri de burayı kullanır.
+    // karne rozetleri ve karne sol kenarındaki acil şeridi burayı kullanır.
+    // (Riskli öğrenci kriteri artık ayrı: window.__riskliOgrencileriHesapla)
     var gorusmeSayac = {};
     gorusmeleriOku().forEach(function(g) {
         if (!g || !g.ogrId) return;
@@ -1399,38 +1477,9 @@
         gorusmeSayac[g.ogrId][onc] = (gorusmeSayac[g.ogrId][onc] || 0) + 1;
     });
 
-    // 2. Riskli Öğrenciler
-    var riskliOgr = [];
-    ogrenciler.forEach(function(ogr) {
-        var devamsizlik = 0, odevSorun = 0;
-        var dersGecmisi = [], odevGecmisi = [];
-        
-        Object.keys(yoklamalar).sort().reverse().forEach(function(tarih) {
-            if (yoklamalar[tarih][ogr.sinif] && yoklamalar[tarih][ogr.sinif][ogr.id]) {
-                var d = yoklamalar[tarih][ogr.sinif][ogr.id];
-                dersGecmisi.push(typeof d === 'string' ? d : d.durum);
-            }
-        });
-        if (dersGecmisi.slice(0, 3).length === 3 && dersGecmisi.slice(0, 3).every(function(d){ return d === 'gelmedi'; })) devamsizlik = 1;
-
-        odevler.slice().reverse().forEach(function(o) {
-            if (o.durumlar && o.durumlar[ogr.id]) {
-                var d = o.durumlar[ogr.id];
-                if (d !== 'bekliyor') odevGecmisi.push(d);
-            }
-        });
-        if (odevGecmisi.slice(0, 3).length === 3 && odevGecmisi.slice(0, 3).every(function(d){ return d === 'yapmadi' || d === 'eksik'; })) odevSorun = 1;
-
-        var gAcil = (gorusmeSayac[ogr.id] && gorusmeSayac[ogr.id].acil) || 0;
-
-        if (devamsizlik || odevSorun || gAcil > 0) {
-            var nedenler = [];
-            if (devamsizlik) nedenler.push("Son 3 ders gelmedi");
-            if (odevSorun) nedenler.push("Son 3 ödev yapılmadı");
-            if (gAcil > 0) nedenler.push("Acil görüşmesi var");
-            riskliOgr.push({ ad: ogr.adSoyad || ogr.ad, sinif: ogr.sinif, neden: nedenler.join(", ") });
-        }
-    });
+    // 2. Riskli Öğrenciler — hesap TEK kaynakta (window.__riskliOgrencileriHesapla);
+    // aynı fonksiyon ana sayfadaki (app.js renderOzet) uyarı panosunu da besler.
+    var riskliOgr = window.__riskliOgrencileriHesapla();
 
     html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-top:16px;">';
     html += '<div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">' +
@@ -1796,6 +1845,72 @@
                     }
                 }
             }));
+        }
+
+        // --- 6. Yatay Bar: Öğretmen Doluluk Oranı (sınıf dersleri hariç) ---
+        // Doluluk yalnız BİREBİR (DB.dersler) + EK DERS (DB.ekDersler) ile ölçülür;
+        // sınıf dersleri (avail.sinif) hesaba girmez, iptaller hiçbir toplama girmez.
+        var ogrtDoluluk = [];
+        var haftalikSlot = 77;
+        if (typeof KISA_KOD !== 'undefined') haftalikSlot = 7 * KISA_KOD.length;
+        (veri.ogretmenler || []).forEach(function(t) {
+          var kapali = (t.avail && t.avail.musait) ? t.avail.musait.length : 0;
+          var musait = Math.max(1, haftalikSlot - kapali);
+          var birebir = (veri.dersler || []).filter(function(d){ return d.ogretmenId === t.id && d.durum !== 'iptal'; }).length;
+          var ekders = (veri.ekDersler || []).filter(function(d){ return d.ogretmenId === t.id && d.durum !== 'iptal'; }).length;
+          var oran = Math.min(100, Math.round(((birebir + ekders) / musait) * 100));
+          ogrtDoluluk.push({ ad: t.ad, oran: oran, birebir: birebir, ek: ekders });
+        });
+        ogrtDoluluk.sort(function(a, b) { return b.oran - a.oran; });
+        var ctxDoluluk = document.getElementById('__anChartOgretmenDoluluk');
+        if (ctxDoluluk) {
+          __anChartlar.push(new Chart(ctxDoluluk, {
+            type: 'bar',
+            data: {
+              labels: ogrtDoluluk.map(function(x){ return x.ad; }),
+              datasets: [{ label: 'Doluluk %', data: ogrtDoluluk.map(function(x){ return x.oran; }),
+                backgroundColor: ogrtDoluluk.map(function(x){ return x.oran >= 80 ? '#ef4444' : x.oran >= 50 ? '#f59e0b' : '#22c55e'; }),
+                borderRadius: 4, maxBarThickness: 24 }]
+            },
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+              plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(c) {
+                var x = ogrtDoluluk[c.dataIndex]; return ' %' + x.oran + ' (Birebir: ' + x.birebir + ', Ek: ' + x.ek + ')';
+              } } } },
+              scales: { x: { beginAtZero: true, max: 100, ticks: { callback: function(v){ return v + '%'; } } },
+                y: { ticks: { font: { size: 10 } } } } }
+          }));
+        }
+
+        // --- 7. Çizgi Grafik: Aylık Devamsızlık Trendi (%) ---
+        var aylikDevamsizlik = {};
+        Object.keys(yoklamalar).forEach(function(tarih) {
+          var ay = tarih.slice(0, 7);
+          if (!aylikDevamsizlik[ay]) aylikDevamsizlik[ay] = { toplam: 0, gelen: 0 };
+          var gun = yoklamalar[tarih];
+          Object.keys(gun).forEach(function(sinif) {
+            Object.keys(gun[sinif]).forEach(function(ogrId) {
+              var st = typeof gun[sinif][ogrId] === 'string' ? gun[sinif][ogrId] : gun[sinif][ogrId].durum;
+              if (st === 'iptal') return;
+              aylikDevamsizlik[ay].toplam++;
+              if (st === 'geldi' || st === 'gec') aylikDevamsizlik[ay].gelen++;
+            });
+          });
+        });
+        var aylar = Object.keys(aylikDevamsizlik).sort();
+        var aylikOran = aylar.map(function(ay) {
+          var x = aylikDevamsizlik[ay];
+          return x.toplam > 0 ? Math.round(((x.toplam - x.gelen) / x.toplam) * 100) : 0;
+        });
+        var ctxAylik = document.getElementById('__anChartAylikDevamsizlik');
+        if (ctxAylik) {
+          __anChartlar.push(new Chart(ctxAylik, {
+            type: 'line',
+            data: { labels: aylar, datasets: [{ label: 'Devamsızlık %', data: aylikOran,
+              borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', tension: 0.3, fill: true }] },
+            options: { responsive: true, maintainAspectRatio: false,
+              plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(c){ return ' %' + c.parsed.y; } } } },
+              scales: { y: { beginAtZero: true, max: 100, ticks: { callback: function(v){ return v + '%'; } } } } }
+          }));
         }
     }, 100);
 

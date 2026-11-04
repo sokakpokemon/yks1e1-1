@@ -1392,12 +1392,28 @@ var kartlar =
       '<div class="text-[10px] text-slate-400 font-semibold mt-1">toplam ders</div></div></div>' + lej + "</div>";
   }
 
+  /* ACİL-MÜDAHALE-PANOSU: risk hesabı tek kaynaktan gelir (takip-sistem.js →
+     window.__riskliOgrencileriHesapla). Takip katmanı yüklü değilse (izole test/sandbox)
+     pano boş kalır. Riskli öğrenci yoksa HTML üretilmez. */
+  var riskliListe = (typeof window !== "undefined" && typeof window.__riskliOgrencileriHesapla === "function") ? window.__riskliOgrencileriHesapla() : [];
+  var riskPanosu = "";
+  if (riskliListe.length > 0) {
+    riskPanosu = '<div class="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-4">' +
+      '<div class="flex items-center gap-2 mb-2"><span class="text-rose-600 font-extrabold text-[14px]">⚠️ Acil Müdahale Gerektirenler (' + riskliListe.length + ')</span></div>' +
+      '<div class="flex flex-wrap gap-2">';
+    riskliListe.forEach(function (r) {
+      riskPanosu += '<span class="rounded-full bg-rose-100 text-rose-700 px-3 py-1 text-[11px] font-bold">' + esc(r.ad) + ' (' + esc(r.sinif) + ')</span>';
+    });
+    riskPanosu += "</div></div>";
+  }
+
   $("ozetBolum").innerHTML =
     '<div class="flex flex-wrap items-center justify-between gap-3 mb-4">' +
       '<div><h2 class="text-[15px] font-bold text-slate-900">Özet Rapor</h2>' +
       '<p class="text-[11.5px] text-slate-400 font-medium">İstatistikler ve grafikler seçili döneme göre anlık hesaplanır</p></div>' + seg + "</div>" +
     '<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-12 gap-4">' +
-      '<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 xl:col-span-8">' + kartlar + "</div>" +
+      '<div class="xl:col-span-8 min-w-0">' +
+        '<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">' + kartlar + "</div>" + riskPanosu + "</div>" +
       '<div class="kart p-5 xl:col-span-4 flex flex-col"><div class="flex items-start justify-between gap-3 flex-wrap"><div><h3 class="text-[13px] font-bold text-slate-900">En Çok Birebir Ders Yazılan Dersler</h3><p class="text-[11px] text-slate-400 font-medium mt-0.5">' + donemAdi() + " dağılımı</p></div>" +
         '<span class="text-[10.5px] font-bold text-teal-600 bg-teal-50 border border-teal-100 rounded-full px-2.5 py-1 whitespace-nowrap"><i class="fa-regular fa-clock mr-1"></i>' + pencereAdi() + "</span></div>" +
         '<div class="mt-4 flex-1 flex items-center">' + donutIcerik + "</div></div>" +

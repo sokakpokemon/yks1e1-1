@@ -155,7 +155,7 @@ t("ikinci yedek döngüsünde dönem alanları yine aynı", JSON.stringify(donem
 console.log("11) UI/HTML/ek-ders.js değişmiyor:");
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ekders = readFileSync("ek-ders.js", "utf8");
-t("ek-ders.js SHA-256 değişmedi", sha(ekders) === "7e315d2baf4d82ec42e480925269102421f49fd1a01d77badb8d5351ab2546d6", sha(ekders));
+t("ek-ders.js SHA-256 değişmedi", sha(ekders) === "3c4d3278e69b760b01c913ac62dffadf6f9452270a7a9f927a15d632154d6011", sha(ekders));
 t("ek-ders.js yama içermiyor (donemleriBaslat yok)", !ekders.includes("donemleriBaslat") && !ekders.includes("DONEM-ILK"));
 t("index.html yama içermiyor (donemleriBaslat yok)", !html.includes("donemleriBaslat") && !html.includes("DONEM-ILK"));
 

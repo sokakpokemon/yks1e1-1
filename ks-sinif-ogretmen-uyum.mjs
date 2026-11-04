@@ -10,7 +10,7 @@ const sha = (s) => createHash("sha256").update(s).digest("hex");
 const app = readFileSync("app.js", "utf8");
 const ekders = readFileSync("ek-ders.js", "utf8");
 const html = readFileSync("index.html", "utf8");
-const KNOWN_EKDERS = "7e315d2baf4d82ec42e480925269102421f49fd1a01d77badb8d5351ab2546d6"; /* güncel checkout hash — bu dilim ek-ders.js'e dokunmaz */
+const KNOWN_EKDERS = "3c4d3278e69b760b01c913ac62dffadf6f9452270a7a9f927a15d632154d6011"; /* güncel checkout hash — bu dilim ek-ders.js'e dokunmaz */
 
 let pass = 0, fail = 0;
 function t(ad, ok) { __kosan++;  if (ok) { pass++; console.log("  ✓ " + ad); } else { fail++; console.log("  ✗ " + ad); } }

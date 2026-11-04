@@ -414,7 +414,7 @@ DB.istekler = DB.istekler.filter(r => !String(r.id).startsWith("kd-i"));
 console.log("10) Süit kaydı ve dosya bütünlüğü:");
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 t("bu süit test.mjs'te tam 1 kez", (readFileSync("test.mjs", "utf8").match(/ks-ders-tasi\.mjs/g) || []).length === 1);
-t("ek-ders.js değişmedi (bilinen hash)", sha(readFileSync("ek-ders.js", "utf8")) === "7e315d2baf4d82ec42e480925269102421f49fd1a01d77badb8d5351ab2546d6");
+t("ek-ders.js değişmedi (bilinen hash)", sha(readFileSync("ek-ders.js", "utf8")) === "3c4d3278e69b760b01c913ac62dffadf6f9452270a7a9f927a15d632154d6011");
 t("EK-DERS-GORUNUM mark sayısı 5 (değişmedi)", kez("EK-DERS-GORUNUM") === 5);
 
 console.log("");

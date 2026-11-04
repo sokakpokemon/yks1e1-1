@@ -1021,6 +1021,7 @@ function seedDB() {
 var ui = {
   filtre: "hafta", anchor: todayKey(), sekme: "ogretmen",
   editId: null, aktifIstekId: null, ogrId: null, sinifAd: null, analizAcik: true, istekFiltre: "",
+  ogrArama: "" /* OGRETMEN-ARAMA: Öğretmen Tanımlama listesi arama sorgusu (ad/soyad) */,
   seciliDurum: null, seciliOgrId: null,
   ekOgrenciIds: null /* GRUP PANEL: secili ek ogrenci id dizisi (sinirsiz; 10+ yalnizca uyari) */,
   panelSecim: null /* GRUP PANEL: { acik, arama, sinif } */,
@@ -1560,8 +1561,20 @@ function renderYonetim() {
 }
 
 /* ---- Öğretmenler ---- */
+/* OGRETMEN-ARAMA: yazdıkça filtrele; render sonrası odak + imleç korunur (kutu yazarken kaybolmaz) */
+function ogrArama(v) {
+  ui.ogrArama = v == null ? "" : String(v);
+  renderYonetim();
+  var el = null;
+  try { el = document.getElementById("ogrAramaInput"); } catch (e) { el = null; }
+  if (el) {
+    try { if (typeof el.focus === "function") el.focus(); } catch (e1) {}
+    try { if (typeof el.setSelectionRange === "function") { var n = String(el.value || "").length; el.setSelectionRange(n, n); } } catch (e2) {}
+  }
+}
 function ogretmenTab() {
   var ogretmenler = DB.ogretmenler.slice();
+  if (ui.ogrArama) { var q = trNormalize(ui.ogrArama); ogretmenler = ogretmenler.filter(function (t) { return trNormalize(t.ad).indexOf(q) >= 0; }); }
   if (ogretmenler.length && !ui.ogrId) ui.ogrId = ogretmenler[0].id;
   var secili = ogretmenler.find(function (t) { return t.id === ui.ogrId; }) || ogretmenler[0];
   ui.ogrId = secili ? secili.id : null;
@@ -1573,7 +1586,9 @@ function ogretmenTab() {
   DERSLER.forEach(function (d) { bransOps += '<option value="' + d.id + '">' + d.ad + "</option>"; });
 
   var listeHtml = '<div class="space-y-2 max-h-[340px] overflow-y-auto pr-1">';
-  if (!ogretmenler.length) listeHtml += '<p class="text-[12px] text-slate-400 text-center py-8">Henüz öğretmen yok.<br>Üstteki formdan ilk öğretmeni ekleyin.</p>';
+  if (!ogretmenler.length) listeHtml += ui.ogrArama
+    ? '<p class="text-[12px] text-slate-400 text-center py-8">Aramayla eşleşen öğretmen yok.</p>'
+    : '<p class="text-[12px] text-slate-400 text-center py-8">Henüz öğretmen yok.<br>Üstteki formdan ilk öğretmeni ekleyin.</p>';
   ogretmenler.forEach(function (t, i) {
     var d = DERS[t.brans];
     var sinifSay = (t.avail.sinif || []).length, mdSay = (t.avail.musait || []).length;
@@ -1620,6 +1635,7 @@ function ogretmenTab() {
           : '<button onclick="ogretmenEkle()" class="w-full rounded-full bg-teal-500 hover:bg-teal-600 text-white text-[13px] font-bold py-2.5 shadow-sm transition-colors"><i class="fa-solid fa-plus mr-1.5"></i>Öğretmeni Kaydet</button>') +
       "</div>" +
       '<h4 class="text-[12px] font-bold text-slate-500 uppercase tracking-wide mt-5 mb-2"><i class="fa-solid fa-list-ul text-teal-500 mr-1"></i>Kayıtlı Öğretmenler <span class="text-slate-300">(' + ogretmenler.length + ')</span></h4>' +
+      '<div class="mb-2"><input type="text" id="ogrAramaInput" value="' + esc(ui.ogrArama) + '" oninput="ogrArama(this.value)" placeholder="Öğretmen ara..." class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-[12px] focus:outline-none focus:ring-1 focus:ring-teal-400"></div>' +
       listeHtml +
     "</div>" +
     '<div class="xl:col-span-8">' + grid + "</div></div>";
@@ -3817,10 +3833,8 @@ function istekEkle() {
   if (!ad) { toast("Öğrenci adı girin.", "hata"); return; }
   if (!dersId) { toast("Ders seçin.", "hata"); return; }
   var o = DB.ogrenciler.find(function (x) { return kucuk(x.ad) === kucuk(ad); });
-  if (!o) {
-    o = { id: uid(), ad: ad, sinif: "", tel: "" };
-    DB.ogrenciler.push(o);
-  }
+  /* OTOMATIK-KAYIT-KAPALI: havuz isteği kayıtsız öğrenci oluşturmaz */
+  if (!o) { toast("Bu isimde öğrenci bulunamadı. Lütfen önce kayıt edin.", "hata"); return; }
   DB.istekler.push({ id: uid(), ogrenciId: o.id, ogrenciAd: o.ad, dersId: dersId, konu: konu, durum: "bekliyor", olusturma: todayKey(), donemId: aktifDonemId() /* DONEM-DAMGA-YAMASI: yeni istek aktif döneme damgalanır */ });
   toast("İstek havuza eklendi ✓");
   renderHavuz(); renderFormDestek();
@@ -4412,7 +4426,7 @@ function planla() {
   var saat = $("f-saat").value;
   var yoksay = $("f-yoksay").checked;
   var hatalar = [];
-  if (!ogrenciAd) hatalar.push("Öğrenci adı yazın (yeni öğrenci otomatik kaydedilir).");
+  if (!ogrenciAd) hatalar.push("Öğrenci adı yazın.");
   if (!dersId) hatalar.push("Ders seçin.");
   if (!ogretmenAd) hatalar.push("Öğretmen adı yazın veya hızlı öğretmen seçin.");
   if (!tarih) hatalar.push("Tarih seçin.");
@@ -4445,20 +4459,14 @@ function planla() {
   }
 
   var o = DB.ogrenciler.find(function (x) { return kucuk(x.ad) === kucuk(ogrenciAd); });
-  if (!o) {
-    o = { id: uid(), ad: ogrenciAd, sinif: "", tel: "" };
-    DB.ogrenciler.push(o);
-    toast("Yeni öğrenci kaydedildi: " + ogrenciAd);
-  }
+  /* OTOMATIK-KAYIT-KAPALI: öğrenci yoksa oluşturulmaz; planlama reddedilir */
+  if (!o) { hataKart(["Bu isimde öğrenci bulunamadı. Lütfen önce Öğrenci & Sınıf sekmesinden ekleyin."]); return; }
   /* GRUP PANEL: ana öğrenci grup listesinde iki kez olamaz (ana değişse bile) */
   grupOgrenciIds = grupOgrenciIds.filter(function (oid) { return oid !== o.id; });
   grupModu = grupOgrenciIds.length >= 1; /* D32-GRUP-2UYE: ana çıkarıldıktan sonra ≥1 ek = grup */
   var t = DB.ogretmenler.find(function (x) { return kucuk(x.ad) === kucuk(ogretmenAd); });
-  if (!t) {
-    t = { id: uid(), ad: ogretmenAd, brans: dersId, avail: { sinif: {}, musait: [] } };
-    DB.ogretmenler.push(t);
-    toast("Yeni öğretmen kaydedildi: " + ogretmenAd);
-  }
+  /* OTOMATIK-KAYIT-KAPALI: öğretmen yoksa oluşturulmaz; planlama reddedilir */
+  if (!t) { hataKart(["Bu isimde öğretmen bulunamadı. Lütfen önce Öğretmen Tanımlama sekmesinden ekleyin."]); return; }
   /* BRANS-DERS-KURALI: kaydetmeden önce zorunlu uygunluk — uygunsuz atama KAYDEDİLMEZ */
   if (typeof bransDersUygun === "function" && !bransDersUygun(t.id, dersId, konu)) {
     hataKart([typeof bransDersRedMesaji === "function" ? bransDersRedMesaji(t, dersId) : "Branş-ders uyumsuzluğu."]);
@@ -4876,10 +4884,8 @@ function istekBurak(ev, el, ogrtId, tarih, saat) {
 
   // Öğrenciyi bul/oluştur
   var o = DB.ogrenciler.find(function (x) { return x.id === r.ogrenciId; });
-  if (!o) {
-    o = { id: uid(), ad: r.ogrenciAd || "İsimsiz Öğrenci", sinif: "", tel: "" };
-    DB.ogrenciler.push(o);
-  }
+  /* OTOMATIK-KAYIT-KAPALI: sürükle-bırak kayıtsız öğrenci oluşturmaz */
+  if (!o) { toast("Bu isimde öğrenci bulunamadı.", "hata"); return; }
 
   // Dersi planla
   /* DÖNGÜ-26: GRUP istekte tüm üyeler ders kaydına taşınır (ogrenciIds = ana dışı ek üyeler);

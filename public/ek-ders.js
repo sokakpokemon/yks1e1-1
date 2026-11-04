@@ -137,19 +137,15 @@ if (
       return;
     }
 
-    /* Sınıf mevcut değilse otomatik kaydet (birebirde yeni öğrenci otomatik kaydediliyordu) */
+    /* OTOMATIK-KAYIT-KAPALI: kayıtsız sınıf oluşturulmaz; ek ders planlama reddedilir */
     if (tumSiniflar().indexOf(sinif) < 0) {
-      DB.sinifProg[sinif] = [];
-      toast("Yeni sınıf kaydedildi: " + sinif);
+      toast("Bu sınıf kayıtlı değil. Lütfen önce Sınıf Ekle kısmından ekleyin.", "hata");
+      return;
     }
 
-    /* Öğretmeni bul / yeni öğretmeni kaydet (birebir ile aynı) */
+    /* OTOMATIK-KAYIT-KAPALI: öğretmen yoksa oluşturulmaz; ek ders planlama reddedilir */
     var t = DB.ogretmenler.find(function (x) { return kucuk(x.ad) === kucuk(ogretmenAd); });
-    if (!t) {
-      t = { id: uid(), ad: ogretmenAd, brans: dersId, avail: { sinif: {}, musait: [] } };
-      DB.ogretmenler.push(t);
-      toast("Yeni öğretmen kaydedildi: " + ogretmenAd);
-    }
+    if (!t) { toast("Bu isimde öğretmen bulunamadı.", "hata"); return; }
     /* BRANS-DERS-KURALI-EK-YAMASI: ek ders kaydetmeden önce zorunlu uygunluk (tek kaynak app.js'te) */
     if (typeof bransDersUygun === "function" && !bransDersUygun(t.id, dersId, konu)) {
       ekHataKart([typeof bransDersRedMesaji === "function" ? bransDersRedMesaji(t, dersId) : "Branş-ders uyumsuzluğu."]);

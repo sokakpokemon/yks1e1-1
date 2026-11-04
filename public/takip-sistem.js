@@ -1526,7 +1526,7 @@
         // En az 1 Acil görüşmesi olan öğrencinin karne kartının sol kenarında kırmızı şerit
         var acilMi = !!(k.gorusme && k.gorusme.acil > 0);
         var kartStil = 'cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:10px; border:1px solid #f1f5f9; border-radius:8px; background:#f8fafc; hover:background:#f1f5f9;' + (acilMi ? ' border-left:4px solid #ef4444;' : '');
-        html += '<div class="an-kart" onclick="window.__ogrDetayGoster(\''+k.id+'\')" data-sinif="'+sinavEsc(k.sinif)+'" data-ad="'+sinavEsc(k.ad.toLowerCase())+'" style="' + kartStil + '">' +
+        html += '<div class="an-kart" onclick="window.__ogrDetayGoster(\''+k.id+'\')" data-sinif="'+sinavEsc(k.sinif)+'" data-ad="'+sinavEsc(trNormalize(k.ad))+'" style="' + kartStil + '">' +
           '<div>' +
             '<div style="font-weight:700; font-size:13px; color:#1e293b;">' + sinavEsc(k.ad) + '</div>' +
             '<div style="font-size:11px; color:#64748b; margin-bottom:' + (rozetSatir ? '3px' : '0') + ';">' + sinavEsc(k.sinif) + '</div>' +
@@ -1807,7 +1807,7 @@ window.__sysAnalizAra = function() {
     var sinifEl = document.getElementById("__anSinif");
     if (!aramaEl || !sinifEl) return;
     
-    var arama = (aramaEl.value || "").toLowerCase();
+    var arama = trNormalize(aramaEl.value);
     var seciliSinif = sinifEl.value;
     var kartlar = document.querySelectorAll(".an-kart");
     
@@ -2003,8 +2003,7 @@ window.__sysAnalizAra = function() {
   var yonetimSonSinif = "";
 
   function yonetimKucuk(s) {
-    var v = String(s == null ? "" : s);
-    return typeof kucuk === "function" ? kucuk(v) : v.toLocaleLowerCase("tr-TR");
+    return trNormalize(s);
   }
 
   function yonetimOgrVeri() {
@@ -2378,7 +2377,7 @@ window.__sysAnalizAra = function() {
   window.__ktAra = function (v) {
     var once = document.getElementById("__ktArama");
     var imlec = once ? once.selectionStart : null;
-    window.__ktAramaMetni = String(v || "").toLowerCase().trim();
+    window.__ktAramaMetni = trNormalize(v);
     window.__ktAramaHam = String(v || "");
     window.__ktListeCiz();
     var inp = document.getElementById("__ktArama");
@@ -2452,9 +2451,9 @@ window.__sysAnalizAra = function() {
       return ktOgrAd(a).localeCompare(ktOgrAd(b), "tr", { numeric: true });
     });
 
-    var arama = window.__ktAramaMetni || "";
+    var arama = trNormalize(window.__ktAramaMetni);
     var ogrenciler = arama
-      ? sinifOgrencileri.filter(function (o) { return ktOgrAd(o).toLowerCase().indexOf(arama) !== -1; })
+      ? sinifOgrencileri.filter(function (o) { return trNormalize(ktOgrAd(o)).indexOf(arama) !== -1; })
       : sinifOgrencileri;
 
     // Özet yalnızca seçili sınıfı sayar (giriş/çıkış ve süre yok)
@@ -2592,10 +2591,7 @@ window.__sysAnalizAra = function() {
     var OGRETMEN_SEC = "#f-ogretmen";
 
     function trNorm(s) {
-      return String(s == null ? "" : s).toLowerCase()
-        .replace(/ı/g, "i").replace(/ş/g, "s").replace(/ğ/g, "g")
-        .replace(/ü/g, "u").replace(/ö/g, "o").replace(/ç/g, "c")
-        .replace(/\s+/g, " ").trim();
+      return trNormalize(s);
     }
     function esc(s) {
       return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {

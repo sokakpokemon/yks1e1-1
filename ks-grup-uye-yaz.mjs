@@ -290,8 +290,9 @@ const hvL1 = havuzHTML();
 t("editörde 'Öğrenci ara…' arama kutusu VAR (id=istek-uye-arama + placeholder + oninput=istekUyeAra(this.value))",
   hvL1.includes('id="istek-uye-arama"') && hvL1.includes('placeholder="Öğrenci ara…"') && hvL1.includes('oninput="istekUyeAra(this.value)"'));
 
-t('arama normalize kuralı TEK fonksiyonda: normalize("NFC") + toLocaleLowerCase("tr-TR"); hem sorguya hem ada uygulanır (1 tanım + 2 kullanım)',
-  /function istekUyeAramaNorm\(s\) \{\s*return String\(s == null \? "" : s\)\.normalize\("NFC"\)\.toLocaleLowerCase\("tr-TR"\);\s*\}/.test(appKaynak) &&
+t('arama normalize kuralı TEK fonksiyonda: istekUyeAramaNorm → merkezi trNormalize (NFC + İ/I/ı→i, diyakritik katlama); hem sorguya hem ada uygulanır (1 tanım + 2 kullanım)',
+  /function istekUyeAramaNorm\(s\) \{\s*return trNormalize\(String\(s == null \? "" : s\)\.normalize\("NFC"\)\);\s*\}/.test(appKaynak) &&
+  (appKaynak.match(/function trNormalize\(s\)/g) || []).length === 1 &&
   (appKaynak.match(/istekUyeAramaNorm\(/g) || []).length === 3 &&
   appKaynak.includes("istekUyeAramaNorm(ui.istekUyeArama)") &&
   appKaynak.includes("istekUyeAramaNorm(o.ad).indexOf(q)"));

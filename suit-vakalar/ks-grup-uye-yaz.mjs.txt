@@ -35,7 +35,7 @@ editör KAPALIYKEN buton metni eski hâline döner: 'Grup üyelerini ekle/çıka
 başka kartın butonu → önceki editör KAPANIR, hedef AÇILIR (ui.istekUyeId = hedef · taslak hedefin üyeleri)
 DOM'da TEK editör paneli + TEK 'Kapat' etiketi; ikisi de HEDEF kartın hücresinde (önceki kartta editör YOK)
 editörde 'Öğrenci ara…' arama kutusu VAR (id=istek-uye-arama + placeholder + oninput=istekUyeAra(this.value))
-arama normalize kuralı TEK fonksiyonda: normalize("NFC") + toLocaleLowerCase("tr-TR"); hem sorguya hem ada uygulanır (1 tanım + 2 kullanım)
+arama normalize kuralı TEK fonksiyonda: istekUyeAramaNorm → merkezi trNormalize (NFC + İ/I/ı→i, diyakritik katlama); hem sorguya hem ada uygulanır (1 tanım + 2 kullanım)
 sorgu BOŞKEN görünür liste bugünkü hâliyle BİREBİR (tüm öğrenciler + satır markup'ı aynı, filtre YOK)
 SORGU: eşleşen SEÇİLMEMİŞ öğrenci görünür · eşleşmeyen SEÇİLMEMİŞ öğrenci GİZLİ (ecr → Ecrin VAR, Yusuf YOK)
 eşleşmeyen SEÇİLİ üyeler listede KALIR ve İŞARETLİ kalır (zzz → 4 seçili satır + 4 checked)

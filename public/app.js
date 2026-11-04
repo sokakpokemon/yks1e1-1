@@ -199,6 +199,24 @@ function uid() {
   return "id" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 function kucuk(s) { return String(s || "").trim().toLocaleLowerCase("tr-TR"); }
+/* TR-ARAMA: arama için TEK normalizasyon kaynağı. İ/I/ı → i, diyakritikler ASCII'ye
+   katlanır, U+0307 (İ'nin locale'siz toLowerCase artığı) silinir, boşluk sadeleşir.
+   kucuk() BİLİNÇLİ olarak dokunulmadı: eşitlik/benzersizlik kararlarında kullanılıyor,
+   orada katlama "Ayşe" ile "Ayse"yi aynı sayardı. */
+function trNormalize(s) {
+  if (s == null) return "";
+  return String(s)
+    .replace(/İ/g, "i").replace(/I/g, "i").replace(/ı/g, "i")
+    .replace(/Ğ/g, "g").replace(/ğ/g, "g")
+    .replace(/Ü/g, "u").replace(/ü/g, "u")
+    .replace(/Ş/g, "s").replace(/ş/g, "s")
+    .replace(/Ö/g, "o").replace(/ö/g, "o")
+    .replace(/Ç/g, "c").replace(/ç/g, "c")
+    .replace(/\u0307/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
 function toKey(d) {
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 }
@@ -1125,12 +1143,12 @@ function penceredeDersler() {
    penceredeDersler()'i filtresiz kullanmaya devam eder. Sıralama bozulmasın diye
    filtre, sıralanmış listenin üzerine uygulanır ve tek kaynak bu yardımcıdır. */
 function dersAramaUygula(liste) {
-  var q = (ui.aramaMetni || "").toLowerCase();
+  var q = trNormalize(ui.aramaMetni);
   if (!q) return liste;
   return liste.filter(function (l) {
-    return (l.ogrenciAd || "").toLowerCase().includes(q) ||
-      (l.ogretmenAd || "").toLowerCase().includes(q) ||
-      (l.konu || "").toLowerCase().includes(q);
+    return trNormalize(l.ogrenciAd).includes(q) ||
+      trNormalize(l.ogretmenAd).includes(q) ||
+      trNormalize(l.konu).includes(q);
   });
 }
 function aktif(liste) { return liste.filter(function (l) { return l.durum !== "iptal"; }); }
@@ -3846,7 +3864,7 @@ function istekUyeButonHTML(r) {
 }
 /* D39-UYE-ARAMA: arama normalizasyonu — hem SORGU hem AD aynı kuraldan geçer (Unicode NFC + Türkçe küçük harf). */
 function istekUyeAramaNorm(s) {
-  return String(s == null ? "" : s).normalize("NFC").toLocaleLowerCase("tr-TR");
+  return trNormalize(String(s == null ? "" : s).normalize("NFC"));
 }
 /* D39-UYE-ARAMA: editör açıkken listelenecek öğrenci satırları (TEK üretici).
    KURAL: SEÇİLİ üye (ui.istekUyeTaslak) aramayla eşleşmese bile listede KALIR ve İŞARETLİ kalır;
@@ -3985,13 +4003,13 @@ function dersOpsi() {
    (birebir planlama öğrenci/öğretmen + havuz öğrenci) TEK renderer (ksSugSatirHTML) ile listelenir.
    Input değeri HAM ad kalır; list="..." kaldırılmadığı için native davranış da bozulmaz (listeler gizli). */
 function ksSugOgrenci(q) {
-  var s = kucuk(q || "");
-  return DB.ogrenciler.filter(function (o) { return !s || kucuk(o.ad).indexOf(s) !== -1; })
+  var s = trNormalize(q);
+  return DB.ogrenciler.filter(function (o) { return !s || trNormalize(o.ad).indexOf(s) !== -1; })
     .map(function (o) { return { deger: o.ad, html: birebirEtiketHTML(o.ad, o.sinif || "") }; });
 }
 function ksSugOgretmen(q) {
-  var s = kucuk(q || "");
-  return DB.ogretmenler.filter(function (t) { return !s || kucuk(t.ad).indexOf(s) !== -1; })
+  var s = trNormalize(q);
+  return DB.ogretmenler.filter(function (t) { return !s || trNormalize(t.ad).indexOf(s) !== -1; })
     .map(function (t) { return { deger: t.ad, html: ksSugSatirHTML(t.ad, null, false) }; });
 }
 /* DÖNGÜ-21: özel öneri listesi scroll/resize ANKRAJI — liste input'a sabitlenir; scroll/resize'da
@@ -4125,11 +4143,11 @@ function grupPanelTumSiniflar() {
 }
 function grupPanelListe() {
   var ps = ui.panelSecim || { acik: false, arama: "", sinif: "" };
-  var q = kucuk(ps.arama);
+  var q = trNormalize(ps.arama);
   var secili = grupPanelSecimler();
   var anaId = grupAnaOgrenciId();
   return DB.ogrenciler.filter(function (o) {
-    if (q && kucuk(o.ad).indexOf(q) === -1) return false;
+    if (q && trNormalize(o.ad).indexOf(q) === -1) return false;
     if (ps.sinif && String(o.sinif || "").trim() !== ps.sinif) return false;
     return true;
   }).map(function (o) {
